@@ -11,6 +11,12 @@ const DAILY_LIMITS = {
 
 export type UsageCheckResult = { allowed: boolean; used: number; limit: number; isPremium: boolean };
 
+/** Reklam başına verilen bonus hak ve bir özellik için günlük bonus tavanı. */
+const BONUS_PER_AD = 1;
+const MAX_BONUS_PER_DAY = 3;
+
+export type AdBonusResult = { bonusCount: number; maxBonus: number };
+
 /**
  * Günlük kullanım sınırını atomik biçimde kontrol eder ve izin varsa sayacı
  * bir artırır (bkz. db/migrations/20260726_usage_limits.sql —
@@ -55,8 +61,43 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
     console.error("[usage-limits] rpc failed", error?.code);
     return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
   }
-  const result = data as { allowed: boolean; current_count: number };
-  return { allowed: result.allowed, used: result.current_count, limit, isPremium };
+  const result = data as { allowed: boolean; current_count: number; effective_limit: number };
+  return { allowed: result.allowed, used: result.current_count, limit: result.effective_limit ?? limit, isPremium };
+}
+
+/**
+ * Reklam izlendikten sonra bir özellik için günlük bonus hakkı verir (bkz.
+ * db/migrations/20260810_ad_bonus_usage.sql — grant_usage_bonus). Bonus,
+ * feature başına MAX_BONUS_PER_DAY ile sınırlıdır; SSV yerine bu tavan
+ * kötüye kullanım riskini sınırlar (bkz. plan notları).
+ */
+export async function grantAdBonus(request: Request, feature: UsageFeature): Promise<AdBonusResult | { error: Response }> {
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    return { error: Response.json({ error: "Reklam ödülü servisi yapılandırılmamış." }, { status: 503 }) };
+  }
+  const token = bearerToken(request);
+  if (!token) {
+    return { error: Response.json({ error: "Bu işlem için giriş yapmalısın." }, { status: 401 }) };
+  }
+
+  const client = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+
+  const { data, error } = await client
+    .rpc("grant_usage_bonus", { p_feature: feature, p_bonus: BONUS_PER_AD, p_max_bonus: MAX_BONUS_PER_DAY });
+  if (error && isMissingInfrastructure(error)) {
+    console.warn(`[usage-limits] grant_usage_bonus bulunamadı; reklam ödülü uygulanmadı. db/migrations/20260810_ad_bonus_usage.sql çalıştırılmalı.`);
+    return { bonusCount: 0, maxBonus: MAX_BONUS_PER_DAY };
+  }
+  if (error || typeof data !== "number") {
+    console.error("[usage-limits] grant_usage_bonus rpc failed", error?.code);
+    return { error: Response.json({ error: "Reklam ödülü uygulanamadı." }, { status: 500 }) };
+  }
+  return { bonusCount: data, maxBonus: MAX_BONUS_PER_DAY };
 }
 
 /**

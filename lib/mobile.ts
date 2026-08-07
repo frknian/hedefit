@@ -1,3 +1,4 @@
+import { AdMob } from "@capacitor-community/admob";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
@@ -62,6 +63,38 @@ export async function scheduleMobileWorkouts(preferences: ReminderPreferences, e
     .filter((notification) => notification.schedule.at.getTime() > now)
     .slice(0, 60);
   if (notifications.length) await LocalNotifications.schedule({ notifications });
+}
+
+let adsInitialized = false;
+
+/** Reklamları hazırlar; birden çok çağrıda yalnızca ilkinde SDK'yı başlatır. */
+export async function initializeAds() {
+  if (!isNativeApp() || adsInitialized) return;
+  adsInitialized = true;
+  await AdMob.initialize({ initializeForTesting: process.env.NODE_ENV !== "production" }).catch(() => undefined);
+}
+
+/** iOS 14+ App Tracking Transparency izni ister; Android'de no-op'tur. */
+export async function requestAdTrackingAuthorization() {
+  if (!isNativeApp()) return;
+  await AdMob.requestTrackingAuthorization().catch(() => undefined);
+}
+
+/**
+ * Ödüllü reklamı hazırlayıp gösterir. Ödül yalnızca kullanıcı reklamı sonuna
+ * kadar izlerse (showRewardVideoAd promise'i çözülürse) kazanılmış sayılır;
+ * erken kapatma veya yükleme hatası { rewarded: false } döner.
+ */
+export async function showRewardedAd(adUnitId: string): Promise<{ rewarded: boolean }> {
+  if (!isNativeApp()) return { rewarded: false };
+  await initializeAds();
+  try {
+    await AdMob.prepareRewardVideoAd({ adId: adUnitId, isTesting: process.env.NODE_ENV !== "production" });
+    const reward = await AdMob.showRewardVideoAd();
+    return { rewarded: Boolean(reward) };
+  } catch {
+    return { rewarded: false };
+  }
 }
 
 export function registerMobileRuntime(options: { supabase: SupabaseClient | null; onOnlineChange: (online: boolean) => void }) {

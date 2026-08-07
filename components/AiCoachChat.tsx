@@ -7,6 +7,7 @@ import type { CoachMessage } from "@/lib/ai-coach";
 import { authorizedFetch } from "@/lib/api-client";
 import { useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
+import { useAdUnlock } from "@/hooks/useAdUnlock";
 
 export function AiCoachChat({ context, onUpgradeRequest }: { context: string; onUpgradeRequest?: () => void }) {
   const t = useTranslations();
@@ -23,6 +24,8 @@ export function AiCoachChat({ context, onUpgradeRequest }: { context: string; on
   const launcherRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const requestController = useRef<AbortController | null>(null);
+  const lastConversation = useRef<CoachMessage[]>([]);
+  const adUnlock = useAdUnlock("chat");
 
   function closeCoach() {
     setOpen(false);
@@ -41,13 +44,8 @@ export function AiCoachChat({ context, onUpgradeRequest }: { context: string; on
 
   useEffect(() => () => requestController.current?.abort(), []);
 
-  async function send(text: string) {
-    const value = text.trim().slice(0, 600);
-    if (!value || busy) return;
-    const userMessage = { id: crypto.randomUUID(), role: "user" as const, text: value };
-    const conversation = [...messages, userMessage].slice(-12);
-    setMessages(conversation);
-    setInput("");
+  async function sendConversation(conversation: CoachMessage[]) {
+    lastConversation.current = conversation;
     setBusy(true);
     setError("");
     setNotice("");
@@ -72,6 +70,21 @@ export function AiCoachChat({ context, onUpgradeRequest }: { context: string; on
     }
   }
 
+  async function send(text: string) {
+    const value = text.trim().slice(0, 600);
+    if (!value || busy) return;
+    const userMessage = { id: crypto.randomUUID(), role: "user" as const, text: value };
+    const conversation = [...messages, userMessage].slice(-12);
+    setMessages(conversation);
+    setInput("");
+    await sendConversation(conversation);
+  }
+
+  async function watchAdForExtraMessage() {
+    const granted = await adUnlock.watchAd();
+    if (granted && lastConversation.current.length) await sendConversation(lastConversation.current);
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void send(input);
@@ -90,7 +103,13 @@ export function AiCoachChat({ context, onUpgradeRequest }: { context: string; on
       <Conversation className="coach-conversation"><ConversationContent className="coach-messages">
         {messages.length === 0 ? <ConversationEmptyState title={t.aiCoachChat.emptyTitle} description={t.aiCoachChat.emptyDescription} icon={<span className="coach-empty-icon">✦</span>} /> : messages.map((message) => <Message from={message.role} key={message.id}><MessageContent><MessageResponse>{message.text}</MessageResponse></MessageContent></Message>)}
         {busy && <div className="coach-thinking" role="status"><i /><i /><i /><span>{t.aiCoachChat.thinking}</span></div>}
-        {error && <div className="coach-error" role="alert">{error} {!limitReached && t.aiCoachChat.tryAgain} {limitReached && onUpgradeRequest && <button type="button" className="upgrade-inline-cta" onClick={onUpgradeRequest}>{t.premium.upgradeCta}</button>}</div>}
+        {error && <div className="coach-error" role="alert">
+          {error} {!limitReached && t.aiCoachChat.tryAgain}
+          {limitReached && adUnlock.showButton && <button type="button" className="watch-ad-inline-cta" disabled={adUnlock.watching} onClick={() => void watchAdForExtraMessage()}>{adUnlock.watching ? t.ads.watching : t.ads.watchAdCta}</button>}
+          {limitReached && onUpgradeRequest && <button type="button" className="upgrade-inline-cta" onClick={onUpgradeRequest}>{t.premium.upgradeCta}</button>}
+        </div>}
+        {adUnlock.status === "granted" && <div className="coach-notice" role="status">{t.ads.rewardGranted}</div>}
+        {adUnlock.status === "failed" && <div className="coach-notice" role="status">{t.ads.adFailed}</div>}
         {notice && <div className="coach-notice" role="status">{notice}</div>}
         {usage && <div className="coach-usage" role="status">{t.aiCoachChat.dailyUsage(usage.used, usage.limit)}</div>}
       </ConversationContent><ConversationScrollButton aria-label={t.aiCoachChat.goToLastMessage} /></Conversation>

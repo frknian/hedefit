@@ -1393,4 +1393,12 @@ export const tr = {
     profileRowSubtitlePremium: "Tüm AI özelliklerinde yüksek günlük limit.",
     upgradeCta: "Premium'a Geç",
   },
+  ads: {
+    watchAdCta: "Reklam izle, +1 hak kazan",
+    watching: "Reklam yükleniyor…",
+    rewardGranted: "Harika! Bugün için +1 hakkın eklendi.",
+    adUnavailable: "Şu an gösterilecek reklam yok, birazdan tekrar dene.",
+    adFailed: "Reklam tamamlanmadı, hak eklenmedi.",
+    dailyAdLimitReached: "Bugün reklamla kazanılabilecek hak sayısına ulaştın.",
+  },
 };

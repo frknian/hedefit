@@ -61,8 +61,10 @@ Konum (GPS) verisi **toplanmaz**.
 - Antrenman hatırlatmaları göndermek
 - Hesabınızı güvenli tutmak (e-posta doğrulama, oturum yönetimi)
 
-Verilerinizi **reklam için kullanmıyoruz**, satmıyoruz ve reklam ağlarıyla
-paylaşmıyoruz. Uygulamada reklam SDK'sı bulunmaz.
+Verilerinizi satmıyoruz. Ücretsiz plandaki bir kullanıcı, günlük AI hakkı
+dolduğunda **isteğe bağlı olarak** ödüllü bir reklam izleyip ekstra hak
+kazanabilir; bunun dışında uygulamada sürekli görünen banner/interstitial
+reklam yoktur. Bu reklamlar Google AdMob üzerinden gösterilir (bkz. Bölüm 4).
 
 ## 4. Üçüncü taraf hizmetler
 
@@ -71,6 +73,7 @@ paylaşmıyoruz. Uygulamada reklam SDK'sı bulunmaz.
 | Supabase | Hesap, veritabanı ve dosya depolama | Bölüm 2'deki tüm veriler |
 | AI sağlayıcısı (Moonshot AI, Kimi K3) | Plan üretimi, öğün fotoğrafı analizi, koç sohbeti, haftalık değerlendirme | Anonim profil özeti, öğün fotoğrafı, sohbet mesajları. Kimlik bilgileriniz (e-posta, ad) gönderilmez. |
 | Open Food Facts | Ürün adı ile besin araması | Yalnızca aradığınız ürün adı |
+| Google AdMob | Yalnızca ücretsiz plandaki kullanıcının kendi isteğiyle izlediği ödüllü reklam | Reklam kimliği ve cihaz/reklam etkileşim verileri; Google'ın kendi gizlilik politikasına tabidir |
 
 ## 5. Saklama ve silme
 

@@ -1390,4 +1390,12 @@ export const en: typeof tr = {
     profileRowSubtitlePremium: "Higher daily limits across all AI features.",
     upgradeCta: "Upgrade to Premium",
   },
+  ads: {
+    watchAdCta: "Watch an ad, get +1",
+    watching: "Loading ad…",
+    rewardGranted: "Nice! You got +1 use for today.",
+    adUnavailable: "No ad available right now, try again in a bit.",
+    adFailed: "The ad wasn't completed, no bonus was granted.",
+    dailyAdLimitReached: "You've reached today's ad-bonus limit.",
+  },
 };

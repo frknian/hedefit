@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Plus, Sparkles, Trash2, Utensils } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
@@ -13,6 +13,7 @@ import { localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
 import { useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
+import { useAdUnlock } from "@/hooks/useAdUnlock";
 type Meal = "Kahvaltı" | "Öğle yemeği" | "Akşam yemeği" | "Atıştırmalık";
 type FoodEntry = { id: string; name: string; meal: Meal; calories: number; protein: number; carbs: number; fat: number; fiber?: number; grams?: number; micros?: FoodMicronutrients; time: string; consumedAt: string; source: "Fotoğraf" | "AI analizi"; isEstimated?: boolean; confidence?: number | null };
 
@@ -86,6 +87,8 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const [estimating, setEstimating] = useState(false);
   const [message, setMessage] = useState("");
   const [textNutritionLimitReached, setTextNutritionLimitReached] = useState(false);
+  const lastEstimateAddToLog = useRef(false);
+  const adUnlock = useAdUnlock("text_nutrition");
   const [mealAdvice, setMealAdvice] = useState("");
   const [mealAdviceLoading, setMealAdviceLoading] = useState(false);
   const [mealAdviceSource, setMealAdviceSource] = useState<"ai" | "fallback">("fallback");
@@ -292,6 +295,7 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   async function estimateFromText(addToLog = false) {
     const query = foodName.trim();
     if (query.length < 2) { setMessage(t.calorieTracker.fillNameAndCalories); return; }
+    lastEstimateAddToLog.current = addToLog;
     setEstimating(true);
     setMessage(t.calorieTracker.estimating);
     setTextNutritionLimitReached(false);
@@ -357,6 +361,11 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     } finally {
       setEstimating(false);
     }
+  }
+
+  async function watchAdForExtraEstimate() {
+    const granted = await adUnlock.watchAd();
+    if (granted) await estimateFromText(lastEstimateAddToLog.current);
   }
 
   // Girdi seçili birimde okunur; iç matematik her zaman GRAM üzerinden yürür.
@@ -508,7 +517,13 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           {aiEstimate && <div className={`ai-estimate-card ${aiEstimate.confidence}`}><span>{t.calorieTracker.aiEstimateLabel}</span><strong>{foodName}</strong><small>{t.calorieTracker.aiEstimateGrams(aiEstimate.grams)}</small><div className="ai-nutrition-values"><b>{nutrition.calories}<small>kcal</small></b><b>{nutrition.protein}<small>{t.calorieTracker.macroProtein} (g)</small></b><b>{nutrition.carbs}<small>{t.calorieTracker.macroCarbs} (g)</small></b><b>{nutrition.fat}<small>{t.calorieTracker.macroFat} (g)</small></b><b>{nutrition.fiber}<small>{t.calorieTracker.fieldFiber} (g)</small></b></div>{aiEstimate.items.length > 1 && <small>{aiEstimate.items.join(" · ")}</small>}<p>{aiEstimate.confidence === "low" ? t.calorieTracker.aiConfidenceLow : aiEstimate.confidence === "high" ? t.calorieTracker.aiConfidenceHigh : t.calorieTracker.aiConfidenceMedium}</p></div>}
           <button type="button" className="primary-btn add-food" disabled={isSubmitting || estimating} onClick={() => void submitManual()}><Plus size={16} /> {estimating ? t.calorieTracker.estimating : aiEstimate ? t.calorieTracker.addToLog : t.calorieTracker.analyzeAndAdd}</button>
         </div>
-        {message && <p className="food-message">{message} {textNutritionLimitReached && onUpgradeRequest && <button type="button" className="upgrade-inline-cta" onClick={onUpgradeRequest}>{t.premium.upgradeCta}</button>}</p>}
+        {message && <p className="food-message">
+          {message}
+          {textNutritionLimitReached && adUnlock.showButton && <button type="button" className="watch-ad-inline-cta" disabled={adUnlock.watching} onClick={() => void watchAdForExtraEstimate()}>{adUnlock.watching ? t.ads.watching : t.ads.watchAdCta}</button>}
+          {textNutritionLimitReached && onUpgradeRequest && <button type="button" className="upgrade-inline-cta" onClick={onUpgradeRequest}>{t.premium.upgradeCta}</button>}
+        </p>}
+        {adUnlock.status === "granted" && <p className="food-message">{t.ads.rewardGranted}</p>}
+        {adUnlock.status === "failed" && <p className="food-message">{t.ads.adFailed}</p>}
       </div>
     </section>
 

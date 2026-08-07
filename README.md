@@ -76,10 +76,16 @@ Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
 
 Premium: **₺89/ay** veya **₺799/yıl**.
 
+Ücretsiz kullanıcı günlük AI hakkını doldurduğunda, isterse kısa bir ödüllü
+reklam izleyip o gün için ekstra hak kazanabilir (bkz. Gizliliğin bölümü).
+
 ## Gizliliğin
 
 - **Konum toplanmaz.** Uygulamada GPS izni yok.
-- **Reklam yok.** Projede hiçbir reklam SDK'sı bulunmaz, verilerin reklam için kullanılmaz.
+- **Reklam yalnızca isteğe bağlı.** Ücretsiz kullanıcı, günlük AI hakkı dolduğunda isterse
+  ödüllü bir reklam (Google AdMob) izleyerek ekstra hak kazanabilir; sürekli görünen banner
+  veya interstitial reklam yoktur. AdMob, reklam kimliği gibi verileri Google'ın kendi
+  gizlilik politikası kapsamında işler.
 - **Hesabın senin.** Uygulama içinden dondurabilir, tüm verini indirebilir, ilerlemeni
   sıfırlayabilir veya hesabını kalıcı olarak silebilirsin.
 
@@ -181,11 +187,17 @@ Turkish and English · export all your data as a single JSON file
 
 Premium: **₺89/month** or **₺799/year** in Türkiye.
 
+Free users who hit their daily AI limit can optionally watch a short rewarded
+ad for one extra use that day (see Your privacy below).
+
 ## Your privacy
 
 - **Meal photos aren't stored.** Only the result (name, grams, macros) is saved.
 - **No location collected.** The app requests no GPS permission.
-- **No ads.** There is no ad SDK in the project, and your data is never used for advertising.
+- **Ads are opt-in only.** When a free user hits their daily AI limit, they can choose to
+  watch a rewarded ad (Google AdMob) for extra usage; there are no always-on banner or
+  interstitial ads. AdMob processes data like the advertising ID under Google's own
+  privacy policy.
 - **The account is yours.** Freeze it, export everything, reset your progress, or
   delete it permanently — all from inside the app.
 

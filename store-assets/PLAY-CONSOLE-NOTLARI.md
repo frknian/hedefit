@@ -36,7 +36,13 @@ hiçbir görüntü sunucuya gönderilmez — bunu ayrıca beyan etmenize gerek y
 - **İçerik derecelendirme (IARC) anketi:** Sağlık/fitness uygulaması,
   kullanıcı etkileşimi yok, satın alma yok.
 - **Hedef kitle:** 13+ (gizlilik politikası bu yaşa göre yazıldı).
-- **Reklam içeriyor mu?** Hayır — projede hiçbir reklam SDK'sı yok.
+- **Reklam içeriyor mu?** Evet — Google AdMob ile isteğe bağlı ödüllü reklam (rewarded
+  ad) gösterilir; kullanıcı günlük AI hakkı dolduğunda kendi isteğiyle izler, sürekli
+  görünen banner/interstitial yoktur. **Bu değişikliği Play Console'daki Data Safety
+  (Veri Güvenliği) formuna da elle işlemeniz gerekir** — kod değişikliği formu otomatik
+  güncellemez; "Reklam kimliği" ve "Cihaz veya diğer kimlikler" gibi kategorilerin
+  AdMob için işaretlenmesi ve "Reklam veya pazarlama" kullanım amacının eklenmesi
+  gerekecek.
 - **Şifreleme ihracat beyanı:** yalnızca standart HTTPS kullanılır.
 
 ## 3. Görsel varlıklar
