@@ -1741,6 +1741,10 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 
 .program-exercise-list > article > .db-exercise-animation.compact { flex:0 0 92px; width:92px; height:78px; border-radius:8px; }
 .program-exercise-list > article > div { flex:1; min-width:0; }
+/* Akıllı programda hareket adının yanında "Değiştir" düğmesi: AI her gün aynı listeyi verdiği için kullanıcı tekrar hissettiği hareketi kendisi değiştirebilsin diye eklendi. */
+.program-exercise-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.program-exercise-head strong { flex:1; min-width:0; }
+.program-exercise-head .swap-trigger { flex:0 0 auto; min-height:29px; padding:0 11px; font-size:10px; }
 @media (max-width:700px) { .program-exercise-list > article > .db-exercise-animation.compact { flex-basis:76px; width:76px; height:66px; } }
 
 /* --- Profil sayfası: gruplanmış kutular ve şıklı sorular ---------------- */

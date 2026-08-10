@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ExerciseAnimation, exerciseLibrary, catalogItemToWorkout, getMotionGuide, type AiWorkout, type CatalogItem } from "@/components/FitAiApp";
 import { OnboardingIcon } from "@/components/onboarding/OnboardingIcon";
+import { alternativeExercises } from "@/lib/exercise-alternatives";
 import { buildReadyProgram, matchesProfile } from "@/lib/ready-programs";
 import {
   CUSTOM_PROGRAM_SLOTS,
@@ -55,6 +56,49 @@ export function TrainingPrograms({
   const [builderId, setBuilderId] = useState<string | null>(null);
   const place: TrainingPlace = isGym ? "gym" : "home";
 
+  // Akıllı program her seansta AYNI hareket havuzunu verir; AI tek bir liste
+  // üretir, gün gün farklı bir set değil. Kullanıcı ikinci günde de aynı
+  // hareketleri görünce şaşırıyordu. Kalıcı bir "günlük split" AI şeması
+  // gerektirir; bu daha küçük ve hemen kullanılabilir çözüm, kullanıcının
+  // tekrar hissettiği hareketi kendisinin değiştirmesine izin verir. İndekse
+  // göre saklanır (isme göre değil): bir hareket ikinci kez değiştirilince
+  // alternatifler yine ORİJİNAL hareketin bölgesine göre önerilir.
+  // Değişiklikler hangi program seçiminde yapıldığıyla birlikte saklanır;
+  // seçim değişince (kayıtlı anahtar artık güncel seçimle eşleşmeyince) eski
+  // değerler sessizce yok sayılır. Ne effect ne de ref gerekir — başka bir
+  // programa geçildiğinde önceki hareket değişiklikleri bir kare bile
+  // görünmeden temizlenmiş olur.
+  const selectionKey = JSON.stringify(selection);
+  const [swapState, setSwapState] = useState<{ key: string; swaps: Record<number, string>; openFor: number | null }>({ key: selectionKey, swaps: {}, openFor: null });
+  const swaps = useMemo(() => swapState.key === selectionKey ? swapState.swaps : {}, [swapState, selectionKey]);
+  const swapOpenFor = swapState.key === selectionKey ? swapState.openFor : null;
+  function setSwaps(updater: (current: Record<number, string>) => Record<number, string>) {
+    setSwapState((current) => ({ key: selectionKey, swaps: updater(current.key === selectionKey ? current.swaps : {}), openFor: current.key === selectionKey ? current.openFor : null }));
+  }
+  function setSwapOpenFor(next: number | null) {
+    setSwapState((current) => ({ key: selectionKey, swaps: current.key === selectionKey ? current.swaps : {}, openFor: next }));
+  }
+
+  const smartListWithSwaps = useMemo<AiWorkout[]>(() => smartWorkouts.map((item, index) => {
+    const replacementName = swaps[index];
+    const replacement = replacementName ? exerciseLibrary.find((candidate) => candidate.name === replacementName) : null;
+    // Set/tekrar/dinlenme reçetesi korunur; yalnızca hareketin kendisi değişir.
+    return replacement ? { ...catalogItemToWorkout(replacement), sets: item.sets, rest: item.rest, seconds: item.seconds } : item;
+  }), [smartWorkouts, swaps]);
+
+  function swapAlternatives(index: number): CatalogItem[] {
+    const original = smartWorkouts[index];
+    if (!original) return [];
+    const profile = placeToProfile(place, equipmentText);
+    const pool = exerciseLibrary.filter((item) => matchesProfile(item, profile));
+    return alternativeExercises({ name: original.name, area: original.area, bodyweight: Boolean(original.bodyweight), requires: [] }, pool);
+  }
+
+  function applySwap(index: number, replacement: CatalogItem) {
+    setSwaps((current) => ({ ...current, [index]: replacement.name }));
+    setSwapOpenFor(null);
+  }
+
   function regionLabel(area: string): string {
     const map: Record<string, string> = {
       "Göğüs": t.programs.regionChest, "Sırt": t.programs.regionBack, "Bacak": t.programs.regionLegs,
@@ -93,7 +137,7 @@ export function TrainingPrograms({
 
   function startSelection() {
     if (!selection) return;
-    if (selection.kind === "smart") { onStart(smartWorkouts, activeKey); return; }
+    if (selection.kind === "smart") { onStart(smartListWithSwaps, activeKey); return; }
     if (activeExercises.length) onStart(activeExercises.map(catalogItemToWorkout), activeKey);
   }
 
@@ -121,7 +165,7 @@ export function TrainingPrograms({
       : selection.kind === "fullBody" ? t.programs.fullBodyTitle
       : selection.kind === "split" ? regionLabel(selection.area)
       : customPrograms.find((program) => program.id === selection.id)?.name ?? t.programs.customTitle;
-    const list: AiWorkout[] = selection.kind === "smart" ? smartWorkouts : activeExercises.map(catalogItemToWorkout);
+    const list: AiWorkout[] = selection.kind === "smart" ? smartListWithSwaps : activeExercises.map(catalogItemToWorkout);
 
     return <section className="programs" id="ready-programs">
       <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><button type="button" className="back-btn" onClick={() => setSelection(null)}>{t.programs.backToPrograms}</button></div>
@@ -135,18 +179,29 @@ export function TrainingPrograms({
         <button type="button" className="start-btn" onClick={startSelection}>{t.programs.startSession} <span>→</span></button>
         {/* Hareket anlatımı listede kalır: kullanıcı başlamadan önce ne
             yapacağını görebilmeli, oynatıcıya girmek zorunda kalmamalı. */}
-        <div className="program-exercise-list">{list.map((item) => {
+        <div className="program-exercise-list">{list.map((item, index) => {
           const guide = getMotionGuide(item);
-          return <article key={item.name}>
+          return <article key={`${item.name}-${index}`}>
             {/* Listede animasyon OYNAMAZ: onlarca kareyi aynı anda döndürmek
                 telefonda hem pili hem kaydırmayı yiyordu. */}
             <ExerciseAnimation exercise={item} compact autoplay={false} />
             <div>
-              <strong>{item.name}</strong>
+              <div className="program-exercise-head">
+                <strong>{item.name}</strong>
+                {/* Yalnız akıllı programda: AI aynı listeyi her gün tekrarlar,
+                    kullanıcı tekrar hissettiği hareketi burada değiştirebilir. */}
+                {selection.kind === "smart" && <button type="button" className="swap-trigger" onClick={() => setSwapOpenFor(swapOpenFor === index ? null : index)}>{t.exerciseSwap.trigger}</button>}
+              </div>
               <small>{item.area} · {item.sets} · {item.rest}</small>
               <details className="how-to"><summary>{t.dashboard.howTo}</summary>
                 <ol className="mini-steps"><li>{guide.start}</li><li>{item.instructions}</li><li>{guide.finish}</li></ol>
               </details>
+              {selection.kind === "smart" && swapOpenFor === index && <div className="swap-panel">
+                <div className="eyebrow">{t.exerciseSwap.title}</div>
+                <p>{t.exerciseSwap.hint}</p>
+                {swapAlternatives(index).length ? <div className="swap-options">{swapAlternatives(index).map((option) => <button type="button" key={option.name} onClick={() => applySwap(index, option)}>{option.name} <small>{option.area}</small></button>)}</div> : <p className="swap-empty">{t.exerciseSwap.empty}</p>}
+                <button type="button" className="swap-cancel" onClick={() => setSwapOpenFor(null)}>{t.exerciseSwap.cancel}</button>
+              </div>}
             </div>
           </article>;
         })}</div>
