@@ -1027,6 +1027,9 @@ export const tr = {
     empty: "Bu bölge için uygun alternatif bulunamadı.",
     cancel: "Vazgeç",
     swapped: (name: string) => `Hareket ${name} ile değiştirildi.`,
+    revert: "Orijinaline dön",
+    activeBadge: "Değiştirildi",
+    currentlyLabel: "Şu an",
   },
   frequentMeals: {
     eyebrow: "SIK YEDİKLERİN",

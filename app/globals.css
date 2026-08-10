@@ -1206,15 +1206,57 @@ input,select,textarea { color-scheme:inherit; }
 
 /* Antrenman sırasında hızlı hareket değişimi */
 .swap-trigger { min-height:34px; padding:0 13px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--muted-text); font-size:11px; font-weight:700; cursor:pointer; }
-.swap-panel { margin:12px 0 0; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft,#fbfbf7); }
+.swap-panel { margin:12px 0 0; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft,#fbfbf7); animation:swap-panel-in .18s ease; }
 .swap-panel p { margin:6px 0 10px; color:var(--muted-text); font-size:11px; line-height:1.45; }
 .swap-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
-.swap-options button { min-height:46px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:transparent; color:var(--ink); font-size:12px; font-weight:600; text-align:left; cursor:pointer; }
+.swap-options button { min-height:46px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:transparent; color:var(--ink); font-size:12px; font-weight:600; text-align:left; cursor:pointer; transition:border-color .15s ease,background-color .15s ease; }
+.swap-options button:hover { border-color:#a9bf57; }
 .swap-options button small { display:block; margin-top:2px; color:var(--muted-text); font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
 .swap-cancel { margin-top:10px; border:0; background:transparent; color:var(--muted-text); font-size:11px; cursor:pointer; }
 .swap-empty { color:var(--muted-text); font-size:11px; }
 .dark .swap-panel { background:#20231a; border-color:#46502c; }
 .dark .swap-options button { border-color:#46502c; }
+.dark .swap-options button:hover { border-color:#5d7030; }
+
+/* Akıllı programdaki modernize edilmiş değiştirme deneyimi: ikonlu düğme,
+   aktifken vurgulu rozet, kısa bir onay yazısı ve ikon avatarlı alternatif
+   kartları. Antrenman oynatıcısındaki sade sürüm (.swap-trigger/.swap-panel
+   temel kuralları) bilerek değiştirilmedi; yeni sınıflar üstüne eklenir. */
+.exercise-swap-btn { display:inline-flex; align-items:center; gap:5px; flex:0 0 auto; min-height:29px; padding:0 11px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--muted-text); font:inherit; font-size:10px; font-weight:700; cursor:pointer; transition:background-color .15s ease,border-color .15s ease,color .15s ease; }
+.exercise-swap-btn:hover { border-color:#a9bf57; color:var(--ink); }
+.exercise-swap-btn.active { border-color:#c6e55f; background:#eef6d2; color:#4d5c1c; }
+.dark .exercise-swap-btn:hover { border-color:#5d7030; color:var(--ink); }
+.dark .exercise-swap-btn.active { border-color:#5d7030; background:#2c3320; color:#d9ed9e; }
+
+.swap-confirm { display:flex; align-items:center; gap:4px; margin-top:4px; color:#5d7c1f; font-size:10px; font-weight:700; animation:swap-panel-in .2s ease; }
+.dark .swap-confirm { color:#b6cf74; }
+
+.swap-panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.swap-panel-close { display:grid; place-items:center; flex:0 0 auto; width:26px; height:26px; border:0; border-radius:50%; background:transparent; color:var(--muted-text); cursor:pointer; }
+.swap-panel-close:hover { background:var(--control-hover); color:var(--ink); }
+
+/* Üç öğe (etiket, hareket adı, geri al) dar ekranda tek satıra sığmıyordu;
+   ad kırpılıyordu. Etiket+ad bir satırda, geri al düğmesi kendi satırında. */
+.swap-current { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:0 0 12px; padding:9px 11px; border:1px solid #c6e55f; border-radius:9px; background:#f2f9dc; }
+.swap-current span:first-child { flex:0 0 auto; color:#5d7c1f; font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+.swap-current strong { flex:1 1 auto; min-width:120px; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.swap-current button { flex:0 0 auto; margin-left:auto; border:0; background:transparent; color:#5d7c1f; font-size:10px; font-weight:800; text-decoration:underline; cursor:pointer; }
+.dark .swap-current { border-color:#5d7030; background:#242a18; }
+.dark .swap-current span:first-child,.dark .swap-current button { color:#c6df78; }
+
+.swap-options button:has(.swap-option-icon) { display:flex; align-items:center; gap:10px; }
+.swap-options button.selected { border-color:#c6e55f; background:#eef6d2; }
+.dark .swap-options button.selected { border-color:#5d7030; background:#2c3320; }
+.swap-option-icon { display:grid; place-items:center; flex:0 0 32px; width:32px; height:32px; border-radius:9px; font-size:15px; background:#eef0ee; }
+.swap-option-icon[data-tone="orange"] { background:#f5c9af; }
+.swap-option-icon[data-tone="blue"] { background:#c8def1; }
+.swap-option-icon[data-tone="purple"] { background:#d8c7ed; }
+.swap-option-copy { flex:1; min-width:0; }
+.swap-options button svg { flex:0 0 auto; color:#5d7c1f; }
+.dark .swap-options button svg { color:#c6df78; }
+
+@keyframes swap-panel-in { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce) { .swap-panel,.swap-confirm { animation:none; } }
 
 /* Sık yenen öğünler: tek dokunuşla tekrar ekleme */
 .frequent-meals { margin:0 0 18px; padding:16px 18px; border:1px solid var(--line); border-radius:11px; background:var(--surface-soft,#fbfbf7); }
@@ -1744,7 +1786,6 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 /* Akıllı programda hareket adının yanında "Değiştir" düğmesi: AI her gün aynı listeyi verdiği için kullanıcı tekrar hissettiği hareketi kendisi değiştirebilsin diye eklendi. */
 .program-exercise-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .program-exercise-head strong { flex:1; min-width:0; }
-.program-exercise-head .swap-trigger { flex:0 0 auto; min-height:29px; padding:0 11px; font-size:10px; }
 @media (max-width:700px) { .program-exercise-list > article > .db-exercise-animation.compact { flex-basis:76px; width:76px; height:66px; } }
 
 /* --- Profil sayfası: gruplanmış kutular ve şıklı sorular ---------------- */

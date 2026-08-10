@@ -124,9 +124,34 @@ function jsonPreference(key: string) {
 
 const customProgramsStore = jsonPreference("hedefit:custom-programs");
 const programLogStore = jsonPreference("hedefit:program-log");
+const smartProgramSwapsStore = jsonPreference("hedefit:smart-program-swaps");
 
 export function setStoredCustomPrograms(programs: unknown) {
   customProgramsStore.write(programs);
+}
+
+/**
+ * Akıllı programda kullanıcının değiştirdiği hareketler: orijinal hareket
+ * adı → yerine geçen hareketin adı. Değişiklik ekrandan çıkınca kaybolmasın
+ * diye (eskiden yalnız bileşen state'indeydi) kalıcı tercihe taşındı;
+ * PreferenceSync ile cihazlar arasında da eşitlenir. İsme göre saklanır,
+ * sıraya göre değil: plan yeniden üretilip hareketler yer değiştirse bile
+ * "bu hareketi görürsen böyle değiştir" anlamı geçerliliğini korur.
+ */
+export function setStoredSmartProgramSwaps(swaps: Record<string, string>) {
+  smartProgramSwapsStore.write(swaps);
+}
+
+export function useStoredSmartProgramSwaps(): Record<string, string> {
+  const raw = useSyncExternalStore(subscribe, smartProgramSwapsStore.read, () => null);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(Object.entries(parsed).filter(([, value]) => typeof value === "string")) as Record<string, string>;
+  } catch {
+    return {};
+  }
 }
 
 export function useStoredCustomPrograms(): unknown {

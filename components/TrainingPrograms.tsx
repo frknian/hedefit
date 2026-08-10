@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Check, RefreshCw, X } from "lucide-react";
 import { ExerciseAnimation, exerciseLibrary, catalogItemToWorkout, getMotionGuide, type AiWorkout, type CatalogItem } from "@/components/FitAiApp";
 import { OnboardingIcon } from "@/components/onboarding/OnboardingIcon";
 import { alternativeExercises } from "@/lib/exercise-alternatives";
+import { setStoredSmartProgramSwaps, useStoredSmartProgramSwaps } from "@/lib/preferences";
 import { buildReadyProgram, matchesProfile } from "@/lib/ready-programs";
 import {
   CUSTOM_PROGRAM_SLOTS,
@@ -60,31 +62,32 @@ export function TrainingPrograms({
   // üretir, gün gün farklı bir set değil. Kullanıcı ikinci günde de aynı
   // hareketleri görünce şaşırıyordu. Kalıcı bir "günlük split" AI şeması
   // gerektirir; bu daha küçük ve hemen kullanılabilir çözüm, kullanıcının
-  // tekrar hissettiği hareketi kendisinin değiştirmesine izin verir. İndekse
-  // göre saklanır (isme göre değil): bir hareket ikinci kez değiştirilince
-  // alternatifler yine ORİJİNAL hareketin bölgesine göre önerilir.
-  // Değişiklikler hangi program seçiminde yapıldığıyla birlikte saklanır;
-  // seçim değişince (kayıtlı anahtar artık güncel seçimle eşleşmeyince) eski
-  // değerler sessizce yok sayılır. Ne effect ne de ref gerekir — başka bir
-  // programa geçildiğinde önceki hareket değişiklikleri bir kare bile
-  // görünmeden temizlenmiş olur.
-  const selectionKey = JSON.stringify(selection);
-  const [swapState, setSwapState] = useState<{ key: string; swaps: Record<number, string>; openFor: number | null }>({ key: selectionKey, swaps: {}, openFor: null });
-  const swaps = useMemo(() => swapState.key === selectionKey ? swapState.swaps : {}, [swapState, selectionKey]);
-  const swapOpenFor = swapState.key === selectionKey ? swapState.openFor : null;
-  function setSwaps(updater: (current: Record<number, string>) => Record<number, string>) {
-    setSwapState((current) => ({ key: selectionKey, swaps: updater(current.key === selectionKey ? current.swaps : {}), openFor: current.key === selectionKey ? current.openFor : null }));
-  }
-  function setSwapOpenFor(next: number | null) {
-    setSwapState((current) => ({ key: selectionKey, swaps: current.key === selectionKey ? current.swaps : {}, openFor: next }));
+  // tekrar hissettiği hareketi kendisinin değiştirmesine izin verir.
+  //
+  // Değişiklik kalıcı tercihte (lib/preferences.ts) İSME göre saklanır —
+  // eskiden bileşen state'inde İNDEKSE göre tutuluyordu ve ekrandan çıkınca
+  // kayboluyordu. İsme göre saklamanın nedeni: plan yeniden üretilince
+  // hareketlerin sırası değişebilir; "bu hareketi görürsen böyle değiştir"
+  // anlamı ancak isimle sıraya bağlı kalmadan geçerliliğini korur.
+  const storedSwaps = useStoredSmartProgramSwaps();
+  const [swapOpenFor, setSwapOpenFor] = useState<number | null>(null);
+  // Değiştirdikten hemen sonra kısa bir onay yazısı göstermek için; kalıcı
+  // değildir, yalnız bu ekran açıkken görünür.
+  const [justSwappedName, setJustSwappedName] = useState<string | null>(null);
+
+  // Başka bir programa geçildiğinde açık kalan panel yanlış hareketin
+  // altında görünmesin diye kapatılır.
+  function openSelection(next: Selection | null) {
+    setSwapOpenFor(null);
+    setSelection(next);
   }
 
-  const smartListWithSwaps = useMemo<AiWorkout[]>(() => smartWorkouts.map((item, index) => {
-    const replacementName = swaps[index];
+  const smartListWithSwaps = useMemo<AiWorkout[]>(() => smartWorkouts.map((item) => {
+    const replacementName = storedSwaps[item.name];
     const replacement = replacementName ? exerciseLibrary.find((candidate) => candidate.name === replacementName) : null;
     // Set/tekrar/dinlenme reçetesi korunur; yalnızca hareketin kendisi değişir.
     return replacement ? { ...catalogItemToWorkout(replacement), sets: item.sets, rest: item.rest, seconds: item.seconds } : item;
-  }), [smartWorkouts, swaps]);
+  }), [smartWorkouts, storedSwaps]);
 
   function swapAlternatives(index: number): CatalogItem[] {
     const original = smartWorkouts[index];
@@ -95,7 +98,20 @@ export function TrainingPrograms({
   }
 
   function applySwap(index: number, replacement: CatalogItem) {
-    setSwaps((current) => ({ ...current, [index]: replacement.name }));
+    const original = smartWorkouts[index];
+    if (!original) return;
+    setStoredSmartProgramSwaps({ ...storedSwaps, [original.name]: replacement.name });
+    setSwapOpenFor(null);
+    setJustSwappedName(replacement.name);
+    window.setTimeout(() => setJustSwappedName((current) => current === replacement.name ? null : current), 2600);
+  }
+
+  function revertSwap(index: number) {
+    const original = smartWorkouts[index];
+    if (!original) return;
+    const next = { ...storedSwaps };
+    delete next[original.name];
+    setStoredSmartProgramSwaps(next);
     setSwapOpenFor(null);
   }
 
@@ -154,7 +170,7 @@ export function TrainingPrograms({
       slotId={builderId}
       initial={existing}
       onCancel={() => setBuilderId(null)}
-      onSave={(program) => { onSaveCustom(program); setBuilderId(null); setSelection({ kind: "custom", id: program.id }); }}
+      onSave={(program) => { onSaveCustom(program); setBuilderId(null); openSelection({ kind: "custom", id: program.id }); }}
       onDelete={existing ? () => { onDeleteCustom(existing.id); setBuilderId(null); } : undefined}
     />;
   }
@@ -168,7 +184,7 @@ export function TrainingPrograms({
     const list: AiWorkout[] = selection.kind === "smart" ? smartListWithSwaps : activeExercises.map(catalogItemToWorkout);
 
     return <section className="programs" id="ready-programs">
-      <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><button type="button" className="back-btn" onClick={() => setSelection(null)}>{t.programs.backToPrograms}</button></div>
+      <div className="section-title"><div className="eyebrow">{t.programs.eyebrow}</div><button type="button" className="back-btn" onClick={() => openSelection(null)}>{t.programs.backToPrograms}</button></div>
       <h2>{title}</h2>
       {/* Ortam etiketi kaldırıldı: seçim artık profilden geliyor, ekranda
           değiştirilebilir bir şey değil. */}
@@ -181,6 +197,13 @@ export function TrainingPrograms({
             yapacağını görebilmeli, oynatıcıya girmek zorunda kalmamalı. */}
         <div className="program-exercise-list">{list.map((item, index) => {
           const guide = getMotionGuide(item);
+          // "item" akıllı programda değiştirilmiş hareketi taşır; hangi
+          // orijinal hareketin YERİNE geçtiğini bilmek için asıl listeye
+          // bakılır — aksi hâlde ikinci bir değişiklikte yanlış bölge
+          // (değiştirilmiş hareketin bölgesi) referans alınırdı.
+          const original = selection.kind === "smart" ? smartWorkouts[index] : null;
+          const isSwapped = Boolean(original && storedSwaps[original.name]);
+          const alternatives = selection.kind === "smart" ? swapAlternatives(index) : [];
           return <article key={`${item.name}-${index}`}>
             {/* Listede animasyon OYNAMAZ: onlarca kareyi aynı anda döndürmek
                 telefonda hem pili hem kaydırmayı yiyordu. */}
@@ -189,18 +212,39 @@ export function TrainingPrograms({
               <div className="program-exercise-head">
                 <strong>{item.name}</strong>
                 {/* Yalnız akıllı programda: AI aynı listeyi her gün tekrarlar,
-                    kullanıcı tekrar hissettiği hareketi burada değiştirebilir. */}
-                {selection.kind === "smart" && <button type="button" className="swap-trigger" onClick={() => setSwapOpenFor(swapOpenFor === index ? null : index)}>{t.exerciseSwap.trigger}</button>}
+                    kullanıcı tekrar hissettiği hareketi burada değiştirebilir.
+                    Değişiklik otomatik olarak kalıcı tercihe kaydedilir. */}
+                {selection.kind === "smart" && <button
+                  type="button"
+                  className={isSwapped ? "exercise-swap-btn active" : "exercise-swap-btn"}
+                  aria-expanded={swapOpenFor === index}
+                  onClick={() => setSwapOpenFor(swapOpenFor === index ? null : index)}
+                ><RefreshCw size={12} />{isSwapped ? t.exerciseSwap.activeBadge : t.exerciseSwap.trigger}</button>}
               </div>
               <small>{item.area} · {item.sets} · {item.rest}</small>
+              {selection.kind === "smart" && justSwappedName === item.name && <small className="swap-confirm"><Check size={11} />{t.exerciseSwap.swapped(item.name)}</small>}
               <details className="how-to"><summary>{t.dashboard.howTo}</summary>
                 <ol className="mini-steps"><li>{guide.start}</li><li>{item.instructions}</li><li>{guide.finish}</li></ol>
               </details>
               {selection.kind === "smart" && swapOpenFor === index && <div className="swap-panel">
-                <div className="eyebrow">{t.exerciseSwap.title}</div>
+                <div className="swap-panel-head">
+                  <div className="eyebrow">{t.exerciseSwap.title}</div>
+                  <button type="button" className="swap-panel-close" aria-label={t.exerciseSwap.cancel} onClick={() => setSwapOpenFor(null)}><X size={15} /></button>
+                </div>
                 <p>{t.exerciseSwap.hint}</p>
-                {swapAlternatives(index).length ? <div className="swap-options">{swapAlternatives(index).map((option) => <button type="button" key={option.name} onClick={() => applySwap(index, option)}>{option.name} <small>{option.area}</small></button>)}</div> : <p className="swap-empty">{t.exerciseSwap.empty}</p>}
-                <button type="button" className="swap-cancel" onClick={() => setSwapOpenFor(null)}>{t.exerciseSwap.cancel}</button>
+                {isSwapped && <div className="swap-current">
+                  <span>{t.exerciseSwap.currentlyLabel}</span>
+                  <strong>{item.name}</strong>
+                  <button type="button" onClick={() => revertSwap(index)}>{t.exerciseSwap.revert}</button>
+                </div>}
+                {alternatives.length ? <div className="swap-options">{alternatives.map((option) => {
+                  const isCurrent = option.name === item.name;
+                  return <button type="button" key={option.name} className={isCurrent ? "selected" : ""} onClick={() => applySwap(index, option)}>
+                    <span className="swap-option-icon" data-tone={option.tone}>{option.icon}</span>
+                    <span className="swap-option-copy"><strong>{option.name}</strong><small>{option.area}</small></span>
+                    {isCurrent && <Check size={14} />}
+                  </button>;
+                })}</div> : <p className="swap-empty">{t.exerciseSwap.empty}</p>}
               </div>}
             </div>
           </article>;
@@ -230,7 +274,7 @@ export function TrainingPrograms({
         <h3>{t.programs.smartTitle}</h3>
         <p>{smartFallback ? t.programs.smartFallbackBody : t.programs.smartBody}</p>
         <small>{progressLabel(programKey("smart"))}</small>
-        <button type="button" disabled={!smartWorkouts.length} onClick={() => setSelection({ kind: "smart" })}>
+        <button type="button" disabled={!smartWorkouts.length} onClick={() => openSelection({ kind: "smart" })}>
           {smartWorkouts.length ? t.programs.open : t.programs.smartLocked} {smartWorkouts.length ? <span>→</span> : null}
         </button>
       </article>
@@ -240,7 +284,7 @@ export function TrainingPrograms({
         <h3>{t.programs.fullBodyTitle}</h3>
         <p>{t.programs.fullBodyBody}</p>
         <small>{progressLabel(programKey("fullBody", place))}</small>
-        <button type="button" onClick={() => setSelection({ kind: "fullBody", place })}>{t.programs.open} <span>→</span></button>
+        <button type="button" onClick={() => openSelection({ kind: "fullBody", place })}>{t.programs.open} <span>→</span></button>
       </article>
 
       <article className="program-card program-panel-item">
@@ -248,7 +292,7 @@ export function TrainingPrograms({
         <h3>{t.programs.splitTitle}</h3>
         <p>{t.programs.splitBody}</p>
         <div className="program-regions">{BODY_REGIONS.map((area) => (
-          <button type="button" key={area} className="equipment" onClick={() => setSelection({ kind: "split", place, area })}>{regionLabel(area)}</button>
+          <button type="button" key={area} className="equipment" onClick={() => openSelection({ kind: "split", place, area })}>{regionLabel(area)}</button>
         ))}</div>
       </article>
     </div>
@@ -271,7 +315,7 @@ export function TrainingPrograms({
           <h3>{program.name}</h3>
           <p>{t.programs.customCount(program.exerciseNames.length)}</p>
           <small>{progressLabel(programKey("custom", undefined, id))}</small>
-          <button type="button" onClick={() => setSelection({ kind: "custom", id })}>{t.programs.open} <span>→</span></button>
+          <button type="button" onClick={() => openSelection({ kind: "custom", id })}>{t.programs.open} <span>→</span></button>
         </article>;
       })}
     </div>

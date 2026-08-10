@@ -1026,6 +1026,9 @@ export const en: typeof tr = {
     empty: "No suitable alternative found for this area.",
     cancel: "Cancel",
     swapped: (name: string) => `Exercise swapped for ${name}.`,
+    revert: "Reset to original",
+    activeBadge: "Swapped",
+    currentlyLabel: "Currently",
   },
   frequentMeals: {
     eyebrow: "YOUR REGULARS",

@@ -4,33 +4,53 @@ import { readFile } from "node:fs/promises";
 
 const tp = await readFile(new URL("../components/TrainingPrograms.tsx", import.meta.url), "utf8");
 const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+const prefs = await readFile(new URL("../lib/preferences.ts", import.meta.url), "utf8");
+const sync = await readFile(new URL("../lib/preference-sync.ts", import.meta.url), "utf8");
 
 test("akıllı programdaki her hareketin yanında değiştir düğmesi vardır", () => {
   // AI aynı listeyi her gün tekrarlıyordu (bkz. yorum satırı); kullanıcı 2.
   // günde de aynı hareketleri gördü. Kalıcı çözüm (günlük split) yerine
   // kullanıcının kendi değiştirebilmesi eklendi.
-  assert.match(tp, /selection\.kind === "smart" && <button type="button" className="swap-trigger"/);
+  assert.match(tp, /selection\.kind === "smart" && <button\s*\n\s*type="button"\s*\n\s*className=\{isSwapped \? "exercise-swap-btn active" : "exercise-swap-btn"\}/);
   // Yalnız akıllı programda: full body/bölgesel/özel programlarda kullanıcı
   // hareketleri zaten kendisi seçmiş ya da profilden geliyor.
   const article = tp.slice(tp.indexOf('<div className="program-exercise-head">'), tp.indexOf("</article>"));
   assert.match(article, /selection\.kind === "smart" && swapOpenFor === index/);
 });
 
-test("değiştirme indekse göre saklanır, isme göre değil", () => {
-  // Bir hareket ikinci kez değiştirildiğinde alternatifler yine ORİJİNAL
-  // hareketin bölgesine göre önerilmeli; isme göre saklansaydı değiştirilmiş
-  // hareketin adı anahtar olur ve ikinci değişiklik yanlış listeyi ararı.
-  assert.match(tp, /const \[swapState, setSwapState\] = useState<\{ key: string; swaps: Record<number, string>; openFor: number \| null \}>/);
+test("değiştirme kalıcı tercihte İSME göre saklanır, bileşen state'inde değil", () => {
+  // Eskiden bileşen state'inde indekse göre tutuluyordu ve ekrandan çıkınca
+  // kayboluyordu ("otomatik kaydedilsin" isteğiyle çelişiyordu). Artık
+  // isme göre saklanır: plan yeniden üretilip hareketler yer değiştirse
+  // bile "bu hareketi görürsen böyle değiştir" anlamı geçerli kalır.
+  assert.match(tp, /const storedSwaps = useStoredSmartProgramSwaps\(\);/);
+  assert.match(tp, /setStoredSmartProgramSwaps\(\{ \.\.\.storedSwaps, \[original\.name\]: replacement\.name \}\);/);
+  // Alternatif önerisi yine orijinal hareketin (index'teki) bölgesine göre
+  // hesaplanır; değiştirilmiş hareketin bölgesine göre değil.
   assert.match(tp, /function swapAlternatives\(index: number\): CatalogItem\[\] \{\s*\n\s*const original = smartWorkouts\[index\];/);
 });
 
-test("başka bir programa geçilince değişiklikler sıfırlanır (effect ya da ref olmadan)", () => {
-  // react-hooks/set-state-in-effect ve react-hooks/refs kurallarına takılan
-  // iki yaklaşım (useEffect ile sıfırlama, useRef ile son anahtarı tutma)
-  // denenip reddedildi; anahtar uyuşmazlığında türetilen değer kullanılır.
-  assert.doesNotMatch(tp, /useEffect/, "bu dosyada useEffect kullanılmamalı");
-  assert.doesNotMatch(tp, /useRef/, "bu dosyada useRef kullanılmamalı");
-  assert.match(tp, /const swaps = useMemo\(\(\) => swapState\.key === selectionKey \? swapState\.swaps : \{\}, \[swapState, selectionKey\]\);/);
+test("hareket değiştirme localStorage'a yazar ve cihazlar arası eşitlenir", () => {
+  assert.match(prefs, /const smartProgramSwapsStore = jsonPreference\("hedefit:smart-program-swaps"\);/);
+  assert.match(prefs, /export function setStoredSmartProgramSwaps\(swaps: Record<string, string>\)/);
+  assert.match(prefs, /export function useStoredSmartProgramSwaps\(\): Record<string, string>/);
+  // PreferenceSync bilmediği anahtarı sessizce atar; kayıtlı olmazsa
+  // değişiklik yalnız bu cihazda kalırdı.
+  assert.match(sync, /"hedefit:smart-program-swaps"/);
+});
+
+test("orijinaline dönmek kayıttan siler, kalıcı olarak sıfırlanmamış bırakmaz", () => {
+  const fn = tp.slice(tp.indexOf("function revertSwap"), tp.indexOf("function regionLabel"));
+  assert.match(fn, /delete next\[original\.name\];/);
+  assert.match(fn, /setStoredSmartProgramSwaps\(next\);/);
+});
+
+test("başka bir programa geçilince açık panel kapanır", () => {
+  // storedSwaps artık kalıcı olduğu için sıfırlanmaz (bu istenen davranış:
+  // "otomatik kaydedilsin"); yalnız o an açık olan panel kapanmalı, yoksa
+  // yeni programda yanlış hareketin altında görünür.
+  assert.match(tp, /function openSelection\(next: Selection \| null\) \{\s*\n\s*setSwapOpenFor\(null\);\s*\n\s*setSelection\(next\);\s*\n\s*\}/);
+  assert.doesNotMatch(tp, /onClick=\{\(\) => setSelection\(/, "doğrudan setSelection çağrısı kalmamalı, openSelection kullanılmalı");
 });
 
 test("değiştirilen hareketin set/tekrar/dinlenme reçetesi korunur", () => {
@@ -47,9 +67,20 @@ test("değiştirilen liste hem gösterimde hem antrenmanı başlatırken kullan�
   assert.match(tp, /const list: AiWorkout\[\] = selection\.kind === "smart" \? smartListWithSwaps : activeExercises\.map\(catalogItemToWorkout\);/);
 });
 
-test("değiştirme paneli mevcut swap-panel stillerini yeniden kullanır", () => {
-  // Antrenman oynatıcısındaki değiştirme paneliyle aynı görsel dil; yeni bir
-  // CSS bileşeni gerekmiyor.
-  assert.match(css, /\.swap-panel \{/);
+test("değiştirdikten sonra kısa bir onay yazısı gösterilir", () => {
+  assert.match(tp, /const \[justSwappedName, setJustSwappedName\] = useState<string \| null>\(null\);/);
+  assert.match(tp, /setJustSwappedName\(replacement\.name\);/);
+  assert.match(tp, /justSwappedName === item\.name && <small className="swap-confirm">/);
+});
+
+test("modernize edilmiş değiştirme arayüzü: ikon rozet, aktif durum, ikonlu alternatif kartları", () => {
+  assert.match(css, /\.exercise-swap-btn \{ display:inline-flex/);
+  assert.match(css, /\.exercise-swap-btn\.active \{/);
+  assert.match(css, /\.swap-panel-head \{/);
+  assert.match(css, /\.swap-current \{/);
+  assert.match(css, /\.swap-option-icon \{/);
+  // Antrenman oynatıcısındaki sade sürüm (.swap-trigger/.swap-panel temel
+  // kuralları) bilerek korunuyor; yeni sınıflar üstüne eklendi, yerine değil.
+  assert.match(css, /\.swap-trigger \{/);
   assert.match(css, /\.program-exercise-head \{ display:flex/);
 });
