@@ -278,18 +278,38 @@ test("Android manifesti kamera, galeri ve bildirim izinlerini tanımlar", async 
   assert.match(manifest, /uses-feature[^>]*android\.hardware\.camera[^>]*required="false"/);
 });
 
-test("mobil üst menü yatay kayar ve seçili bölümü görünür tutar", async () => {
-  const [page, styles] = await Promise.all([
+test("mobil gezinme alt sekme çubuğunda ve hiçbir görünüm erişilemez kalmaz", async () => {
+  // Yatay kayan üst menü, Stitch tasarımıyla birlikte alt sekme çubuğuna
+  // taşındı: telefonda başparmakla ulaşılan tek bölge orası. Kayan şeridin
+  // yerini aldığı için eski scrollIntoView düzeltmesi de kalktı.
+  const [page, shell, styles, quickActions] = await Promise.all([
     readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/layout/AppShell.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../lib/quick-actions.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /const topLinksRef = useRef<HTMLDivElement>\(null\)/);
-  assert.match(page, /ref=\{topLinksRef\}/);
-  assert.match(page, /activeLink\.scrollIntoView\(\{ behavior, block: "nearest", inline: "center" \}\)/);
-  assert.match(styles, /scroll-snap-type:x proximity/);
-  assert.match(styles, /overscroll-behavior-inline:contain/);
-  assert.match(styles, /\.top-links::\-webkit-scrollbar \{ display:none; \}/);
+  assert.doesNotMatch(page, /topLinksRef/, "kayan üst menü kalıntısı duruyor");
+  assert.match(shell, /className="hf-tabbar"/);
+  // Sekmeye sığmayan görünümler başlık çubuğunda ikon olarak durmalı.
+  assert.match(shell, /items\.filter\(\(item\) => item\.primary\)/);
+  assert.match(shell, /items\.filter\(\(item\) => !item\.primary\)/);
+  assert.match(shell, /className="hf-topbar-icon"/);
+
+  // AppView'daki her görünümün kabukta bir gezinme girdisi olmalı.
+  const views = [...quickActions.matchAll(/export type AppView =([^;]+);/g)][0][1]
+    .split("|").map((value) => value.trim().replace(/"/g, ""));
+  const navBlock = page.slice(page.indexOf("const navItems: ShellNavItem[]"), page.indexOf("const brand ="));
+  for (const view of views) assert.ok(navBlock.includes(`id: "${view}"`), `gezinmede eksik görünüm: ${view}`);
+
+  // Sabit çubuk içeriği örtmemeli ve çentikli telefonda ekran altına gömülmemeli.
+  const tabbar = styles.match(/\.hf-tabbar \{([^}]*)\}/)?.[1] ?? "";
+  assert.match(tabbar, /position:fixed/);
+  assert.match(tabbar, /bottom:0/);
+  assert.match(tabbar, /env\(safe-area-inset-bottom\)/);
+  assert.match(styles, /\.hf-shell \.hf-main \{ padding-bottom:\d+px; \}/);
+  // Masaüstünde yerini sol sütun alır.
+  assert.match(styles, /@media \(min-width:1024px\) \{[^]*?\.hf-tabbar \{ display:none; \}/);
   assert.match(styles, /@media \(max-width:420px\) \{[^]*?\.stats-row \{ grid-template-columns:1fr; \}/);
 });
 

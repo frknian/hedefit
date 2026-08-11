@@ -30,7 +30,21 @@ Google sağlayıcısı Supabase içinde etkin olmalı. Mobil OAuth, sistem taray
 
 ## Mağaza öncesi
 
-- Supabase bağlantı değişkenlerini yayın ortamına ekle ve SQL şemasını uygula.
-- Uygulama ikonlarını ve açılış görsellerini nihai Hedefit marka dosyalarıyla doğrula.
-- Gizlilik politikası, destek URL'si ve mağaza veri güvenliği formlarını hazırla.
-- Gerçek cihazlarda e-posta doğrulama, Google girişi, kamera, bildirim ve antrenman kaydını test et.
+- [x] Gizlilik politikası `/gizlilik` route'unda yayında (`app/gizlilik/page.tsx`),
+      destek e-postası belirlendi: `furkaninanjob@gmail.com`.
+- [x] Android upload keystore oluşturuldu (`~/hedefit-keystore-yedek/`, repo
+      dışında). `android/keystore.properties` dolduruldu, imzalı AAB build
+      doğrulandı (`./gradlew bundleRelease`).
+- [ ] **Kalıcı prod domain satın al** ve Cloudflare'e bağla (şu an
+      `hedefit.frknian.workers.dev` geçici adresi kullanılıyor). Domain
+      belirlenince `CAPACITOR_SERVER_URL=https://<domain>` ile
+      `npx cap sync` çalıştırılıp Play Console'a `https://<domain>/gizlilik`
+      verilmeli.
+- [ ] Supabase bağlantı değişkenlerini yayın ortamına ekle ve SQL şemasını uygula.
+- [ ] Uygulama ikonlarını ve açılış görsellerini nihai Hedefit marka dosyalarıyla doğrula.
+- [ ] Google Play Console hesabı aç (~$25 tek seferlik), `store-assets/PLAY-CONSOLE-NOTLARI.md`
+      kontrol listesini uygula, telefon ekran görüntülerini al, `app-release.aab` yükle.
+- [ ] Apple Developer hesabı aç (~$99/yıl), Xcode'da iOS Simulator platform
+      bileşenini kur (`Xcode > Settings > Components`), imzalama takımını
+      ayarla, TestFlight ve App Store Connect kaydını tamamla.
+- [ ] Gerçek cihazlarda e-posta doğrulama, Google girişi, kamera, bildirim ve antrenman kaydını test et.

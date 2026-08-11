@@ -9,6 +9,12 @@
 
 alter table public.usage_counters add column if not exists bonus_count integer not null default 0;
 
+-- increment_usage_counter'ın dönüş sütunları değişiyor (effective_limit
+-- eklendi); Postgres, OUT parametreleriyle tanımlı bir fonksiyonun dönüş
+-- tipini create or replace ile değiştirmeye izin vermiyor, önce düşürmek
+-- gerekiyor.
+drop function if exists public.increment_usage_counter(text, integer);
+
 create or replace function public.increment_usage_counter(p_feature text, p_limit integer)
 returns table (allowed boolean, current_count integer, effective_limit integer)
 language plpgsql security definer set search_path = public as $$

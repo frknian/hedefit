@@ -9,11 +9,18 @@ import { setStoredSmartProgramSwaps, useStoredSmartProgramSwaps } from "@/lib/pr
 import { buildReadyProgram, matchesProfile } from "@/lib/ready-programs";
 import {
   CUSTOM_PROGRAM_SLOTS,
+  DEFAULT_PROGRAM_EXERCISE,
+  PROGRAM_EXERCISE_LIMITS,
   customSlotId,
+  estimateProgramMinutes,
+  moveProgramExercise,
   nextFreeSlot,
+  normalizeProgramExercise,
   placeToProfile,
+  programExerciseNames,
   programKey,
   type CustomProgram,
+  type ProgramExercise,
   type ProgramProgress,
   type TrainingPlace,
 } from "@/lib/training-programs";
@@ -132,7 +139,7 @@ export function TrainingPrograms({
       const program = customPrograms.find((item) => item.id === selection.id);
       if (!program) return [];
       // İsimle saklanır; katalogdan düşen bir hareket sessizce atlanır.
-      return program.exerciseNames
+      return programExerciseNames(program)
         .map((name) => exerciseLibrary.find((item) => item.name === name))
         .filter((item): item is CatalogItem => Boolean(item));
     }
@@ -313,7 +320,7 @@ export function TrainingPrograms({
         return <article className="program-card" key={id}>
           <OnboardingIcon name="health" />
           <h3>{program.name}</h3>
-          <p>{t.programs.customCount(program.exerciseNames.length)}</p>
+          <p>{t.programs.customCount(program.exercises.length)}</p>
           <small>{progressLabel(programKey("custom", undefined, id))}</small>
           <button type="button" onClick={() => openSelection({ kind: "custom", id })}>{t.programs.open} <span>→</span></button>
         </article>;
@@ -333,9 +340,11 @@ function CustomProgramBuilder({ slotId, initial, onSave, onCancel, onDelete }: {
 }) {
   const t = useTranslations();
   const [name, setName] = useState(initial?.name ?? "");
-  const [picked, setPicked] = useState<string[]>(initial?.exerciseNames ?? []);
+  const [picked, setPicked] = useState<ProgramExercise[]>(initial?.exercises ?? []);
   const [query, setQuery] = useState("");
   const [area, setArea] = useState<string>("");
+  const pickedNames = useMemo(() => new Set(picked.map((exercise) => exercise.name)), [picked]);
+  const estimatedMinutes = estimateProgramMinutes(picked);
 
   const results = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("tr-TR");
@@ -345,9 +354,22 @@ function CustomProgramBuilder({ slotId, initial, onSave, onCancel, onDelete }: {
   }, [query, area]);
 
   function toggle(exerciseName: string) {
-    setPicked((current) => current.includes(exerciseName)
-      ? current.filter((item) => item !== exerciseName)
-      : current.length >= 12 ? current : [...current, exerciseName]);
+    setPicked((current) => current.some((item) => item.name === exerciseName)
+      ? current.filter((item) => item.name !== exerciseName)
+      : current.length >= 12 ? current : [...current, { name: exerciseName, ...DEFAULT_PROGRAM_EXERCISE }]);
+  }
+
+  // Reçete düzenlemeleri tek yerden geçer: her biri sınırlarına çekilerek
+  // yazılır, böylece kaydedilen veri her zaman geçerli olur.
+  function updateExercise(index: number, patch: Partial<ProgramExercise>) {
+    setPicked((current) => current.map((exercise, position) => {
+      if (position !== index) return exercise;
+      return normalizeProgramExercise({ ...exercise, ...patch }) ?? exercise;
+    }));
+  }
+
+  function move(index: number, direction: -1 | 1) {
+    setPicked((current) => moveProgramExercise(current, index, index + direction));
   }
 
   return <section className="programs" id="ready-programs">
@@ -368,18 +390,53 @@ function CustomProgramBuilder({ slotId, initial, onSave, onCancel, onDelete }: {
 
     <p className="programs-note">{t.programs.pickedCount(picked.length)}</p>
     <div className="program-picker">{results.map((item) => {
-      const selected = picked.includes(item.name);
+      const selected = pickedNames.has(item.name);
       return <button type="button" key={item.name} aria-pressed={selected} className={selected ? "program-pick selected" : "program-pick"} onClick={() => toggle(item.name)}>
         <strong>{item.name}</strong><small>{item.area}</small>
       </button>;
     })}</div>
+
+    {/* Seçilen her hareketin set/tekrar/dinlenme reçetesi programla birlikte
+        kaydedilir; sıra da buradaki taşımayla belirlenir. */}
+    {picked.length > 0 && <div className="program-prescription">
+      <div className="program-prescription-head">
+        <strong>{t.programs.prescriptionTitle}</strong>
+        <span className="program-estimate">{t.programs.estimatedMinutes(estimatedMinutes)}</span>
+      </div>
+      <ol className="program-prescription-list">
+        {picked.map((exercise, index) => <li key={exercise.name}>
+          <div className="program-prescription-title">
+            <b>{index + 1}. {exercise.name}</b>
+            <div className="program-prescription-order">
+              <button type="button" aria-label={t.programs.moveUp} disabled={index === 0} onClick={() => move(index, -1)}>↑</button>
+              <button type="button" aria-label={t.programs.moveDown} disabled={index === picked.length - 1} onClick={() => move(index, 1)}>↓</button>
+              <button type="button" aria-label={t.programs.removeExercise} onClick={() => toggle(exercise.name)}>×</button>
+            </div>
+          </div>
+          <div className="program-prescription-fields">
+            <label>{t.programs.setsLabel}
+              <input type="number" inputMode="numeric" min={PROGRAM_EXERCISE_LIMITS.sets.min} max={PROGRAM_EXERCISE_LIMITS.sets.max} value={exercise.sets} onChange={(event) => updateExercise(index, { sets: Number(event.target.value) })} />
+            </label>
+            <label>{t.programs.repsLabel}
+              <input type="text" value={exercise.reps} maxLength={PROGRAM_EXERCISE_LIMITS.reps.maxLength} onChange={(event) => updateExercise(index, { reps: event.target.value })} />
+            </label>
+            <label>{t.programs.restLabel}
+              <input type="number" inputMode="numeric" min={PROGRAM_EXERCISE_LIMITS.rest.min} max={PROGRAM_EXERCISE_LIMITS.rest.max} step={15} value={exercise.restSeconds} onChange={(event) => updateExercise(index, { restSeconds: Number(event.target.value) })} />
+            </label>
+            <button type="button" className={exercise.dropSet ? "program-dropset active" : "program-dropset"} aria-pressed={exercise.dropSet} title={t.programs.dropSetHint} onClick={() => updateExercise(index, { dropSet: !exercise.dropSet })}>
+              {t.programs.dropSetLabel}
+            </button>
+          </div>
+        </li>)}
+      </ol>
+    </div>}
 
     <div className="action-row">
       {onDelete && <button type="button" className="back-btn program-delete" onClick={onDelete}>{t.programs.deleteProgram}</button>}
       <button type="button" className="primary-btn" disabled={!picked.length} onClick={() => onSave({
         id: slotId,
         name: name.trim() || t.programs.customTitle,
-        exerciseNames: picked,
+        exercises: picked,
         updatedAt: new Date().toISOString(),
       })}>{t.programs.saveProgram} <span>→</span></button>
     </div>

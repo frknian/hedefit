@@ -2,7 +2,13 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { CalendarDays, Dumbbell, House, LibraryBig, LineChart, UserRound, Utensils } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { AppShell, type ShellNavItem } from "@/components/layout/AppShell";
+import { AiInsight, StatTile } from "@/components/design";
+import { GlobalSearch } from "@/components/GlobalSearch";
+import { NotificationBell } from "@/components/NotificationBell";
+import type { GlobalSearchResult } from "@/lib/global-search";
 import { createClient } from "@/lib/supabase/client";
 import { AiCoachChat } from "@/components/AiCoachChat";
 import { AuthScreen } from "@/components/AuthScreen";
@@ -29,6 +35,7 @@ import { TrainingPrograms } from "@/components/TrainingPrograms";
 import { normalizeCustomPrograms, removeCustomProgram, summarizeProgramProgress, upsertCustomProgram, type CustomProgram } from "@/lib/training-programs";
 import { QuickActions } from "@/components/QuickActions";
 import { DailyEnergyRing } from "@/components/DailyEnergyRing";
+import { StepCounterCard } from "@/components/StepCounterCard";
 import type { AppView } from "@/lib/quick-actions";
 import { FrozenAccountScreen, ProfileManager } from "@/components/ProfileManager";
 import { PremiumPlans } from "@/components/PremiumPlans";
@@ -725,8 +732,8 @@ function PersonalRecordCelebration({ records, unit, onDismiss }: { records: NewP
   </section>;
 }
 
-function LibraryView({ onOpenWorkout, onAddWorkout }: { onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => void }) {
-  return <ExerciseLibrary onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
+function LibraryView({ initialExerciseId, onOpenWorkout, onAddWorkout }: { initialExerciseId?: string; onOpenWorkout: (exercise: AiWorkout) => void; onAddWorkout: (exercise: AiWorkout) => void }) {
+  return <ExerciseLibrary initialExerciseId={initialExerciseId} onOpenWorkout={(exercise) => onOpenWorkout(databaseExerciseAsWorkout(exercise))} onAddWorkout={(exercise) => onAddWorkout(databaseExerciseAsWorkout(exercise))} />;
 }
 
 // Hazır programlar katalogdan ÜRETİLİR (bkz. lib/ready-programs.ts). Sabit isim
@@ -753,6 +760,8 @@ export default function Home() {
   const [planReport, setPlanReport] = useState<{ weeklyDays: number; sessionMinutes: number; exerciseCount: number } | null>(null);
   // Hangi programın çalıştırıldığı: seans bitince ilerlemesi bu anahtara yazılır.
   const [activeProgramKey, setActiveProgramKey] = useState("");
+  // Genel aramadan seçilen hareket: kütüphane açılınca ayrıntısı gösterilir.
+  const [libraryExerciseId, setLibraryExerciseId] = useState("");
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [height, setHeight] = useState("");
@@ -801,7 +810,6 @@ export default function Home() {
   const [chosenView, setChosenView] = useState<"plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile" | null>(null);
   const activeView = chosenView ?? "plan";
   const setActiveView = setChosenView;
-  const topLinksRef = useRef<HTMLDivElement>(null);
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [activityOpen, setActivityOpen] = useState(false);
   const [goalPlanOpen, setGoalPlanOpen] = useState(false);
@@ -1147,20 +1155,9 @@ export default function Home() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [activeView, activeWorkout, questionIndex, step]);
 
-  useEffect(() => {
-    const links = topLinksRef.current;
-    if (!links || !window.matchMedia("(max-width: 700px)").matches) return;
-
-    const activeLink = links.querySelector<HTMLButtonElement>("button.active");
-    if (!activeLink) return;
-
-    const frame = window.requestAnimationFrame(() => {
-      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-      activeLink.scrollIntoView({ behavior, block: "nearest", inline: "center" });
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [activeView, step]);
+  // Not: telefonda yatay kayan bağlantı şeridini aktif sekmeye kaydıran efekt
+  // kaldırıldı. Gezinme artık alt sekme çubuğunda sabit beş sütun (bkz.
+  // components/layout/AppShell.tsx); kaydırılacak bir şerit yok.
 
   useEffect(() => {
     if (!isRunning || !currentWorkout) return;
@@ -1674,17 +1671,45 @@ export default function Home() {
     return <FrozenAccountScreen user={authUser} onReactivated={() => setAccountStatus("active")} onSignOut={handleSignOut} />;
   }
 
+  // Gezinme kabuğu (masaüstünde sol sütun, telefonda alt sekme çubuğu).
+  // Sekmelerde beş ana görünüm durur; takvim ve kütüphane başlık çubuğunda
+  // ikon olarak kalır — hiçbir ekran erişilemez hâle gelmez.
+  const navItems: ShellNavItem[] = [
+    { id: "plan", label: t.nav.home, icon: House, primary: true },
+    { id: "workout", label: t.nav.workout, icon: Dumbbell, primary: true },
+    { id: "nutrition", label: t.nav.nutrition, icon: Utensils, primary: true },
+    { id: "progress", label: t.nav.progress, icon: LineChart, primary: true },
+    { id: "profile", label: t.nav.profile, icon: UserRound, primary: true },
+    { id: "calendar", label: t.nav.calendar, icon: CalendarDays },
+    { id: "library", label: t.nav.library, icon: LibraryBig },
+  ];
+
+  // Logo ana ekrana döner: her uygulamada beklenen davranış, burada yoktu ve
+  // kullanıcı alt sekmeden geri gelmek zorunda kalıyordu.
+  const brand = <button type="button" className="brand" aria-label={t.nav.home} onClick={() => { setActiveView("plan"); setActiveWorkout(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}><span className="brand-mark">↗</span><span>Hede<span className="brand-letter-gradient">f</span><span className="brand-dot">it</span></span></button>;
+
+  // Genel aramanın ekran kaynağı: gezinme etiketleri + arama anahtar
+  // kelimeleri. Sözlükten burada okunur; arama modülü saf kalır.
+  const searchViews = navItems.map((item) => ({
+    view: item.id as AppView,
+    title: item.label,
+    subtitle: "",
+    keywords: t.search.viewKeywords[item.id as keyof typeof t.search.viewKeywords] ?? item.label,
+  }));
+
+  // Aramadan gelen sonuç doğru ekrana götürür; hareket sonucu kütüphanede
+  // doğrudan o hareketin ayrıntısını açar.
+  function openSearchResult(result: GlobalSearchResult) {
+    setLibraryExerciseId(result.exerciseId ?? "");
+    setActiveView(result.view);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  const shellFooter = <footer><span>{t.common.footerTagline}</span><span>© 2026</span></footer>;
+
   return (
     <main className="app-shell">
       <MobileRuntime />
       <PreferenceSync userId={authUser?.id} />
-      {step === STEP.dashboard && <nav className="topbar">
-        {/* Logo ana ekrana döner: her uygulamada beklenen davranış, burada
-            yoktu ve kullanıcı alt sekmeden geri gelmek zorunda kalıyordu. */}
-        <button type="button" className="brand" aria-label={t.nav.home} onClick={() => { setActiveView("plan"); setActiveWorkout(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}><span className="brand-mark">↗</span><span>Hede<span className="brand-letter-gradient">f</span><span className="brand-dot">it</span></span></button>
-        <div className="top-links" ref={topLinksRef}><button type="button" aria-pressed={activeView === "plan"} className={activeView === "plan" ? "active" : ""} onClick={() => setActiveView("plan")}>{t.nav.home}</button><button type="button" aria-pressed={activeView === "workout"} className={activeView === "workout" ? "active" : ""} onClick={() => setActiveView("workout")}>{t.nav.workout}</button><button type="button" aria-pressed={activeView === "nutrition"} className={activeView === "nutrition" ? "active" : ""} onClick={() => setActiveView("nutrition")}>{t.nav.nutrition}</button><button type="button" aria-pressed={activeView === "progress"} className={activeView === "progress" ? "active" : ""} onClick={() => setActiveView("progress")}>{t.nav.progress}</button><button type="button" aria-pressed={activeView === "calendar"} className={activeView === "calendar" ? "active" : ""} onClick={() => setActiveView("calendar")}>{t.nav.calendar}</button><button type="button" aria-pressed={activeView === "library"} className={activeView === "library" ? "active" : ""} onClick={() => setActiveView("library")}>{t.nav.library}</button></div>
-        <div className="top-actions"><LanguageToggle /><ThemeToggle /><button type="button" className={activeView === "profile" ? "profile-mini active" : "profile-mini"} aria-pressed={activeView === "profile"} onClick={() => step === STEP.dashboard && setActiveView("profile")}><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={30} height={30} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span>{t.nav.profile}</span></button></div>
-      </nav>}
       {step < STEP.dashboard && <div className="toggle-row onboarding-toggle-row"><LanguageToggle /><ThemeToggle /></div>}
 
       {step < STEP.dashboard ? (
@@ -1740,10 +1765,12 @@ export default function Home() {
             <div className="eyebrow">{t.onboarding.reportEyebrow}</div>
             <h1>{t.onboarding.reportTitle}<br /><em>{t.onboarding.reportTitleEm}</em></h1>
             <p className="lead">{aiRationale || t.onboarding.reportLead}</p>
-            <div className="report-grid">
-              <div><span>{t.onboarding.reportWeeklyDays}</span><strong>{planReport.weeklyDays}</strong><small>{t.onboarding.reportWeeklyDaysHint(planReport.sessionMinutes)}</small></div>
-              <div><span>{t.onboarding.reportExercises}</span><strong>{planReport.exerciseCount}</strong><small>{t.onboarding.reportExercisesHint}</small></div>
-              {reportEnergy && <div><span>{reportEnergy.losing ? t.onboarding.reportDeficit : t.onboarding.reportSurplus}</span><strong>{reportEnergy.dailyDeltaKcal} <small>kcal</small></strong><small>{t.onboarding.reportEnergyHint(reportEnergy.weeks)}</small></div>}
+            {/* Rapor kutucukları tasarım sistemindeki StatTile ile çizilir:
+                sayı Montserrat'tan gelir, kart yüzeyi ve kenarı jetonlardan. */}
+            <div className="report-stats">
+              <StatTile label={t.onboarding.reportWeeklyDays} value={planReport.weeklyDays} hint={t.onboarding.reportWeeklyDaysHint(planReport.sessionMinutes)} />
+              <StatTile label={t.onboarding.reportExercises} value={planReport.exerciseCount} hint={t.onboarding.reportExercisesHint} />
+              {reportEnergy && <StatTile label={reportEnergy.losing ? t.onboarding.reportDeficit : t.onboarding.reportSurplus} value={reportEnergy.dailyDeltaKcal} unit="kcal" hint={t.onboarding.reportEnergyHint(reportEnergy.weeks)} />}
             </div>
             {aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}
             {aiError && <div className="ai-error">{aiError}</div>}
@@ -1753,8 +1780,19 @@ export default function Home() {
           <aside className="side-note"><div className="orb"><span>✦</span></div><p><strong>{t.onboarding.sideNoteTitle}</strong><br />{t.onboarding.sideNoteBody}</p></aside>
         </section>
       ) : (
+        <AppShell
+          items={navItems}
+          activeId={activeView}
+          onSelect={(id) => setActiveView(id as AppView)}
+          brand={brand}
+          profile={<><span className="mini-avatar">{avatarUrl ? <Image src={avatarUrl} alt="" width={40} height={40} unoptimized /> : name ? name.charAt(0).toUpperCase() : "E"}</span><span className="hf-sidenav-identity"><strong>{name || t.dashboard.defaultName}</strong><small>{isPremium ? t.premium.premiumLabel : t.premium.freeLabel}</small></span></>}
+          search={<GlobalSearch programs={customPrograms} views={searchViews} onSelect={openSearchResult} />}
+          headerActions={<><NotificationBell onOpenSettings={() => setActiveView("calendar")} /><LanguageToggle /><ThemeToggle /></>}
+          cta={<button type="button" className="start-btn" onClick={() => { setActiveView("workout"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>{t.quickActions.startWorkout} <span>→</span></button>}
+          footer={shellFooter}
+        >
         <section className="dashboard">
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onRefreshPlan={refreshPlanFromProfile} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} isPremium={isPremium} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "library" ? <LibraryView onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onRefreshPlan={refreshPlanFromProfile} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} isPremium={isPremium} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "library" ? <LibraryView initialExerciseId={libraryExerciseId} onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
@@ -1782,7 +1820,15 @@ export default function Home() {
             smartWorkouts={aiWorkouts.length ? aiWorkouts : localPlan}
             smartFallback={!aiWorkouts.length && localPlan.length > 0}
             smartExtra={<>
-              <div className="plan-explanation"><div><div className="eyebrow">{t.dashboard.planWhyEyebrow}</div><p>{aiRationale || t.dashboard.planWhyDefault}</p>{aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}{aiError && <div className="ai-error">{aiError}</div>}</div></div>
+              {/* Planın gerekçesi Stitch'teki "AI Analysis" balonuyla aynı
+                  bileşenden çizilir: yapay zekâ çıktısı, uygulamanın kendi
+                  verisinden buzlu cam ve lime parıltıyla ayrışır. */}
+              <div className="plan-explanation"><AiInsight title={t.dashboard.aiAnalysisTitle} status={aiError ? undefined : t.dashboard.aiAnalysisStatus}>
+                <div className="eyebrow">{t.dashboard.planWhyEyebrow}</div>
+                <p>{aiRationale || t.dashboard.planWhyDefault}</p>
+                {aiSafetyNote && <div className="ai-safety"><strong>{t.dashboard.safetyNoteLabel}</strong><span>{aiSafetyNote}</span></div>}
+                {aiError && <div className="ai-error">{aiError}</div>}
+              </AiInsight></div>
               <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />
               {aiAnalysis && <AiPlanInsights analysis={aiAnalysis} schedule={aiSchedule} progression={aiProgression} fingerprint={aiFingerprint} />}
             </>}
@@ -1811,11 +1857,13 @@ export default function Home() {
             <div className="home-bmi"><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div>
             <DailyEnergyRing userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} />
           </div>
+          <StepCounterCard userId={authUser?.id} />
           <QuickActions onNavigate={navigateFromQuickAction} />
           <GoalPlanCard compact onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
           </>}
           </>}
         </section>
+        </AppShell>
       )}
       {/* Hedef planının tam hâli (grafik, AI analizi, sihirbaz) yalnız burada,
           kompakt şeride dokununca açılır — ana ekranda yer kaplamaz. */}
@@ -1837,7 +1885,9 @@ export default function Home() {
         <p>{t.feedback.body}</p><fieldset><legend>{t.feedback.difficultyLegend}</legend><div className="feedback-options">{(["Kolay", "Uygun", "Zor"] as WorkoutDifficulty[]).map((option) => <button type="button" aria-pressed={feedbackDifficulty === option} className={feedbackDifficulty === option ? "selected" : ""} onClick={() => setFeedbackDifficulty(option)} key={option}>{option === "Kolay" ? t.feedback.difficultyEasy : option === "Uygun" ? t.feedback.difficultySuitable : t.feedback.difficultyHard}</button>)}</div></fieldset><fieldset><legend>{t.feedback.fatigueLegend}</legend><div className="fatigue-scale">{[1, 2, 3, 4, 5].map((value) => <button type="button" aria-pressed={feedbackFatigue === value} className={feedbackFatigue === value ? "selected" : ""} onClick={() => setFeedbackFatigue(value)} key={value}><strong>{value}</strong><small>{value === 1 ? t.feedback.fatigueVeryLow : value === 3 ? t.feedback.fatigueMedium : value === 5 ? t.feedback.fatigueVeryHigh : ""}</small></button>)}</div></fieldset><fieldset><legend>{t.feedback.painLegend}</legend><div className="feedback-options pain-options">{["Yok", "Bel", "Diz", "Omuz", "Diğer"].map((area) => <button type="button" aria-pressed={feedbackPainAreas.includes(area)} className={feedbackPainAreas.includes(area) ? "selected" : ""} onClick={() => toggleFeedbackPain(area)} key={area}>{area === "Yok" ? t.feedback.painNone : area === "Bel" ? t.feedback.painLowerBack : area === "Diz" ? t.feedback.painKnee : area === "Omuz" ? t.feedback.painShoulder : t.feedback.painOther}</button>)}</div></fieldset><label className="feedback-note">{t.feedback.noteLabel} <small>{t.onboarding.optionalHint}</small><textarea value={feedbackNote} onChange={(event) => setFeedbackNote(event.target.value)} placeholder={t.feedback.notePlaceholder} /></label><div className="feedback-summary"><span>{t.feedback.nextStepLabel}</span><strong>{feedbackPainAreas.some((area) => area !== "Yok") || feedbackDifficulty === "Zor" || feedbackFatigue >= 4 ? t.feedback.nextStepRecovery : feedbackDifficulty === "Kolay" && feedbackFatigue <= 2 ? t.feedback.nextStepIncrease : t.feedback.nextStepBalanced}</strong></div><button className="primary-btn feedback-save" type="button" onClick={() => void saveWorkoutFeedback()}>{t.feedback.save} <span>→</span></button></div></div>}
       {step === STEP.dashboard && <AiCoachChat context={coachContext} onUpgradeRequest={() => setPaywallOpen(true)} />}
       <PremiumPlans open={paywallOpen} onClose={() => setPaywallOpen(false)} isPremium={isPremium} />
-      <footer><span>{t.common.footerTagline}</span><span>© 2026</span></footer>
+      {/* Panelde alt bilgi kabuğun içinde (sekme çubuğunun üstünde) durur;
+          burada yalnız onboarding akışı için render edilir. */}
+      {step < STEP.dashboard && shellFooter}
     </main>
   );
 }

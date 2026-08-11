@@ -29,10 +29,10 @@ hiçbir görüntü sunucuya gönderilmez — bunu ayrıca beyan etmenize gerek y
 
 ## 2. Zorunlu alanlar
 
-- **Gizlilik politikası URL'si:** `store-assets/GIZLILIK-POLITIKASI.md` metnini
-  herkese açık kalıcı bir adreste yayınlayın (ör. `https://alanadiniz.com/gizlilik`).
-  Placeholder alanları (`[KURUM ADI]` vb.) doldurmayı unutmayın.
-- **Destek e-postası:** repoda hiçbir iletişim adresi yok, belirlemeniz gerekiyor.
+- **Gizlilik politikası URL'si:** artık uygulamanın kendisinde `/gizlilik` route'u
+  olarak yayınlanıyor (`app/gizlilik/page.tsx`). Kalıcı prod domain bağlandığında
+  Play Console'a `https://<domain>/gizlilik` verin.
+- **Destek e-postası:** `furkaninanjob@gmail.com`
 - **İçerik derecelendirme (IARC) anketi:** Sağlık/fitness uygulaması,
   kullanıcı etkileşimi yok, satın alma yok.
 - **Hedef kitle:** 13+ (gizlilik politikası bu yaşa göre yazıldı).

@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useEffectEvent, useRef, useState } from "react";
+import { ComponentProps, ComponentType, FormEvent, ReactNode, useEffect, useEffectEvent, useId, useRef, useState } from "react";
+import { ArrowLeft, CalendarDays, Eye, EyeOff, KeyRound, Lock, Mail } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { isVerifiedAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -68,6 +69,44 @@ function GoogleMark() {
     <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33Z" />
     <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z" />
   </svg>;
+}
+
+/**
+ * Kimlik ekranlarının tek girdi bileşeni (Stitch hesap/giriş/şifre ekranları).
+ *
+ * Her alan solda bir ikon taşır, şifre alanları kendi göster/gizle düğmesini
+ * yönetir. Etiketin yanındaki eylem (ör. "Şifremi unuttum") `<label>` DIŞINDA
+ * durur: etiketin içindeki düğme, alana dokunmayı da tetiklerdi.
+ */
+function AuthField({
+  label,
+  icon: Icon,
+  hint,
+  labelAction,
+  ...inputProps
+}: ComponentProps<"input"> & { label: string; icon: ComponentType<{ className?: string }>; hint?: string; labelAction?: ReactNode }) {
+  const t = useTranslations();
+  const fieldId = useId();
+  const [revealed, setRevealed] = useState(false);
+  const isPassword = inputProps.type === "password";
+  return (
+    <div className="auth-field">
+      <div className="auth-field-label">
+        <label htmlFor={fieldId}>{label}</label>
+        {labelAction}
+      </div>
+      <div className="auth-field-control">
+        <Icon className="auth-field-icon" aria-hidden />
+        <input id={fieldId} {...inputProps} type={isPassword && revealed ? "text" : inputProps.type} />
+        {isPassword && (
+          <button type="button" className="auth-field-reveal" aria-label={revealed ? t.auth.hidePassword : t.auth.showPassword} onClick={() => setRevealed((current) => !current)}>
+            {revealed ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
+          </button>
+        )}
+      </div>
+      {hint && <small>{hint}</small>}
+    </div>
+  );
 }
 
 function friendlyAuthError(message: string, copy: Dictionary["auth"]) {
@@ -397,17 +436,32 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
           <div className="auth-benefits"><span>01</span><p><strong>{t.auth.benefit1Title}</strong><small>{t.auth.benefit1Body}</small></p><span>02</span><p><strong>{t.auth.benefit2Title}</strong><small>{t.auth.benefit2Body}</small></p></div>
         </div>
 
+        {/* Stitch kimlik ekranları tek bir ortalanmış kart: üstte geri düğmesi
+            (yalnız alt akışlarda), marka başlığı, ikonlu alanlar ve altta
+            diğer moda geçiren bağlantı. Sekme anahtarı kaldırıldı — üç ekranın
+            hepsinde bu bağlantı deseni var ve iki ayrı geçiş yolu gereksizdi. */}
         <div className="auth-panel">
-          <div className="auth-tabs" role="tablist" aria-label={t.auth.tabSignup}>
-            <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "active" : ""} onClick={() => changeMode("signup")}>{t.auth.tabSignup}</button>
-            <button type="button" role="tab" aria-selected={mode === "login"} className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>{t.auth.tabLogin}</button>
-          </div>
+          {(mode === "reset" || step === "verify") && (
+            <button type="button" className="auth-back" aria-label={t.auth.backToForm} onClick={() => step === "verify" ? backToForm() : changeMode("login")} disabled={busy}>
+              <ArrowLeft className="size-5" />
+            </button>
+          )}
           <div className="auth-panel-heading"><span>{mode === "signup" ? t.auth.headingSignupEyebrow : mode === "reset" ? t.auth.headingResetEyebrow : t.auth.headingLoginEyebrow}</span><h2>{mode === "signup" ? t.auth.headingSignupTitle : mode === "reset" ? t.auth.headingResetTitle : t.auth.headingLoginTitle}</h2><p>{mode === "signup" ? t.auth.headingSignupBody : mode === "reset" ? t.auth.headingResetBody : t.auth.headingLoginBody}</p></div>
 
           {status === "unavailable" && <div className="auth-message error auth-configuration" role="alert"><strong>{t.auth.unavailableTitle}</strong><span>{t.auth.unavailableBody}</span></div>}
           {step === "form" ? (
             <>
+              <form className="auth-form" onSubmit={handleEmailAuth}>
+                <AuthField label={t.auth.emailLabel} icon={Mail} type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder={t.auth.emailPlaceholder} />
+                {mode === "signup" && <AuthField label={t.auth.birthDateLabel} icon={CalendarDays} hint={t.auth.birthDateHint} type="date" name="birth-date" autoComplete="bday" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} required value={birthDate} onChange={(event) => setBirthDate(event.target.value)} />}
+                {mode !== "reset" && <AuthField label={t.auth.passwordLabel} icon={Lock} type="password" name="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t.auth.passwordPlaceholder}
+                  labelAction={mode === "login" ? <button type="button" className="auth-linkish" onClick={() => changeMode("reset")} disabled={busy}>{t.auth.forgotPassword}</button> : undefined} />}
+                {mode === "signup" && <AuthField label={t.auth.passwordAgainLabel} icon={Lock} type="password" name="password-confirmation" autoComplete="new-password" minLength={8} required value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} placeholder={t.auth.passwordAgainPlaceholder} />}
+                {error && <div className="auth-message error" role="alert">{error}</div>}
+                <button className="auth-submit" type="submit" disabled={busy || status === "unavailable"}>{busy ? t.auth.submitBusy : status === "unavailable" ? t.auth.submitUnavailable : mode === "signup" ? t.auth.submitSignup : mode === "reset" ? t.auth.submitReset : t.auth.submitLogin}<span>→</span></button>
+              </form>
               {mode !== "reset" && <>
+                <div className="auth-divider"><span>{t.auth.dividerText}</span></div>
                 {usesGoogleIdentityButton ? (
                   <div className={`google-identity-button${googleButtonReady ? " ready" : ""}`} aria-label={t.auth.googleButton}>
                     <div ref={googleButtonRef} />
@@ -416,29 +470,24 @@ export function AuthScreen({ status, onSignedIn }: { status: "loading" | "anonym
                 ) : (
                   <button type="button" className="google-auth-button" onClick={() => void handleGoogleSignIn()} disabled={busy || status === "unavailable"}><GoogleMark /> {t.auth.googleButton}</button>
                 )}
-                <div className="auth-divider"><span>{t.auth.dividerText}</span></div>
               </>}
-              <form className="auth-form" onSubmit={handleEmailAuth}>
-                <label>{t.auth.emailLabel}<input type="email" name="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder={t.auth.emailPlaceholder} /></label>
-                {mode === "signup" && <label>{t.auth.birthDateLabel}<input type="date" name="birth-date" autoComplete="bday" min="1905-01-01" max={new Date().toISOString().slice(0, 10)} required value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /><small>{t.auth.birthDateHint}</small></label>}
-                {mode !== "reset" && <label>{t.auth.passwordLabel}<input type="password" name="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t.auth.passwordPlaceholder} /></label>}
-                {mode === "signup" && <label>{t.auth.passwordAgainLabel}<input type="password" name="password-confirmation" autoComplete="new-password" minLength={8} required value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} placeholder={t.auth.passwordAgainPlaceholder} /></label>}
-                {error && <div className="auth-message error" role="alert">{error}</div>}
-                <button className="auth-submit" type="submit" disabled={busy || status === "unavailable"}>{busy ? t.auth.submitBusy : status === "unavailable" ? t.auth.submitUnavailable : mode === "signup" ? t.auth.submitSignup : mode === "reset" ? t.auth.submitReset : t.auth.submitLogin}<span>→</span></button>
-              </form>
-              {mode === "login" && <div className="auth-verify-actions"><button type="button" className="auth-linkish" onClick={() => changeMode("reset")} disabled={busy}>{t.auth.forgotPassword}</button></div>}
-              {mode === "reset" && <div className="auth-verify-actions"><button type="button" className="auth-linkish" onClick={() => changeMode("login")} disabled={busy}>{t.auth.backToLogin}</button></div>}
             </>
           ) : (
             <form className="auth-form" onSubmit={verifyCode}>
               <div className="auth-panel-heading"><span>{mode === "reset" ? t.auth.verifyResetEyebrow : t.auth.verifyCodeEyebrow}</span><h2>{mode === "reset" ? t.auth.verifyResetTitle : t.auth.verifyCodeTitle}</h2><p>{t.auth.verifyCodeBody(email)}</p></div>
               {notice && <div className="auth-message success" role="status"><strong>{t.auth.checkEmailTitle}</strong><span>{notice}</span></div>}
-              <label>{t.auth.codeLabel}<input type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} required value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" style={{ letterSpacing: "0.5em", textAlign: "center", fontSize: "1.4rem" }} /></label>
-              {mode === "reset" && <><label>{t.auth.newPasswordLabel}<input type="password" name="new-password" autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t.auth.passwordPlaceholder} /></label><label>{t.auth.newPasswordAgainLabel}<input type="password" name="new-password-confirmation" autoComplete="new-password" minLength={8} required value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} placeholder={t.auth.passwordAgainPlaceholder} /></label></>}
+              <AuthField label={t.auth.codeLabel} icon={KeyRound} className="auth-code-input" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6} required value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" />
+              {mode === "reset" && <><AuthField label={t.auth.newPasswordLabel} icon={Lock} type="password" name="new-password" autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t.auth.passwordPlaceholder} /><AuthField label={t.auth.newPasswordAgainLabel} icon={Lock} type="password" name="new-password-confirmation" autoComplete="new-password" minLength={8} required value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} placeholder={t.auth.passwordAgainPlaceholder} /></>}
               {error && <div className="auth-message error" role="alert">{error}</div>}
               <button className="auth-submit" type="submit" disabled={busy}>{busy ? t.auth.submitBusy : mode === "reset" ? t.auth.verifySubmitReset : t.auth.verifySubmitCode}<span>→</span></button>
-              <div className="auth-verify-actions"><button type="button" className="auth-linkish" onClick={() => void resendVerification()} disabled={busy}>{t.auth.resendCode}</button><button type="button" className="auth-linkish" onClick={backToForm} disabled={busy}>{t.auth.backToForm}</button></div>
+              <div className="auth-verify-actions"><button type="button" className="auth-linkish" onClick={() => void resendVerification()} disabled={busy}>{t.auth.resendCode}</button></div>
             </form>
+          )}
+          {step === "form" && mode !== "reset" && (
+            <p className="auth-switch">
+              {mode === "signup" ? t.auth.hasAccountPrompt : t.auth.noAccountPrompt}
+              <button type="button" onClick={() => changeMode(mode === "signup" ? "login" : "signup")} disabled={busy}>{mode === "signup" ? t.auth.tabLogin : t.auth.tabSignup}</button>
+            </p>
           )}
           <p className="auth-privacy">{t.auth.privacyNote}</p>
         </div>

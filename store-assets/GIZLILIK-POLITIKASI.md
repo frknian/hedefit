@@ -2,15 +2,15 @@
 
 **Son güncelleme:** 26 Temmuz 2026
 
-> Bu metin, uygulamanın kaynak kodunda gerçekten yapılan veri işlemesine göre
-> hazırlanmıştır. Yayınlamadan önce **[KURUM ADI]**, **[İLETİŞİM E-POSTASI]** ve
-> **[VERİ SORUMLUSU ADRESİ]** alanlarını doldurun ve metni herkese açık,
-> kalıcı bir adreste yayınlayın. Play Console bu adresi zorunlu tutar.
+> Bu metin `/gizlilik` adresinde (app/gizlilik/page.tsx) canlı olarak yayınlanır —
+> kalıcı prod domain bağlandığında Play Console'a o adresin `/gizlilik` yolu
+> verilmelidir. Bu dosya kaynak referansı olarak kalır; asıl güncelleme
+> app/gizlilik/page.tsx üzerinden yapılmalıdır.
 
 ## 1. Veri sorumlusu
 
-Hedefit uygulamasını **[KURUM ADI]** işletir. Sorularınız için:
-**[İLETİŞİM E-POSTASI]**
+Hedefit uygulamasını **Furkan İnan** işletir (Türkiye). Sorularınız için:
+**furkaninanjob@gmail.com**
 
 ## 2. Topladığımız veriler
 
@@ -109,7 +109,7 @@ keskin ağrı, göğüs ağrısı veya baş dönmesi yaşarsanız durun ve hekim
 
 KVKK ve GDPR kapsamında verilerinize erişme, düzeltme, silme ve taşıma
 haklarına sahipsiniz. Erişim ve silme işlemlerini uygulama içinden doğrudan
-yapabilirsiniz; diğer talepler için **[İLETİŞİM E-POSTASI]** adresine yazın.
+yapabilirsiniz; diğer talepler için **furkaninanjob@gmail.com** adresine yazın.
 
 ## 10. Değişiklikler
 

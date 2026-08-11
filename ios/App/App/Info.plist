@@ -41,6 +41,10 @@
 	<string>Vücut analizi veya profil fotoğrafını seçebilmen için fotoğraf arşivine erişim gerekir.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Sana daha ilgili reklamlar gösterebilmemiz için bu veriler kullanılacaktır.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Günlük adım sayını otomatik gösterebilmemiz için Sağlık verilerine erişim gerekir.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Uygulama Sağlık verilerine yazma yapmaz; bu izin sistem tarafından zorunlu tutulur.</string>
 	<key>GADApplicationIdentifier</key>
 	<!-- Aşağıdaki değer Google'ın herkese açık TEST kimliğidir. Yayına almadan
 	     önce kendi AdMob hesabından alacağın gerçek uygulama kimliğiyle

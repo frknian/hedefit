@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./design-tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -600,7 +601,8 @@ button,input { font:inherit; } button { cursor:pointer; }
 .database-filters { display:grid; grid-template-columns:2fr repeat(4,1fr) auto; gap:9px; align-items:end; margin:28px 0 18px; padding:16px; border:1px solid var(--line); border-radius:11px; background:#fbfbf7; }
 .database-filters label { display:grid; gap:7px; min-width:0; }.database-filters label > span { color:#8b8e86; font-size:8px; font-weight:850; letter-spacing:1px; }
 .database-filters input,.database-filters select { width:100%; min-width:0; height:42px; padding:0 11px; border:1px solid #dddeda; border-radius:7px; outline:none; background:#fff; color:#454742; font-size:10px; }.database-filters input:focus,.database-filters select:focus { border-color:#8ca52f; box-shadow:0 0 0 3px #edf5d1; }
-.clear-filters { height:42px; padding:0 12px; border:1px solid #dddeda; border-radius:7px; background:transparent; color:#777a72; font-size:9px; font-weight:750; white-space:nowrap; }
+/* .clear-filters artık ChipButton bileşeni (components/design/Chip.tsx); yalnız yerleşimi burada kalır. */
+.clear-filters { white-space:nowrap; }
 .library-result-row { display:flex; justify-content:space-between; align-items:center; margin:0 0 14px; color:#92958e; font-size:9px; }.library-result-row strong { color:#40423d; font-size:11px; }
 .database-exercise-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .database-exercise-card { min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:11px; background:#fbfbf7; transition:transform .2s ease,box-shadow .2s ease; }.database-exercise-card:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(28,31,25,.08); }
@@ -612,7 +614,7 @@ button,input { font:inherit; } button { cursor:pointer; }
 .exercise-image-fallback { display:grid; place-items:center; align-content:center; gap:8px; height:100%; color:#8d918a; text-align:center; }.exercise-image-fallback span { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#d9f76b; color:#24251f; font-size:20px; }.exercise-image-fallback strong { font-size:9px; }
 .database-card-copy { padding:14px; }.database-card-top { display:flex; align-items:center; justify-content:space-between; }.database-card-top > span { color:#e75635; font-size:8px; font-weight:850; letter-spacing:1px; text-transform:uppercase; }
 .favorite { width:32px; height:32px; border:1px solid #dedfda; border-radius:50%; background:#fff; color:#8d8f89; font-size:15px; }.favorite.active { border-color:#ffc6b7; background:#fff1ec; color:#df4c30; }
-.database-card-copy h3 { min-height:36px; margin:8px 0 10px; font-size:15px; line-height:1.2; }.exercise-facts { display:flex; flex-wrap:wrap; gap:5px; }.exercise-facts span,.detail-tags span { padding:5px 7px; border-radius:99px; background:#eef2e2; color:#687058; font-size:8px; text-transform:capitalize; }
+.database-card-copy h3 { min-height:36px; margin:8px 0 10px; font-size:15px; line-height:1.2; }.exercise-facts { display:flex; flex-wrap:wrap; gap:5px; }.detail-tags span { padding:5px 7px; border-radius:99px; background:#eef2e2; color:#687058; font-size:8px; text-transform:capitalize; }
 .exercise-detail-button { width:100%; margin-top:13px; padding:10px; border:1px solid #d8dfbf; border-radius:6px; background:#f5f9e6; color:#586b20; font-size:9px; font-weight:800; }
 .exercise-loading,.library-empty { display:grid; place-items:center; min-height:240px; padding:30px; border:1px dashed #d5d7cf; border-radius:10px; color:#8b8e85; text-align:center; }.library-empty strong { color:#45473f; }.library-empty p { margin:8px 0 14px; font-size:10px; }.library-empty button { padding:9px 12px; border:0; border-radius:6px; background:#22221f; color:#fff; font-size:9px; }
 .load-exercises { display:block; margin:22px auto 0; padding:12px 18px; border:1px solid #cbd99b; border-radius:7px; background:#f0f7d5; color:#56661e; font-size:10px; font-weight:800; }
@@ -779,7 +781,7 @@ button,input { font:inherit; } button { cursor:pointer; }
    okunmuyordu. O üçü bu gruptan çıkarıldı, kendi açık yazı rengini alıyor. */
 .dark .streak-card,.dark .finish-btn,.dark .ready-card button { color:#34410e; }
 .dark .exercise-metadata strong,.dark .library-empty strong { color:var(--ink); }
-.dark .exercise-facts span,.dark .detail-tags span { background:#303329; color:#bcc3aa; }
+.dark .detail-tags span { background:#303329; color:#bcc3aa; }
 .dark .db-exercise-animation,.dark .exercise-media { border-color:#34362f; }.dark .db-exercise-animation { background:linear-gradient(145deg,#292b26,#1b1c19); }.dark .db-exercise-animation img { mix-blend-mode:normal; }
 .dark .exercise-labels > span { background:#303a23; color:#c6df78; }
 .dark .set-log-card,.dark .set-log-row input,.dark .set-log-row select,.dark .previous-sets > span { background:var(--surface); color:var(--ink); border-color:var(--line); }
@@ -1896,6 +1898,27 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .dark .energy-ring-card { background:#181915; }
 @media (prefers-reduced-motion: reduce) { .energy-ring-fill { transition:none; } }
 
+/* Adım sayar kartı: energy-ring ile aynı görsel dil, sadece native app'te
+   (HealthKit/Health Connect) görünür — web'de bileşen hiç render edilmez. */
+.step-ring-card { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:14px; min-width:0; margin-top:10px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
+.step-ring { position:relative; width:88px; height:88px; }
+.step-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+.step-ring-track { fill:none; stroke:var(--line); stroke-width:9; }
+.step-ring-fill { fill:none; stroke:#7fb6e0; stroke-width:9; stroke-linecap:round; transition:stroke-dasharray .35s ease; }
+.step-ring-center { position:absolute; inset:0; display:grid; place-content:center; text-align:center; }
+.step-ring-center strong { display:block; font-size:19px; line-height:1; letter-spacing:-.8px; font-variant-numeric:tabular-nums; }
+.step-ring-center small { display:block; margin-top:3px; color:var(--muted-text); font-size:8px; font-weight:700; }
+.step-ring-legend { display:grid; gap:6px; min-width:0; }
+.step-ring-legend span { color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+.step-ring-legend strong { font-size:13px; line-height:1.2; letter-spacing:-.2px; }
+.step-ring-legend small { color:var(--muted-text); font-size:10px; }
+.step-ring-connect { display:grid; gap:8px; grid-column:1/-1; }
+.step-ring-connect span { color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+.step-ring-connect p { margin:0; font-size:12px; color:var(--muted-text); }
+.step-ring-connect button { justify-self:start; padding:8px 14px; border:0; border-radius:var(--r-sm,8px); background:var(--ink); color:var(--paper); font-size:11px; font-weight:700; }
+.dark .step-ring-card { background:#181915; }
+@media (prefers-reduced-motion: reduce) { .step-ring-fill { transition:none; } }
+
 /* Kısayollar tek sırada dört sütun: mobilde de alt alta uzayıp ana ekranı
    ikinci sayfaya taşımasın. */
 .quick-actions-list { grid-template-columns:repeat(4,minmax(0,1fr)); }
@@ -1995,3 +2018,454 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .upgrade-inline-cta { display:inline-block; margin-left:6px; padding:4px 10px; border:0; border-radius:8px; background:var(--orange); color:#fff; font-weight:700; font-size:10px; cursor:pointer; }
 .watch-ad-inline-cta { display:inline-block; margin-left:6px; padding:4px 10px; border:1px solid var(--orange); border-radius:8px; background:transparent; color:var(--orange); font-weight:700; font-size:10px; cursor:pointer; }
 .watch-ad-inline-cta:disabled { opacity:0.6; cursor:default; }
+
+/* ==========================================================================
+   STITCH TASARIM SİSTEMİ — "High-Performance Kinetic"
+   --------------------------------------------------------------------------
+   Google Stitch çıktısındaki görsel dilin mevcut ekranlara uygulanması.
+   Kural: burada SABİT RENK YOK; her değer app/design-tokens.css'teki
+   `--hf-*` jetonlarından gelir, böylece açık/koyu tema tek kuralla doğru
+   kalır. Blok dosyanın sonunda durur ve aynı özgüllükteki eski kuralları
+   kaynak sırasıyla ezer — eski stil silinmediği için hiçbir ekran çıplak
+   kalmaz, yalnız üzerine yazılır.
+   ========================================================================== */
+
+/* --- 1. Tipografi: başlıklar Montserrat, veri ve gövde Inter ------------- */
+body { font-family:var(--hf-font-body); font-size:var(--hf-body-md-size); line-height:var(--hf-body-md-line); -webkit-font-smoothing:antialiased; }
+h1, h2, h3, .brand, .dashboard h1, .step-content h1, .workout-player h1,
+.progress-cards strong, .stats-row strong, .home-bmi strong, .timer-card strong,
+.report-grid strong, .activity-daily-summaries strong, .goal-plan-compact-stats strong {
+  font-family:var(--hf-font-display); font-weight:var(--hf-headline-lg-weight);
+}
+/* Montserrat, Arial'dan geniştir: eski -3.5px harf aralığı ve 58px sabit
+   boyut Türkçe uzun başlıklarda taşıyordu. Akışkan boyut + jeton aralığı. */
+.step-content h1, .dashboard h1, .workout-player h1 {
+  font-size:clamp(32px, 4.4vw, 48px); line-height:var(--hf-display-line);
+  letter-spacing:var(--hf-display-tracking); font-weight:var(--hf-display-weight);
+}
+.section-title h2, .ready-programs h2, .plan-explanation h2, .profile-editor h2, .premium-dialog h2, .activity-logger-head h2 {
+  font-size:var(--hf-headline-md-size); line-height:var(--hf-headline-md-line);
+  font-weight:var(--hf-headline-md-weight); letter-spacing:-.01em;
+}
+.eyebrow, .field-caption, .progress-row, .textarea-label, .activity-form label {
+  font-family:var(--hf-font-body); letter-spacing:1.6px;
+}
+.lead { font-size:var(--hf-body-md-size); line-height:var(--hf-body-lg-line); color:var(--hf-on-surface-variant); }
+/* Georgia vurgusu markanın imzası; korunur ama Montserrat ile aynı hizada. */
+.step-content em, .dashboard em, .coach-card em { font-family:Georgia, "Times New Roman", serif; }
+
+/* --- 2. Yardımcı sınıflar: cam ve parıltı -------------------------------- */
+.hf-glass { background:var(--hf-glass-panel); backdrop-filter:blur(var(--hf-glass-blur)); -webkit-backdrop-filter:blur(var(--hf-glass-blur)); }
+.hf-glow { box-shadow:var(--hf-glow-primary); }
+
+/* --- 3. Uygulama kabuğu: masaüstünde sütun, telefonda alt sekme ---------- */
+.hf-shell { display:flex; flex-direction:column; min-height:100vh; }
+.hf-sidenav { display:none; }
+.hf-main { flex:1; min-width:0; }
+
+.hf-topbar {
+  position:sticky; top:0; z-index:60;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  height:64px; padding:0 var(--hf-container-margin);
+  background:var(--hf-glass-fill); backdrop-filter:blur(var(--hf-glass-blur)); -webkit-backdrop-filter:blur(var(--hf-glass-blur));
+  border-bottom:1px solid var(--hf-hairline);
+}
+.native-app .hf-topbar { top:env(safe-area-inset-top); }
+.hf-topbar-brand { display:flex; align-items:center; min-width:0; }
+.hf-topbar-actions { display:flex; align-items:center; gap:2px; }
+.hf-topbar-icon {
+  display:grid; place-items:center; width:44px; height:44px; border:0; border-radius:var(--hf-radius-full);
+  background:transparent; color:var(--hf-on-surface-variant); cursor:pointer; transition:background .16s var(--hf-ease), color .16s var(--hf-ease);
+}
+.hf-topbar-icon:hover { background:var(--hf-surface-highest); color:var(--hf-primary); }
+.hf-topbar-icon[aria-pressed="true"] { background:var(--hf-primary-container); color:var(--hf-on-primary-container); }
+
+.hf-navitem {
+  display:flex; align-items:center; gap:14px; width:100%;
+  min-height:48px; padding:0 16px; border:0;
+  border-radius:var(--hf-radius-lg); background:transparent;
+  color:var(--hf-on-surface-variant); font-size:var(--hf-label-bold-size); font-weight:var(--hf-label-bold-weight);
+  text-align:left; cursor:pointer; transition:background .16s var(--hf-ease), color .16s var(--hf-ease);
+}
+.hf-navitem:hover { background:var(--hf-surface-highest); color:var(--hf-on-surface); }
+/* Etkin sekmenin sağ kenarındaki lime şerit gerçek bir kenarlık DEĞİL:
+   yuvarlatılmış köşede kenarlık dışarı taşıp şişkinlik yapıyordu. */
+.hf-navitem.active { background:color-mix(in srgb, var(--hf-primary-container) 22%, transparent); box-shadow:inset -4px 0 0 0 var(--hf-primary); color:var(--hf-primary); }
+.dark .hf-navitem.active { color:var(--hf-primary-strong); }
+
+.hf-tabbar {
+  position:fixed; z-index:90; left:0; right:0; bottom:0;
+  display:grid; grid-auto-flow:column; grid-auto-columns:1fr; align-items:stretch;
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  background:var(--hf-glass-panel); backdrop-filter:blur(var(--hf-glass-blur)); -webkit-backdrop-filter:blur(var(--hf-glass-blur));
+  border-top:1px solid var(--hf-hairline);
+}
+.hf-tab {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  min-height:52px; padding:6px 2px; border:0; border-radius:var(--hf-radius-lg);
+  background:transparent; color:var(--hf-on-surface-variant);
+  font-size:10px; font-weight:600; letter-spacing:.2px; cursor:pointer;
+  transition:background .16s var(--hf-ease), color .16s var(--hf-ease);
+}
+.hf-tab span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hf-tab.active { background:var(--hf-primary-container); color:var(--hf-on-primary-container); font-weight:750; }
+/* Sekme çubuğu içeriğin üstüne biner: alt boşluk ve yüzen koç düğmesi kalkar. */
+.hf-shell .hf-main { padding-bottom:96px; }
+.hf-shell > footer { margin-bottom:78px; }
+.coach-launcher { bottom:calc(84px + env(safe-area-inset-bottom)); }
+
+@media (min-width:1024px) {
+  .hf-shell {
+    display:grid; grid-template-columns:264px minmax(0,1fr); grid-template-rows:auto 1fr auto;
+    grid-template-areas:"nav head" "nav main" "nav foot";
+  }
+  .hf-sidenav {
+    grid-area:nav; position:sticky; top:0; align-self:start;
+    display:flex; flex-direction:column; gap:var(--hf-space-lg);
+    height:100vh; padding:var(--hf-space-lg) var(--hf-space-md);
+    background:var(--hf-surface-lowest); border-right:1px solid var(--hf-hairline);
+  }
+  .hf-sidenav-brand { padding:0 8px; }
+  .hf-sidenav-profile { display:flex; align-items:center; gap:12px; padding:0 8px; }
+  .hf-sidenav-list { display:flex; flex-direction:column; gap:6px; flex:1; }
+  .hf-sidenav-cta { margin-top:auto; }
+  .hf-topbar { grid-area:head; height:80px; padding:0 var(--hf-space-xl); }
+  .hf-topbar-brand { display:none; }
+  .hf-main { grid-area:main; padding-bottom:var(--hf-space-xl); }
+  .hf-shell > footer { grid-area:foot; margin-bottom:0; }
+  .hf-tabbar { display:none; }
+  .coach-launcher { bottom:24px; }
+}
+
+/* --- 4. Yüzeyler: tonal katman + saç teli kenar + ortam gölgesi ---------- */
+.workout-card, .library-card, .ready-card, .question-card, .progress-panel, .progress-cards > div,
+.activity-logger, .activity-daily-summaries article, .premium-plan-card, .quick-actions,
+.exercise-media, .integration-card, .player-how-to, .home-bmi, .set-tracker, .swap-panel {
+  border:1px solid var(--hf-hairline); border-radius:var(--hf-radius-xl);
+  background:var(--hf-surface-lowest); box-shadow:var(--hf-elevation-card);
+}
+.activity-modal, .premium-dialog, .feedback-dialog, .goal-plan-overlay-inner {
+  border-radius:var(--hf-radius-2xl); box-shadow:var(--hf-elevation-float);
+}
+.workout-card:hover, .library-card:hover, .ready-card:hover {
+  border-color:color-mix(in srgb, var(--hf-primary) 45%, transparent);
+  box-shadow:var(--hf-elevation-raised);
+}
+/* Koyu zeminli imza kartları (koç, zamanlayıcı) mürekkep tonunu korur. */
+.coach-card, .timer-card { border-radius:var(--hf-radius-xl); box-shadow:var(--hf-elevation-raised); }
+
+/* --- 5. Düğmeler: lime birincil, turuncu "ısı" ikincil ------------------- */
+.primary-btn, .start-btn {
+  background:var(--hf-primary-container); color:var(--hf-on-primary-container);
+  border-radius:var(--hf-radius-lg); box-shadow:var(--hf-elevation-card);
+  font-family:var(--hf-font-body); font-weight:700;
+}
+.primary-btn:hover:not(:disabled), .start-btn:hover:not(:disabled) { box-shadow:var(--hf-glow-primary), var(--hf-elevation-raised); }
+.primary-btn span, .start-btn span { color:var(--hf-primary); }
+.dark .primary-btn span, .dark .start-btn span { color:var(--hf-on-primary); }
+.back-btn { border-radius:var(--hf-radius-lg); border-color:var(--hf-outline-variant); }
+/* "Bitir ve kaydet" yüksek yoğunluklu bir eylemdir: turuncu ısı rengi. */
+.finish-btn {
+  border-radius:var(--hf-radius-lg); border-color:color-mix(in srgb, var(--hf-secondary-container) 55%, transparent);
+  background:color-mix(in srgb, var(--hf-secondary-container) 14%, transparent); color:var(--hf-secondary);
+  font-weight:700;
+}
+.finish-btn:hover { background:color-mix(in srgb, var(--hf-secondary-container) 24%, transparent); }
+.outline-btn, .connect-btn, .play-btn, .activity-close, .premium-close, .activity-modal-close {
+  border-radius:var(--hf-radius-full); border-color:var(--hf-outline-variant);
+}
+.premium-cta-button, .activity-save { border-radius:var(--hf-radius-lg); background:var(--hf-primary-container); color:var(--hf-on-primary-container); }
+
+/* --- 6. Çipler: her zaman hap biçimli, label-sm tipografi ---------------- */
+.answer, .equipment, .progress-status, .player-meta span, .exercise-labels > span, .pill, .activity-history-list > article > b {
+  border-radius:var(--hf-radius-full); font-size:var(--hf-label-sm-size); font-weight:var(--hf-label-sm-weight);
+}
+.answer, .equipment { border-color:var(--hf-outline-variant); background:var(--hf-surface-lowest); }
+.answer.selected, .equipment.selected { border-color:var(--hf-primary); background:var(--hf-primary-container); color:var(--hf-on-primary-container); }
+
+/* --- 7. Girdiler: kâğıt zemin, odakta lime kenar ------------------------- */
+.form-grid input, .textarea-label textarea, .question-note, .library-filters input, .library-filters select,
+.activity-form input, .activity-form select, .activity-form textarea, .integration-select select, .feedback-note textarea {
+  border-radius:var(--hf-radius-lg); border-color:var(--hf-outline-variant); background:var(--hf-paper); color:var(--hf-on-surface);
+}
+.form-grid input:focus, .textarea-label textarea:focus, .question-note:focus, .library-filters input:focus,
+.library-filters select:focus, .activity-form input:focus, .activity-form select:focus, .activity-form textarea:focus {
+  border-color:var(--hf-primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--hf-primary-container) 55%, transparent); outline:none;
+}
+
+/* --- 8. Yapay zekâ çıktısı: cam + lime parıltı (AI Feedback Bubble) ------ */
+.ai-safety, .ai-scan, .movement-guide, .integration-message, .profile-editor {
+  border:1px solid color-mix(in srgb, var(--hf-primary-container) 60%, transparent);
+  border-radius:var(--hf-radius-xl);
+  background:color-mix(in srgb, var(--hf-primary-container) 12%, var(--hf-surface-lowest));
+  box-shadow:var(--hf-glow-primary);
+}
+.ai-safety { border-left:4px solid var(--hf-primary-container); }
+
+/* --- 9. Kaplamalar: cam zemin ------------------------------------------- */
+.activity-overlay, .goal-plan-overlay, .feedback-overlay, .premium-overlay {
+  background:color-mix(in srgb, var(--hf-on-surface) 62%, transparent);
+  backdrop-filter:blur(var(--hf-glass-blur)); -webkit-backdrop-filter:blur(var(--hf-glass-blur));
+}
+
+/* --- 10. Panel içeriği: üst çubuk artık kabuğun kendisi ------------------ */
+/* Not: eski `.topbar`, `.top-links`, `.top-actions`, `.profile-mini` kuralları
+   artık hiçbir bileşende kullanılmıyor (gezinme AppShell'e taşındı). Kurallar
+   dosyanın farklı yerlerinde `.brand`/`.profile-editor` gibi HÂLÂ kullanılan
+   seçicilerle aynı satırları paylaştığı için burada topluca silinmedi. */
+.dashboard { margin-top:var(--hf-space-xl); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hf-navitem, .hf-tab, .hf-topbar-icon, .workout-card, .library-card, .ready-card { transition:none; }
+}
+
+/* --- 11. Kabuk içi kimlik bloğu ve marka --------------------------------- */
+.hf-sidenav-profile .mini-avatar { width:40px; height:40px; font-size:15px; }
+.hf-sidenav-identity { display:grid; min-width:0; }
+.hf-sidenav-identity strong { font-family:var(--hf-font-display); font-size:15px; font-weight:600; color:var(--hf-on-surface); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hf-sidenav-identity small { color:var(--hf-on-surface-variant); font-size:11px; }
+.hf-sidenav-brand .brand, .hf-topbar-brand .brand { border:0; background:transparent; padding:0; cursor:pointer; }
+.hf-sidenav-brand .brand { font-size:26px; }
+.hf-sidenav-cta .start-btn { margin-top:0; }
+
+/* --- 12. Plan gerekçesi: kutu artık AiInsight bileşeninin kendisi -------- */
+.plan-explanation { display:block; padding:0; margin:0 0 var(--hf-space-lg); border:0; }
+.plan-explanation .eyebrow { margin-bottom:6px; }
+.plan-explanation p { max-width:none; margin:0; font-size:13px; line-height:1.6; color:var(--hf-on-surface-variant); }
+/* Cam balonun İÇİNDEKİ güvenlik notu ikinci bir cam katman kurmaz. */
+.plan-explanation .ai-safety {
+  margin-top:12px; padding:8px 0 8px 12px; border:0; border-left:3px solid var(--hf-primary-container);
+  border-radius:0; background:transparent; box-shadow:none;
+}
+.plan-explanation .ai-error { margin-top:10px; color:var(--hf-secondary); font-size:11px; }
+
+/* --- 13. Rapor kutucukları artık StatTile bileşeni ----------------------- */
+/* Kap yeni bir sınıf kullanır: eski `.report-grid > div/span/strong` kuralları
+   kutuyu kendisi çiziyordu ve öğe seçicileri bileşenin jeton tabanlı
+   tipografisini eziyordu. Yeni sınıfla o kurallar hiç eşleşmez. */
+.report-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:var(--hf-space-md); margin:var(--hf-space-lg) 0 var(--hf-space-md); }
+@media (max-width:760px) { .report-stats { grid-template-columns:1fr; } }
+
+/* --- 14. Açılış ekranı: nabız halkaları + zıplayan noktalar -------------- */
+/* Stitch "Giriş ve Yükleme Ekranı": dışa doğru sönerek büyüyen iki halka,
+   dairesel çekirdek ve üç zıplayan nokta. Eski tempo çubukları noktaya
+   dönüştü; sınıf adı (.sport-loader-bars) korunuyor çünkü ritim göstergesi
+   rolü aynı. */
+.sport-loader { width:132px; height:132px; }
+.sport-loader-pulse {
+  position:absolute; width:96px; height:96px; border-radius:50%;
+  border:2px solid color-mix(in srgb, var(--hf-primary) 35%, transparent);
+  box-shadow:var(--hf-glow-button);
+  animation:sport-pulse-ring 2s cubic-bezier(.215,.61,.355,1) infinite;
+}
+.sport-loader-pulse:nth-of-type(2) { animation-delay:.5s; border-color:color-mix(in srgb, var(--hf-primary) 22%, transparent); }
+.sport-loader-core {
+  width:66px; height:66px;
+  background:var(--hf-surface-high); color:var(--hf-primary);
+  border:1px solid color-mix(in srgb, var(--hf-outline-variant) 45%, transparent);
+  box-shadow:var(--hf-elevation-raised);
+}
+.sport-loader-core .onboarding-icon { width:30px; height:30px; }
+.sport-loader-bars { align-items:center; height:8px; gap:6px; margin-top:6px; }
+.sport-loader-bars i {
+  width:6px; height:6px; border-radius:50%; opacity:1;
+  background:var(--hf-primary); transform-origin:center;
+  animation:sport-dot-bounce 1.05s var(--hf-ease) infinite;
+}
+.sport-loader-bars i:nth-child(2) { animation-delay:.2s; }
+.sport-loader-bars i:nth-child(3) { animation-delay:.4s; }
+.sport-loader-card h1 { font-family:var(--hf-font-display); font-size:var(--hf-headline-lg-size); letter-spacing:-.01em; }
+.sport-loader-card p { color:var(--hf-on-surface-variant); }
+/* Zeminde ince noktalı doku: "yüksek teknoloji" hissi, içeriği bozmadan. */
+.auth-loading { position:relative; }
+.auth-loading::before {
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.32;
+  background-image:radial-gradient(circle at 2px 2px, color-mix(in srgb, var(--hf-on-surface) 10%, transparent) 1px, transparent 0);
+  background-size:32px 32px;
+}
+.auth-loading > * { position:relative; z-index:1; }
+
+@keyframes sport-pulse-ring { 0% { transform:scale(.8); opacity:.5; } 80%, 100% { transform:scale(2.2); opacity:0; } }
+@keyframes sport-dot-bounce { 0%,100% { transform:translateY(0); opacity:.45; } 50% { transform:translateY(-6px); opacity:1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sport-loader-pulse { animation:none; opacity:.35; }
+  .sport-loader-bars i { animation:none; transform:none; opacity:.7; }
+}
+
+/* --- 15. Kimlik ekranları: ikonlu alanlar, göster/gizle, parıltılı eylem -- */
+/* Stitch "Hesap Oluşturma / Giriş Yap / Şifremi Unuttum" ekranları. Yarıçap
+   uygulamanın geri kalanıyla aynı (--hf-radius-lg); Stitch çıktısındaki 8px
+   yalnız bu üç ekranda kullanılıp arayüzü ikiye bölerdi. */
+.auth-panel { position:relative; }
+.auth-back {
+  display:grid; place-items:center; width:44px; height:44px; margin-bottom:4px;
+  border:0; border-radius:var(--hf-radius-full); background:transparent;
+  color:var(--hf-on-surface); cursor:pointer; transition:background .16s var(--hf-ease), color .16s var(--hf-ease);
+}
+.auth-back:hover:not(:disabled) { background:var(--hf-surface-highest); color:var(--hf-primary); }
+.auth-back:disabled { opacity:.5; cursor:wait; }
+
+.auth-field { display:grid; gap:8px; }
+.auth-field-label { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.auth-field-label label { color:var(--hf-on-surface); font-size:12px; font-weight:600; letter-spacing:.02em; }
+.auth-field-control { position:relative; display:block; }
+.auth-field-icon {
+  position:absolute; z-index:1; left:14px; top:50%; transform:translateY(-50%);
+  width:18px; height:18px; color:var(--hf-on-surface-variant); pointer-events:none;
+}
+.auth-form .auth-field input {
+  min-height:52px; margin-top:0; padding:0 14px 0 44px;
+  border-radius:var(--hf-radius-lg); border:1px solid var(--hf-outline-variant);
+  background:var(--hf-paper); color:var(--hf-on-surface); font-size:15px;
+}
+.auth-form .auth-field input:focus {
+  border-color:var(--hf-primary);
+  box-shadow:0 0 0 1px var(--hf-primary), 0 0 0 4px color-mix(in srgb, var(--hf-primary) 18%, transparent);
+}
+/* Şifre alanında sağdaki göz düğmesi metnin üstüne binmemeli. */
+.auth-form .auth-field input[type="password"], .auth-form .auth-field input[type="text"][autocomplete*="password"] { padding-right:48px; }
+.auth-field:has(.auth-field-reveal) input { padding-right:48px; }
+.auth-field-reveal {
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  display:grid; place-items:center; width:40px; height:40px;
+  border:0; border-radius:var(--hf-radius-full); background:transparent;
+  color:var(--hf-on-surface-variant); cursor:pointer; transition:color .16s var(--hf-ease), background .16s var(--hf-ease);
+}
+.auth-field-reveal:hover { color:var(--hf-primary); background:var(--hf-surface-highest); }
+.auth-field > small { color:var(--hf-on-surface-variant); font-size:11px; line-height:1.4; }
+.auth-form .auth-code-input { padding-left:44px; text-align:center; font-size:22px; letter-spacing:.45em; }
+
+.auth-form { gap:18px; }
+/* Birincil eylem her iki temada da lime zemin + koyu mürekkep yazıdır
+   (DESIGN.md → Buttons). Açık temada eski kural koyu zemin veriyordu; lime
+   parıltı koyu düğmenin arkasında anlamsız duruyordu. */
+.auth-submit {
+  justify-content:center; gap:10px; min-height:54px;
+  border-radius:var(--hf-radius-lg); box-shadow:var(--hf-glow-button);
+  background:var(--hf-primary-container); color:var(--hf-on-primary-container);
+  font-size:15px; font-weight:700;
+}
+.auth-submit:hover:not(:disabled) { box-shadow:var(--hf-glow-button), var(--hf-elevation-raised); }
+.auth-submit span { color:var(--hf-primary); font-size:18px; }
+.dark .auth-submit span { color:var(--hf-on-primary); }
+
+.auth-divider { margin:24px 0; }
+.auth-switch { margin:24px 0 0; text-align:center; color:var(--hf-on-surface-variant); font-size:13px; }
+.auth-switch button {
+  margin-left:6px; padding:0; border:0; background:transparent;
+  color:var(--hf-primary); font:inherit; font-weight:700; cursor:pointer; text-decoration:underline; text-underline-offset:4px;
+}
+.auth-switch button:hover:not(:disabled) { color:var(--hf-primary-strong); }
+.auth-switch button:disabled { opacity:.5; cursor:wait; }
+.auth-privacy { color:var(--hf-on-surface-variant); }
+/* Not: `.auth-tabs` kuralları artık kullanılmıyor — Üye ol/Giriş yap anahtarı
+   yerini `.auth-switch` bağlantısına bıraktı (Stitch üç ekranda da bu deseni
+   kullanıyor). Kurallar silinmedi; temizlik ayrı bir işte yapılacak. */
+/* Açılış ekranı Stitch'te kartsızdır: içerik doğrudan zeminin ortasında
+   durur. Kart çerçevesi yalnız bu ekranda kaldırılır. */
+.auth-loading .auth-status-card { border:0; background:transparent; box-shadow:none; padding:0; gap:12px; }
+.dark .auth-loading .auth-status-card { box-shadow:none; }
+.auth-loading .sport-loader-card h1 { margin-bottom:2px; }
+
+/* --- 16. Program reçetesi: set / tekrar / dinlenme ve sıralama ----------- */
+/* Stitch antrenman kurucusundaki hareket satırı. Sıra taşıma düğmeleri
+   sürükle-bırakın erişilebilir karşılığıdır: dokunmatikte ve klavyeyle de
+   çalışır, sürükleme ise her ikisinde de sorunludur. */
+.program-prescription { margin-top:var(--hf-space-lg); padding:var(--hf-space-md); border:1px solid var(--hf-hairline); border-radius:var(--hf-radius-xl); background:var(--hf-surface-lowest); box-shadow:var(--hf-elevation-card); }
+.program-prescription-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.program-prescription-head strong { font-family:var(--hf-font-display); font-size:16px; font-weight:600; }
+.program-estimate { padding:6px 12px; border-radius:var(--hf-radius-full); background:var(--hf-primary-container); color:var(--hf-on-primary-container); font-size:12px; font-weight:600; white-space:nowrap; }
+.program-prescription-list { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+.program-prescription-list > li { padding:12px; border:1px solid var(--hf-outline-variant); border-radius:var(--hf-radius-lg); background:var(--hf-paper); }
+.program-prescription-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.program-prescription-title b { font-size:14px; font-weight:700; }
+.program-prescription-order { display:flex; gap:4px; }
+.program-prescription-order button { display:grid; place-items:center; width:32px; height:32px; border:1px solid var(--hf-outline-variant); border-radius:var(--hf-radius-full); background:var(--hf-surface-lowest); color:var(--hf-on-surface-variant); font-size:14px; cursor:pointer; }
+.program-prescription-order button:hover:not(:disabled) { border-color:var(--hf-primary); color:var(--hf-primary); }
+.program-prescription-order button:disabled { opacity:.4; cursor:default; }
+.program-prescription-fields { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:10px; }
+.program-prescription-fields label { display:grid; gap:5px; min-width:0; color:var(--hf-on-surface-variant); font-size:11px; font-weight:600; }
+/* width:100% + min-width:0 şart: `input` öğesinin varsayılan içsel genişliği
+   grid izinden geniştir ve dar ekranda satırı yatay olarak taşırıyordu. */
+.program-prescription-fields input { width:100%; min-width:0; min-height:42px; padding:0 10px; border:1px solid var(--hf-outline-variant); border-radius:var(--hf-radius-md); background:var(--hf-surface-lowest); color:var(--hf-on-surface); font:inherit; font-size:14px; text-align:center; }
+.program-prescription-fields input:focus { border-color:var(--hf-primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--hf-primary) 18%, transparent); outline:none; }
+.program-dropset { align-self:end; min-height:42px; padding:0 10px; border:1px solid color-mix(in srgb, var(--hf-secondary-container) 55%, transparent); border-radius:var(--hf-radius-md); background:color-mix(in srgb, var(--hf-secondary-container) 12%, transparent); color:var(--hf-secondary); font-size:12px; font-weight:700; cursor:pointer; }
+.program-dropset.active { background:var(--hf-secondary-container); color:var(--hf-on-secondary-container); }
+@media (max-width:640px) { .program-prescription-fields { grid-template-columns:repeat(3,minmax(0,1fr)); } .program-dropset { grid-column:1/-1; } }
+
+/* --- 17. Genel arama: başlıkta tetikleyici, ortada komut paleti ---------- */
+.hf-topbar-search { display:flex; min-width:0; flex:1; justify-content:flex-end; }
+.hf-search-trigger {
+  display:flex; align-items:center; gap:10px; min-height:44px; padding:0 14px;
+  border:1px solid var(--hf-outline-variant); border-radius:var(--hf-radius-full);
+  background:var(--hf-paper); color:var(--hf-on-surface-variant);
+  font:inherit; font-size:14px; cursor:pointer; text-align:left;
+  transition:border-color .16s var(--hf-ease), color .16s var(--hf-ease);
+}
+.hf-search-trigger:hover { border-color:var(--hf-primary); color:var(--hf-on-surface); }
+.hf-search-trigger > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Telefonda başlıkta yalnız ikon kalır; palet ikisinde de aynıdır. */
+@media (max-width:1023px) {
+  .hf-search-trigger { width:44px; padding:0; justify-content:center; border-color:transparent; background:transparent; }
+  .hf-search-trigger > span { display:none; }
+}
+@media (min-width:1024px) { .hf-topbar-search { justify-content:flex-start; } .hf-search-trigger { width:min(420px,100%); } }
+
+.hf-search-overlay {
+  position:fixed; z-index:140; inset:0; display:grid; align-items:start; justify-items:center;
+  padding:max(12vh,60px) 16px 16px;
+  background:color-mix(in srgb, var(--hf-on-surface) 55%, transparent);
+  backdrop-filter:blur(var(--hf-glass-blur)); -webkit-backdrop-filter:blur(var(--hf-glass-blur));
+}
+.hf-search-panel {
+  width:min(620px,100%); max-height:min(70vh,560px); display:flex; flex-direction:column; overflow:hidden;
+  border:1px solid var(--hf-hairline); border-radius:var(--hf-radius-2xl);
+  background:var(--hf-surface-lowest); box-shadow:var(--hf-elevation-float);
+}
+.hf-search-field { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--hf-hairline); color:var(--hf-on-surface-variant); }
+.hf-search-field input { flex:1; min-width:0; min-height:40px; border:0; background:transparent; color:var(--hf-on-surface); font:inherit; font-size:16px; outline:none; }
+.hf-search-field input::-webkit-search-cancel-button { display:none; }
+.hf-search-field > button { display:grid; place-items:center; width:40px; height:40px; border:0; border-radius:var(--hf-radius-full); background:transparent; color:var(--hf-on-surface-variant); cursor:pointer; }
+.hf-search-field > button:hover { background:var(--hf-surface-highest); color:var(--hf-on-surface); }
+.hf-search-results { flex:1; overflow-y:auto; padding:8px; }
+.hf-search-hint { margin:0; padding:22px 14px; color:var(--hf-on-surface-variant); font-size:13px; line-height:1.5; text-align:center; }
+.hf-search-result {
+  display:flex; align-items:center; gap:12px; width:100%; min-height:56px; padding:10px 12px;
+  border:0; border-radius:var(--hf-radius-lg); background:transparent; color:var(--hf-on-surface);
+  font:inherit; text-align:left; cursor:pointer;
+}
+.hf-search-result.active { background:color-mix(in srgb, var(--hf-primary-container) 26%, transparent); }
+.hf-search-result-icon { display:grid; place-items:center; width:36px; height:36px; flex:0 0 36px; border-radius:var(--hf-radius-md); background:var(--hf-surface-highest); color:var(--hf-on-surface-variant); }
+.hf-search-result.active .hf-search-result-icon { background:var(--hf-primary-container); color:var(--hf-on-primary-container); }
+.hf-search-result-copy { display:grid; gap:2px; min-width:0; flex:1; }
+.hf-search-result-copy strong { font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hf-search-result-copy small { color:var(--hf-on-surface-variant); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hf-search-result-kind { flex:0 0 auto; padding:4px 10px; border-radius:var(--hf-radius-full); background:var(--hf-surface-highest); color:var(--hf-on-surface-variant); font-size:10px; font-weight:600; }
+@media (max-width:520px) { .hf-search-overlay { padding:0; align-items:stretch; } .hf-search-panel { width:100%; max-height:100dvh; border-radius:0; } .hf-search-result-kind { display:none; } }
+
+/* --- 18. Bildirim zili: izin durumu başlıkta görünür --------------------- */
+.hf-bell-wrap { position:relative; display:flex; }
+.hf-bell { position:relative; }
+.hf-bell-granted { color:var(--hf-primary); }
+.hf-bell-denied, .hf-bell-unsupported { color:var(--hf-on-surface-variant); }
+/* İzin henüz istenmemişken küçük bir nokta: kalıcı uyarı rozeti değil,
+   yalnız "buraya bir kez dokun" işareti. */
+.hf-bell-dot { position:absolute; top:9px; right:9px; width:8px; height:8px; border-radius:50%; background:var(--hf-secondary-container); box-shadow:0 0 0 2px var(--hf-surface); }
+.hf-bell:disabled { opacity:.6; cursor:wait; }
+/* Mesaj zile göre değil EKRANA göre konumlanır: zile bağlı `right:0`, zil
+   solda kaldığında kutuyu görüntü alanının dışına taşıyordu. */
+.hf-bell-notice {
+  position:fixed; z-index:120;
+  top:calc(64px + env(safe-area-inset-top) + 8px);
+  right:max(12px, env(safe-area-inset-right)); left:auto;
+  /* Genişlik `vw` ile değil sabit px + dar ekran sorgusuyla verilir: bazı
+     gömülü WebView'larda görünüm birimleri 0 çözülüp kutuyu görünmez yapıyor. */
+  width:320px;
+  margin:0; padding:12px 14px;
+  border:1px solid var(--hf-hairline); border-radius:var(--hf-radius-lg);
+  background:var(--hf-surface-lowest); color:var(--hf-on-surface-variant);
+  box-shadow:var(--hf-elevation-float); font-size:12px; line-height:1.5;
+}
+@media (max-width:368px) { .hf-bell-notice { left:12px; right:12px; width:auto; } }
+@media (min-width:1024px) { .hf-bell-notice { top:88px; right:var(--hf-space-xl); } }

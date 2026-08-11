@@ -20,14 +20,116 @@ export type TrainingPlace = "home" | "gym";
 /** Kullanıcının kurabileceği program sayısı. */
 export const CUSTOM_PROGRAM_SLOTS = 3;
 
+/**
+ * Programdaki tek bir hareketin reçetesi.
+ *
+ * Önceden yalnız hareket ADI saklanıyordu; set, tekrar ve dinlenme her seansta
+ * profilden yeniden türetiliyordu. Kullanıcı "bu programda 4x8 çalışırım"
+ * diyemiyordu. Reçete artık programın parçası ve slot ile birlikte kaydedilir.
+ *
+ * `reps` metindir: "8-10" gibi aralıklar ve "30 sn" gibi süreler de geçerli
+ * girdilerdir; sayıya zorlamak bunları kaybettirirdi.
+ */
+export type ProgramExercise = {
+  /** Katalogdaki hareket adı. İsimle saklanır; katalog kimlikleri değişebilir. */
+  name: string;
+  sets: number;
+  reps: string;
+  restSeconds: number;
+  /** Son sette ağırlığı düşürüp devam etme (Stitch tasarımındaki "Drop Set"). */
+  dropSet: boolean;
+};
+
+export const PROGRAM_EXERCISE_LIMITS = { sets: { min: 1, max: 10 }, rest: { min: 15, max: 300 }, reps: { maxLength: 12 } } as const;
+
+export const DEFAULT_PROGRAM_EXERCISE: Omit<ProgramExercise, "name"> = { sets: 3, reps: "10", restSeconds: 60, dropSet: false };
+
 export type CustomProgram = {
   /** Slot kimliği: "custom-1" … "custom-3". Sıra sabit kalsın diye slot bazlı. */
   id: string;
   name: string;
-  /** Katalogdaki hareket adları. İsimle saklanır; katalog kimlikleri değişebilir. */
-  exerciseNames: string[];
+  /** Sıralı hareket reçeteleri. Dizi sırası antrenman sırasıdır. */
+  exercises: ProgramExercise[];
   updatedAt: string;
 };
+
+const clampNumber = (value: unknown, min: number, max: number, fallback: number) => {
+  const parsed = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(parsed)));
+};
+
+/** Tek bir reçeteyi güvenli sınırlara çeker; adı olmayan kayıt atılır. */
+export function normalizeProgramExercise(raw: unknown): ProgramExercise | null {
+  if (typeof raw === "string") {
+    const name = raw.trim().slice(0, 80);
+    return name ? { name, ...DEFAULT_PROGRAM_EXERCISE } : null;
+  }
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Record<string, unknown>;
+  const name = typeof value.name === "string" ? value.name.trim().slice(0, 80) : "";
+  if (!name) return null;
+  const reps = typeof value.reps === "string" || typeof value.reps === "number"
+    ? String(value.reps).trim().slice(0, PROGRAM_EXERCISE_LIMITS.reps.maxLength)
+    : "";
+  return {
+    name,
+    sets: clampNumber(value.sets, PROGRAM_EXERCISE_LIMITS.sets.min, PROGRAM_EXERCISE_LIMITS.sets.max, DEFAULT_PROGRAM_EXERCISE.sets),
+    reps: reps || DEFAULT_PROGRAM_EXERCISE.reps,
+    restSeconds: clampNumber(value.restSeconds, PROGRAM_EXERCISE_LIMITS.rest.min, PROGRAM_EXERCISE_LIMITS.rest.max, DEFAULT_PROGRAM_EXERCISE.restSeconds),
+    dropSet: value.dropSet === true,
+  };
+}
+
+/** Geriye dönük okuma: eski kayıtlar `exerciseNames: string[]` tutuyordu. */
+function readProgramExercises(value: Record<string, unknown>): ProgramExercise[] {
+  const source = Array.isArray(value.exercises) ? value.exercises : Array.isArray(value.exerciseNames) ? value.exerciseNames : [];
+  const seen = new Set<string>();
+  const list: ProgramExercise[] = [];
+  for (const entry of source) {
+    const exercise = normalizeProgramExercise(entry);
+    if (!exercise || seen.has(exercise.name)) continue;
+    seen.add(exercise.name);
+    list.push(exercise);
+    if (list.length >= 12) break;
+  }
+  return list;
+}
+
+/** Hareket adları: kuyruğu kuran ve katalogla eşleştiren kod bunu kullanır. */
+export const programExerciseNames = (program: CustomProgram): string[] => program.exercises.map((exercise) => exercise.name);
+
+/** Sürükleyerek sıralama: hareketi `from` konumundan `to` konumuna taşır. */
+export function moveProgramExercise(exercises: ProgramExercise[], from: number, to: number): ProgramExercise[] {
+  if (from === to || from < 0 || to < 0 || from >= exercises.length || to >= exercises.length) return exercises;
+  const copy = exercises.slice();
+  const [moved] = copy.splice(from, 1);
+  copy.splice(to, 0, moved);
+  return copy;
+}
+
+/**
+ * Tasarımdaki "Est: 45 min" rozeti.
+ *
+ * Set süresi tekrar sayısıyla ölçeklenir (tekrar başına ~3,5 sn); "30 sn" gibi
+ * süre girdileri doğrudan kullanılır. Son setten sonra dinlenme sayılmaz —
+ * seans orada biter.
+ */
+export function estimateProgramMinutes(exercises: ProgramExercise[]): number {
+  let seconds = 0;
+  for (const exercise of exercises) {
+    const durationMatch = exercise.reps.match(/(\d+)\s*(sn|sec|s)\b/i);
+    const repsMatch = exercise.reps.match(/\d+/g);
+    const workSeconds = durationMatch
+      ? Number(durationMatch[1])
+      : Math.max(20, Math.round(Number(repsMatch?.[repsMatch.length - 1] ?? 10) * 3.5));
+    seconds += exercise.sets * workSeconds + Math.max(0, exercise.sets - 1) * exercise.restSeconds;
+    if (exercise.dropSet) seconds += workSeconds;
+  }
+  // Hareket geçişleri: her hareket arası ~45 sn hazırlık.
+  seconds += Math.max(0, exercises.length - 1) * 45;
+  return exercises.length ? Math.max(1, Math.round(seconds / 60)) : 0;
+}
 
 export function customSlotId(index: number): string {
   return `custom-${index + 1}`;
@@ -53,15 +155,13 @@ export function normalizeCustomPrograms(raw: unknown): CustomProgram[] {
     const value = item as Record<string, unknown>;
     const id = typeof value.id === "string" ? value.id : "";
     const name = typeof value.name === "string" ? value.name.trim().slice(0, 60) : "";
-    const exerciseNames = Array.isArray(value.exerciseNames)
-      ? [...new Set(value.exerciseNames.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== ""))].slice(0, 12)
-      : [];
-    if (!id || seen.has(id) || !exerciseNames.length) continue;
+    const exercises = readProgramExercises(value);
+    if (!id || seen.has(id) || !exercises.length) continue;
     seen.add(id);
     programs.push({
       id,
       name: name || id,
-      exerciseNames,
+      exercises,
       updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : new Date().toISOString(),
     });
     if (programs.length >= CUSTOM_PROGRAM_SLOTS) break;

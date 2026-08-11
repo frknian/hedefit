@@ -34,10 +34,42 @@ const exerciseById = new Map(exercises.map((exercise) => [exercise.id, exercise]
 export const getAllExercises = () => [...exercises];
 export const getExerciseById = (id: string) => exerciseById.get(id.replace(/[^a-zA-Z0-9_-]/g, "")) ?? null;
 
+/**
+ * Aranabilir metin ÖNCEDEN hesaplanır.
+ *
+ * Eskiden her tuş vuruşunda 873 hareketin her biri için ad, kas grupları,
+ * ekipman ve bunların Türkçe karşılıkları yeniden birleştirilip
+ * normalize ediliyordu: aramanın her adımında on binlerce geçici dize.
+ * Katalog uygulama ömrü boyunca değişmediği için bu iş bir kez yapılır ve
+ * filtreleme tek bir `includes` çağrısına iner.
+ */
+const searchHaystacks = exercises.map((exercise) => fold([
+  exercise.name,
+  ...exercise.primaryMuscles,
+  ...exercise.secondaryMuscles,
+  exercise.equipment || "",
+  ...exercise.primaryMuscles.map((item) => translateExerciseLabel(item)),
+  ...exercise.secondaryMuscles.map((item) => translateExerciseLabel(item)),
+  translateExerciseLabel(exercise.equipment),
+].join(" ")));
+
+/** Eşleşen hareketlerin katalog sırasındaki indeksleri. */
+export function searchExerciseIndexes(query: string): number[] {
+  const normalizedQuery = fold(query).slice(0, 100);
+  const matches: number[] = [];
+  if (!normalizedQuery) return matches;
+  for (let index = 0; index < searchHaystacks.length; index += 1) {
+    if (searchHaystacks[index].includes(normalizedQuery)) matches.push(index);
+  }
+  return matches;
+}
+
+export const getExerciseByIndex = (index: number) => exercises[index] ?? null;
+
 export function searchExercises(query: string) {
   const normalizedQuery = fold(query).slice(0, 100);
   if (!normalizedQuery) return getAllExercises();
-  return exercises.filter((exercise) => fold([exercise.name, ...exercise.primaryMuscles, ...exercise.secondaryMuscles, exercise.equipment || "", ...exercise.primaryMuscles.map((item) => translateExerciseLabel(item)), ...exercise.secondaryMuscles.map((item) => translateExerciseLabel(item)), translateExerciseLabel(exercise.equipment)].join(" ")).includes(normalizedQuery));
+  return exercises.filter((_, index) => searchHaystacks[index].includes(normalizedQuery));
 }
 
 export function filterExercises(filters: ExerciseFilters = {}) {
@@ -46,9 +78,8 @@ export function filterExercises(filters: ExerciseFilters = {}) {
   const equipment = fold(filters.equipment || "");
   const level = fold(filters.level || "");
   const category = fold(filters.category || "");
-  return exercises.filter((exercise) => {
-    const searchable = fold([exercise.name, ...exercise.primaryMuscles, ...exercise.secondaryMuscles, exercise.equipment || "", ...exercise.primaryMuscles.map((item) => translateExerciseLabel(item)), ...exercise.secondaryMuscles.map((item) => translateExerciseLabel(item)), translateExerciseLabel(exercise.equipment)].join(" "));
-    return (!search || searchable.includes(search))
+  return exercises.filter((exercise, index) => {
+    return (!search || searchHaystacks[index].includes(search))
       && (!muscle || exercise.primaryMuscles.some((item) => fold(item) === muscle) || exercise.secondaryMuscles.some((item) => fold(item) === muscle))
       && (!equipment || fold(exercise.equipment || "none") === equipment)
       && (!level || fold(exercise.level) === level)

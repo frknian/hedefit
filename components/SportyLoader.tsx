@@ -3,21 +3,23 @@
 import { OnboardingIcon } from "./onboarding/OnboardingIcon";
 
 /**
- * Açılış bekleme ekranı.
+ * Açılış / bekleme ekranı (Stitch "Giriş ve Yükleme Ekranı").
  *
- * Önceden sabit bir "↗" dairesiydi ve bir fitness uygulamasından çok jenerik
- * bir yükleniyor kutusu gibi duruyordu. Artık dönen bir tur halkası, nabız
- * gibi atan bir dambıl ve tempo çubukları var — bekleme süresi değişmiyor,
- * ama ekran uygulamanın ne olduğunu anlatıyor.
+ * Ortada nabız gibi genişleyen iki halka, içinde dambıl işaretli dairesel
+ * çekirdek; altında marka adı, durum metni ve zıplayan üç nokta. Bekleme
+ * süresi değişmez, ama ekran uygulamanın ne olduğunu anlatır.
  *
- * role="status" + aria-live: ekran okuyucu bekleme durumunu duyurur; animasyon
- * `prefers-reduced-motion` altında durur (bkz. globals.css).
+ * role="status" + aria-live: ekran okuyucu bekleme durumunu duyurur; tüm
+ * animasyonlar `prefers-reduced-motion` altında durur (bkz. globals.css).
  */
 export function SportyLoader({ title, body }: { title: string; body: string }) {
   return (
     <main className="auth-shell auth-loading">
       <section className="auth-status-card sport-loader-card" role="status" aria-live="polite">
         <div className="sport-loader">
+          {/* Dışa doğru sönerek büyüyen nabız halkaları. */}
+          <span className="sport-loader-pulse" aria-hidden="true" />
+          <span className="sport-loader-pulse" aria-hidden="true" />
           <svg viewBox="0 0 100 100" aria-hidden="true">
             <circle className="sport-loader-track" cx="50" cy="50" r="42" />
             <circle className="sport-loader-arc" cx="50" cy="50" r="42" />
@@ -26,7 +28,7 @@ export function SportyLoader({ title, body }: { title: string; body: string }) {
         </div>
         <h1>{title}</h1>
         <p>{body}</p>
-        <div className="sport-loader-bars" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+        <div className="sport-loader-bars" aria-hidden="true"><i /><i /><i /></div>
       </section>
     </main>
   );

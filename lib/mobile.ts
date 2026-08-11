@@ -5,6 +5,7 @@ import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { Network } from "@capacitor/network";
+import { Health } from "capacitor-health";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ReminderPreferences, WorkoutScheduleEntry } from "@/lib/workout-calendar";
 
@@ -94,6 +95,46 @@ export async function showRewardedAd(adUnitId: string): Promise<{ rewarded: bool
     return { rewarded: Boolean(reward) };
   } catch {
     return { rewarded: false };
+  }
+}
+
+/** Adım sayar için sağlık verisi (HealthKit / Health Connect) erişilebilir mi? Web'de her zaman false. */
+export async function isStepCounterAvailable(): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const result = await Health.isHealthAvailable();
+    return result.available;
+  } catch {
+    return false;
+  }
+}
+
+/** Adım okuma iznini ister; kullanıcı reddederse veya sağlık uygulaması yoksa false döner. */
+export async function requestStepPermission(): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const result = await Health.requestHealthPermissions({ permissions: ["READ_STEPS"] });
+    return Boolean(result.permissions?.[0]?.READ_STEPS);
+  } catch {
+    return false;
+  }
+}
+
+/** Bugünün yerel gece yarısından şu ana kadar atılan toplam adımı döner. */
+export async function fetchTodaySteps(): Promise<number | null> {
+  if (!isNativeApp()) return null;
+  try {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const result = await Health.queryAggregated({
+      startDate: startOfDay.toISOString(),
+      endDate: now.toISOString(),
+      dataType: "steps",
+      bucket: "day",
+    });
+    return result.aggregatedData.reduce((total, sample) => total + (Number(sample.value) || 0), 0);
+  } catch {
+    return null;
   }
 }
 

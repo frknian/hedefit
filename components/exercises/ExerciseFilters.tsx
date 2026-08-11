@@ -4,6 +4,7 @@ import type { ExerciseFilters as Filters } from "@/types/exercise";
 import { translateExerciseLabel } from "@/lib/exercise-translations";
 import { useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
+import { ChipButton } from "@/components/design";
 
 type FilterOptions = { muscles: string[]; equipment: string[]; levels: string[]; categories: string[] };
 
@@ -17,6 +18,6 @@ export function ExerciseFilters({ filters, options, onChange, onClear }: { filte
     <label><span>{t.exerciseLibrary.equipment}</span><select value={filters.equipment || ""} onChange={(event) => update("equipment", event.target.value)}><option value="">{t.exerciseLibrary.all}</option>{options.equipment.map((value) => <option value={value} key={value}>{translateExerciseLabel(value, locale)}</option>)}</select></label>
     <label><span>{t.exerciseLibrary.level}</span><select value={filters.level || ""} onChange={(event) => update("level", event.target.value)}><option value="">{t.exerciseLibrary.all}</option>{options.levels.map((value) => <option value={value} key={value}>{translateExerciseLabel(value, locale)}</option>)}</select></label>
     <label><span>{t.exerciseLibrary.category}</span><select value={filters.category || ""} onChange={(event) => update("category", event.target.value)}><option value="">{t.exerciseLibrary.all}</option>{options.categories.map((value) => <option value={value} key={value}>{translateExerciseLabel(value, locale)}</option>)}</select></label>
-    <button type="button" className="clear-filters" onClick={onClear}>{t.exerciseLibrary.clearFilters}</button>
+    <ChipButton className="clear-filters" onClick={onClear}>{t.exerciseLibrary.clearFilters}</ChipButton>
   </section>;
 }
