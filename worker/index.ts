@@ -69,7 +69,10 @@ const worker = {
         // orijinal dosyayı servis etmek, kırık görsel göstermekten iyidir.
         console.error("[image] optimization failed, serving original", error);
         const source = url.searchParams.get("url");
-        if (!source || !source.startsWith("/")) return new Response("Not found", { status: 404 });
+        // "//evil.com/x.png" da "/" ile başlar ama new URL(source, request.url)
+        // onu PROTOKOL-GÖRELİ bir yol olarak çözüp farklı bir origin'e gider.
+        // fetchAsset yalnız aynı Worker'ın ASSETS bağlamasına gitmeli.
+        if (!source || !source.startsWith("/") || source.startsWith("//")) return new Response("Not found", { status: 404 });
         return withSecurityHeaders(await fetchAsset(source));
       }
     }

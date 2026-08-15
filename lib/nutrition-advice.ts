@@ -11,6 +11,44 @@ function gap(target: number, current: number) {
   return Math.max(0, Math.round(target - current));
 }
 
+export type MealAdviceTotals = { calories: number; protein: number; carbs: number; fat: number };
+export type MealAdviceTargets = { calorieTarget: number; proteinTarget: number; carbsTarget: number; fatTarget: number };
+export type MealAdviceSnapshot = { date: string; totals: MealAdviceTotals; targets: MealAdviceTargets; locale: "tr" | "en"; revision: number };
+
+/**
+ * Öneri isteğinin CalorieTracker'da yeniden atılıp atılmayacağına karar
+ * verir. Önceden totals/dailyEntries her değiştiğinde (yani her yemek
+ * girişinde) yeniden isteniyordu; ücretsiz kullanıcının günlük
+ * nutrition_advice hakkı tek bir öğün ekleme oturumunda tükenebiliyordu.
+ *
+ * "Yenile" düğmesi (revision) her ARTIŞINDA zorunlu yeniden istek anlamına
+ * gelir — sabit bir eşik (ör. revision > 0) kullanmak ilk tıklamadan SONRA
+ * kalıcı olarak devreye girip bu eşik atlamasını sonsuza dek açık bırakırdı;
+ * bu yüzden önceki çağrının revision'ı ile KARŞILAŞTIRILIR.
+ *
+ * locale ve targets (calorieTarget vb.) isteğe AYNEN binen alanlardır; ilk
+ * sürümde bu ikisi izlenmiyordu — kullanıcı dili değiştirdiğinde veya
+ * hedeflerini güncellediğinde (totals aynı kalsa bile) eski dildeki/eski
+ * hedefe göre üretilmiş öneri metni ekranda takılı kalıyordu. Bunlar sayısal
+ * "ayar" değerleri olduğu için totals'taki gibi bir eşik uygulanmaz — HERHANGİ
+ * bir değişiklik yeniden istek gerektirir.
+ */
+export function shouldRefetchMealAdvice(previous: MealAdviceSnapshot | null, next: MealAdviceSnapshot): boolean {
+  if (!previous) return true;
+  if (next.revision !== previous.revision) return true;
+  if (next.date !== previous.date) return true;
+  if (next.locale !== previous.locale) return true;
+  if (next.targets.calorieTarget !== previous.targets.calorieTarget
+    || next.targets.proteinTarget !== previous.targets.proteinTarget
+    || next.targets.carbsTarget !== previous.targets.carbsTarget
+    || next.targets.fatTarget !== previous.targets.fatTarget) return true;
+  const meaningfulChange = (current: number, before: number) => Math.abs(current - before) >= Math.max(current, before) * 0.05 + 1;
+  return meaningfulChange(next.totals.calories, previous.totals.calories)
+    || meaningfulChange(next.totals.protein, previous.totals.protein)
+    || meaningfulChange(next.totals.carbs, previous.totals.carbs)
+    || meaningfulChange(next.totals.fat, previous.totals.fat);
+}
+
 export function localNutritionAdvice(input: NutritionAdviceInput, locale: "tr" | "en" = "tr") {
   if (locale === "en") {
     if (!input.meals.length) return "For your first meal, consider a protein source, a vegetable or fruit, and a carb that fits your needs. Adjust the portion to your hunger.";

@@ -3,8 +3,9 @@ import test from "node:test";
 
 import { POST, profileSignals } from "../app/api/generate-plan/route.ts";
 import { extractSessionMinutes, planProgressionBlock } from "../lib/training-profile.ts";
-import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
+import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv, withUsageMock } from "./helpers/auth.mjs";
 import { QUESTION, emptyHistory } from "../lib/onboarding-questions.ts";
+import { PROMPT_CATALOG_LIMIT } from "../lib/exercise-service.ts";
 
 // Cevaplar lib/onboarding-questions.ts'teki 15'lik sıraya göre kurulur.
 // Sıra bilgisini teste elle gömmek yerine adlandırılmış indeksleri kullanıyoruz;
@@ -122,7 +123,7 @@ test("AI sağlayıcısı başarıyla plan üretir", { concurrency: false }, asyn
   const restoreAuthEnv = withSupabaseAuthEnv();
   const calls = [];
   process.env.AI_API_KEY = "test-key";
-  globalThis.fetch = withAuthenticatedFetch(async (url) => {
+  globalThis.fetch = withUsageMock({ isPremium: false, allowed: true, currentCount: 1 }, async (url) => {
     calls.push(String(url));
     const generated = {
       title: "Test planı", profileSummary: "Test", rationale: "Test", safetyNote: "Test",
@@ -158,7 +159,12 @@ test("anahtar veya ağ yokken anlaşılır ve güvenli hata döndürür", { conc
     assert.match((await missingKey.json()).error, /AI_API_KEY/);
 
     process.env.AI_API_KEY = "test-key";
-    globalThis.fetch = withAuthenticatedFetch(async () => { throw new TypeError("network unavailable"); });
+    // Kota kontrolü başarıyla geçmeli; ağ hatası özellikle AI model çağrısını
+    // (chat/completions) vurmalı ki test AI üretiminin kendisinin başarısız
+    // olma senaryosunu ölçsün, kota kontrolünü değil.
+    globalThis.fetch = withUsageMock({ isPremium: false, allowed: true, currentCount: 1 }, async () => {
+      throw new TypeError("network unavailable");
+    });
     const networkFailure = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify(scenarios[1].payload) }));
     assert.equal(networkFailure.status, 502);
   } finally {
@@ -196,5 +202,121 @@ test("plan ilerleme blokları tamamlanan antrenmanla kademeli açılır", () => 
     const block = planProgressionBlock(sessions);
     assert.ok(block >= previous, `${sessions} antrenmanda kademe geriledi`);
     previous = block;
+  }
+});
+
+// generate-plan istek gövdesi boyutu ve exerciseCatalog kırpma sınırı: sunucu
+// öncesinde ikisini de doğrulamıyordu; kimliği doğrulanmış tek bir kullanıcı
+// 5 dk'da 5 istek hakkının HER birine megabaytlarca prompt taşıtabilirdi.
+function catalogItem(index) {
+  return { id: `item-${index}`, name: `Hareket ${index}`, english: `Exercise ${index}`, area: "Core", equipment: "none" };
+}
+
+// rateLimit `generate-plan:${userId}` anahtarını tüm dosya boyunca paylaşılan
+// tekil bir Map'te tutuyor (bkz. lib/rate-limit.ts); TEST_USER_ID'yi
+// kullanan testler aynı kovayı tüketiyor. Bu üç yeni test hangi sırada
+// çalışırsa çalışsın (ya da dosyaya başka AI testi eklenirse) sınıra
+// takılmasın diye her biri KENDİ tekil sahte kullanıcı kimliğiyle çağırıyor.
+function withIsolatedPlanFetch(userId, handler) {
+  return async (url, init) => {
+    const href = String(url);
+    if (href.includes("/auth/v1/user")) {
+      return Response.json({
+        id: userId, aud: "authenticated", role: "authenticated", email: `${userId}@example.com`,
+        email_confirmed_at: "2026-01-01T00:00:00.000Z", app_metadata: {}, user_metadata: {}, created_at: "2026-01-01T00:00:00.000Z",
+      });
+    }
+    if (href.includes("/rpc/check_and_consume_usage")) {
+      const body = JSON.parse(String(init.body));
+      return Response.json({ allowed: true, current_count: 1, effective_limit: body.p_free_limit, is_premium: false });
+    }
+    return handler(url, init);
+  };
+}
+
+test("generate-plan payload: normal durum — küçük bir katalog aynen isteme gider", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  let promptBody = "";
+  globalThis.fetch = withIsolatedPlanFetch("00000000-0000-4000-8000-000000000097", async (url, init) => {
+    promptBody = String(init?.body || "");
+    const generated = {
+      title: "T", profileSummary: "T", rationale: "T", safetyNote: "T",
+      analysis: { experienceLevel: "Yeni", weeklyFrequency: "1–2 gün", sessionMinutes: 30, primaryGoal: "Güç", intensity: "Düşük", equipmentMode: "Ekipmansız", focusAreas: ["Tüm vücut"], adaptations: ["A", "B", "C"] },
+      weeklySchedule: [{ day: "Pazartesi", focus: "Tüm vücut", durationMinutes: 30 }], progression: ["1", "2", "3", "4"],
+      workouts: [1, 2, 3].map((index) => ({ id: `ex-${index}`, name: `H${index}`, english: `E${index}`, area: "Core", sets: 3, reps: "10", restSeconds: 60, instructions: "Kontrollü uygula." })),
+    };
+    return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(generated) } }] });
+  });
+  try {
+    const smallCatalog = Array.from({ length: 5 }, (_, index) => catalogItem(index));
+    const response = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify({ ...scenarios[0].payload, exerciseCatalog: smallCatalog }) }));
+    assert.equal(response.status, 200);
+    const itemCount = (promptBody.match(/item-\d+/g) || []).length;
+    assert.equal(itemCount, 5, "5 hareketlik katalog eksiksiz gitmeli");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
+test(`generate-plan payload: edge case — ${PROMPT_CATALOG_LIMIT}'ı aşan katalog tam sınırda kırpılır`, { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  let promptBody = "";
+  globalThis.fetch = withIsolatedPlanFetch("00000000-0000-4000-8000-000000000098", async (url, init) => {
+    promptBody = String(init?.body || "");
+    const generated = {
+      title: "T", profileSummary: "T", rationale: "T", safetyNote: "T",
+      analysis: { experienceLevel: "Yeni", weeklyFrequency: "1–2 gün", sessionMinutes: 30, primaryGoal: "Güç", intensity: "Düşük", equipmentMode: "Ekipmansız", focusAreas: ["Tüm vücut"], adaptations: ["A", "B", "C"] },
+      weeklySchedule: [{ day: "Pazartesi", focus: "Tüm vücut", durationMinutes: 30 }], progression: ["1", "2", "3", "4"],
+      workouts: [1, 2, 3].map((index) => ({ id: `ex-${index}`, name: `H${index}`, english: `E${index}`, area: "Core", sets: 3, reps: "10", restSeconds: 60, instructions: "Kontrollü uygula." })),
+    };
+    return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(generated) } }] });
+  });
+  try {
+    // Sınırın 60 fazlası: kırpma gerçekten devrede mi, yoksa katalog zaten
+    // küçük olduğu için mi geçiyor ayırt edilsin diye kasıtlı büyük seçildi.
+    const oversizedCatalog = Array.from({ length: PROMPT_CATALOG_LIMIT + 60 }, (_, index) => catalogItem(index));
+    const response = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify({ ...scenarios[0].payload, exerciseCatalog: oversizedCatalog }) }));
+    assert.equal(response.status, 200);
+    const itemCount = (promptBody.match(/item-\d+/g) || []).length;
+    assert.equal(itemCount, PROMPT_CATALOG_LIMIT, `katalog tam olarak ${PROMPT_CATALOG_LIMIT} hareketle sınırlanmalı`);
+    // Kırpma dizinin BAŞINDAN (.slice(0, LIMIT)) yapılıyor; son eklenenler
+    // değil ilk LIMIT tanesi gitmeli.
+    assert.match(promptBody, /item-0\b/);
+    assert.doesNotMatch(promptBody, new RegExp(`item-${PROMPT_CATALOG_LIMIT}\\b`));
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
+  }
+});
+
+test("generate-plan payload: hatalı input — aşırı büyük istek gövdesi AI'ya hiç gitmeden 413 ile reddedilir", { concurrency: false }, async () => {
+  const previousKey = process.env.AI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  process.env.AI_API_KEY = "test-key";
+  let aiCalled = false;
+  globalThis.fetch = withIsolatedPlanFetch("00000000-0000-4000-8000-000000000099", async (url) => {
+    if (String(url).includes("/chat/completions")) { aiCalled = true; return Response.json({}); }
+    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
+  });
+  try {
+    // MAX_BODY_BYTES (8.5MB) üzerinde, uydurma devasa bir "note" alanıyla.
+    const hugePayload = { ...scenarios[0].payload, note: "x".repeat(9_000_000) };
+    const response = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify(hugePayload) }));
+    assert.equal(response.status, 413);
+    assert.equal(aiCalled, false, "boyut sınırı aşıldığında AI'ya hiç gidilmemeli");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousKey;
   }
 });

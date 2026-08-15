@@ -1,12 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { bearerToken } from "./api-auth.ts";
 
-export type UsageFeature = "chat" | "photo" | "text_nutrition" | "weekly_review" | "nutrition_advice";
+export type UsageFeature = "chat" | "photo" | "text_nutrition" | "weekly_review" | "nutrition_advice" | "plan";
 
 const DAILY_LIMITS = {
-  free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5 },
-  premium: { chat: 20, photo: 10, text_nutrition: 30, weekly_review: 3, nutrition_advice: 20 },
+  free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5, plan: 3 },
+  premium: { chat: 20, photo: 10, text_nutrition: 30, weekly_review: 3, nutrition_advice: 20, plan: 10 },
 } as const;
 
 export type UsageCheckResult = { allowed: boolean; used: number; limit: number; isPremium: boolean };
@@ -19,10 +19,19 @@ export type AdBonusResult = { bonusCount: number; maxBonus: number };
 
 /**
  * Günlük kullanım sınırını atomik biçimde kontrol eder ve izin varsa sayacı
- * bir artırır (bkz. db/migrations/20260726_usage_limits.sql —
- * increment_usage_counter). Sınır aşılmışsa sayaç ARTIRILMAZ.
+ * bir artırır. Sınır aşılmışsa sayaç ARTIRILMAZ.
+ *
+ * Öncelik db/migrations/20260812_combined_usage_check.sql — is_premium okuma
+ * ile sayaç artırmayı TEK round trip'te birleştiren check_and_consume_usage().
+ * Bu fonksiyon eski (henüz migration'ı uygulamamış) kurulumlarda mevcut
+ * değilse db/migrations/20260726_usage_limits.sql'deki iki adımlı yola
+ * (profil okuma + increment_usage_counter) döner — bkz. legacyCheckAndConsumeUsage.
+ *
+ * `userId`, `authenticateRequest()`'ten gelen doğrulanmış kullanıcı
+ * kimliğidir; yalnız eski yolda (profiles.select) RLS'e ek bir savunma
+ * katmanı olarak kullanılır. Yeni yol zaten yalnız auth.uid()'i okur.
  */
-export async function checkAndConsumeUsage(request: Request, feature: UsageFeature): Promise<UsageCheckResult | { error: Response }> {
+export async function checkAndConsumeUsage(request: Request, feature: UsageFeature, userId: string): Promise<UsageCheckResult | { error: Response }> {
   const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) {
@@ -38,31 +47,115 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
 
-  const { data: profile, error: profileError } = await client.from("profiles").select("is_premium").maybeSingle();
+  let { data, error } = await client.rpc("check_and_consume_usage", {
+    p_feature: feature,
+    p_free_limit: DAILY_LIMITS.free[feature],
+    p_premium_limit: DAILY_LIMITS.premium[feature],
+  }).single();
+
+  // PGRST202/PGRST204 genellikle migration eksikliğinden değil, PostgREST'in
+  // şema önbelleğinin bir önceki deploy'dan hemen sonra henüz güncellenmemiş
+  // olmasından kaynaklanır (Supabase şema değişikliklerinde otomatik yeniler,
+  // ama bu anlık değildir). Üretimde bu hatada doğrudan 503'e düşmek, migration
+  // eksik olmayan SIRADAN bir deploy'da bile TÜM AI özelliklerini kısa
+  // süreliğine kesebiliyordu. Kapalı tarafa düşmeden önce kısa bir bekleme +
+  // TEK yeniden deneme yapılır; önbellek gerçekten güncellenmişse bu ikinci
+  // deneme başarılı olur. Migration GERÇEKTEN eksikse yeniden deneme de aynı
+  // hatayı verir ve akış normal şekilde legacy yola / 503'e düşmeye devam eder.
+  if (error && isMissingInfrastructure(error) && process.env.NODE_ENV === "production") {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    ({ data, error } = await client.rpc("check_and_consume_usage", {
+      p_feature: feature,
+      p_free_limit: DAILY_LIMITS.free[feature],
+      p_premium_limit: DAILY_LIMITS.premium[feature],
+    }).single());
+  }
+
+  if (error && isMissingInfrastructure(error)) {
+    return legacyCheckAndConsumeUsage(client, feature, userId);
+  }
+  if (error || !data) {
+    console.error("[usage-limits] check_and_consume_usage rpc failed", error?.code);
+    return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
+  }
+  const result = data as { allowed: boolean; current_count: number; effective_limit: number; is_premium: boolean };
+  return { allowed: result.allowed, used: result.current_count, limit: result.effective_limit, isPremium: result.is_premium };
+}
+
+/**
+ * db/migrations/20260812_combined_usage_check.sql henüz uygulanmamış eski
+ * kurulumlar için iki adımlı geriye dönük uyumlu yol (profil okuma +
+ * increment_usage_counter — bkz. db/migrations/20260726_usage_limits.sql).
+ *
+ * SİLME PLANI: bu fonksiyon yalnızca geçiş dönemi içindir. 20260812_combined_usage_check.sql
+ * migration'ı TÜM ortamlarda (prod dahil) uygulandığı doğrulandıktan sonra:
+ *   1) Bu fonksiyonu ve isLegacyTextNutritionCounter'ı sil.
+ *   2) checkAndConsumeUsage'daki `if (error && isMissingInfrastructure(error))
+ *      return legacyCheckAndConsumeUsage(...)` dalını kaldır (missing-infra
+ *      artık yalnız handleMissingInfrastructure'a düşsün).
+ *   3) checkAndConsumeUsage'ın userId parametresini kaldır (yalnız bu
+ *      fonksiyonun .eq("id", userId) savunma katmanı için vardı; yeni RPC
+ *      zaten yalnız auth.uid() okuyor) ve 5 çağrı yerini güncelle
+ *      (app/api/chat, generate-plan, weekly-review, nutrition/parse-text,
+ *      nutrition/advice route.ts dosyaları).
+ * Bu üç adım atlanmadan silinmemeli; aksi hâlde eski kurulumlar sessizce
+ * "Kullanım sınırı kontrol edilemedi" hatası almaya başlar.
+ */
+async function legacyCheckAndConsumeUsage(
+  client: SupabaseClient,
+  feature: UsageFeature,
+  userId: string,
+): Promise<UsageCheckResult | { error: Response }> {
+  const { data: profile, error: profileError } = await client.from("profiles").select("is_premium").eq("id", userId).maybeSingle();
   if (profileError && !isMissingInfrastructure(profileError)) {
     console.error("[usage-limits] profile lookup failed", profileError.code);
     return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
   }
-  if (profileError) return unlimited(feature, "profiles.is_premium");
+  if (profileError) return handleMissingInfrastructure(feature, "profiles.is_premium");
   const isPremium = Boolean(profile?.is_premium);
   const limit = isPremium ? DAILY_LIMITS.premium[feature] : DAILY_LIMITS.free[feature];
 
   let { data, error } = await client.rpc("increment_usage_counter", { p_feature: feature, p_limit: limit }).single();
-  // text_nutrition sayacı yeni sürümle eklendi. Üretim migration'ı henüz
+  // text_nutrition sayacı sonradan eklendi. Üretim migration'ı henüz
   // uygulanmamış eski kurulumlarda fonksiyon "invalid feature" döndürür.
   // AI öğün analizini tamamen kilitlemek yerine geçici olarak mevcut chat
   // sayacını aynı (daha düşük) besin limitiyle kullanırız. Migration
   // uygulandığında ilk çağrı doğrudan ayrı sayaca geçer.
   if (feature === "text_nutrition" && error && isLegacyTextNutritionCounter(error)) {
+    console.warn("[usage-limits] text_nutrition sayacı bulunamadı; chat sayacı paylaşılıyor. db/migrations/20260806_premium_plan_expansion.sql çalıştırılmalı.");
     ({ data, error } = await client.rpc("increment_usage_counter", { p_feature: "chat", p_limit: limit }).single());
   }
-  if (error && isMissingInfrastructure(error)) return unlimited(feature, "increment_usage_counter", isPremium);
+  if (error && isMissingInfrastructure(error)) return handleMissingInfrastructure(feature, "increment_usage_counter", isPremium);
   if (error || !data) {
     console.error("[usage-limits] rpc failed", error?.code);
     return { error: Response.json({ error: "Kullanım sınırı kontrol edilemedi." }, { status: 500 }) };
   }
   const result = data as { allowed: boolean; current_count: number; effective_limit: number };
   return { allowed: result.allowed, used: result.current_count, limit: result.effective_limit ?? limit, isPremium };
+}
+
+/**
+ * AI çağrısı sayaç artırıldıktan SONRA başarısız olursa (zaman aşımı, model
+ * hatası, doğrulama başarısızlığı) o hakkı geri iade eder. Çağıran route
+ * güvenli yerel yanıta düşse bile kullanıcının günlük hakkı boşa gitmesin
+ * diye (bkz. app/api/chat/route.ts, app/api/nutrition/parse-text/route.ts).
+ * İade, iyimser bir en-iyi-çaba işlemidir: başarısız olursa yalnız loglanır,
+ * kullanıcıya hata döndürülmez — asıl istek zaten yanıtlanmış olur.
+ */
+export async function refundUsage(request: Request, feature: UsageFeature): Promise<void> {
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const token = bearerToken(request);
+  if (!url || !anonKey || !token) return;
+
+  const client = createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { error } = await client.rpc("refund_usage_counter", { p_feature: feature, p_amount: 1 });
+  if (error && !isMissingInfrastructure(error)) {
+    console.error("[usage-limits] refund_usage_counter failed", error.code);
+  }
 }
 
 /**
@@ -157,9 +250,25 @@ function isLegacyTextNutritionCounter(error: { code?: string | null; message?: s
   return /invalid feature|usage_counters_feature_check/i.test(`${error.message || ""} ${error.details || ""}`);
 }
 
-function unlimited(feature: UsageFeature, missing: string, isPremium = false): UsageCheckResult {
-  console.warn(`[usage-limits] ${missing} bulunamadı; kullanım sınırı uygulanmıyor. db/migrations/20260726_usage_limits.sql çalıştırılmalı.`);
-  return { allowed: true, used: 0, limit: Number.POSITIVE_INFINITY, isPremium };
+/**
+ * Eksik altyapı (migration uygulanmamış / PostgREST şema önbelleği henüz
+ * yenilenmemiş) tespit edildiğinde ne yapılacağına karar verir.
+ *
+ * Geliştirmede (NODE_ENV !== "production") sınırsız çalışmaya devam eder —
+ * yerel kurulumda her migration'ı manuel uygulamadan iterasyon yapılabilsin.
+ * ÜRETİMDE bunun tersi güvenli: sınırı uygulayamıyorsak isteği KAPALI tarafa
+ * düşürüp 503 döneriz. Önceki davranış (üretimde de sınırsız) PGRST202/
+ * PGRST204'ün yalnız "migration eksik" değil, PostgREST şema önbelleği kısa
+ * süreliğine güncel değilken de dönebilmesi nedeniyle her deploy sonrası
+ * kısa bir pencerede TÜM kullanıcılara sınırsız AI hakkı veriyordu.
+ */
+function handleMissingInfrastructure(feature: UsageFeature, missing: string, isPremium = false): UsageCheckResult | { error: Response } {
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[usage-limits] ${missing} bulunamadı; kullanım sınırı uygulanmıyor (yalnız üretim dışı). db/migrations/20260726_usage_limits.sql çalıştırılmalı.`);
+    return { allowed: true, used: 0, limit: Number.POSITIVE_INFINITY, isPremium };
+  }
+  console.error(`[usage-limits] ${missing} bulunamadı; kullanım sınırı üretimde kapalı tarafa düşürüldü (feature=${feature}). db/migrations/20260726_usage_limits.sql çalıştırılmalı.`);
+  return { error: Response.json({ error: "Kullanım sınırı servisi geçici olarak kullanılamıyor. Lütfen kısa süre sonra tekrar dene." }, { status: 503 }) };
 }
 
 export function usageLimitExceeded(feature: UsageFeature, used: number, limit: number) {
@@ -171,7 +280,9 @@ export function usageLimitExceeded(feature: UsageFeature, used: number, limit: n
         ? "yazarak AI besin tahmini"
         : feature === "weekly_review"
           ? "haftalık AI değerlendirme"
-          : "AI beslenme önerisi";
+          : feature === "plan"
+            ? "AI program üretimi"
+            : "AI beslenme önerisi";
   return Response.json(
     {
       error: `Bugünkü ücretsiz ${featureLabel} sınırına ulaştın (${limit}/${limit}). Yarın tekrar deneyebilirsin.`,

@@ -27,6 +27,12 @@ create policy "Users can update own profile" on public.profiles for update using
 
 -- Profil yaşam döngüsü, tarihçe, özellik bayrakları ve özel avatar deposu için
 -- db/migrations/20260723_profile_lifecycle.sql dosyası uygulanmalıdır.
+--
+-- KRİTİK: yukarıdaki UPDATE politikası sütun kısıtı içermiyor. is_premium
+-- (db/migrations/20260726_usage_limits.sql ile eklenir) bu politikayla
+-- korunmasız kalır ve kullanıcı kendi satırında bu sütunu true yaparak günlük
+-- AI limitlerini yükseltebilir. db/migrations/20260812_profile_privilege_guard.sql
+-- BU YÜZDEN ZORUNLUDUR; yalnız base schema ile production'a çıkma.
 
 create table if not exists public.workout_sessions (
   id uuid primary key,
@@ -282,6 +288,11 @@ alter table public.food_entries enable row level security;
 create policy "Users can read own food entries" on public.food_entries for select using (auth.uid() = user_id);
 create policy "Users can insert own food entries" on public.food_entries for insert with check (auth.uid() = user_id);
 create policy "Users can delete own food entries" on public.food_entries for delete using (auth.uid() = user_id);
+-- UPDATE politikası kasıtlı olarak burada yok: db/migrations/20260727_nutrition_tracking.sql
+-- tarafından eklenir. Yalnız bu dosya çalıştırılıp migration'lar atlanırsa
+-- PATCH /api/nutrition/logs/[id] RLS tarafından sessizce 0 satırla engellenir
+-- (bkz. app/api/nutrition/logs/[id]/route.ts) — migration'ların sırayla
+-- uygulanması zorunludur.
 
 -- Daily activity streaks are updated only by the server-side RPCs/trigger in
 -- db/migrations/20260722_activity_streaks.sql. Direct writes stay unavailable

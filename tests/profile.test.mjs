@@ -41,8 +41,12 @@ test("profil yaşam döngüsü özel depolama, RLS ve güçlü silme doğrulamas
   assert.doesNotMatch(component, /DEĞİŞİKLİK GEÇMİŞİ|her doğum gününde otomatik güncellenir/);
   assert.match(route, /auth\.admin\.deleteUser/);
   assert.match(route, /SUPABASE_SECRET_KEY/);
+  // Bu iki geri alınamaz uç nokta, sunucu tarafı jeton doğrulamasını (e-posta
+  // onayı ve hız sınırı dahil) tekrar yazmak yerine paylaşılan
+  // authenticateRequest()'i kullanmalı (bkz. lib/api-auth.ts).
+  assert.match(route, /authenticateRequest\(request\)/);
+  assert.match(progressResetRoute, /authenticateRequest\(request\)/);
   assert.match(progressResetRoute, /payload\.confirmation !== "RESET_PROGRESS"/);
-  assert.match(progressResetRoute, /authClient\.auth\.getUser\(token\)/);
   for (const table of ["food_entries", "sport_activity_entries", "activity_logs", "user_streaks", "workout_sessions"]) {
     assert.match(progressResetRoute, new RegExp(table));
   }

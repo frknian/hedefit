@@ -2,7 +2,7 @@ import { localNutritionAdvice, type NutritionAdviceInput } from "../../../../lib
 import { authenticateRequest } from "../../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 import { generateAiText, hasAiProvider } from "../../../../lib/ai-provider.ts";
-import { checkAndConsumeUsage } from "../../../../lib/usage-limits.ts";
+import { checkAndConsumeUsage, refundUsage } from "../../../../lib/usage-limits.ts";
 
 export const runtime = "edge";
 
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   // Bu istek her öğün girişinde arka planda otomatik atılır; ücretsiz
   // kullanıcılarda günlük AI öneri sınırı dolduğunda hata yerine sessizce
   // yerel yedeğe düşülür.
-  const usage = await checkAndConsumeUsage(request, "nutrition_advice");
+  const usage = await checkAndConsumeUsage(request, "nutrition_advice", auth.user.id);
   if ("error" in usage || !usage.allowed) return Response.json({ advice: fallback, source: "fallback" });
 
   const languageInstruction = locale === "en" ? "in English" : "Türkçe";
@@ -84,5 +84,7 @@ export async function POST(request: Request) {
   } catch {
     // Yerel yedeğe düşülür.
   }
+  // AI'dan kullanılabilir bir öneri gelmedi; kullanıcının günlük hakkı iade edilir.
+  if (Number.isFinite(usage.limit)) await refundUsage(request, "nutrition_advice");
   return Response.json({ advice: fallback, source: "fallback" });
 }

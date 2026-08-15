@@ -11,6 +11,9 @@ export const tr = {
     themeDarkShort: "Koyu",
     languageToggle: "English",
     footerTagline: "Hedefit · Hedefin için fit plan.",
+    sessionSyncFailed: "Antrenman kaydın hesabına eşitlenemedi; bağlantını kontrol edip tekrar dene. Kayıt bu oturumun ilerleme ekranında kalır.",
+    profileSyncFailed: "Profil bilgilerin kaydedilemedi; bağlantını kontrol edip profil ekranından tekrar kaydet.",
+    dismiss: "Kapat",
   },
   notifications: {
     labelDefault: "Bildirimleri aç",

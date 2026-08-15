@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
+import { isVerifiedAuthUser } from "./auth.ts";
 
 export type AuthenticatedUser = { id: string; email: string | null };
 
@@ -29,7 +30,14 @@ export async function authenticateRequest(request: Request): Promise<{ user: Aut
   if (error || !data.user) {
     return { error: Response.json({ error: "Oturum doğrulanamadı." }, { status: 401 }) };
   }
-  if (!data.user.email_confirmed_at) {
+  // isVerifiedAuthUser: yalnız email_confirmed_at değil, Google OAuth için
+  // kimlik sağlayıcının email_verified bayrağını da kabul eder — bazı Google
+  // dönüşlerinde email_confirmed_at oturum yenilenene kadar boş kalabiliyor
+  // (bkz. lib/auth.ts). Bu kontrolü client-side isVerifiedAuthUser ile
+  // AYNI tutmazsak, istemci zaten doğrulanmış saydığı bir kullanıcıyı sunucu
+  // reddedebilir (ör. hesap silme/ilerleme sıfırlama az önce Google ile giriş
+  // yapmış birinde 403 döndürüyordu).
+  if (!isVerifiedAuthUser(data.user)) {
     return { error: Response.json({ error: "Bu işlem için e-posta adresini doğrulamalısın." }, { status: 403 }) };
   }
   return { user: { id: data.user.id, email: data.user.email ?? null } };

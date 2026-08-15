@@ -23,6 +23,14 @@ const FORWARDED_RESPONSE_HEADERS = [
 ];
 const BODYLESS_STATUSES = new Set([101, 204, 205, 304]);
 
+function safeDecodeURIComponent(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
 export async function handleSupabaseProxy(request: Request): Promise<Response | null> {
   const incomingUrl = new URL(request.url);
   if (!incomingUrl.pathname.startsWith(PROXY_PREFIX)) return null;
@@ -31,7 +39,16 @@ export async function handleSupabaseProxy(request: Request): Promise<Response | 
     return Response.json({ error: "Unknown Supabase project." }, { status: 403 });
   }
 
-  const pathname = incomingUrl.pathname.slice(PROXY_PREFIX.length);
+  // Ham (hâlâ yüzde kodlu) yolu TEK SEFERDE çözüp kanonik hale getiriyoruz;
+  // hem allowlist kontrolü hem de hedef URL inşası bu TEK değeri kullanır.
+  // Önceden allowlist kontrolü çözülmüş bir kopya üzerinde, hedef URL ise ham
+  // kopya üzerinde yapılıyordu — iki farklı temsilin ayrışması, birinin kabul
+  // ettiğini diğerinin farklı yorumlaması riskini taşırdı.
+  const rawPathname = incomingUrl.pathname.slice(PROXY_PREFIX.length);
+  const pathname = safeDecodeURIComponent(rawPathname);
+  if (pathname === null || pathname.split("/").some((segment) => segment === "." || segment === "..")) {
+    return Response.json({ error: "Unsupported Supabase endpoint." }, { status: 404 });
+  }
   if (!ALLOWED_PREFIXES.some((prefix) => `${pathname}/`.startsWith(prefix))) {
     return Response.json({ error: "Unsupported Supabase endpoint." }, { status: 404 });
   }
@@ -69,7 +86,8 @@ export async function handleSupabaseProxy(request: Request): Promise<Response | 
       statusText: upstream.statusText,
       headers: responseHeaders,
     });
-  } catch {
+  } catch (error) {
+    console.error("[supabase-proxy] upstream request failed", error);
     return Response.json(
       { code: 502, error_code: "upstream_unavailable", msg: "Authentication service is temporarily unavailable." },
       { status: 502, headers: { "Cache-Control": "no-store", "X-Hedefit-Proxy": "supabase" } },

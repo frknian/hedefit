@@ -15,7 +15,10 @@ export async function GET(request: Request) {
   let query = client.from("food_entries").select("*").eq("user_id", auth.user.id).order("consumed_at", { ascending: false }).limit(100);
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) query = query.eq("logged_date", date);
   const { data, error } = await query;
-  if (error) return Response.json({ error: "Beslenme günlüğü yüklenemedi." }, { status: 500 });
+  if (error) {
+    console.error("[nutrition-logs] read failed", error.code);
+    return Response.json({ error: "Beslenme günlüğü yüklenemedi." }, { status: 500 });
+  }
   return Response.json({ logs: data || [] }, { headers: { "Cache-Control": "private, no-store" } });
 }
 

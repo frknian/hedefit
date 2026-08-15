@@ -6,6 +6,13 @@ import { validateManualNutrition } from "./nutrition-calculation.ts";
 export const MEAL_TYPES = ["Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık"] as const;
 export const INPUT_METHODS = ["natural_language", "photo"] as const;
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Gerçek bir UUID (v1-5) biçimini doğrular; app/api/nutrition/logs/[id]/route.ts ile paylaşılır. */
+export function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
 export type NutritionLogInput = {
   foodId: string | null;
   loggedDate: string;
@@ -35,7 +42,7 @@ export function validateNutritionLogInput(value: unknown, partial = false): Part
   const required = (key: string) => !partial || key in input;
 
   if (required("foodId")) {
-    if (input.foodId !== null && (typeof input.foodId !== "string" || !/^[0-9a-f-]{36}$/i.test(input.foodId))) return null;
+    if (input.foodId !== null && (typeof input.foodId !== "string" || !isUuid(input.foodId))) return null;
     result.foodId = input.foodId as string | null;
   }
   if (required("loggedDate")) {

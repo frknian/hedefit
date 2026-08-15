@@ -5,6 +5,13 @@ import { normalizeAnswers } from "../../../lib/goal-plan.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
+import { checkAndConsumeUsage, refundUsage, usageLimitExceeded } from "../../../lib/usage-limits.ts";
+import { PROMPT_CATALOG_LIMIT } from "../../../lib/exercise-service.ts";
+
+// İstek gövdesinin tamamı için kaba bir üst sınır (bkz. photoDataUrl zaten
+// parseImageDataUrl içinde ~7 MB base64 ile sınırlı; bu, geri kalan JSON
+// alanlarının — profil, geçmiş, katalog — toplamda makul kalmasını sağlar).
+const MAX_BODY_BYTES = 8_500_000;
 
 const plannerRules = [
   "Yaş, cinsiyet, boy, kilo, hedef metni, ortam, ekipman, istenen hareketler ve test cevaplarının HER BİRİNİ tek tek değerlendir; hiçbirini yok sayma.",
@@ -156,14 +163,37 @@ export async function POST(request: Request) {
 
   if (!hasAiProvider()) return Response.json({ error: "AI_API_KEY tanımlı değil" }, { status: 503 });
 
-  let payload: Record<string, unknown>;
+  let bodyText: string;
   try {
-    payload = await request.json() as Record<string, unknown>;
+    bodyText = await request.text();
   } catch {
     return Response.json({ error: "Profil verileri okunamadı" }, { status: 400 });
   }
+  // exerciseCatalog ve ham profil JSON'unun sunucuda hiçbir boyut kontrolü
+  // yoktu; kimliği doğrulanmış tek bir kullanıcı 5 dk'da 5 istek hakkının
+  // HER birine megabaytlarca prompt taşıtıp AI maliyetini şişirebilirdi.
+  if (bodyText.length > MAX_BODY_BYTES) {
+    return Response.json({ error: "Profil verisi çok büyük." }, { status: 413 });
+  }
+
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(bodyText) as Record<string, unknown>;
+  } catch {
+    return Response.json({ error: "Profil verileri okunamadı" }, { status: 400 });
+  }
+
+  const usage = await checkAndConsumeUsage(request, "plan", auth.user.id);
+  if ("error" in usage) return usage.error;
+  if (!usage.allowed) return usageLimitExceeded("plan", usage.used, usage.limit);
+
   const photoDataUrl = typeof payload.photoDataUrl === "string" ? payload.photoDataUrl : null;
-  const exerciseCatalog = Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : [];
+  // Meşru istemci kataloğu zaten PROMPT_CATALOG_LIMIT ile kırpıyor (bkz.
+  // lib/exercise-service.ts getExercisesForProfile); sunucu bunu asla
+  // doğrulamıyordu. Sınırı burada da uygulamak, hazırlanmış bir istekle
+  // kataloğun tamamının (873 hareket) veya uydurma bir dizinin gönderilip
+  // istemi/maliyeti şişirmesini engeller.
+  const exerciseCatalog = (Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : []).slice(0, PROMPT_CATALOG_LIMIT);
   const locale = payload.locale === "en" ? "en" : "tr";
   const profile = { ...payload };
   delete profile.photoDataUrl;
@@ -243,11 +273,14 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
       abortSignal: AbortSignal.timeout(60_000),
     });
     if (result.workouts.length < 3) {
+      // Kullanıcı gerçekte kullanılabilir bir plan ALMADI; günlük hakkı iade edilir.
+      if (Number.isFinite(usage.limit)) await refundUsage(request, "plan");
       return Response.json({ error: "Model yeterli hareket üretmedi" }, { status: 502 });
     }
     return Response.json({ ...result, profileFingerprint: signals.fingerprint, model: aiModelId() });
   } catch (error) {
     console.error("AI plan generation error", error);
+    if (Number.isFinite(usage.limit)) await refundUsage(request, "plan");
     return Response.json({
       error: "Program üretimi başarısız",
       detail: process.env.NODE_ENV === "development" ? String(error) : undefined,

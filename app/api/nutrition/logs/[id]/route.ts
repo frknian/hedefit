@@ -1,12 +1,8 @@
 import { authenticateRequest } from "@/lib/api-auth";
-import { nutritionUserClient, toCompatibleFoodEntryRow, validateNutritionLogInput } from "@/lib/nutrition-log";
+import { isUuid, nutritionUserClient, toCompatibleFoodEntryRow, validateNutritionLogInput } from "@/lib/nutrition-log";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 export const runtime = "edge";
-
-function validId(id: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await authenticateRequest(request);
@@ -14,7 +10,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const limited = rateLimit(`nutrition-logs-update:${auth.user.id}`, 30, 60_000);
   if (!limited.ok) return tooManyRequests(limited.retryAfterSeconds);
   const { id } = await params;
-  if (!validId(id)) return Response.json({ error: "Geçersiz kayıt kimliği." }, { status: 400 });
+  if (!isUuid(id)) return Response.json({ error: "Geçersiz kayıt kimliği." }, { status: 400 });
   const input = validateNutritionLogInput(await request.json().catch(() => null), true);
   if (!input || Object.keys(input).length === 0) return Response.json({ error: "Güncellenecek geçerli alan bulunamadı." }, { status: 400 });
   const client = nutritionUserClient(request);
@@ -49,7 +45,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const limited = rateLimit(`nutrition-logs-delete:${auth.user.id}`, 30, 60_000);
   if (!limited.ok) return tooManyRequests(limited.retryAfterSeconds);
   const { id } = await params;
-  if (!validId(id)) return Response.json({ error: "Geçersiz kayıt kimliği." }, { status: 400 });
+  if (!isUuid(id)) return Response.json({ error: "Geçersiz kayıt kimliği." }, { status: 400 });
   const client = nutritionUserClient(request);
   if (!client) return Response.json({ error: "Beslenme günlüğü yapılandırılmamış." }, { status: 503 });
   const { data, error } = await client.from("food_entries")

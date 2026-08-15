@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { normalizeSupabaseUrl } from "../../../../lib/supabase/url.ts";
+import { authenticateRequest } from "../../../../lib/api-auth.ts";
+import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 
 export const runtime = "nodejs";
 
@@ -13,19 +15,18 @@ const PROGRESS_TABLES = [
   "workout_sessions",
 ] as const;
 
-function bearerToken(request: Request) {
-  const authorization = request.headers.get("authorization") || "";
-  return authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
-}
-
 export async function POST(request: Request) {
+  const auth = await authenticateRequest(request);
+  if ("error" in auth) return auth.error;
+  // Geri alınamaz bir işlem: sohbet gibi günlük kotaya değil, kötüye
+  // kullanımı sınırlayan dar bir hız sınırına bağlı.
+  const rateLimitResult = rateLimit(`account-reset-progress:${auth.user.id}`, 3, 3_600_000);
+  if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
+
   const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
   if (!url || !anonKey || !secretKey) return Response.json({ error: "İlerleme sıfırlama servisi yapılandırılmamış." }, { status: 503 });
-
-  const token = bearerToken(request);
-  if (!token) return Response.json({ error: "Güvenli oturum bulunamadı." }, { status: 401 });
 
   let payload: { confirmation?: string };
   try {
@@ -34,10 +35,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "Sıfırlama onayı okunamadı." }, { status: 400 });
   }
   if (payload.confirmation !== "RESET_PROGRESS") return Response.json({ error: "Sıfırlama onayı eşleşmiyor." }, { status: 400 });
-
-  const authClient = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: { user }, error: userError } = await authClient.auth.getUser(token);
-  if (userError || !user) return Response.json({ error: "Oturum doğrulanamadı." }, { status: 401 });
 
   const admin = createClient(url, secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
@@ -48,17 +45,17 @@ export async function POST(request: Request) {
   const { error: scheduleError } = await admin
     .from("workout_schedule")
     .update({ completed_session_id: null, status: "planned" })
-    .eq("user_id", user.id)
+    .eq("user_id", auth.user.id)
     .not("completed_session_id", "is", null);
   if (scheduleError) {
-    console.error("[progress-reset] schedule release failed", { userId: user.id, code: scheduleError.code });
+    console.error("[progress-reset] schedule release failed", { userId: auth.user.id, code: scheduleError.code });
     return Response.json({ error: "İlerleme verileri sıfırlanamadı. Lütfen tekrar dene." }, { status: 500 });
   }
 
   for (const table of PROGRESS_TABLES) {
-    const { error } = await admin.from(table).delete().eq("user_id", user.id);
+    const { error } = await admin.from(table).delete().eq("user_id", auth.user.id);
     if (error) {
-      console.error("[progress-reset] deletion failed", { table, userId: user.id, code: error.code });
+      console.error("[progress-reset] deletion failed", { table, userId: auth.user.id, code: error.code });
       return Response.json({ error: "İlerleme verileri sıfırlanamadı. Lütfen tekrar dene." }, { status: 500 });
     }
   }

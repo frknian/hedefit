@@ -146,7 +146,7 @@ const BODYWEIGHT_TAGS = new Set(["body only", "", "other"]);
  * taşırdı. Sınır kütüphaneyi DEĞİL yalnız istemi bağlar: kullanıcı 873 hareketin
  * tamamını uygulamada görmeye devam eder.
  */
-const PROMPT_CATALOG_LIMIT = 240;
+export const PROMPT_CATALOG_LIMIT = 240;
 
 function groupBy<T>(items: T[], key: (item: T) => string): T[][] {
   const buckets = new Map<string, T[]>();

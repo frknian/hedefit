@@ -13,6 +13,9 @@ export const en: typeof tr = {
     themeDarkShort: "Dark",
     languageToggle: "Türkçe",
     footerTagline: "Hedefit · A fit plan for your goal.",
+    sessionSyncFailed: "Your workout couldn't sync to your account; check your connection and try again. It stays on this session's progress screen.",
+    profileSyncFailed: "Your profile changes couldn't be saved; check your connection and save again from the profile screen.",
+    dismiss: "Dismiss",
   },
   notifications: {
     labelDefault: "Turn on notifications",

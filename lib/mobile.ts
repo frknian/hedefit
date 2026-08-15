@@ -82,6 +82,16 @@ export async function requestAdTrackingAuthorization() {
 }
 
 /**
+ * showRewardVideoAd() bir AdMobRewardItem ({ type, amount }) ile çözülür.
+ * Boolean(reward) her zaman true dönerdi (boş {} bile truthy); gerçek ödül
+ * miktarının pozitif olduğunu kontrol etmek gerekiyor.
+ */
+export function isRewardedAdReward(reward: unknown): boolean {
+  if (!reward || typeof reward !== "object") return false;
+  return Number((reward as { amount?: unknown }).amount) > 0;
+}
+
+/**
  * Ödüllü reklamı hazırlayıp gösterir. Ödül yalnızca kullanıcı reklamı sonuna
  * kadar izlerse (showRewardVideoAd promise'i çözülürse) kazanılmış sayılır;
  * erken kapatma veya yükleme hatası { rewarded: false } döner.
@@ -92,7 +102,7 @@ export async function showRewardedAd(adUnitId: string): Promise<{ rewarded: bool
   try {
     await AdMob.prepareRewardVideoAd({ adId: adUnitId, isTesting: process.env.NODE_ENV !== "production" });
     const reward = await AdMob.showRewardVideoAd();
-    return { rewarded: Boolean(reward) };
+    return { rewarded: isRewardedAdReward(reward) };
   } catch {
     return { rewarded: false };
   }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { enforceWeeklySafety, hasEnoughWeeklyData, localWeeklyReview, validateWeeklyReview, validateWeeklySummary, weeklyReviewWeekStart } from "../lib/weekly-review.ts";
-import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
+import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv, withUsageMock } from "./helpers/auth.mjs";
 import { tr } from "../lib/i18n/dictionaries/tr.ts";
 
 const baseSummary = {
@@ -66,11 +66,7 @@ test("günlük AI değerlendirme sınırı dolunca AI'ya gitmeden yerel değerle
   const previousFetch = globalThis.fetch;
   const restoreAuthEnv = withSupabaseAuthEnv();
   process.env.AI_API_KEY = "test-key";
-  globalThis.fetch = withAuthenticatedFetch((url) => {
-    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: false });
-    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: false, current_count: 1 });
-    throw new TypeError(`beklenmeyen ağ isteği: ${url}`);
-  });
+  globalThis.fetch = withUsageMock({ isPremium: false, allowed: false, currentCount: 1 });
   try {
     const { POST } = await import(`../app/api/weekly-review/route.ts?test=${Date.now()}`);
     const response = await POST(authorizedRequest("http://localhost/api/weekly-review", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ summary: baseSummary }) }));
@@ -86,9 +82,7 @@ test("günlük AI değerlendirme sınırı dolunca AI'ya gitmeden yerel değerle
 });
 
 function withWeeklyReviewFetch({ isPremium, lastAiWeekStart, generated }) {
-  return withAuthenticatedFetch((url) => {
-    if (String(url).includes("/rest/v1/profiles")) return Response.json({ is_premium: isPremium });
-    if (String(url).includes("/rpc/increment_usage_counter")) return Response.json({ allowed: true, current_count: 1 });
+  return withUsageMock({ isPremium, allowed: true, currentCount: 1 }, (url) => {
     if (String(url).includes("/rest/v1/weekly_ai_reviews")) return Response.json(lastAiWeekStart ? [{ week_start: lastAiWeekStart }] : []);
     if (String(url).includes("/chat/completions")) return Response.json({ choices: [{ message: { role: "assistant", content: JSON.stringify(generated) } }] });
     throw new TypeError(`beklenmeyen ağ isteği: ${url}`);

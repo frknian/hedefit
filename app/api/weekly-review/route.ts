@@ -3,7 +3,7 @@ import { generateAiObject, hasAiProvider, aiModelId } from "../../../lib/ai-prov
 import { enforceWeeklySafety, hasEnoughWeeklyData, localWeeklyReview, validateWeeklyReview, validateWeeklySummary, type WeeklyReview } from "../../../lib/weekly-review.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
-import { checkAndConsumeUsage, daysBetweenWeekStarts, lastAiWeeklyReviewWeekStart } from "../../../lib/usage-limits.ts";
+import { checkAndConsumeUsage, daysBetweenWeekStarts, lastAiWeeklyReviewWeekStart, refundUsage } from "../../../lib/usage-limits.ts";
 import { tr } from "../../../lib/i18n/dictionaries/tr.ts";
 import { en } from "../../../lib/i18n/dictionaries/en.ts";
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   // dolduğunda hata döndürmek yerine (bu istek arka planda otomatik atılır,
   // kullanıcı doğrudan tetiklemez) sessizce güvenli yerel değerlendirmeye
   // düşülür — tıpkı AI sağlayıcısı yokken yapıldığı gibi.
-  const usage = await checkAndConsumeUsage(request, "weekly_review");
+  const usage = await checkAndConsumeUsage(request, "weekly_review", auth.user.id);
   if ("error" in usage || !usage.allowed) return Response.json({ review: fallback, source: "local", reason: "Günlük AI değerlendirme sınırına ulaşıldığı için güvenli yerel değerlendirme kullanıldı." });
 
   // Ücretsiz planda AI değerlendirme 2 haftada bir sunulur; aradaki
@@ -85,6 +85,8 @@ ${outputLanguageInstruction}
     if (!validated) throw new Error("Model yanıtı doğrulanamadı");
     return Response.json({ review: enforceWeeklySafety(validated, safeSummary, dictionary), source: "ai", model: aiModelId() });
   } catch {
+    // Kullanıcı gerçekte bir AI değerlendirmesi ALMADI; günlük hakkı iade edilir.
+    if (Number.isFinite(usage.limit)) await refundUsage(request, "weekly_review");
     return Response.json({ review: fallback, source: "local", reason: "AI yanıtı alınamadığı için güvenli yerel değerlendirme kullanıldı." });
   }
 }

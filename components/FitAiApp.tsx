@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { CalendarDays, Dumbbell, House, LibraryBig, LineChart, UserRound, Utensils } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { AppShell, type ShellNavItem } from "@/components/layout/AppShell";
@@ -14,7 +15,6 @@ import { AiCoachChat } from "@/components/AiCoachChat";
 import { AuthScreen } from "@/components/AuthScreen";
 import { adaptPrescription, summarizeTrainingAdaptation, type TrainingAdaptation, type WorkoutDifficulty } from "@/lib/training-adaptation";
 import { ExerciseAnimation as ExerciseFrameAnimation } from "@/components/exercises/ExerciseAnimation";
-import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { useTranslations, translateDifficulty, translatePainArea } from "@/lib/i18n/translate";
@@ -64,6 +64,17 @@ import { detectNewPersonalRecords, summarizePersonalRecords, type NewPersonalRec
 import { formatWeight, unitToKg, type WeightUnit } from "@/lib/units";
 import { appendProgramLog, setStoredCustomPrograms, setStoredGoalPlan, useStoredCustomPrograms, useStoredGoalPlan, useStoredProgramLog, useWeightUnit } from "@/lib/preferences";
 import { authorizedFetch } from "@/lib/api-client";
+
+// lib/exercise-service.ts, data/exercises.json'ı (873 hareket, ~1 MB ham JSON)
+// modül yüklenirken içe aktarır. ExerciseLibrary bu kataloğun TAMAMINI arayıp
+// filtreleyen tek görünüm ve yalnız "library" sekmesinde açılır; statik
+// import edilirse bu 1 MB, kütüphaneyi hiç açmayan kullanıcılar dahil HERKESİN
+// ilk sayfa paketine giriyordu. dynamic() ile ayrı bir chunk'a bölünüp yalnız
+// sekme açıldığında indirilir. Not: getExerciseById/getExercisesForProfile
+// (yukarıda satır ~54) hâlâ aynı modülü statik içe aktarıyor — render
+// sırasında senkron çağrıldıkları için (ör. isBodyweightWorkout) bu, ayrı ve
+// daha büyük bir refactor gerektirir; burada kapsam dışı bırakıldı.
+const ExerciseLibrary = dynamic(() => import("@/components/exercises/ExerciseLibrary").then((mod) => mod.ExerciseLibrary), { ssr: false });
 
 // Kullanıcı hangi arayüz dilini seçerse seçsin, seçilen cevaplar bu Türkçe
 // kanonik değerlerle saklanır — plan üretimi ve ağrı bölgesi eşleştirmesi
@@ -784,6 +795,10 @@ export default function Home() {
   const [currentSet, setCurrentSet] = useState(1);
   const [exerciseSetDrafts, setExerciseSetDrafts] = useState<Record<number, WorkoutSetDraft[]>>({});
   const [newRecords, setNewRecords] = useState<NewPersonalRecord[]>([]);
+  // saveWorkoutFeedback ve createPlan'daki profil kaydı sessizce yerel state'e
+  // düşüyordu; kullanıcı hiçbir uyarı görmeden "kaydedildi" sanıyordu. Bu
+  // banner görünüm ne olursa olsun (AppShell dışına render edilir) gösterilir.
+  const [syncNotice, setSyncNotice] = useState("");
   const [swapOpen, setSwapOpen] = useState(false);
   const [previousPerformances, setPreviousPerformances] = useState<Record<string, PreviousExercisePerformance | null>>({});
   const requestedPerformanceKeys = useRef(new Set<string>());
@@ -1347,12 +1362,24 @@ export default function Home() {
       const { error: sessionError } = await supabase.from("workout_sessions").insert({ ...baseRecord, difficulty: record.difficulty, fatigue: record.fatigue, pain_areas: record.painAreas, feedback_note: record.feedbackNote || null });
       if (sessionError) {
         const { error: fallbackSessionError } = await supabase.from("workout_sessions").insert(baseRecord);
-        if (fallbackSessionError) return;
+        if (fallbackSessionError) { setSyncNotice(t.common.sessionSyncFailed); return; }
       }
       window.dispatchEvent(new Event("fit-ai-activity-recorded"));
       const completedDate = localDateKey(new Date(record.completedAt));
       const { data: scheduledDay } = await supabase.from("workout_schedule").select("id, scheduled_time, original_date").eq("user_id", user.id).eq("scheduled_date", completedDate).maybeSingle();
       await supabase.from("workout_schedule").upsert({ id: scheduledDay?.id || crypto.randomUUID(), user_id: user.id, scheduled_date: completedDate, scheduled_time: scheduledDay?.scheduled_time || localTimeKey(new Date(record.completedAt)), status: "completed", original_date: scheduledDay?.original_date || null, completed_session_id: record.id, updated_at: new Date().toISOString() }, { onConflict: "user_id,scheduled_date" });
+      // workout_sessions eklendi ve workout_schedule bu seansı "tamamlandı"
+      // olarak işaretledi. Aşağıdaki adımlardan biri (exercise/set log) başarısız
+      // olursa, bu iki yazıyı GERİ ALMADAN sadece bir uyarı göstermek, veritabanını
+      // "tamamlandı" görünen ama hiç egzersiz kaydı olmayan bir seansla baş başa
+      // bırakırdı (seriler, haftalık özet ve ilerleme ekranı bunu geçerli bir
+      // antrenman sayardı). Bu yardımcı, o iki yazıyı SADECE bizim az önce
+      // yazdığımız kayıtları hedefleyerek (id/completed_session_id eşleşmesiyle)
+      // geri alır.
+      const rollbackSessionAndSchedule = async () => {
+        await supabase.from("workout_schedule").update({ completed_session_id: null, status: "planned" }).eq("user_id", user.id).eq("scheduled_date", completedDate).eq("completed_session_id", record.id);
+        await supabase.from("workout_sessions").delete().eq("id", record.id);
+      };
       if (!exerciseLogs.length) return;
 
       const exerciseRows = exerciseLogs.map((log) => ({
@@ -1367,7 +1394,7 @@ export default function Home() {
         completed_at: record.completedAt,
       }));
       const { error: exerciseLogError } = await supabase.from("workout_exercise_logs").insert(exerciseRows);
-      if (exerciseLogError) return;
+      if (exerciseLogError) { await rollbackSessionAndSchedule(); setSyncNotice(t.common.sessionSyncFailed); return; }
 
       const exerciseRowByOrder = new Map(exerciseRows.map((row) => [row.exercise_order, row]));
       const setRows = exerciseLogs.flatMap((log) => {
@@ -1389,6 +1416,8 @@ export default function Home() {
       const { error: setLogError } = setRows.length ? await supabase.from("workout_set_logs").insert(setRows) : { error: null };
       if (setLogError) {
         await supabase.from("workout_exercise_logs").delete().in("id", exerciseRows.map((row) => row.id));
+        await rollbackSessionAndSchedule();
+        setSyncNotice(t.common.sessionSyncFailed);
         return;
       }
 
@@ -1437,7 +1466,9 @@ export default function Home() {
         return next;
       });
     } catch {
-      // Bağlantı yoksa kayıt bu oturumun ilerleme ekranında kalır.
+      // Kayıt bu oturumun ilerleme ekranında kalır; kullanıcı sessizce
+      // "kaydedildi" sanmasın diye görünür bir uyarı gösterilir.
+      setSyncNotice(t.common.sessionSyncFailed);
     }
   }
 
@@ -1503,7 +1534,10 @@ export default function Home() {
         }
       }
     } catch {
-      // Profil kaydı başarısız olsa bile AI planı üretmeye devam eder.
+      // Profil kaydı başarısız olsa bile AI planı üretmeye devam eder; kullanıcı
+      // boy/kilo/hedef değişikliğinin kaydedildiğini sanıp sessiz kalmasın diye
+      // engellemeyen bir uyarı gösterilir.
+      setSyncNotice(t.common.profileSyncFailed);
     }
     setAiStage("history");
     try {
@@ -1792,6 +1826,7 @@ export default function Home() {
           footer={shellFooter}
         >
         <section className="dashboard">
+{syncNotice ? <div role="alert" style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between", padding: "12px 16px", margin: "0 0 16px", borderRadius: 12, background: "var(--hf-error-container)", color: "var(--hf-on-error-container)", fontSize: 14 }}><span>{syncNotice}</span><button type="button" onClick={() => setSyncNotice("")} aria-label={t.common.dismiss} style={{ border: "none", background: "transparent", color: "inherit", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{t.common.dismiss}</button></div> : null}
 <WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onRefreshPlan={refreshPlanFromProfile} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} isPremium={isPremium} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "library" ? <LibraryView initialExerciseId={libraryExerciseId} onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>

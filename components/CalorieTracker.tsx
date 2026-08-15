@@ -8,8 +8,9 @@ import { frequentMeals } from "@/lib/frequent-meals";
 import { HOUSEHOLD_PORTION_UNITS, PRIMARY_PORTION_UNITS, fromGrams, referenceGrams, toGrams, type PortionUnit } from "@/lib/portion-unit";
 import { emptyFoodNutrition, scaleFoodNutrition, type FoodMicronutrients, type FoodNutrition } from "@/lib/food-search";
 import { calculateNutritionGoal, calculateWeeklyWeightTrend, inferNutritionGoal, sanitizeNutritionGoal, type NutritionGoal, type NutritionGoalType, type WeightTrend } from "@/lib/nutrition-goals";
+import { shouldRefetchMealAdvice, type MealAdviceSnapshot } from "@/lib/nutrition-advice";
 import { createClient } from "@/lib/supabase/client";
-import { localDateKey } from "@/lib/streak";
+import { consumedAtForSelectedDate, localDateKey } from "@/lib/streak";
 import { authorizedFetch } from "@/lib/api-client";
 import { useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
@@ -113,8 +114,20 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
 
   useEffect(() => {
     if (!storageReady) return;
-    localStorage.setItem("fit-ai-calorie-entries", JSON.stringify(entries));
-  }, [entries, storageReady]);
+    // entries üst sınırsız büyüyebilir; her değişiklikte tüm diziyi yazmak
+    // zamanla localStorage'ı sınırsız şişirir. GİRİŞ YAPMIŞ kullanıcıda bunu
+    // en yeni 200 kayıtla sınırlıyoruz çünkü sunucuda zaten bir kopya var
+    // (bkz. loadEntries, en fazla 100 satır). HESAPSIZ kullanıcıda localStorage
+    // TEK veri kaynağı — burada kırpmak geçmişi GERİ DÖNÜŞSÜZ silmek demektir
+    // (daha önce burada 200'e kırpılıyordu ve bu, aylardır kullanan hesapsız
+    // kullanıcıların eski kayıtlarını sessizce siliyordu). Hesapsız kullanıcı
+    // için tam diziyi yazmaya devam ediyoruz; sınırsız büyüme riski, veri
+    // kaybından çok daha ehven.
+    const bounded = userId
+      ? [...entries].sort((a, b) => new Date(b.consumedAt).getTime() - new Date(a.consumedAt).getTime()).slice(0, 200)
+      : entries;
+    localStorage.setItem("fit-ai-calorie-entries", JSON.stringify(bounded));
+  }, [entries, storageReady, userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -205,7 +218,28 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const rawProgress = Math.round((totals.calories / Math.max(1, nutritionGoal.calorieTarget)) * 100);
   const progress = Math.min(100, rawProgress);
 
+  // Bu istek her öğün eklendiğinde otomatik tetiklenir ve nutrition_advice
+  // günlük kotasından düşer (bkz. app/api/nutrition/advice/route.ts). Öncesinde
+  // totals/dailyEntries her değiştiğinde (yani her yemek girişinde) yeniden
+  // isteniyordu; ücretsiz kullanıcının günlük 5 hakkı tek bir öğün ekleme
+  // oturumunda tükenebiliyordu. Şimdi yalnız gün değiştiğinde veya toplamlar
+  // anlamlı ölçüde (kalori/makro %5'ten fazla) değiştiğinde yeniden istenir;
+  // "Yenile" düğmesi (adviceRevision) bu kontrolü her zaman atlar.
+  const lastAdviceRef = useRef<MealAdviceSnapshot | null>(null);
   useEffect(() => {
+    const previous = lastAdviceRef.current;
+    const next: MealAdviceSnapshot = {
+      date: selectedDate,
+      totals,
+      targets: { calorieTarget: nutritionGoal.calorieTarget, proteinTarget: nutritionGoal.proteinGrams, carbsTarget: nutritionGoal.carbsGrams, fatTarget: nutritionGoal.fatGrams },
+      locale,
+      revision: adviceRevision,
+    };
+    if (!shouldRefetchMealAdvice(previous, next)) return;
+    // "Yenile" düğmesi (adviceRevision) debounce'u atlayıp anında ister;
+    // organik değişiklikler (yeni öğün) 650ms beklenir.
+    const manualRefresh = !previous || next.revision !== previous.revision;
+
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setMealAdviceLoading(true);
@@ -221,19 +255,26 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           setMealAdvice(result.advice);
           setMealAdviceSource(result.source === "ai" ? "ai" : "fallback");
         }
+        if (!controller.signal.aborted) lastAdviceRef.current = next;
       } catch {
         if (!controller.signal.aborted) setMealAdvice(t.calorieTracker.mealAdviceUnavailable);
       } finally {
         if (!controller.signal.aborted) setMealAdviceLoading(false);
       }
-    }, adviceRevision ? 0 : 650);
+    }, manualRefresh ? 0 : 650);
     return () => { controller.abort(); window.clearTimeout(timer); };
   }, [adviceRevision, dailyEntries, nutritionGoal.calorieTarget, nutritionGoal.carbsGrams, nutritionGoal.fatGrams, nutritionGoal.proteinGrams, selectedDate, totals, t, locale]);
 
   async function addEntry(entry: Omit<FoodEntry, "id" | "time" | "consumedAt">) {
-    const now = new Date();
     const temporaryId = crypto.randomUUID();
-    const record = { ...entry, id: temporaryId, time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(now), consumedAt: now.toISOString() };
+    // Kayıt seçili güne (selectedDate, dateOffset ile geçmişe alınabilir)
+    // eklenir; consumedAt de o güne düşmeli — bkz. lib/streak.ts
+    // consumedAtForSelectedDate. Öncesinde her zaman ŞİMDİ kullanılıyordu:
+    // dünle geçmişe eklenen bir öğün, dailyEntries'in consumedAt'e göre
+    // gruplaması yüzünden (bkz. aşağıdaki useMemo) anında bugüne kayıyor ve
+    // seçili günden kayboluyordu.
+    const consumedAt = consumedAtForSelectedDate(selectedDate);
+    const record = { ...entry, id: temporaryId, time: new Intl.DateTimeFormat(dateLocale, { hour: "2-digit", minute: "2-digit" }).format(consumedAt), consumedAt: consumedAt.toISOString() };
     setEntries((current) => [record, ...current]);
     if (userId) {
       const inputMethod = record.source === "Fotoğraf" ? "photo" : "natural_language";
@@ -256,10 +297,19 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
           isEstimated: Boolean(record.isEstimated || aiEstimate),
           metadata: { micros: record.micros || {}, aiEstimated: Boolean(aiEstimate) },
         }),
-      });
-      const result = await response.json().catch(() => ({})) as { log?: { id?: string } };
-      if (!response.ok) setMessage(t.calorieTracker.syncedLocallyOnly);
-      else if (result.log?.id) setEntries((current) => current.map((item) => item.id === temporaryId ? { ...item, id: result.log!.id! } : item));
+      }).catch(() => null);
+      // Ağ hatasında (kopuk bağlantı vb.) authorizedFetch reddediyor; bunu
+      // yakalamazsak addFrequentMeal gibi çağıranlarda unhandled rejection
+      // oluşuyor ve kullanıcı kaydın senkronize olmadığından hiç haberdar
+      // olmuyordu (iyimser satır ekliydi kalıyordu). Senkron başarısız olsa
+      // bile satır yerel olarak eklenmiş kalır; formu sıfırlamaya devam ederiz.
+      if (!response) {
+        setMessage(t.calorieTracker.syncedLocallyOnly);
+      } else {
+        const result = await response.json().catch(() => ({})) as { log?: { id?: string } };
+        if (!response.ok) setMessage(t.calorieTracker.syncedLocallyOnly);
+        else if (result.log?.id) setEntries((current) => current.map((item) => item.id === temporaryId ? { ...item, id: result.log!.id! } : item));
+      }
     }
     // Ana ekranın kalori çemberi başka bir görünümde durur; öğün değişince
     // haber verilmezse eski sayıyı gösterir.
