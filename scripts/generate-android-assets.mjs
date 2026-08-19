@@ -150,3 +150,7 @@ for (const [path, s] of jobs) {
   await writeFile(target, encodePng(s));
 }
 console.log(`${jobs.length} varlık üretildi.`);
+
+// Eski splash üretim akışı çalıştırıldığında güncel marka ikonlarının geri
+// dönmemesi için platform ve mağaza varlıklarını ana logodan yeniden üret.
+await import("./generate-brand-assets.mjs");

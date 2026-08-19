@@ -18,6 +18,7 @@
     "mobile:android": "cap open android",
     "mobile:ios": "cap open ios",
     "mobile:doctor": "cap doctor",
+    "brand:generate": "node scripts/generate-brand-assets.mjs",
     "ai:benchmark": "node scripts/local-ai-benchmark.mjs",
     "ai:benchmark:check": "node scripts/local-ai-benchmark.mjs --check",
     "android:build": "cd android && ./gradlew :app:assembleDebug"

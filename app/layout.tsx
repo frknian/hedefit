@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase,
   title,
   description,
-  openGraph: { title, description, type: "website", locale: "tr_TR", images: [{ url: "/og.png", width: 1672, height: 941, alt: "Hedefit kişisel antrenman rehberi" }] },
+  openGraph: { title, description, type: "website", locale: "tr_TR", images: [{ url: "/og.png", width: 1200, height: 630, alt: "Hedefit kişisel antrenman rehberi" }] },
   twitter: { card: "summary_large_image", title, description, images: ["/og.png"] },
   other: {
     "mobile-web-app-capable": "yes",
@@ -26,9 +26,10 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "default",
   },
   icons: [
-    { rel: "icon", url: "/favicon.svg", type: "image/svg+xml" },
+    { rel: "icon", url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+    { rel: "icon", url: "/favicon-16.png", type: "image/png", sizes: "16x16" },
     { rel: "manifest", url: "/manifest.json" },
-    { rel: "apple-touch-icon", url: "/icon-192.png" },
+    { rel: "apple-touch-icon", url: "/apple-touch-icon.png", sizes: "180x180" },
   ],
 };
 

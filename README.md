@@ -13,6 +13,8 @@ verdiğin geri bildirimi okuyup programını kendisi ayarlar.
 
 <img src="store-assets/feature-graphic-1024x500.png" alt="Hedefit" width="100%">
 
+<sub>GitHub sosyal önizleme: <code>store-assets/github-social-preview-1280x640.png</code></sub>
+
 </div>
 
 ---
