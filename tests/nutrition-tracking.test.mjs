@@ -198,8 +198,13 @@ test("yemek adı ve gramaj AI ile kalori ve makrolara çevrilir", { concurrency:
 test("kalori tahmini ekonomik K2 modeline yönlendirilir", async () => {
   const source = await readFile(new URL("../lib/ai-nutrition-estimator.ts", import.meta.url), "utf8");
   assert.match(source, /AI_NUTRITION_TEXT_MODEL \|\| "kimi-k2\.6"/);
-  assert.match(source, /thinking: \{ type: "disabled" \}/);
   assert.match(source, /name alanını mutlaka doğal Türkçe yaz/);
+  // AI göçünden sonra sağlayıcıya özgü "thinking" ayarı alan modülünde
+  // DEĞİL, sağlayıcı katmanında yaşıyor — bir beslenme modülünün model
+  // ailesini bilmesi gerekmemeli (bkz. docs/AI_MIGRATION_PLAN.md).
+  assert.doesNotMatch(source, /moonshot/i, "sağlayıcı adı alan modülüne sızmamalı");
+  const provider = await readFile(new URL("../lib/ai/providers/openai-compatible.ts", import.meta.url), "utf8");
+  assert.match(provider, /thinking: \{ type: "disabled" \}/);
 });
 
 test("kalori tahmini prompt'u çiğ/pişmiş ağırlık farkını öğretir", async () => {

@@ -57,11 +57,33 @@ export default function GizlilikPage() {
           <li>Hedefleriniz ve profil testi cevaplarınız</li>
         </ul>
 
+        <h3 className="mt-4 mb-1 font-medium">2.2.1 AI koç hafızası ve geri bildirimi</h3>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            <strong>Koç hafızası:</strong> Sohbet sırasında belirttiğiniz kalıcı tercihler
+            (ör. &quot;koşmayı sevmiyorum&quot;, &quot;akşam antrenmanı tercih ediyorum&quot;,
+            ekipman ve sakatlık kısıtları) hesabınıza bağlı olarak saklanır; böylece koç
+            önerilerini bunlara göre şekillendirir. Sohbetlerinizin tamamı değil, yalnızca
+            bu kısa tercih kayıtları tutulur. Bunları uygulama içinden görebilir ve
+            silebilirsiniz.
+          </li>
+          <li>
+            <strong>Yanıt geri bildirimi:</strong> Bir koç yanıtına 👍/👎 verdiğinizde
+            yalnızca oyunuz ve yanıtı üreten teknik bilgi (sağlayıcı, model, sürüm)
+            saklanır. <strong>Mesaj metni bu kayda dahil edilmez.</strong>
+          </li>
+          <li>
+            <strong>Teknik ölçümler:</strong> Hangi AI sağlayıcısının kullanıldığı, yanıt
+            süresi ve hata türü kaydedilir. Bu kayıtlarda istek veya yanıt metni
+            <strong> bulunmaz</strong>.
+          </li>
+        </ul>
+
         <h3 className="mt-4 mb-1 font-medium">2.3 Fotoğraflar</h3>
         <ul className="list-disc space-y-1 pl-5">
           <li>
             <strong>Öğün fotoğrafı:</strong> Kalori tahmini için çektiğiniz fotoğraf, analiz
-            amacıyla yapay zeka sağlayıcımıza (Moonshot AI&apos;nin Kimi K3 modeli) gönderilir.
+            amacıyla yapay zeka sağlayıcımıza (Moonshot AI&apos;nin Kimi modelleri) gönderilir.
             Fotoğrafın kendisi sunucularımızda saklanmaz; yalnızca analiz sonucu (besin adı,
             gramaj, makrolar) kaydedilir.
           </li>
@@ -130,13 +152,15 @@ export default function GizlilikPage() {
                 <td className="py-2">Bölüm 2&apos;deki tüm veriler</td>
               </tr>
               <tr className="border-b border-neutral-200 align-top dark:border-neutral-800">
-                <td className="py-2 pr-3">AI sağlayıcısı (Moonshot AI, Kimi K3)</td>
+                <td className="py-2 pr-3">AI sağlayıcısı (Moonshot AI, Kimi modelleri)</td>
                 <td className="py-2 pr-3">
                   Plan üretimi, öğün fotoğrafı analizi, koç sohbeti, haftalık değerlendirme
                 </td>
                 <td className="py-2">
                   Anonim profil özeti, öğün fotoğrafı, sohbet mesajları. Kimlik bilgileriniz
-                  (e-posta, ad) gönderilmez.
+                  (e-posta, ad) gönderilmez. Kalori, kilo ve ilerleme hesapları AI
+                  sağlayıcısına yaptırılmaz; kendi sunucumuzda hesaplanır. Acil sağlık
+                  belirtisi içeren mesajlar AI sağlayıcısına hiç gönderilmez.
                 </td>
               </tr>
               <tr className="border-b border-neutral-200 align-top dark:border-neutral-800">

@@ -24,6 +24,8 @@ npm run lint
 - Görsel girdi (vücut analizi fotoğrafı) gerektiği için `AI_MODEL` görsel destekli bir model olmalı; varsayılan `kimi-k3`, Moonshot AI'nin kendi API'si (`https://api.moonshot.ai/v1`) üzerinden native görsel destekler. OpenRouter/Together/Fireworks gibi başka bir sağlayıcıya geçmek için `.env.example`'daki örneğe bakın.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — hesap ve veri katmanı. Tanımlı değilse giriş ekranı "yapılandırılmamış" durumunu gösterir.
 - `SUPABASE_SECRET_KEY` — yalnız sunucu tarafındaki hesap silme işlemi için; `NEXT_PUBLIC_` öneki eklemeyin.
+- `AI_ROUTING_MODE` — `auto` (varsayılan) · `local` (ücretli çağrı yapılmaz, yalnız güvenli deterministik yanıtlar) · `remote` (yerel katman devre dışı). Sağlayıcı kotası dolduğunda uygulamayı ayakta tutmak için `local`'a alınabilir.
+- `AI_DEBUG` — AI olaylarını (sağlayıcı, model, gecikme, hata sınıfı) üretimde de log'a yazar. İstek/yanıt metni asla yazılmaz.
 - `CAPACITOR_SERVER_URL` — Capacitor geliştirmesinde yerel sunucu adresi.
 
 ## Veritabanı kurulumu
@@ -179,7 +181,24 @@ Görsel tabanlı hareket simülasyonları (`components/exercises/ExerciseAnimati
 - **Akıllı Duraklatma**: Animasyon döngüleri (`setInterval`) yalnızca ilgili kart viewport sınırları içindeyken (Intersection Observer ile izlenir) ve tarayıcı sekmesi aktifken çalışır. Kullanıcı `prefers-reduced-motion` tercihine sahipse döngüler tamamen devre dışı bırakılır.
 - **Temizlik**: Bileşenler unmount edildiğinde tüm zamanlayıcılar (interval) ve gözlemciler (observer) bellek sızıntısını önlemek için temizlenir.
 
-## AI kataloğu
+## AI mimarisi
+
+Ayrıntı: [AI_MIGRATION_PLAN.md](AI_MIGRATION_PLAN.md) · [AI_MODEL_DECISION.md](AI_MODEL_DECISION.md) · [AI_MIGRATION_REPORT.md](AI_MIGRATION_REPORT.md)
+
+Uygulamanın hiçbir yeri bir AI sağlayıcısını doğrudan çağırmaz. Zincir:
+
+```
+rota → lib/ai/coach.ts → intelligence + memory → context-builder → safety → router → sağlayıcı
+```
+
+- **Sağlayıcı eklemek:** `AIProvider` arayüzünü uygulayın ve `providerRegistry.register(provider)` deyin. Başka hiçbir dosya değişmez.
+- **Sağlayıcı değiştirmek:** `AI_BASE_URL` + `AI_MODEL`. Kod değişikliği gerekmez.
+- **Deterministik hesaplar:** BMI, kalori hedefi/kalanı, kilo trendi ve ortalamalar `lib/ai/intelligence.ts` içinde hesaplanır ve modele "kesin doğru" olarak verilir. **Modele aritmetik yaptırılmaz.** Yeni bir hesap eklerken formülü orada tekrarlamayın; var olan `lib/` modülünü çağırın.
+- **Güvenlik:** `lib/ai/safety.ts` prompttan bağımsızdır; acil/klinik durumlarda istek hiçbir sağlayıcıya gitmez ve kullanıcının günlük hakkı harcanmaz.
+- **Hafıza:** `ai_memories` tablosu, RLS ile kullanıcıya kilitli. Sohbetin tamamı değil, yalnız kısa tercih kayıtları saklanır.
+- **Test:** `node --test tests/ai-*.test.mjs`. Yönlendirme, yedekleme, güvenlik, hafıza ve bağlam bütçesi ayrı ayrı test edilir; gerçek sağlayıcıya ağ isteği yapılmaz.
+
+### AI kataloğu
 
 `getExercisesForAI(filters)` yalnızca kimlik, ad, seviye, ekipman, kaslar ve kategori alanlarını döndürür. Görsel yolları ve uzun talimatlar modele gönderilmez. AI yanıtındaki her egzersiz kimliği yerel veri tabanında doğrulanır; bulunmayan kimlikler kullanıcıya gösterilmez.
 

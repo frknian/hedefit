@@ -692,6 +692,8 @@ export const tr = {
     sendQuestion: "Soruyu gönder",
     disclaimer: "Tıbbi tanı yerine geçmez. Ağrı veya yaralanmada sağlık uzmanına danış.",
     coachUnresponsive: "Fit Koç yanıt veremedi.",
+    helpful: "Bu yanıt işime yaradı",
+    notHelpful: "Bu yanıt işime yaramadı",
     coachUnreachable: "Fit Koç'a ulaşılamıyor.",
     dailyUsage: (used: number, limit: number) => `Bugün ${used}/${limit} soru kullanıldı`,
   },

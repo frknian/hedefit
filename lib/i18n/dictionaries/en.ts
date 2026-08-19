@@ -694,6 +694,8 @@ export const en: typeof tr = {
     sendQuestion: "Send question",
     disclaimer: "Not a substitute for medical diagnosis. Consult a health professional for pain or injury.",
     coachUnresponsive: "Fit Coach couldn't respond.",
+    helpful: "This answer was helpful",
+    notHelpful: "This answer was not helpful",
     coachUnreachable: "Can't reach Fit Coach.",
     dailyUsage: (used: number, limit: number) => `${used}/${limit} questions used today`,
   },

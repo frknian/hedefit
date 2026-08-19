@@ -57,6 +57,18 @@ yapay zeka değerlendirmesi.
 Programın, hareketlerin veya beslenmen hakkında soru sor. Koç senin profilini
 ve planını bilerek cevaplar.
 
+Koç zamanla seni tanır: sohbette belirttiğin kalıcı tercihler (sevmediğin
+hareketler, ekipmanın, antrenman saatin) hesabına kaydedilir ve sonraki
+önerileri şekillendirir. Bu kayıtları görebilir ve silebilirsin.
+
+Kalori, kilo ve ilerleme sayıları **yapay zekâya hesaplatılmaz** — kendi
+sunucumuzda hesaplanır, model yalnızca sonucu anlatır. Sağlayıcı geçici olarak
+yanıt veremezse koç, verilerine dayanan güvenli bir yerel öneriyle cevap verir
+ve günlük AI hakkın iade edilir.
+
+Mimari ayrıntı: [docs/AI_MIGRATION_PLAN.md](docs/AI_MIGRATION_PLAN.md) ·
+model/çalışma zamanı kararı: [docs/AI_MODEL_DECISION.md](docs/AI_MODEL_DECISION.md)
+
 ### Ayrıntılar
 Açık ve koyu tema · kg/lb birim tercihi · antrenman takvimi ve hatırlatıcılar ·
 Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
@@ -166,6 +178,15 @@ weekly AI review.
 ### AI coach chat
 Ask about your program, a specific movement, or your nutrition. The coach
 answers knowing your profile and your plan.
+
+The coach gets to know you over time: lasting preferences you mention in chat
+(exercises you dislike, your equipment, when you train) are saved to your
+account and shape later advice. You can review and delete these.
+
+Calorie, weight and progress numbers are **never calculated by the AI** — they
+are computed on our own server, and the model only explains the result. If the
+provider is temporarily unavailable, the coach falls back to a safe local
+suggestion based on your data, and your daily AI quota is refunded.
 
 ### Details
 Light and dark themes · kg/lb preference · workout calendar and reminders ·

@@ -1055,6 +1055,12 @@ input,select,textarea { color-scheme:inherit; }
 .food-search-panel { padding:16px; }.food-search-results { max-height:360px; }.food-search-results button { min-height:72px; padding:13px 8px; border-radius:7px; }.food-search-results button:hover { padding-left:12px; }.food-search-results strong { font-size:13px; }.food-search-results small { margin-top:2px; font-size:9px; }.food-search-results b { font-size:12px; }.selected-food-summary strong { font-size:12px; }
 .coach-notice { margin:3px 4px; padding:8px 10px; border:1px solid #d7dfbc; border-radius:7px; background:#f6f8ed; color:#6f7854; font-size:8px; line-height:1.4; }
 .coach-usage { margin:0 6px 4px; color:var(--muted-text); font-size:8px; text-align:right; }
+/* AI yanıtına 👍/👎. Mevcut sohbet baloncuğunun içinde, dikkat çekmeden
+   durması için küçük ve soluk; basıldığında belirginleşir. */
+.coach-feedback { display:flex; gap:4px; margin-top:5px; }
+.coach-feedback button { padding:2px 5px; border:1px solid var(--line); border-radius:6px; background:transparent; font-size:9px; line-height:1; opacity:.5; cursor:pointer; transition:opacity .15s ease, border-color .15s ease; }
+.coach-feedback button:hover, .coach-feedback button:focus-visible { opacity:.9; }
+.coach-feedback button.active { opacity:1; border-color:var(--hf-primary); background:var(--hf-primary-container); }
 
 /* Hedef tahmini kartı (ana sayfa) */
 .goal-forecast { margin:0 0 24px; padding:20px; border:1px solid #dce9ad; border-radius:11px; background:linear-gradient(135deg,#fbfdf2,#f4f9df); }
@@ -1093,7 +1099,7 @@ input,select,textarea { color-scheme:inherit; }
 .dark .goal-forecast-note.goal-forecast-warn { background:#29251b; border-color:#5a4c30; color:#e2c88d; }
 .dark .goal-forecast-note.goal-forecast-done { color:#c3e08a; }
 .dark .goal-forecast-form label { color:#9aa578; }
-.dark .training-place-switch { background:#20231a; }.dark .training-place-switch .switch-track { background:#30352a; box-shadow:none; }.dark .meal-ai-advice { border-color:#53642c; background:linear-gradient(135deg,#263019,#20231a); }.dark .meal-ai-advice p { color:var(--ink); }.dark .meal-ai-advice small { color:var(--muted-text); }.dark .meal-ai-advice button { border-color:#607437; background:#33411f; color:#d9ed9e; }.dark .coach-notice { border-color:#46502c; background:#252b20; color:#c8d6a4; }
+.dark .training-place-switch { background:#20231a; }.dark .training-place-switch .switch-track { background:#30352a; box-shadow:none; }.dark .meal-ai-advice { border-color:#53642c; background:linear-gradient(135deg,#263019,#20231a); }.dark .meal-ai-advice p { color:var(--ink); }.dark .meal-ai-advice small { color:var(--muted-text); }.dark .meal-ai-advice button { border-color:#607437; background:#33411f; color:#d9ed9e; }.dark .coach-notice { border-color:#46502c; background:#252b20; color:#c8d6a4; }.dark .coach-feedback button { border-color:#3a4030; }
 @media (max-width:900px) { .profile-manager { grid-template-columns:1fr; }.manual-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }.manual-fields .food-name { grid-column:1/-1; }.manual-fields .add-food { grid-column:1/-1; } }
 @media (max-width:700px) { .profile-manager { padding:18px; }.profile-avatar-card { align-items:center; }.training-place-switch { width:100%; }.training-place-switch button { padding-right:20px; }.meal-ai-advice { grid-template-columns:auto 1fr; padding:15px; }.meal-ai-advice button { grid-column:1/-1; width:100%; }.manual-fields { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }.food-search-results button { min-height:68px; }.food-search-results strong { font-size:12px; } }
 

@@ -290,7 +290,9 @@ test("plan üretiminde akıl yürütme bütçesi içeriği aç bırakmaz", async
   const budget = Number(route.match(/maxOutputTokens: ([\d_]+)/)?.[1].replace(/_/g, "") ?? 0);
   assert.ok(budget >= 8000, `akıl yürütme payı için bütçe yetersiz: ${budget}`);
   // Tek deneme: SDK'nın 2 yeniden denemesi süreyi üç katına çıkarıyordu.
-  const provider = await readFile(new URL("../lib/ai-provider.ts", import.meta.url), "utf8");
+  // AI göçünden sonra sağlayıcının kendisi lib/ai/providers/ altında; bu
+  // ayar orada yaşıyor (bkz. docs/AI_MIGRATION_PLAN.md).
+  const provider = await readFile(new URL("../lib/ai/providers/openai-compatible.ts", import.meta.url), "utf8");
   assert.match(provider, /maxRetries: 0/);
 });
 
@@ -304,7 +306,7 @@ test("koç sohbeti zaman aşımı hızlı modele göre paylı", async () => {
   const timeout = Number(`${match[1]}${match[2]}`);
   assert.ok(timeout >= 30_000, `sohbet zaman aşımı yetersiz: ${timeout}`);
 
-  const provider = await readFile(new URL("../lib/ai-provider.ts", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../lib/ai/providers/openai-compatible.ts", import.meta.url), "utf8");
   assert.match(provider, /DEFAULT_MODEL\s*=\s*"kimi-k2\.7-code-highspeed"/, "varsayılan hızlı model ayarlı olmalı");
 });
 

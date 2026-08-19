@@ -55,7 +55,7 @@ import { CURRENT_PROFILE_TEST_VERSION, FREE_TEXT_QUESTIONS, QUESTION, QUESTION_C
 import { applyPreviousPerformance, buildCompletedExerciseLog, createWorkoutSetDrafts, exerciseLogKey, type CompletedExerciseLog, type PreviousExercisePerformance, type WorkoutSetDraft } from "@/lib/workout-log";
 import { localTimeKey } from "@/lib/workout-calendar";
 import { localDateKey } from "@/lib/streak";
-import { inferWorkoutDays } from "@/lib/nutrition-goals";
+import { inferNutritionGoal, inferWorkoutDays } from "@/lib/nutrition-goals";
 import type { Exercise } from "@/types/exercise";
 import { calculateAge, isValidBirthDate, type AccountStatus, type EditableProfile } from "@/lib/profile";
 import { isVerifiedAuthUser } from "@/lib/auth";
@@ -914,6 +914,35 @@ export default function Home() {
   }, [height, weight]);
   // Sohbet bağlamı da yalnız panelde (AiCoachChat) kullanılır; gate olmadan
   // her tuş vuruşunda tüm planı JSON'a çeviriyordu.
+  // AI koçuna giden YAPILANDIRILMIŞ sinyaller.
+  //
+  // Burada yalnız HAM ölçüm gönderilir. Türetilmiş değerlerin (BMI, kalan
+  // kalori, kilo trendi) hesabı sunucudaki deterministik motora aittir
+  // (lib/ai/intelligence.ts). Eskiden BMI burada hesaplanıp gönderiliyordu ve
+  // ölçü eksikse yerine sabit "22.4" yazılıyordu — modele hiç ölçülmemiş bir
+  // değer gerçek gibi gidiyordu. Artık ölçü yoksa alan hiç gönderilmez ve koç
+  // "bu veriyi göremiyorum" diyebilir.
+  const coachSignals = useMemo(() => {
+    if (!onDashboard) return undefined;
+    const heightCm = Number(height) || undefined;
+    const weightKg = Number(weight) || undefined;
+    const targetWeightKg = Number(targetWeightDraft) || undefined;
+    const ageYears = Number(age) || undefined;
+    const weekAgo = Date.now() - 7 * 86_400_000;
+    return {
+      profile: { age: ageYears, sex: gender === "Erkek" ? "male" : gender === "Kadın" ? "female" : undefined, heightCm, weightKg },
+      goal: {
+        goalType: inferNutritionGoal(goalText || planGoal),
+        targetWeightKg,
+        activityFactor: energyMetrics?.activityFactor,
+      },
+      today: { workoutCompleted: burnedTodayCalories > 0 },
+      activity: {
+        workoutsThisWeek: sessionHistory.filter((session) => new Date(session.completedAt).getTime() >= weekAgo).length,
+      },
+    };
+  }, [onDashboard, age, burnedTodayCalories, energyMetrics, gender, goalText, height, planGoal, sessionHistory, targetWeightDraft, weight]);
+
   const coachContext = useMemo(() => !onDashboard ? "" : JSON.stringify({
     profile: { name, age, gender, height, weight, bmi, environment: gym, equipment: equipmentText || "Ekipmansız", goal: goalText || planGoal, requestedExercises },
     historyAnswers: history,
@@ -1918,7 +1947,7 @@ export default function Home() {
         </div>
         {sessionAreas.length > 0 && <div className="session-areas"><span>{t.feedback.summaryAreas}</span><div>{sessionAreas.map((area) => <b key={area}>{area}</b>)}</div></div>}
         <p>{t.feedback.body}</p><fieldset><legend>{t.feedback.difficultyLegend}</legend><div className="feedback-options">{(["Kolay", "Uygun", "Zor"] as WorkoutDifficulty[]).map((option) => <button type="button" aria-pressed={feedbackDifficulty === option} className={feedbackDifficulty === option ? "selected" : ""} onClick={() => setFeedbackDifficulty(option)} key={option}>{option === "Kolay" ? t.feedback.difficultyEasy : option === "Uygun" ? t.feedback.difficultySuitable : t.feedback.difficultyHard}</button>)}</div></fieldset><fieldset><legend>{t.feedback.fatigueLegend}</legend><div className="fatigue-scale">{[1, 2, 3, 4, 5].map((value) => <button type="button" aria-pressed={feedbackFatigue === value} className={feedbackFatigue === value ? "selected" : ""} onClick={() => setFeedbackFatigue(value)} key={value}><strong>{value}</strong><small>{value === 1 ? t.feedback.fatigueVeryLow : value === 3 ? t.feedback.fatigueMedium : value === 5 ? t.feedback.fatigueVeryHigh : ""}</small></button>)}</div></fieldset><fieldset><legend>{t.feedback.painLegend}</legend><div className="feedback-options pain-options">{["Yok", "Bel", "Diz", "Omuz", "Diğer"].map((area) => <button type="button" aria-pressed={feedbackPainAreas.includes(area)} className={feedbackPainAreas.includes(area) ? "selected" : ""} onClick={() => toggleFeedbackPain(area)} key={area}>{area === "Yok" ? t.feedback.painNone : area === "Bel" ? t.feedback.painLowerBack : area === "Diz" ? t.feedback.painKnee : area === "Omuz" ? t.feedback.painShoulder : t.feedback.painOther}</button>)}</div></fieldset><label className="feedback-note">{t.feedback.noteLabel} <small>{t.onboarding.optionalHint}</small><textarea value={feedbackNote} onChange={(event) => setFeedbackNote(event.target.value)} placeholder={t.feedback.notePlaceholder} /></label><div className="feedback-summary"><span>{t.feedback.nextStepLabel}</span><strong>{feedbackPainAreas.some((area) => area !== "Yok") || feedbackDifficulty === "Zor" || feedbackFatigue >= 4 ? t.feedback.nextStepRecovery : feedbackDifficulty === "Kolay" && feedbackFatigue <= 2 ? t.feedback.nextStepIncrease : t.feedback.nextStepBalanced}</strong></div><button className="primary-btn feedback-save" type="button" onClick={() => void saveWorkoutFeedback()}>{t.feedback.save} <span>→</span></button></div></div>}
-      {step === STEP.dashboard && <AiCoachChat context={coachContext} onUpgradeRequest={() => setPaywallOpen(true)} />}
+      {step === STEP.dashboard && <AiCoachChat context={coachContext} signals={coachSignals} onUpgradeRequest={() => setPaywallOpen(true)} />}
       <PremiumPlans open={paywallOpen} onClose={() => setPaywallOpen(false)} isPremium={isPremium} />
       {/* Panelde alt bilgi kabuğun içinde (sekme çubuğunun üstünde) durur;
           burada yalnız onboarding akışı için render edilir. */}

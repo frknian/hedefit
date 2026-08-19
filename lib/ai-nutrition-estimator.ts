@@ -131,20 +131,20 @@ export async function estimateAiTextNutrition(input: {
   grams: number;
   timeoutMs?: number;
 }) {
-  const model = process.env.AI_NUTRITION_TEXT_MODEL || "kimi-k2.6";
-  const isMoonshotK2 = (process.env.AI_PROVIDER_NAME || "moonshot") === "moonshot"
-    && /^kimi-k2(?:\.|$)/.test(model);
+  // Sağlayıcıya/modele özgü ayar BURADA YOK. "Kısa, yapılandırılmış çıktı"
+  // istemek yeterli; hangi modelin bunun için nasıl ayarlanacağı sağlayıcı
+  // katmanının işi (bkz. lib/ai/providers/openai-compatible.ts providerQuirks).
   const generated = await generateAiObject({
     system: NUTRITION_SYSTEM_PROMPT,
     prompt: `Yemek: <food>${input.foodName}</food>\nYenen miktar: ${input.grams} gram`,
-    model,
+    // Kalori tahmini yüksek hacimli ve basit bir iştir; genel sohbet modeli
+    // yerine daha ucuz bir model kullanmak maliyeti belirgin düşürür. Bu bir
+    // VARSAYILAN AYARDIR (AI_BASE_URL gibi), sağlayıcıya dallanan mantık değil.
+    model: process.env.AI_NUTRITION_TEXT_MODEL || "kimi-k2.6",
+    category: "structured_extraction",
     schema: textSchema,
     temperature: 0.1,
     maxOutputTokens: 500,
-    minimumOutputTokens: isMoonshotK2 ? 350 : undefined,
-    providerOptions: isMoonshotK2
-      ? { moonshot: { thinking: { type: "disabled" } } }
-      : undefined,
     abortSignal: AbortSignal.timeout(input.timeoutMs || 20_000),
   });
   return validateAiTextNutrition(generated, input.grams);
