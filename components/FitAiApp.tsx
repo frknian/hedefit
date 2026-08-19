@@ -1749,7 +1749,7 @@ export default function Home() {
 
   // Logo ana ekrana döner: her uygulamada beklenen davranış, burada yoktu ve
   // kullanıcı alt sekmeden geri gelmek zorunda kalıyordu.
-  const brand = <button type="button" className="brand" aria-label={t.nav.home} onClick={() => { setActiveView("plan"); setActiveWorkout(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}><Image className="brand-mark" src="/icon-192.png" alt="" aria-hidden="true" width={28} height={28} /><span>Hede<span className="brand-letter-gradient">f</span><span className="brand-dot">it</span></span></button>;
+  const brand = <button type="button" className="brand" aria-label={t.nav.home} onClick={() => { setActiveView("plan"); setActiveWorkout(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}><span className="brand-mark" aria-hidden="true" /><span>Hede<span className="brand-letter-gradient">f</span><span className="brand-dot">it</span></span></button>;
 
   // Genel aramanın ekran kaynağı: gezinme etiketleri + arama anahtar
   // kelimeleri. Sözlükten burada okunur; arama modülü saf kalır.
