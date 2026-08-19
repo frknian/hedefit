@@ -1,28 +1,24 @@
 // Cihaz üstü (on-device) AI yeteneği algılama.
 //
-// DÜRÜST DURUM TESPİTİ: Hedefit bir Next.js/RSC uygulamasıdır; sunucu tarafı
-// Cloudflare Worker'da, istemci tarafı tarayıcıda ve Capacitor WebView'ında
-// çalışır. Bugün bu üç ortamın hiçbirinde KURULU bir cihaz-üstü LLM çalışma
-// zamanı yok:
+// PHASE 2: bu modül artık bir "sözleşme" değil, GERÇEK bir algılama katmanı.
+// Android'de Capacitor eklentisi (HedefitLocalAI → LiteRT-LM) yüklüyse gerçek
+// cihaz değerleri okunur; tarayıcıda ve iOS'ta eklenti yoktur ve dürüst
+// biçimde "desteklenmiyor" döner.
 //
-//   · Cloudflare Worker  → kullanıcının cihazı değil; "yerel" tanımına girmez
-//   · Tarayıcı/WebView   → WebGPU çıkarımı teknik olarak mümkün, ama modeli
-//                          indirmek için native bir köprü ve depolama yönetimi
-//                          gerekir (aşağıdaki BLOKAJ)
-//   · Android/iOS native → gerçek çözüm; Capacitor eklentisi yazılmalı
-//
-// Bu modül o yüzden bir YER TUTUCU DEĞİL, bir SÖZLEŞMEdir: native köprü
-// eklendiğinde `detectDeviceAiCapability` gerçek değerleri döndürmeye başlar
-// ve router hiç değişmeden yerel modeli kullanmaya başlar. Bugün ise dürüst
-// biçimde `LOCAL_NOT_SUPPORTED` döner ve uygulama uzak sağlayıcıyla çalışır.
-//
-// Ayrıntılı gerekçe ve model seçimi: docs/AI_MODEL_DECISION.md
+// "Android = destekleniyor" VARSAYILMAZ. Native taraf ABI, RAM, düşük bellek
+// bayrağı ve depolama alanını ayrı ayrı değerlendirir (LocalAiCapability.kt);
+// burada o karar taşınır ve yönlendirmeye çevrilir.
+
+import { readNativeCapabilities, type LocalAiNativeState, type NativeCapabilities } from "./local-bridge.ts";
 
 export type LocalAiState =
   | "LOCAL_READY"
   | "LOCAL_MODEL_NOT_DOWNLOADED"
   | "LOCAL_NOT_SUPPORTED"
+  | "LOCAL_LOW_MEMORY"
+  | "LOCAL_INSUFFICIENT_STORAGE"
   | "LOCAL_ERROR"
+  | "LOCAL_DISABLED"
   | "REMOTE_ONLY";
 
 export type DeviceAICapability = {
@@ -30,67 +26,55 @@ export type DeviceAICapability = {
   state: LocalAiState;
   reason?: string;
   availableMemoryMb?: number;
+  totalMemoryMb?: number;
+  freeStorageMb?: number;
+  abi?: string;
   modelInstalled: boolean;
   runtimeAvailable: boolean;
+  engineLoaded?: boolean;
+};
+
+// Native durumların uygulama durumlarına eşlemesi. Tek yerde tutulur ki
+// yeni bir native durum eklendiğinde burada derleme hatası alınsın.
+const STATE_MAP: Record<LocalAiNativeState, LocalAiState> = {
+  UNSUPPORTED_PLATFORM: "LOCAL_NOT_SUPPORTED",
+  LOW_MEMORY: "LOCAL_LOW_MEMORY",
+  INSUFFICIENT_STORAGE: "LOCAL_INSUFFICIENT_STORAGE",
+  MODEL_NOT_INSTALLED: "LOCAL_MODEL_NOT_DOWNLOADED",
+  MODEL_READY: "LOCAL_READY",
+  RUNTIME_ERROR: "LOCAL_ERROR",
 };
 
 /**
- * Native köprünün uygulaması gereken arayüz. Bir Capacitor eklentisi bu şekli
- * `window.HedefitLocalAi` üzerinden sağladığında algılama otomatik olarak
- * gerçek değerlere geçer — bu dosyada değişiklik gerekmez.
+ * Yerel AI'yı tamamen kapatan anahtar.
+ *
+ * Bir sorun çıktığında yeni sürüm yayınlamadan yerel yolu kapatabilmek için;
+ * sunucu tarafında okunur ve istemciye taşınır (bkz. lib/ai/local-policy.ts).
  */
-export type LocalAiBridge = {
-  isRuntimeAvailable(): Promise<boolean>;
-  isModelInstalled(): Promise<boolean>;
-  availableMemoryMb(): Promise<number>;
-};
-
-// Küçük bir quantize modelin (≈1–2 GB) yüklenip üretim yapabilmesi için
-// gereken serbest bellek tabanı. Altındaki cihazda model yüklemek uygulamayı
-// çökertir; bu yüzden yetenek algılama seviyesinde eleriz.
-export const MIN_LOCAL_MEMORY_MB = 2_048;
-
-function bridge(): LocalAiBridge | undefined {
-  if (typeof globalThis === "undefined") return undefined;
-  return (globalThis as { HedefitLocalAi?: LocalAiBridge }).HedefitLocalAi;
+export function localAiDisabledByConfig(): boolean {
+  return process.env.LOCAL_AI_ENABLED === "0" || process.env.LOCAL_AI_ENABLED === "false";
 }
 
-export async function detectDeviceAiCapability(): Promise<DeviceAICapability> {
-  const native = bridge();
-  if (!native) {
-    return {
-      supported: false,
-      state: "LOCAL_NOT_SUPPORTED",
-      reason: "no on-device inference runtime is installed on this platform",
-      modelInstalled: false,
-      runtimeAvailable: false,
-    };
+function fromNative(native: NativeCapabilities): DeviceAICapability {
+  const state = STATE_MAP[native.state] ?? "LOCAL_ERROR";
+  return {
+    supported: Boolean(native.supported) && state === "LOCAL_READY",
+    state,
+    ...(native.reason ? { reason: native.reason } : {}),
+    ...(typeof native.availableRamMb === "number" ? { availableMemoryMb: native.availableRamMb } : {}),
+    ...(typeof native.totalRamMb === "number" ? { totalMemoryMb: native.totalRamMb } : {}),
+    ...(typeof native.freeStorageMb === "number" ? { freeStorageMb: native.freeStorageMb } : {}),
+    ...(native.abi ? { abi: native.abi } : {}),
+    modelInstalled: native.state === "MODEL_READY",
+    runtimeAvailable: Boolean(native.runtimeAvailable),
+    ...(typeof native.engineLoaded === "boolean" ? { engineLoaded: native.engineLoaded } : {}),
+  };
+}
+
+export async function detectDeviceAiCapability(options: { modelId?: string; disabled?: boolean } = {}): Promise<DeviceAICapability> {
+  if (options.disabled ?? localAiDisabledByConfig()) {
+    return { supported: false, state: "LOCAL_DISABLED", reason: "disabled_by_config", modelInstalled: false, runtimeAvailable: false };
   }
-  try {
-    const runtimeAvailable = await native.isRuntimeAvailable();
-    if (!runtimeAvailable) {
-      return { supported: false, state: "LOCAL_NOT_SUPPORTED", reason: "runtime reported unavailable", modelInstalled: false, runtimeAvailable: false };
-    }
-    const availableMemoryMb = await native.availableMemoryMb();
-    if (availableMemoryMb < MIN_LOCAL_MEMORY_MB) {
-      return { supported: false, state: "LOCAL_NOT_SUPPORTED", reason: "insufficient memory", availableMemoryMb, modelInstalled: false, runtimeAvailable: true };
-    }
-    const modelInstalled = await native.isModelInstalled();
-    return {
-      supported: modelInstalled,
-      state: modelInstalled ? "LOCAL_READY" : "LOCAL_MODEL_NOT_DOWNLOADED",
-      availableMemoryMb,
-      modelInstalled,
-      runtimeAvailable: true,
-    };
-  } catch (error) {
-    // Köprü hata verirse uygulama ÇÖKMEZ; uzak sağlayıcıyla devam eder.
-    return {
-      supported: false,
-      state: "LOCAL_ERROR",
-      reason: error instanceof Error ? error.name : "unknown bridge error",
-      modelInstalled: false,
-      runtimeAvailable: false,
-    };
-  }
+  const native = await readNativeCapabilities(options.modelId);
+  return fromNative(native);
 }

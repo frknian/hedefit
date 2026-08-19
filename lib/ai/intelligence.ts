@@ -178,8 +178,16 @@ export function analyze(input: IntelligenceInput): CoachFacts {
   const sorted = (input.measurements ?? [])
     .filter((item): item is { measuredAt: string; weightKg: number } => typeof item.weightKg === "number" && Number.isFinite(item.weightKg))
     .sort((a, b) => a.measuredAt.localeCompare(b.measuredAt));
-  const weekAgo = Date.now() - 7 * 86_400_000;
-  const withinWeek = sorted.filter((item) => new Date(`${item.measuredAt}T12:00:00Z`).getTime() >= weekAgo);
+  // Pencere GÜN bazında karşılaştırılır, an bazında değil.
+  //
+  // Ölçümler tarih anahtarlıdır ("2026-08-12"); bunları `Date.now() - 7 gün`
+  // gibi bir ANLA karşılaştırmak, tam 7 gün önceki kaydı günün saatine göre
+  // bazen içeri bazen dışarı alıyordu. Sonuç kullanıcıya doğrudan yansıyordu:
+  // aynı veriyle "son 7 günde -1,0 kg" sabah farklı, öğleden sonra farklı
+  // görünebiliyordu. Tarihi tarihle karşılaştırmak bunu kesin olarak çözer.
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const weekAgoKey = new Date(new Date(`${todayKey}T00:00:00Z`).getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+  const withinWeek = sorted.filter((item) => item.measuredAt >= weekAgoKey);
   const weightChange7dKg = withinWeek.length >= 2
     ? round(withinWeek[withinWeek.length - 1].weightKg - withinWeek[0].weightKg, 1)
     : undefined;

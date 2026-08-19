@@ -2,7 +2,7 @@ import { authenticateRequest } from "../../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 import { deleteMemory, loadMemories, mayContainMemory, saveMemories } from "../../../../lib/ai/memory.ts";
 import { extractMemories } from "../../../../lib/ai/coach.ts";
-import { hasAiProvider } from "../../../../lib/ai-provider.ts";
+import { hasRemoteProvider } from "../../../../lib/ai/providers/openai-compatible.ts";
 
 export const runtime = "edge";
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
   // Çıkarım şema gerektirir; yerel deterministik sağlayıcı bunu yapamaz.
   // Uzak sağlayıcı yoksa sessizce hiçbir şey yapılmaz.
-  if (!hasAiProvider()) return Response.json({ saved: 0 });
+  if (!hasRemoteProvider()) return Response.json({ saved: 0 });
 
   let payload: { message?: unknown; locale?: unknown };
   try {

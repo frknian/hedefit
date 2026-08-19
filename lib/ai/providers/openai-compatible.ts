@@ -2,7 +2,7 @@
 //
 // Moonshot (Kimi), OpenRouter, Together, Fireworks, kendi vLLM/Ollama
 // sunucunuz — hepsi aynı gövdeyi konuşur, bu yüzden tek uygulama yeter.
-// Göç öncesinde bu dosyanın içeriği lib/ai-provider.ts'in tamamıydı; artık
+// Göç öncesinde bu dosyanın içeriği tek bir lib/ai-provider.ts dosyasıydı; artık
 // yalnızca ZİNCİRDEKİ BİR HALKA. Kimi'ye özgü hiçbir bilgi burada
 // sabitlenmez, yalnızca ortam değişkeni varsayılanı olarak durur.
 
@@ -35,6 +35,17 @@ const MIN_OUTPUT_TOKENS = 4_000;
 // üst düzeyde okunsaydı `AI_API_KEY` sonradan tanımlansa bile hiç görülmezdi.
 export function remoteApiKey() {
   return process.env.AI_API_KEY || "";
+}
+
+/**
+ * "UZAK sağlayıcı yapılandırıldı mı?"
+ *
+ * Yerel (deterministik) sağlayıcı her zaman hazırdır, bu yüzden bu kontrol
+ * yerel katmanı KAPSAMAZ. Rotalar bunu, ücretli çağrıya hiç girmeden kendi
+ * güvenli yerel yedeklerine düşmek için kullanır.
+ */
+export function hasRemoteProvider() {
+  return Boolean(remoteApiKey());
 }
 
 export function remoteModelId() {
@@ -189,3 +200,11 @@ export const openAiCompatibleProvider: AIProvider = {
     };
   },
 };
+
+// Bir data URL'sini ("data:image/jpeg;base64,...") ImageInput'a çevirir.
+// Tüm route'lar aynı doğrulamayı tekrarlamasın diye burada.
+export function parseImageDataUrl(dataUrl: string): ImageInput | null {
+  const match = dataUrl.match(/^data:(image\/[\w.+-]+);base64,(.+)$/);
+  if (!match || match[2].length > 7_000_000) return null;
+  return { mimeType: match[1], base64: match[2] };
+}

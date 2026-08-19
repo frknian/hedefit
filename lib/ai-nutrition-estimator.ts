@@ -1,5 +1,5 @@
 import { jsonSchema } from "ai";
-import { generateAiObject } from "./ai-provider.ts";
+import { routeObject } from "./ai/router.ts";
 
 export type AiTextNutrition = {
   name: string;
@@ -134,7 +134,11 @@ export async function estimateAiTextNutrition(input: {
   // Sağlayıcıya/modele özgü ayar BURADA YOK. "Kısa, yapılandırılmış çıktı"
   // istemek yeterli; hangi modelin bunun için nasıl ayarlanacağı sağlayıcı
   // katmanının işi (bkz. lib/ai/providers/openai-compatible.ts providerQuirks).
-  const generated = await generateAiObject({
+  // Kişiselleştirme YOK: "200 g pilav kaç kalori" sorusu kullanıcıya bağlı
+  // değildir. Bu yüzden Coach Service'in bağlam/hafıza boru hattı değil,
+  // doğrudan yönlendirici kullanılır — gereksiz bir hafıza okuması her öğün
+  // girişine fazladan bir veritabanı turu eklerdi.
+  const { object: generated } = await routeObject({
     system: NUTRITION_SYSTEM_PROMPT,
     prompt: `Yemek: <food>${input.foodName}</food>\nYenen miktar: ${input.grams} gram`,
     // Kalori tahmini yüksek hacimli ve basit bir iştir; genel sohbet modeli

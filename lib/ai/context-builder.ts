@@ -102,6 +102,30 @@ export async function buildCoachContext(input: {
   };
 }
 
+/**
+ * Sohbet DIŞI görevler için bağlam.
+ *
+ * Farkı: konuşma geçmişi yoktur. Bilgi getirimi bir `query` dizesiyle yapılır
+ * (ör. hedef metni, öğün özeti başlığı) — mesaj listesi taklit etmek yerine
+ * ne aradığımızı doğrudan söylemek daha dürüst ve daha isabetli.
+ *
+ * `facts` burada HAZIR gelir: her rota kendi deterministik motorunu zaten
+ * çalıştırıyor (planGoal, profileSignals, validateWeeklySummary...). Onları
+ * yeniden hesaplamak iş mantığını ikinci kez yazmak olurdu.
+ */
+export async function buildTaskContext(input: {
+  memories?: UserMemory[];
+  query: string;
+  retriever?: KnowledgeRetriever;
+  locale?: "tr" | "en";
+}): Promise<Pick<UserCoachContext, "memories" | "knowledge">> {
+  const retriever = input.retriever ?? staticKnowledgeRetriever;
+  return {
+    memories: rankMemories(input.memories ?? [], MEMORY_BUDGET),
+    knowledge: await retriever.retrieve(input.query, { locale: input.locale, limit: KNOWLEDGE_BUDGET }),
+  };
+}
+
 /** Bağlamı sistem promptuna çevirir. */
 export function contextToSystemPrompt(context: UserCoachContext, options: { locale: "tr" | "en"; safetyInstruction?: string }): string {
   const promptInput: PromptInput = {

@@ -1,5 +1,7 @@
 import { jsonSchema } from "ai";
-import { generateAiObject, hasAiProvider, aiModelId } from "../../../lib/ai-provider.ts";
+import { hasRemoteProvider } from "../../../lib/ai/providers/openai-compatible.ts";
+import { generateCoachObject } from "../../../lib/ai/coach.ts";
+import { loadMemories } from "../../../lib/ai/memory.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { normalizeAnswers, planGoal, goalPlanSummary, validateGoalAnalysis, type GoalAnalysis, type GoalPlanProjection } from "../../../lib/goal-plan.ts";
@@ -73,16 +75,31 @@ export async function POST(request: Request) {
 
   const summary = goalPlanSummary(answers, plan, currentWeightKg);
   const fallback = localAnalysis(plan, dictionary);
-  if (!hasAiProvider()) return Response.json({ status: "ready", plan, analysis: fallback, source: "local" });
+  if (!hasRemoteProvider()) return Response.json({ status: "ready", plan, analysis: fallback, source: "local" });
 
   const languageRule = locale === "en"
     ? "- Write entirely in English: short, concrete, encouraging."
     : "- Tamamen Türkçe yaz: kısa, somut, cesaretlendirici.";
 
+  // Hedef adımları kullanıcının gerçekten yapacağı şeyler olmalı: sevmediği
+  // bir hareketi "bu hafta şunu yap" diye yazmak öneriyi ölü doğurur.
+  const memories = await loadMemories(request);
+
   try {
-    const output = await generateAiObject({
+    const result = await generateCoachObject({
       schema: analysisSchema,
-      system: `Sen Hedefit uygulamasının hedef planlama asistanısın.
+      category: "goal_progress",
+      locale,
+      memories,
+      // planGoal() zaten hesapladı; model yalnız yorumlar.
+      facts: summary as unknown as Record<string, unknown>,
+      knowledgeQuery: `${plan.losing ? "kilo verme" : "kilo alma"} haftalık hız beslenme antrenman`,
+      // Kullanıcının serbest metni yok; hedef sayısal. Güvenlik katmanı yine de
+      // uygulanır (aşırı kısıtlama uyarısı planGoal warnings'ten gelir).
+      maxOutputTokens: 700,
+      temperature: 0.3,
+      abortSignal: AbortSignal.timeout(20_000),
+      domainRules: `Sen Hedefit uygulamasının hedef planlama asistanısın.
 - Sana VERİLEN sayılar uygulamada zaten hesaplandı. Yeni tarih, yeni haftalık hız veya yeni kalori sayısı UYDURMA; verilen değerleri yorumla.
 ${languageRule}
 - assessment alanında hedefin bu tempoyla gerçekçi olup olmadığını, antrenmanın ve beslenmenin payını açıkla.
@@ -91,14 +108,11 @@ ${languageRule}
 - warnings içinde "intakeBelowBmr" varsa kalori hedefinin bazal ihtiyacın altında kaldığını belirt ve bir uzmana danışmayı öner.
 - Tıbbi teşhis koyma, ilaç veya takviye önerme, "garanti" gibi kesinlik ifadeleri kullanma.
 - Vücut görünümü hakkında yargı bildirme; yalnız kullanıcının kendi belirlediği hedefe odaklan.`,
-      prompt: `KULLANICININ HEDEF PLANI (anonim, uygulamada hesaplanmış):\n${JSON.stringify(summary)}\n\nBu veriler dışında bir şey varsayma.`,
-      maxOutputTokens: 700,
-      temperature: 0.3,
-      abortSignal: AbortSignal.timeout(20_000),
+      prompt: `KULLANICININ HEDEF PLANI (anonim, uygulamada hesaplanmış) <facts> içinde verildi.\n\nBu veriler dışında bir şey varsayma.`,
     });
-    const validated = validateGoalAnalysis(output);
+    const validated = validateGoalAnalysis(result.object);
     if (!validated) throw new Error("Model yanıtı doğrulanamadı");
-    return Response.json({ status: "ready", plan, analysis: validated, source: "ai", model: aiModelId() });
+    return Response.json({ status: "ready", plan, analysis: validated, source: "ai", model: result.model });
   } catch {
     return Response.json({ status: "ready", plan, analysis: fallback, source: "local" });
   }

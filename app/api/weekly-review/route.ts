@@ -1,5 +1,7 @@
 import { jsonSchema } from "ai";
-import { generateAiObject, hasAiProvider, aiModelId } from "../../../lib/ai-provider.ts";
+import { hasRemoteProvider } from "../../../lib/ai/providers/openai-compatible.ts";
+import { generateCoachObject } from "../../../lib/ai/coach.ts";
+import { loadMemories } from "../../../lib/ai/memory.ts";
 import { enforceWeeklySafety, hasEnoughWeeklyData, localWeeklyReview, validateWeeklyReview, validateWeeklySummary, type WeeklyReview } from "../../../lib/weekly-review.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
   if (!hasEnoughWeeklyData(safeSummary)) return Response.json({ error: "Değerlendirme için yeterli veri yok" }, { status: 422 });
 
   const fallback = enforceWeeklySafety(localWeeklyReview(safeSummary, dictionary, locale), safeSummary, dictionary);
-  if (!hasAiProvider()) return Response.json({ review: fallback, source: "local", reason: "AI yapılandırılmadığı için güvenli yerel değerlendirme kullanıldı." });
+  if (!hasRemoteProvider()) return Response.json({ review: fallback, source: "local", reason: "AI yapılandırılmadığı için güvenli yerel değerlendirme kullanıldı." });
 
   // Ücretsiz kullanıcılarda AI değerlendirme günlük sınırlıdır; sınır
   // dolduğunda hata döndürmek yerine (bu istek arka planda otomatik atılır,
@@ -66,24 +68,38 @@ export async function POST(request: Request) {
   const outputLanguageInstruction = locale === "en"
     ? "- Output must be written entirely in English, short, concrete and supportive."
     : "- Çıktı Türkçe, kısa, somut ve destekleyici olsun.";
+
+  // Kullanıcının kalıcı tercihleri (sevmediği hareketler, ekipman, program
+  // saati) haftalık ÖNERİLERİ şekillendirir: "recommendations" alanına
+  // kullanıcının zaten yapmayacağı bir şeyi yazmanın değeri yok. Hafıza
+  // okunamazsa boş döner ve değerlendirme normal şekilde üretilir.
+  const memories = await loadMemories(request);
+
   try {
-    const output = await generateAiObject({
+    const result = await generateCoachObject({
       schema: weeklyReviewSchema,
-      system: `Sen Hedefit uygulamasının güvenli haftalık fitness değerlendirme asistanısın.
+      category: "complex_reasoning",
+      locale,
+      memories,
+      // Özet zaten uygulamada hesaplandı (validateWeeklySummary); modelin
+      // görevi bu sayıları yorumlamak, yeniden üretmek değil.
+      facts: safeSummary as unknown as Record<string, unknown>,
+      knowledgeQuery: `${safeSummary.goalCategory} haftalık antrenman toparlanma beslenme`,
+      domainRules: `Sen Hedefit uygulamasının güvenli haftalık fitness değerlendirme asistanısın.
 - Yalnızca verilen anonim özet metriklerini kullan; kişisel veri, tanı veya kesin sağlık iddiası üretme.
 ${outputLanguageInstruction}
 - positives olumlu gelişmeleri, cautions dikkat noktalarını, recommendations gelecek hafta için 2–4 uygulanabilir adımı içersin.
 - Ağrı alanı varsa veya ortalama yorgunluk 4/5 ve üzerindeyse yük, ağırlık, set, tekrar ya da yoğunluk artırmayı önerme. Dinlenme, form kalitesi ve güvenli toparlanmayı öner.
 - Kilo, bel veya beslenme değişimini tek başına sağlık sonucu gibi yorumlama.
 - Tıbbi teşhis, tedavi veya kesin kalori hedefi verme.`,
-      prompt: `SON 7 GÜNÜN ANONİM HAFTALIK ÖZETİ:\n${JSON.stringify(safeSummary)}\n\nBu özet dışında veri varsayma.`,
+      prompt: `SON 7 GÜNÜN ANONİM HAFTALIK ÖZETİ <facts> içinde verildi.\n\nBu özet dışında veri varsayma.`,
       maxOutputTokens: 900,
       temperature: 0.25,
       abortSignal: AbortSignal.timeout(20_000),
     });
-    const validated = validateWeeklyReview(output);
+    const validated = validateWeeklyReview(result.object);
     if (!validated) throw new Error("Model yanıtı doğrulanamadı");
-    return Response.json({ review: enforceWeeklySafety(validated, safeSummary, dictionary), source: "ai", model: aiModelId() });
+    return Response.json({ review: enforceWeeklySafety(validated, safeSummary, dictionary), source: "ai", model: result.model });
   } catch {
     // Kullanıcı gerçekte bir AI değerlendirmesi ALMADI; günlük hakkı iade edilir.
     if (Number.isFinite(usage.limit)) await refundUsage(request, "weekly_review");

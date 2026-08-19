@@ -12,6 +12,7 @@ import { GOAL_PRESETS } from "@/lib/goal-presets";
 import { EQUIPMENT_CHOICES, INJURY_CHOICES, formatChoices, parseChoices, toggleChoice } from "@/lib/profile-choices";
 import { useWeightUnit, setStoredWeightUnit } from "@/lib/preferences";
 import { kgToInputValue, parseWeightInputToKg, type WeightUnit } from "@/lib/units";
+import { LocalAiSettings } from "@/components/LocalAiSettings";
 import { translateGender, useTranslations } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
 
@@ -316,6 +317,9 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     {/* Profil cevapları değişince Full Body/Bölgesel programlar kendiliğinden
         güncellenir (ekipmandan türetilirler), ama Akıllı Program AI'dan gelir
         ve yeniden üretilmesi gerekir. */}
+    {/* Cihaz üstü AI: köprü yoksa (web/iOS) bileşen kendini hiç göstermez. */}
+    <LocalAiSettings />
+
     <div className="profile-export refresh-plan-zone"><div><span>{t.profileManager.refreshEyebrow}</span><strong>{t.profileManager.refreshTitle}</strong><p>{t.profileManager.refreshBody}</p></div><button type="button" disabled={refreshing} onClick={() => { setRefreshing(true); void onRefreshPlan().finally(() => setRefreshing(false)); }}>{refreshing ? t.profileManager.refreshing : t.profileManager.refreshAction}</button></div>
 
     <div className="profile-export retake-test-zone"><div><span>{t.profileManager.retakeTestEyebrow}</span><strong>{t.profileManager.retakeTestTitle}</strong><p>{t.profileManager.retakeTestBody}</p></div><button type="button" onClick={onRetakeTest}>{t.profileManager.retakeTestAction}</button></div>

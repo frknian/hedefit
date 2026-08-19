@@ -56,6 +56,40 @@ const MEMORY_RULE = {
   en: "<memory> holds lasting preferences the user stated earlier. Shape your advice around them (e.g. don't keep suggesting an exercise they dislike), but don't recite them in every reply.",
 };
 
+/**
+ * Sohbet DIŞI görevlerin (haftalık değerlendirme, hedef analizi, plan üretimi,
+ * öğün önerisi) sistem promptu.
+ *
+ * Koç promptuyla aynı gövdeyi paylaşır — gerçeklerin kesinliği, hafıza kuralı
+ * ve güvenilmez-bölüm sınırı HER görevde aynı olmalı. Farklı olan tek şey
+ * göreve özgü kurallar (`domainRules`): "positives/cautions alanlarını şöyle
+ * doldur" gibi ifadeler rotanın kendi alan bilgisidir ve orada kalır.
+ *
+ * Kimlik/üslup bölümleri BİLEREK yok: bu görevlerin çıktısı şemaya bağlıdır,
+ * "en fazla 140 kelime yaz" gibi sohbet kuralları şemayla çelişirdi.
+ */
+export function buildTaskSystemPrompt(input: PromptInput & { domainRules: string }): string {
+  const { locale } = input;
+  const hasMemory = Boolean(input.memoryLines?.length);
+  const hasKnowledge = Boolean(input.knowledgeLines?.length);
+  const untrustedTags = [hasMemory && "<memory>", hasKnowledge && "<knowledge>"]
+    .filter(Boolean)
+    .join(locale === "en" ? " and " : " ve ");
+
+  const parts = [
+    input.domainRules,
+    FACTS_RULE[locale],
+    hasMemory ? MEMORY_RULE[locale] : "",
+    untrustedTags ? UNTRUSTED_RULE[locale](untrustedTags) : "",
+    input.safetyInstruction,
+  ].filter(Boolean);
+
+  return parts.join("\n\n")
+    + section("facts", input.factsJson)
+    + section("memory", input.memoryLines)
+    + section("knowledge", input.knowledgeLines);
+}
+
 function section(tag: string, lines: string[] | string | undefined): string {
   if (!lines || (Array.isArray(lines) && !lines.length)) return "";
   const body = Array.isArray(lines) ? lines.join("\n") : lines;

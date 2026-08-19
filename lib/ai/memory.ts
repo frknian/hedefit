@@ -181,13 +181,22 @@ function fromRow(row: MemoryRow): UserMemory {
 export async function loadMemories(request: Request, limit = MAX_MEMORIES_PER_USER): Promise<UserMemory[]> {
   const client = userClient(request);
   if (!client) return [];
-  const { data, error } = await client
-    .from("ai_memories")
-    .select("id, memory_type, memory_key, memory_value, confidence, source, created_at, updated_at")
-    .order("updated_at", { ascending: false })
-    .limit(limit);
-  if (error || !data) return [];
-  return (data as MemoryRow[]).map(fromRow);
+  try {
+    const { data, error } = await client
+      .from("ai_memories")
+      .select("id, memory_type, memory_key, memory_value, confidence, source, created_at, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+    // Array.isArray şart: PostgREST tablo yokken veya vekil bir katman araya
+    // girdiğinde `data` bir dizi OLMAYABİLİR (hata nesnesi, tek satır, null).
+    // Doğrudan .map çağırmak burada TypeError fırlatır ve "hafıza asla
+    // çağrıyı bozmaz" sözünü tutamazdık — koç sohbeti ve plan üretimi
+    // hafızayı okuyamadığı için tamamen çökerdi.
+    if (error || !Array.isArray(data)) return [];
+    return (data as MemoryRow[]).map(fromRow);
+  } catch {
+    return [];
+  }
 }
 
 /**

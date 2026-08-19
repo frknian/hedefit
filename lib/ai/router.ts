@@ -16,6 +16,7 @@
 // tam olarak budur.
 
 import { AiAllProvidersFailedError, AiUnsupportedRequestError } from "./errors.ts";
+import { LocalGenerationCancelledError } from "./providers/on-device.ts";
 import { providerRegistry } from "./providers/registry.ts";
 import { classifyError, consoleEventSink, createEvent, type AiEventSink } from "./telemetry.ts";
 import type { AIProvider, AiObjectRequest, AiObjectResponse, AiRequest, AiResponse } from "./types.ts";
@@ -107,6 +108,7 @@ async function runChain<TResponse extends { provider: string; model: string; lat
         latencyMs: response.latencyMs,
         inputTokens: response.usage?.inputTokens,
         outputTokens: response.usage?.outputTokens,
+        ...(provider.kind === "local" && provider.id !== "local-deterministic" ? { runtime: "litert-lm" as const } : {}),
       }));
       return { ...response, fallbackUsed };
     } catch (error) {
@@ -121,8 +123,13 @@ async function runChain<TResponse extends { provider: string; model: string; lat
         errorKind,
       }));
       failures.push({ provider: provider.id, message: errorKind });
-      // İptal kullanıcının kendi kararıdır (sekmeyi kapattı, "durdur"a bastı);
-      // bunun üzerine ücretli bir yedek çağrı yapmak yanlış olur.
+      // İPTAL YEDEKLEME SEBEBİ DEĞİLDİR.
+      //
+      // Kullanıcı "durdur"a bastığında ya da sekmeyi kapattığında, arkasından
+      // ücretli bir uzak çağrı başlatmak hem parayı boşa harcar hem de
+      // kullanıcının açıkça istemediği bir işi yapar. Bu yüzden iptal, zinciri
+      // olduğu yerde bitirir; sonraki sağlayıcı DENENMEZ.
+      if (error instanceof LocalGenerationCancelledError) throw error;
       if (request.abortSignal?.aborted) break;
     }
   }

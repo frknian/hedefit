@@ -93,9 +93,20 @@ sayıyı üretir, LLM yalnızca anlatır.
 
 Her aşama kendi testleriyle birlikte gelir; `tests/ai-*.test.mjs`.
 
-## 5. Geriye dönük uyumluluk
+## 5. Geriye dönük uyumluluk (tamamlandı, katman kaldırıldı)
 
-`lib/ai-provider.ts`'in dışa açtığı `generateAiText` / `generateAiObject` /
-`hasAiProvider` / `aiModelId` / `parseImageDataUrl` imzaları **korunur**.
-Beş rota bu fonksiyonları çağırmaya devam eder; altlarında artık router
-çalışır. Böylece göç tek seferde her rotayı yeniden yazmayı gerektirmez.
+İlk dalgada `lib/ai-provider.ts` bir uyumluluk katmanına dönüştürüldü:
+`generateAiText` / `generateAiObject` imzaları korundu, altlarında router
+çalıştı. Böylece göç, her rotayı aynı anda yeniden yazmayı gerektirmedi.
+
+İkinci dalgada dört rota da Coach Service boru hattına taşındı ve katman
+**tamamen silindi**. İçindeki iki genel yardımcı
+(`hasRemoteProvider`, `parseImageDataUrl`) sağlayıcı katmanına taşındı.
+
+Bugün AI'ya erişimin üç meşru yolu var:
+
+| Kullanım | Giriş noktası |
+|---|---|
+| Koç sohbeti | `lib/ai/coach.ts` → `generateCoachResponse` |
+| Şemaya bağlı görev (değerlendirme, analiz, plan) | `lib/ai/coach.ts` → `generateCoachObject` |
+| Kişiselleştirme gerektirmeyen üretim (besin tahmini) | `lib/ai/router.ts` → `routeObject` / `routeText` |

@@ -191,6 +191,7 @@ Uygulamanın hiçbir yeri bir AI sağlayıcısını doğrudan çağırmaz. Zinci
 rota → lib/ai/coach.ts → intelligence + memory → context-builder → safety → router → sağlayıcı
 ```
 
+- **Giriş noktaları:** koç sohbeti → `generateCoachResponse`, şemaya bağlı görev (haftalık değerlendirme, hedef analizi, plan) → `generateCoachObject`, kişiselleştirme gerektirmeyen üretim → `routeObject`/`routeText`. Rotalar sağlayıcıyı doğrudan çağırmaz.
 - **Sağlayıcı eklemek:** `AIProvider` arayüzünü uygulayın ve `providerRegistry.register(provider)` deyin. Başka hiçbir dosya değişmez.
 - **Sağlayıcı değiştirmek:** `AI_BASE_URL` + `AI_MODEL`. Kod değişikliği gerekmez.
 - **Deterministik hesaplar:** BMI, kalori hedefi/kalanı, kilo trendi ve ortalamalar `lib/ai/intelligence.ts` içinde hesaplanır ve modele "kesin doğru" olarak verilir. **Modele aritmetik yaptırılmaz.** Yeni bir hesap eklerken formülü orada tekrarlamayın; var olan `lib/` modülünü çağırın.

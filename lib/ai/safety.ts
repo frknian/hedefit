@@ -25,7 +25,10 @@ export type SafetyReason = "emergency" | "self_harm" | "eating_disorder" | "medi
 const PATTERNS: Array<{ reason: SafetyReason; tr: RegExp; en: RegExp }> = [
   {
     reason: "emergency",
-    tr: /göğs(üm|ünde)?\s*(ağrı|sıkış)|göğüs ağrı|bayıl|bilincimi kaybet|nefes alamıyorum|felç|konuşmakta zorlan/i,
+    // "acı/acıyor" da kapsanır: Türkçede göğüs ağrısı en sık "göğsüm acıyor"
+    // diye ifade ediliyor ve yalnız "ağrı" arayan kalıp bunu kaçırıyordu
+    // (karşılaştırma kümesi safe-02 senaryosu bu boşluğu yakaladı).
+    tr: /göğs(üm|ün|ünde|ümde)?\s*\w*\s*(ağrı|acı|sıkış|yanı)|göğüs (ağrı|acı)|bayıl|bilincimi kaybet|nefes alamıyorum|felç|konuşmakta zorlan/i,
     // "hurts" da kapsanır: kullanıcılar "chest pain" gibi klinik bir ifade
     // yerine gündelik dili kullanıyor ve acil bir belirti bu yüzden kaçamaz.
     en: /chest\s*(pain|tight|hurt)|faint(ed|ing)?|lost consciousness|can'?t breathe|passing out|numb on one side/i,

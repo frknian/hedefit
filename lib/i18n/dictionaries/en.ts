@@ -1422,6 +1422,23 @@ export const en: typeof tr = {
     fallbackBody: "A safe local plan was prepared; the AI connection can be retried",
 
   },
+  localAi: {
+    eyebrow: "ON-DEVICE AI",
+    title: "Run the AI coach on your device",
+    body: "Download the AI model to your phone to get coach replies without an internet connection and without token costs. Your data never leaves the device.",
+    sizeHint: (size: string) => `Model size is about ${size} GB. Downloading over Wi-Fi is recommended.`,
+    download: "Download model",
+    cancel: "Stop download",
+    downloading: (percent: number) => `Downloading… ${percent}%`,
+    ready: "Ready — coach replies are generated on your device.",
+    deleteModel: "Delete model",
+    lowMemory: "This device does not have enough memory for on-device AI; the coach keeps working over the cloud.",
+    noStorage: "Not enough storage. Free up space and try again.",
+    unsupported: "This device does not support on-device AI; the coach works over the cloud.",
+    errorDownload: "The model could not be downloaded. Check your connection and try again.",
+    errorIntegrity: "The downloaded file could not be verified and was deleted. You can try again.",
+    errorStorage: "The download could not finish because storage is full.",
+  },
   premium: {
     title: "Hedefit Premium",
     subtitle: "More AI coaching, higher daily limits.",

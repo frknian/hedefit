@@ -54,6 +54,11 @@ test("kilo trendi yalnız yeterli aralık varken hesaplanır", () => {
   assert.equal(enough.trends.weeklyRateKg, -1);
   assert.equal(enough.trends.weightChange7dKg, -1);
 
+  // Pencere günün saatine göre KAYMAMALI: tam 7 gün önceki ölçüm her zaman
+  // içeride kalır. (Daha önce an bazında karşılaştırılıyordu ve aynı veri
+  // öğleden önce/sonra farklı sonuç veriyordu.)
+  assert.equal(enough.trends.trendDays, 7);
+
   // İki gün arayla iki ölçüm trend için yetersiz (bkz. calculateWeeklyWeightTrend),
   // ama ham 7 günlük fark yine de gösterilebilir.
   const tooShort = analyze({ profile: PROFILE, measurements: [

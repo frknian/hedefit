@@ -283,23 +283,22 @@ kodda değildir.
 
 ## Remaining Limitations
 
-1. **Cihaz üstü LLM yok** — native köprü gerekiyor. Mimari hazır, sözleşme
-   tanımlı; gerekçe `docs/AI_MODEL_DECISION.md`. **Dış blokaj:** Capacitor
-   eklentisi + gerçek cihazlarda ölçüm.
-2. **Model indirme ekranı yok** — indirilecek model olmadığı için yapılmadı.
-   Gereken davranış model kararı belgesinde tanımlı.
+1. ~~**Cihaz üstü LLM yok**~~ — **ÇÖZÜLDÜ (Phase 2)**: LiteRT-LM 0.16.1 ile
+   gerçek Capacitor/Android köprüsü yazıldı. Bkz. `docs/LOCAL_AI_PHASE2.md`.
+   Kalan tek eksik ölçüm: fiziksel cihaz (bkz. `docs/LOCAL_AI_BENCHMARK.md`).
+2. ~~**Model indirme ekranı yok**~~ — **ÇÖZÜLDÜ (Phase 2)**: kullanıcı onaylı,
+   ilerlemeli, iptal edilebilir, SHA-256 doğrulamalı indirme
+   (`components/LocalAiSettings.tsx` + `LocalAiModelStore.kt`).
 3. **Kullanıcıya dönük "Yerel AI" anahtarı yok** — bilerek. Bugün var olmayan
    bir yeteneği vaat ederdi. İşletmeci tarafında `AI_ROUTING_MODE` çalışıyor.
 4. **`ai_provider_events` yazımı bağlanmadı** — tablo, tip ve olay üretimi hazır;
    her istekte fazladan bir veritabanı yazımı eklememek için kalıcılaştırma
    çağıran tarafa bırakıldı. Bugün olaylar `consoleEventSink` ile log'a gidiyor.
-5. **Diğer dört AI rotası hâlâ uyumluluk katmanından geçiyor** — `generate-plan`,
-   `weekly-review`, `goal-plan`, `nutrition/advice`. Yönlendirme ve yedeklemeden
-   yararlanıyorlar ama kendi deterministik bağlamlarını Coach Service üzerinden
-   kurmuyorlar. Davranışları göç öncesiyle birebir aynı.
-6. **Migration uygulanmadı** — `db/migrations/20260819_ai_memory.sql` Supabase SQL
-   Editor'de çalıştırılmalı. **Dış blokaj:** üretim veritabanı erişimi. Tablo
-   yokken hafıza ve geri bildirim sessizce devre dışı kalır; sohbet çalışır.
+5. ~~**Diğer dört AI rotası hâlâ uyumluluk katmanından geçiyor**~~ — **ÇÖZÜLDÜ**
+   (bkz. aşağıdaki "İkinci Dalga"). Dört rota da Coach Service boru hattını
+   kullanıyor ve `lib/ai-provider.ts` tamamen silindi.
+6. ~~**Migration uygulanmadı**~~ — **ÇÖZÜLDÜ**: `db/migrations/20260819_ai_memory.sql`
+   kullanıcı tarafından uygulandı. Hafıza ve geri bildirim artık etkin.
 7. **Bilgi tabanı sekiz parça** — genel ilkelerle sınırlı, tanı içermez.
 8. **Konuşma özeti deterministik**, modelle üretilmiyor — her mesajın maliyetini
    ikiye katlamamak için.
@@ -317,3 +316,180 @@ kodda değildir.
    ürettiği sayıları kullanabilir).
 5. Cihaz üstü çıkarım için Capacitor köprüsünü yazın ve `LocalAiBridge`'i
    uygulayın; model seçimini gerçek cihaz ölçümüyle yapın.
+
+---
+
+# İkinci Dalga — Uyumluluk Katmanının Kaldırılması
+
+Tarih: 2026-08-19 (aynı gün, ilk dalganın devamı)
+
+İlk dalgada dört rota (`generate-plan`, `weekly-review`, `goal-plan`,
+`nutrition/advice`) `lib/ai-provider.ts` uyumluluk katmanı üzerinden
+çalışmaya devam ediyordu (bkz. Remaining Limitations #5). Bu dalgada hepsi
+Coach Service boru hattına taşındı ve **uyumluluk katmanı tamamen silindi**.
+
+## Eklenen altyapı
+
+Coach Service sohbet için tasarlanmıştı: girdi mesaj dizisi, çıktı metin.
+Bu dört rota ise **şemaya bağlı** çıktı üretir. Aynı boru hattını sohbet
+olmayan görevlere açmak için üç parça eklendi:
+
+| Ekleme | Rol |
+|---|---|
+| `prompts.ts` → `buildTaskSystemPrompt()` | Ortak kurallar (gerçekler kesindir, hafıza, güvenilmezlik) + göreve özgü `domainRules` |
+| `context-builder.ts` → `buildTaskContext()` | Konuşma geçmişi olmayan görevler için hafıza + bilgi getirimi; sorgu bir dize |
+| `coach.ts` → `generateCoachObject()` / `generateCoachTaskText()` | Güvenlik → bağlam → router zinciri, şema veya metin çıktısıyla |
+
+Tasarım kararı: **`facts` hazır gelir.** Her rotanın kendi deterministik motoru
+zaten çalışıyor (`planGoal`, `profileSignals`, `validateWeeklySummary`,
+`nutritionGaps`). Coach Service bunları yeniden hesaplasaydı iş mantığı ikinci
+kez yazılmış olurdu. Servis yalnızca onları `<facts>` içine otorite olarak
+yerleştirir.
+
+## Rota bazında değişim
+
+| Rota | Kazanım |
+|---|---|
+| `weekly-review` | Özet `<facts>` içinde otorite; **hafıza** haftalık önerileri şekillendiriyor; bilgi getirimi hedef kategorisine göre |
+| `goal-plan` | `goalPlanSummary` otorite; hafıza "bu hafta yapılacaklar" adımlarını şekillendiriyor |
+| `nutrition/advice` | **Kalan makrolar artık sunucuda** (`nutritionGaps`) — model çıkarma yapmıyor; beslenme tercihleri (vejetaryen, alerji) öneriyi belirliyor |
+| `generate-plan` | Tüm veri serbest metin başlıkları yerine yapılandırılmış `<facts>` içinde; hafıza sevilmeyen hareketleri programdan uzak tutuyor; fotoğraf varsa `vision` kategorisi |
+
+Ek olarak `lib/ai-nutrition-estimator.ts` doğrudan `routeObject`'e bağlandı.
+Kişiselleştirme gerektirmeyen bir iş olduğu için (200 g pilav kaç kalori)
+bilerek Coach Service'in bağlam/hafıza hattına sokulmadı — her öğün girişine
+gereksiz bir veritabanı turu eklerdi.
+
+## Uyumluluk katmanı silindi
+
+`lib/ai-provider.ts` **artık yok**. İçindeki iki genel yardımcı doğru yerlerine
+taşındı:
+
+- `hasAiProvider()` → `hasRemoteProvider()`, `lib/ai/providers/openai-compatible.ts`
+- `parseImageDataUrl()` → aynı dosya
+
+Yedi rota artık sağlayıcı katmanını doğrudan, deprecate edilmiş bir ara katman
+olmadan kullanıyor. Denetim: `grep -rn "ai-provider" app lib components hooks`
+→ yalnızca bir tarihsel yorum satırı.
+
+## Bu dalgada bulunan gerçek hatalar
+
+1. **`loadMemories` çökebiliyordu.** "Hafıza asla çağrıyı bozmaz" sözü
+   verilmişti ama `data` dizi değilse (tablo yok, vekil katman, tek satır
+   yanıtı) `.map` doğrudan `TypeError` fırlatıyordu — bu durumda **plan üretimi
+   ve sohbet tamamen çökerdi**. `Array.isArray` guard + `try/catch` eklendi.
+2. **7 günlük kilo değişimi günün saatine göre kayıyordu.** Tarih anahtarlı
+   ölçümler (`"2026-08-12"`) `Date.now() - 7 gün` gibi bir ANLA
+   karşılaştırılıyordu; tam 7 gün önceki kayıt öğleden önce içeride, öğleden
+   sonra dışarıda kalıyordu. Kullanıcı aynı veriyle sabah "-1,0 kg", öğleden
+   sonra "veri yok" görebiliyordu. Karşılaştırma gün bazına alındı ve günün
+   dört farklı saatinde doğrulandı.
+3. **Test paketinde 7 sn'lik gecikme.** `weekly_ai_reviews` sorgusu
+   mock'lanmadığı için supabase-js ağ hatasında yeniden deniyordu; iki test
+   14 sn sürüyordu → 66 ms.
+
+## Testler
+
+15 yeni test (`tests/ai-task-routes.test.mjs`): görev boru hattı (gerçekler
+otorite, hafıza iletimi, alakasız bilgi girmiyor, şema gerektiren işte yerel
+sağlayıcı elenmiyor, çıktı güvenliği), deterministik makro hesabı ve **dört
+rotanın kota davranışı** (hizmet alınmadıysa hak iade edilir).
+
+Güncellenen testler — hepsinin AMACI korundu, yalnız yeni mimariye
+yönlendirildi:
+
+- `rendered-html` — plan verisinin modele ulaştığı iddiaları artık `<facts>`
+  anahtarlarını doğruluyor (`profileTest`, `exerciseCatalog`, `trainingHistory`,
+  `adaptation`)
+- `nutrition-tracking` — sistem promptu bağlaması `domainRules` üzerinden
+
+```
+node --test tests/*.test.mjs
+ℹ tests 539   ℹ pass 539   ℹ fail 0        (ilk dalga sonrası: 524)
+npx tsc --noEmit  → temiz
+npx eslint …      → 0 hata (1 önceden var olan uyarı)
+npm run build     → EXIT=0
+```
+
+Çalışma zamanı: uygulama açılıyor, **konsolda hata yok**, beş AI rotası da
+kimlik doğrulaması olmadan **401**.
+
+## Sözleşme değişikliği
+
+**Yok.** Dört rotanın da yanıt şekli (`{review, source, model, reason}`,
+`{status, plan, analysis, source, model}`, `{advice, source}`,
+`{...plan, profileFingerprint, model}`) ve kota davranışı birebir korundu;
+testlerle doğrulandı.
+
+
+---
+
+# Phase 2 — Gerçek Cihaz Üstü LLM (özet)
+
+Ayrıntı: [LOCAL_AI_PHASE2.md](LOCAL_AI_PHASE2.md) ·
+[LOCAL_AI_BENCHMARK.md](LOCAL_AI_BENCHMARK.md) ·
+[AI_MODEL_DECISION.md](AI_MODEL_DECISION.md)
+
+## Ne yapıldı
+
+Yerel katman artık şablon değil, **gerçek sinir ağı çıkarımı**. Zincir üç
+katmanlı:
+
+```
+on-device-litertlm  →  openai-compatible  →  local-deterministic
+```
+
+| Bileşen | Dosya |
+|---|---|
+| Capacitor eklentisi | `android/.../localai/HedefitLocalAiPlugin.kt` |
+| LiteRT-LM sarmalayıcı | `LocalAiEngine.kt` (çalışma zamanını gören TEK dosya) |
+| Model deposu (indirme + SHA-256 + atomik kurulum) | `LocalAiModelStore.kt` |
+| Yetenek algılama (ABI/RAM/depolama) | `LocalAiCapability.kt` |
+| Doğrulanmış model kataloğu | `LocalAiModelCatalog.kt` |
+| JS köprüsü | `lib/ai/local-bridge.ts` |
+| Sağlayıcı | `lib/ai/providers/on-device.ts` |
+| Yerel politika (bütçe/kategori/süre) | `lib/ai/local-policy.ts` |
+| Kalite denetimleri | `lib/ai/benchmark.ts` |
+| İndirme arayüzü | `components/LocalAiSettings.tsx` |
+| Karşılaştırma kümesi (48 senaryo) | `tests/fixtures/ai/hedefit-local-benchmark.json` |
+
+## Phase 2'de bulunan gerçek hatalar
+
+1. **Android derlemesi zaten kırıktı.** `capacitor-health` (commit `21d22c9`)
+   `minSdk 26` dayatıyor, proje 24 ilan ediyordu → manifest birleştirme hatası.
+   Android paketi o commit'ten beri hiç üretilememiş. minSdk 26'ya çıkarıldı.
+2. **Güvenlik açığı: "göğsüm acıyor" engellenmiyordu.** Kalıp yalnız "ağrı"
+   arıyordu; Türkçede göğüs ağrısı en sık "acıyor" diye ifade edilir. Karşılaştırma
+   koşucusunun ilk çalıştırmasında yakalandı, düzeltildi, teste bağlandı.
+3. **Cihaz üstü model ana özellikte hiç devreye girmeyecekti.** Sohbet rotası
+   `conversation` kategorisiyle istek gönderiyor, ama bu kategori yerel listede
+   yoktu — model kurulu olsa bile her mesaj uzağa giderdi. Kendi testim yakaladı.
+4. **Kotlin 2.1 LiteRT-LM'i okuyamıyor** (metadata 2.3.0). Sürüm 2.3.21'e
+   çıkarıldı; bu bir tercih değil çalışma zamanı dayatması.
+
+## Doğrulama
+
+```
+node --test tests/*.test.mjs   → 568/568 geçer   (Phase 2 öncesi 539)
+npx tsc --noEmit               → temiz
+npx eslint …                   → 0 hata (4 önceden var olan uyarı)
+npm run build                  → EXIT=0 (Cloudflare/web)
+npx cap sync android           → başarılı
+./gradlew clean assembleDebug  → BUILD SUCCESSFUL, 56 MB APK
+npm run ai:benchmark:check     → 48 senaryo, 0 güvenlik hatası, 0 bütçe aşımı
+```
+
+APK doğrulaması: `liblitertlm_jni.so` (arm64-v8a + x86_64) **var**,
+`HedefitLocalAiPlugin` dex'te **var**, model dosyası **YOK** (gigabaytlar
+pakete gömülmedi).
+
+Cloudflare Worker paketinde LiteRT/Android bağımlılığı **yok**; yalnız
+"köprü var mı" kontrolü var — sunucuda köprü hiçbir zaman bulunmaz.
+
+## Kalan blokaj
+
+**PHYSICAL_DEVICE_BENCHMARK_BLOCKED** — bağlı/yetkili Android cihaz, tanımlı
+AVD ve kurulu sistem imajı yok. Gerçek TTFT/token-sn/bellek ölçümü YAPILMADI ve
+**hiçbir sayı uydurulmadı**. Varsayılan model bu yüzden kanıta değil "en düşük
+risk" ilkesine dayanıyor. Cihaz bağlandığında çalıştırılacak komutlar
+`docs/LOCAL_AI_BENCHMARK.md` içinde.

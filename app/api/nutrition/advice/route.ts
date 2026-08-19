@@ -1,7 +1,9 @@
-import { localNutritionAdvice, type NutritionAdviceInput } from "../../../../lib/nutrition-advice.ts";
+import { localNutritionAdvice, nutritionGaps, type NutritionAdviceInput } from "../../../../lib/nutrition-advice.ts";
 import { authenticateRequest } from "../../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
-import { generateAiText, hasAiProvider } from "../../../../lib/ai-provider.ts";
+import { hasRemoteProvider } from "../../../../lib/ai/providers/openai-compatible.ts";
+import { generateCoachTaskText } from "../../../../lib/ai/coach.ts";
+import { loadMemories } from "../../../../lib/ai/memory.ts";
 import { checkAndConsumeUsage, refundUsage } from "../../../../lib/usage-limits.ts";
 
 export const runtime = "edge";
@@ -68,7 +70,7 @@ export async function POST(request: Request) {
   const input = sanitizeInput(body);
   if (!input || !input.calorieTarget) return Response.json({ error: "Beslenme özeti geçersiz" }, { status: 400 });
   const fallback = localNutritionAdvice(input, locale);
-  if (!hasAiProvider() || !input.meals.length) return Response.json({ advice: fallback, source: "fallback" });
+  if (!hasRemoteProvider() || !input.meals.length) return Response.json({ advice: fallback, source: "fallback" });
 
   // Bu istek her öğün girişinde arka planda otomatik atılır; ücretsiz
   // kullanıcılarda günlük AI öneri sınırı dolduğunda hata yerine sessizce
@@ -77,10 +79,32 @@ export async function POST(request: Request) {
   if ("error" in usage || !usage.allowed) return Response.json({ advice: fallback, source: "fallback" });
 
   const languageInstruction = locale === "en" ? "in English" : "Türkçe";
-  const prompt = `Aşağıdaki anonim günlük beslenme özetine göre ${languageInstruction}, tıbbi olmayan ve tek paragraf halinde en fazla 65 kelimelik bir sonraki öğün önerisi yaz. Kesin sağlık iddiası üretme. Eksik makrolara odaklan ve 2-4 yaygın besin örneği ver. Kalori hedefini aşmayı teşvik etme.\n${JSON.stringify(input)}`;
+
+  // Kullanıcının beslenme tercihleri (vejetaryen, sevmediği besinler, alerji)
+  // doğrudan bu öneriyi belirler: "tavuk ekle" demek, tavuk yemeyen birine
+  // öneriyi tamamen kullanışsız yapar.
+  const memories = await loadMemories(request);
+
+  // Kalan makrolar BURADA hesaplanır (nutritionGaps), modele çıkarma
+  // yaptırılmaz — yerel öneriyle birebir aynı sayıyı görür.
+  const facts = { ...nutritionGaps(input), targets: { calories: input.calorieTarget, protein: input.proteinTarget, carbs: input.carbsTarget, fat: input.fatTarget }, consumed: input.totals, mealsLogged: input.meals.length };
+
   try {
-    const advice = await generateAiText({ system: ADVICE_SYSTEM_PROMPT, prompt, temperature: 0.3, maxOutputTokens: 180, abortSignal: AbortSignal.timeout(15_000) });
-    if (advice.trim()) return Response.json({ advice: advice.trim(), source: "ai" });
+    const result = await generateCoachTaskText({
+      category: "nutrition_explanation",
+      locale,
+      memories,
+      facts,
+      knowledgeQuery: "protein beslenme öğün kalori",
+      // Öğün adları kullanıcı girdisidir; güvenlik katmanından geçirilir.
+      userText: input.meals.map((meal) => meal.name).join(" "),
+      domainRules: ADVICE_SYSTEM_PROMPT,
+      prompt: `Aşağıdaki anonim günlük beslenme özetine göre ${languageInstruction}, tıbbi olmayan ve tek paragraf halinde en fazla 65 kelimelik bir sonraki öğün önerisi yaz. Kesin sağlık iddiası üretme. Eksik makrolara odaklan ve 2-4 yaygın besin örneği ver. Kalori hedefini aşmayı teşvik etme.\n\nBugün kaydedilen öğünler: ${JSON.stringify(input.meals)}`,
+      temperature: 0.3,
+      maxOutputTokens: 180,
+      abortSignal: AbortSignal.timeout(15_000),
+    });
+    if (result.text.trim()) return Response.json({ advice: result.text.trim(), source: "ai" });
   } catch {
     // Yerel yedeğe düşülür.
   }

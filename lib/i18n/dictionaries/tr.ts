@@ -1425,6 +1425,23 @@ export const tr = {
     fallbackBody: "Güvenli yerel plan hazırlandı; AI bağlantısı yeniden denenebilir",
 
   },
+  localAi: {
+    eyebrow: "CİHAZDA AI",
+    title: "AI Koçu cihazda çalıştır",
+    body: "AI modelini telefonuna indirerek koç yanıtlarını internet bağlantısı olmadan ve token ücreti olmadan alabilirsin. Verilerin cihazdan çıkmaz.",
+    sizeHint: (size: string) => `Model boyutu yaklaşık ${size} GB. Wi-Fi ile indirmen önerilir.`,
+    download: "Modeli indir",
+    cancel: "İndirmeyi durdur",
+    downloading: (percent: number) => `İndiriliyor… %${percent}`,
+    ready: "Hazır — koç yanıtları cihazında üretiliyor.",
+    deleteModel: "Modeli sil",
+    lowMemory: "Bu cihazın belleği cihaz üstü AI için yeterli değil; koç bulut üzerinden çalışmaya devam ediyor.",
+    noStorage: "Depolama alanı yetersiz. Yer açtıktan sonra tekrar deneyebilirsin.",
+    unsupported: "Bu cihaz cihaz üstü AI'yı desteklemiyor; koç bulut üzerinden çalışıyor.",
+    errorDownload: "Model indirilemedi. Bağlantını kontrol edip tekrar deneyebilirsin.",
+    errorIntegrity: "İndirilen dosya doğrulanamadı ve silindi. Tekrar deneyebilirsin.",
+    errorStorage: "Depolama alanı yetersiz olduğu için indirme tamamlanamadı.",
+  },
   premium: {
     title: "Hedefit Premium",
     subtitle: "Daha fazla AI koçluk, daha yüksek günlük limitler.",

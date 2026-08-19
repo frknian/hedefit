@@ -244,7 +244,11 @@ test("öğün önerisi prompt'u enerji dengesini ve BMR sınırını bilir", asy
   // BMR altına inmek kas kaybı ve metabolik yavaşlama demektir.
   assert.match(prompt, /BMR\) altına inmeyi ASLA teşvik/);
   assert.match(prompt, /termik etki/i);
-  assert.match(source, /generateAiText\(\{ system: ADVICE_SYSTEM_PROMPT/, "system prompt çağrıya bağlanmalı");
+  // AI göçünden sonra çağrı Coach Service üzerinden gidiyor; alan bilgisi
+  // `domainRules` olarak bağlanır, ortak kurallar (gerçekler kesindir, hafıza,
+  // güvenilmezlik) servis tarafından eklenir.
+  assert.match(source, /domainRules: ADVICE_SYSTEM_PROMPT/, "system prompt çağrıya bağlanmalı");
+  assert.match(source, /generateCoachTaskText/, "öneri Coach Service üzerinden üretilmeli");
 });
 
 test("günlük AI öneri sınırı dolunca AI'ya gitmeden yerel öneriye düşülür", { concurrency: false }, async () => {

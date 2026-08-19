@@ -1061,6 +1061,13 @@ input,select,textarea { color-scheme:inherit; }
 .coach-feedback button { padding:2px 5px; border:1px solid var(--line); border-radius:6px; background:transparent; font-size:9px; line-height:1; opacity:.5; cursor:pointer; transition:opacity .15s ease, border-color .15s ease; }
 .coach-feedback button:hover, .coach-feedback button:focus-visible { opacity:.9; }
 .coach-feedback button.active { opacity:1; border-color:var(--hf-primary); background:var(--hf-primary-container); }
+/* Cihaz üstü AI ayarı. Mevcut .profile-export satır yapısını kullanır;
+   yalnız indirme çubuğu ve durum satırları eklenir. */
+.local-ai-zone .local-ai-progress { margin-top:6px; }
+.local-ai-progress-track { height:4px; border-radius:999px; background:var(--surface-soft); overflow:hidden; }
+.local-ai-progress-track i { display:block; height:100%; background:var(--hf-primary); transition:width .25s var(--ease, ease); }
+.local-ai-zone .local-ai-ready { color:var(--hf-primary); }
+.local-ai-zone .local-ai-error { color:var(--color-hf-error, #b3261e); }
 
 /* Hedef tahmini kartı (ana sayfa) */
 .goal-forecast { margin:0 0 24px; padding:20px; border:1px solid #dce9ad; border-radius:11px; background:linear-gradient(135deg,#fbfdf2,#f4f9df); }

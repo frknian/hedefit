@@ -108,3 +108,73 @@ kendi vLLM/Ollama sunucunuza tek ortam değişkeniyle geçilir.
 Varsayılan `kimi-k2.7-code-highspeed` seçimi ölçüme dayanır (bkz. aynı dosyadaki
 süre tablosu): akıl yürüten modeller bu uygulamanın zaman penceresine
 yetişmiyordu.
+
+
+---
+
+# PHASE 2 GÜNCELLEMESİ — Cihaz üstü LLM artık GERÇEK
+
+Yukarıdaki Phase 1 değerlendirmesi "bugün cihaz üstü LLM çalıştırmıyoruz"
+diyordu ve gerekçesi doğruydu. Phase 2 o kararı **tersine çevirdi**: Google'ın
+üretim için hazırladığı LiteRT-LM çalışma zamanı entegre edildi ve gerçek bir
+Capacitor/Android köprüsü yazıldı.
+
+## Çalışma zamanı kararı
+
+**Seçilen:** `com.google.ai.edge.litertlm:litertlm-android:0.16.1`
+
+| Aday | Sonuç |
+|---|---|
+| **LiteRT-LM** | ✅ Seçildi. Google'ın üretim çalışma zamanı; Kotlin API'si coroutine/Flow tabanlı; `cancelProcess()` ve `BenchmarkInfo` yerleşik; `.litertlm` artefaktları hazır |
+| MediaPipe LLM Inference (`tasks-genai`) | ❌ Bakım modunda; görev tanımı da kaçınılmasını istiyor |
+| llama.cpp / ONNX Runtime | ❌ Değerlendirilmedi — LiteRT-LM sorunsuz entegre oldu, karşılaştırma yapmadan başka bir çalışma zamanına geçmek gerekçesiz olurdu |
+
+Karar dokümantasyona değil **artefakta** dayanır: AAR indirilip `javap` ile
+incelendi, kullanılan her sınıf ve imza gerçek ikili dosyadan doğrulandı.
+
+### Öğrenilen sert kısıtlar
+
+- AAR yalnız **arm64-v8a** ve **x86_64** native kitaplığı taşıyor →
+  32-bit ARM cihazlar desteklenmez (yetenek algılamada elenir).
+- AAR **Kotlin metadata 2.3.0** ile derlenmiş → projenin Kotlin sürümü
+  2.3.21'e çıkarılmak ZORUNDA kaldı (2.1/2.2 okuyamıyor).
+- AAR `minSdkVersion 24`; uygulamanın tabanı ayrı bir sebeple 26'ya çıktı.
+
+## Model adayları (ölçüme hazır)
+
+Boyut ve SHA-256 değerleri Hugging Face API'sinden okunmuş gerçek değerlerdir.
+Üçü de Apache-2.0 ve gate'siz.
+
+| Model | Artefakt | Boyut | Min. RAM | Not |
+|---|---|---|---|---|
+| Qwen3 0.6B (mixed int4) | `qwen3_0_6b_mixed_int4.litertlm` | 0,50 GB | 3 GB | En küçük; thinking destekli (kapalı kullanılır) |
+| Qwen2.5 1.5B (q8) | `Qwen2.5-1.5B-Instruct_…_q8_ekv4096.litertlm` | 1,60 GB | 4 GB | Denge adayı |
+| Gemma 4 E2B | `gemma-4-E2B-it.litertlm` | 2,59 GB | 6 GB | En büyük; kalite adayı |
+
+Kapsam dışı:
+- **Qwen2.5 0.5B** — depoda `.litertlm` yok, yalnız `.task`; LiteRT-LM 0.16.1
+  ile kullanılamaz.
+- **Gemma 3 1B** — litert-community deposu Gemma 4 ailesine geçmiş; yerine
+  `gemma-4-E2B` alındı.
+
+## VARSAYILAN MODEL: HENÜZ KANITA DAYALI SEÇİLMEDİ
+
+`DEFAULT_MODEL_ID = "qwen3-0.6b-int4"`
+
+Bu bir **ölçüm sonucu değildir**. Fiziksel cihaz bulunmadığı için karşılaştırma
+çalıştırılamadı (`docs/LOCAL_AI_BENCHMARK.md` → PHYSICAL_DEVICE_BENCHMARK_BLOCKED).
+En küçük model, en düşük "hiç çalışmama" riskine sahip olduğu için geçici
+varsayılan yapıldı.
+
+Nihai seçim şu eksenlerde ölçüldükten sonra yapılmalı — ve **yalnız hızla ya da
+yalnız boyutla** verilmemeli:
+
+1. Türkçe koçluk kalitesi
+2. `<facts>` içindeki sayıları koruma (uydurmama)
+3. Talimata uyma
+4. TTFT ve decode token/sn
+5. RAM ve termal davranış
+6. İndirme boyutunun kullanıcıya maliyeti
+
+Ölçüm tamamlandığında `LocalAiModelCatalog.DEFAULT_MODEL_ID` güncellenir ve
+sonuç tablosu `docs/LOCAL_AI_BENCHMARK.md` içine yazılır.

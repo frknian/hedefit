@@ -11,6 +11,24 @@ function gap(target: number, current: number) {
   return Math.max(0, Math.round(target - current));
 }
 
+/**
+ * Hedefe kalan miktarlar — deterministik.
+ *
+ * Modele ham "hedef + tüketilen" gönderip farkı ONA hesaplatmak, dil
+ * modellerinin en güvenilmez olduğu işi (aritmetik) kritik bir yerde yapmaktı.
+ * `localNutritionAdvice` bu farkları zaten hesaplıyordu; aynı `gap()` burada da
+ * kullanılır ki yerel öneri ile AI önerisi aynı sayıyı görsün.
+ */
+export function nutritionGaps(input: NutritionAdviceInput) {
+  return {
+    remainingCalories: gap(input.calorieTarget, input.totals.calories),
+    remainingProteinGrams: gap(input.proteinTarget, input.totals.protein),
+    remainingCarbsGrams: gap(input.carbsTarget, input.totals.carbs),
+    remainingFatGrams: gap(input.fatTarget, input.totals.fat),
+    calorieTargetReached: gap(input.calorieTarget, input.totals.calories) === 0,
+  };
+}
+
 export type MealAdviceTotals = { calories: number; protein: number; carbs: number; fat: number };
 export type MealAdviceTargets = { calorieTarget: number; proteinTarget: number; carbsTarget: number; fatTarget: number };
 export type MealAdviceSnapshot = { date: string; totals: MealAdviceTotals; targets: MealAdviceTargets; locale: "tr" | "en"; revision: number };

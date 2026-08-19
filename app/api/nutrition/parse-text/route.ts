@@ -1,6 +1,6 @@
 import { authenticateRequest } from "../../../../lib/api-auth.ts";
 import { estimateAiTextNutrition } from "../../../../lib/ai-nutrition-estimator.ts";
-import { hasAiProvider } from "../../../../lib/ai-provider.ts";
+import { hasRemoteProvider } from "../../../../lib/ai/providers/openai-compatible.ts";
 import { containsPromptInjection } from "../../../../lib/nutrition-parser.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 import { checkAndConsumeUsage, refundUsage, usageLimitExceeded } from "../../../../lib/usage-limits.ts";
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (!Number.isFinite(grams) || grams <= 0 || grams > 5000) {
     return Response.json({ error: "Gramaj 1–5000 gram arasında olmalı." }, { status: 400 });
   }
-  if (!hasAiProvider()) {
+  if (!hasRemoteProvider()) {
     return Response.json({ error: "AI besin hesaplama servisi yapılandırılmamış." }, { status: 503 });
   }
 

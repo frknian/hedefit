@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 // Yayın imzalama bilgileri repoya GİRMEZ. Öncelik sırası:
 //   1) keystore.properties (android/ altında, .gitignore'da)
@@ -19,6 +20,9 @@ def hasReleaseSigning = keystorePath && keystorePass && keystoreAlias && keystor
 
 android {
     namespace = "com.hedefit.app"
+    kotlinOptions {
+        jvmTarget = "21"
+    }
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.hedefit.app"
@@ -87,6 +91,13 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+
+    // --- Cihaz üstü AI (Phase 2) -------------------------------------------
+    // LiteRT-LM: Google'ın üretim için hazırladığı edge LLM çalışma zamanı.
+    // Kullanımdan kaldırılmakta olan MediaPipe LLM Inference API'si (
+    // com.google.mediapipe:tasks-genai) BİLEREK kullanılmadı.
+    implementation "com.google.ai.edge.litertlm:litertlm-android:$litertLmVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutinesVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

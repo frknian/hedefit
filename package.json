@@ -17,7 +17,10 @@
     "mobile:sync": "cap sync",
     "mobile:android": "cap open android",
     "mobile:ios": "cap open ios",
-    "mobile:doctor": "cap doctor"
+    "mobile:doctor": "cap doctor",
+    "ai:benchmark": "node scripts/local-ai-benchmark.mjs",
+    "ai:benchmark:check": "node scripts/local-ai-benchmark.mjs --check",
+    "android:build": "cd android && ./gradlew :app:assembleDebug"
   },
   "//overrides": "Güvenlik yamaları: bu paketler geçişli bağımlılık olarak açıklı sürümlerde geliyor (OWASP A06).",
   "overrides": {

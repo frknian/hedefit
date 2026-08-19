@@ -22,6 +22,17 @@ export type AiEvent = {
   outputTokens?: number;
   promptVersion: string;
   errorKind?: string;
+  // --- Cihaz üstü çıkarım ölçümleri (Phase 2) ---------------------------
+  // Yalnızca teknik metadata. İSTEM VE YANIT METNİ HİÇBİR ZAMAN YAZILMAZ:
+  // yerel çıkarımın temel vaadi verinin cihazdan çıkmamasıdır; performans
+  // ölçmek uğruna sağlık verisini yukarı göndermek bu vaadi bozardı.
+  runtime?: "litert-lm";
+  /** Model belleğe yüklenirken geçen süre (yalnız ilk yüklemede anlamlı). */
+  loadMs?: number;
+  /** İlk token'a kadar geçen süre — algılanan hızın asıl göstergesi. */
+  ttftMs?: number;
+  decodeTokensPerSecond?: number;
+  prefillTokensPerSecond?: number;
 };
 
 /** Sağlayıcı hatasını ham mesaj SIZDIRMADAN sınıflandırır. */
@@ -29,7 +40,16 @@ export function classifyError(error: unknown): string {
   if (error instanceof Error) {
     if (error.name === "AbortError" || error.name === "TimeoutError") return "timeout";
     if (error.name === "AiUnsupportedRequestError") return "unsupported";
+    // Kullanıcı iptali arıza değildir; ayrı sınıflandırılır ki hata
+    // oranlarını şişirmesin.
+    if (error.name === "LocalGenerationCancelledError") return "cancelled";
   }
+  const nativeMessage = error instanceof Error ? error.message : String(error);
+  if (/generation_timeout|load_timeout/.test(nativeMessage)) return "timeout";
+  if (/model_not_installed/.test(nativeMessage)) return "model_missing";
+  if (/integrity_failed|checksum_mismatch|size_mismatch/.test(nativeMessage)) return "model_corrupted";
+  if (/insufficient_storage/.test(nativeMessage)) return "insufficient_storage";
+  if (/load_failed|generation_failed/.test(nativeMessage)) return "local_runtime_error";
   const message = error instanceof Error ? error.message : String(error);
   if (/\b429\b|rate.?limit/i.test(message)) return "rate_limited";
   if (/\b401\b|\b403\b|unauthor|forbidden|api key/i.test(message)) return "auth";

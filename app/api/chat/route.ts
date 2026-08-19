@@ -1,7 +1,7 @@
 import type { CoachMessage } from "../../../lib/ai-coach.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
-import { hasAiProvider } from "../../../lib/ai-provider.ts";
+import { hasRemoteProvider } from "../../../lib/ai/providers/openai-compatible.ts";
 import { generateCoachResponse } from "../../../lib/ai/coach.ts";
 import { LOCAL_PROVIDER_ID } from "../../../lib/ai/providers/deterministic-local.ts";
 import { evaluateSafety } from "../../../lib/ai/safety.ts";
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
   // ALMADI, günlük hakkı geri iade edilir (bkz. lib/usage-limits.ts refundUsage).
   if (Number.isFinite(usage.limit)) await refundUsage(request, "chat");
   return Response.json({
-    text: hasAiProvider()
+    text: hasRemoteProvider()
       ? "AI koç şu anda kullanılamıyor. Verilerin kaybolmadı; biraz sonra tekrar deneyebilirsin."
       : "AI bağlantısı yapılandırılmadığı için koç şu anda kullanılamıyor.",
     source: "fallback",

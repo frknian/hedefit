@@ -207,25 +207,31 @@ test("keeps the AI plan and movement library wired into the product", async () =
   assert.match(page, /t\.progress\.bmrRef/);
   assert.match(page, /t\.progress\.tdeeRef/);
   assert.match(page, /setAiWorkouts\(\[\]\)/);
-  assert.match(route, /generateAiObject/);
-  assert.match(route, /KULLANICI VERİLERİ/);
-  assert.match(route, /HAM KULLANICI VERİLERİ/);
+  // AI göçünden sonra plan üretimi Coach Service üzerinden gidiyor ve modele
+  // giden veriler serbest metin başlıkları yerine <facts> içinde yapılandırılmış
+  // olarak taşınıyor (bkz. docs/AI_MIGRATION_REPORT.md). Aşağıdaki iddiaların
+  // AMACI değişmedi: her veri parçasının hâlâ modele ulaştığını doğrularlar.
+  assert.match(route, /generateCoachObject/);
+  assert.match(route, /const planFacts/);
+  assert.match(route, /\bprofile,/, "ham profil verisi modele gitmeli");
   // Cevaplar soru etiketleriyle birlikte gider; çıplak dizi hangi cevabın
   // hangi soruya ait olduğunu modele bırakıyordu.
-  assert.match(route, /PROFİL TESTİ \(\$\{QUESTION_COUNT\} soru\)/);
-  assert.match(route, /JSON\.stringify\(signals\.answers\)/);
+  assert.match(route, /profileTest: signals\.answers/);
+  assert.match(route, /derivedSignals: signals/);
   assert.match(route, /weeklySchedule/);
   assert.match(route, /progression/);
   assert.match(route, /profileFingerprint/);
-  assert.match(route, /UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU/);
+  assert.match(route, /exerciseCatalog/, "hareket kataloğu modele gitmeli");
   assert.match(route, /photoDataUrl/);
   assert.match(route, /katalogdaki id ve name alanlarını birebir kullan/);
-  assert.match(route, /ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ/);
-  assert.match(weeklyRoute, /generateAiObject/);
+  assert.match(route, /trainingHistory/, "önceki antrenmanlar ve geri bildirimler modele gitmeli");
+  assert.match(route, /adaptation/, "uygulamanın uyarlama kararı modele gitmeli");
+  assert.match(weeklyRoute, /generateCoachObject/);
   assert.match(weeklyRoute, /jsonSchema<WeeklyReview>/);
   assert.match(weeklyRoute, /validateWeeklySummary/);
   assert.match(weeklyRoute, /enforceWeeklySafety/);
-  assert.match(weeklyRoute, /JSON\.stringify\(safeSummary\)/);
+  // Özet artık <facts> içinde otorite olarak taşınıyor.
+  assert.match(weeklyRoute, /facts: safeSummary/);
   assert.doesNotMatch(weeklyRoute, /payload\.(email|name|userId)/);
   assert.match(layout, /Hedefit — Hedefin için fit plan\./);
   assert.match(layout, /export const metadata/);

@@ -1,10 +1,12 @@
 import { jsonSchema } from "ai";
 import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-profile.ts";
-import { QUESTION, QUESTION_COUNT, labelledAnswers } from "../../../lib/onboarding-questions.ts";
+import { QUESTION, labelledAnswers } from "../../../lib/onboarding-questions.ts";
 import { normalizeAnswers } from "../../../lib/goal-plan.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
-import { generateAiObject, hasAiProvider, aiModelId, parseImageDataUrl } from "../../../lib/ai-provider.ts";
+import { hasRemoteProvider, parseImageDataUrl } from "../../../lib/ai/providers/openai-compatible.ts";
+import { generateCoachObject } from "../../../lib/ai/coach.ts";
+import { loadMemories } from "../../../lib/ai/memory.ts";
 import { checkAndConsumeUsage, refundUsage, usageLimitExceeded } from "../../../lib/usage-limits.ts";
 import { PROMPT_CATALOG_LIMIT } from "../../../lib/exercise-service.ts";
 
@@ -161,7 +163,7 @@ export async function POST(request: Request) {
   const rateLimitResult = rateLimit(`generate-plan:${auth.user.id}`, 5, 300000);
   if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
 
-  if (!hasAiProvider()) return Response.json({ error: "AI_API_KEY tanımlı değil" }, { status: 503 });
+  if (!hasRemoteProvider()) return Response.json({ error: "AI_API_KEY tanımlı değil" }, { status: 503 });
 
   let bodyText: string;
   try {
@@ -202,22 +204,19 @@ export async function POST(request: Request) {
   const signals = profileSignals(payload);
   const trainingHistory = Array.isArray(payload.trainingHistory) ? payload.trainingHistory.slice(0, 8) : [];
   const adaptation = payload.adaptation && typeof payload.adaptation === "object" ? payload.adaptation : null;
-  const prompt = `Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın. Aynı hazır programı herkese verme. Aşağıdaki ham verileri ve türetilmiş plan parametrelerini birlikte kullan.
+  // Modele giden veriler <facts> içinde toplanır: hepsi uygulamada zaten
+  // hesaplandı (profileSignals, training-adaptation) ve model bunları
+  // DEĞİŞTİRMEMELİ. Serbest metin istemi yalnız "ne yap" der, veriyi taşımaz.
+  const planFacts: Record<string, unknown> = {
+    profile,
+    profileTest: signals.answers,
+    derivedSignals: signals,
+    trainingHistory,
+    adaptation,
+    exerciseCatalog,
+  };
 
-HAM KULLANICI VERİLERİ:
-${JSON.stringify(profile)}
-
-PROFİL TESTİ (${QUESTION_COUNT} soru) — HER CEVAP SORUSUYLA BİRLİKTE:
-${JSON.stringify(signals.answers)}
-
-TEST CEVAPLARINDAN TÜRETİLEN SİNYALLER:
-${JSON.stringify(signals)}
-
-ÖNCEKİ ANTRENMANLAR VE KULLANICI GERİ BİLDİRİMLERİ:
-${JSON.stringify(trainingHistory)}
-
-UYGULAMANIN GEÇMİŞTEN HESAPLADIĞI UYARLAMA KARARI:
-${JSON.stringify(adaptation)}
+  const prompt = `Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın. Aynı hazır programı herkese verme. <facts> içindeki ham verileri ve türetilmiş plan parametrelerini birlikte kullan.
 
 BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
 - Ana hedef: ${signals.primaryGoal}${signals.primaryGoal === "Yağ kaybı" ? `
@@ -242,8 +241,7 @@ BU PROFİL İÇİN ZORUNLU PLAN PARAMETRELERİ:
 - Serbest not: ${signals.note}
 - Profil çeşitlilik anahtarı: ${signals.fingerprint}
 
-UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU:
-${JSON.stringify(exerciseCatalog)}
+UYGULAMADA KULLANILABİLEN HAREKET KATALOĞU: <facts> içindeki exerciseCatalog.
 
 GÜVENLİK VE KALİTE KURALLARI:
 ${plannerRules.join("\n")}
@@ -254,11 +252,24 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
 
   const image = photoDataUrl ? parseImageDataUrl(photoDataUrl) ?? undefined : undefined;
 
+  // Kullanıcının sevmediği hareketler, ekipmanı ve sakatlık kısıtları programın
+  // KENDİSİNİ belirler; koç sohbetinde öğrenilen tercih burada işe yarar.
+  const memories = await loadMemories(request);
+
   try {
-    const result = await generateAiObject({
+    const result = await generateCoachObject({
       prompt,
       image,
       schema: responseSchema,
+      // Fotoğraf varsa yalnız görsel destekli sağlayıcı bu işi yapabilir.
+      category: image ? "vision" : "complex_reasoning",
+      locale,
+      memories,
+      facts: planFacts,
+      knowledgeQuery: `${signals.primaryGoal} ${signals.preferredStyle} antrenman programı`,
+      // Kullanıcının serbest notu güvenlik katmanından geçer.
+      userText: signals.note,
+      domainRules: "Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın.",
       temperature: 0.35,
       // Bu sağlayıcının modelleri "akıl yürütme" token'ı harcıyor ve bu da
       // aynı bütçeden düşüyor. 3.000 ile ölçüldü: 2.997 token düşünmeye gitti,
@@ -272,12 +283,13 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
       // Bu yüzden AI'a makul bir pencere verilir, yetişmezse yedeğe düşülür.
       abortSignal: AbortSignal.timeout(60_000),
     });
-    if (result.workouts.length < 3) {
+    const plan = result.object;
+    if (plan.workouts.length < 3) {
       // Kullanıcı gerçekte kullanılabilir bir plan ALMADI; günlük hakkı iade edilir.
       if (Number.isFinite(usage.limit)) await refundUsage(request, "plan");
       return Response.json({ error: "Model yeterli hareket üretmedi" }, { status: 502 });
     }
-    return Response.json({ ...result, profileFingerprint: signals.fingerprint, model: aiModelId() });
+    return Response.json({ ...plan, profileFingerprint: signals.fingerprint, model: result.model });
   } catch (error) {
     console.error("AI plan generation error", error);
     if (Number.isFinite(usage.limit)) await refundUsage(request, "plan");
