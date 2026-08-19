@@ -76,6 +76,12 @@ import { authorizedFetch } from "@/lib/api-client";
 // daha büyük bir refactor gerektirir; burada kapsam dışı bırakıldı.
 const ExerciseLibrary = dynamic(() => import("@/components/exercises/ExerciseLibrary").then((mod) => mod.ExerciseLibrary), { ssr: false });
 
+// Hedefit Rota (canlı GPS takibi + günlük): MapLibre GL, window/document'a
+// bağımlı olduğundan sunucu tarafında render edilemez; ayrıca yalnızca bu
+// iki ekran açıldığında indirilmesi için ayrı bir chunk'a bölünür.
+const GpsActivityTracker = dynamic(() => import("@/components/GpsActivityTracker").then((mod) => mod.GpsActivityTracker), { ssr: false });
+const ActivityLog = dynamic(() => import("@/components/ActivityLog").then((mod) => mod.ActivityLog), { ssr: false });
+
 // Kullanıcı hangi arayüz dilini seçerse seçsin, seçilen cevaplar bu Türkçe
 // kanonik değerlerle saklanır — plan üretimi ve ağrı bölgesi eşleştirmesi
 // (ör. pain.includes("diz")) bu sabit değerlere dayanır. Yalnızca EKRANDA
@@ -828,6 +834,8 @@ export default function Home() {
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [activityOpen, setActivityOpen] = useState(false);
   const [goalPlanOpen, setGoalPlanOpen] = useState(false);
+  const [gpsTrackerOpen, setGpsTrackerOpen] = useState(false);
+  const [activityLogOpen, setActivityLogOpen] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const weightUnit = useWeightUnit();
@@ -1922,6 +1930,10 @@ export default function Home() {
             <DailyEnergyRing userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} />
           </div>
           <StepCounterCard userId={authUser?.id} />
+          <div className="gps-activity-entry">
+            <button type="button" className="gps-activity-entry-start" onClick={() => setGpsTrackerOpen(true)}>{t.gpsActivity.start}</button>
+            <button type="button" className="gps-activity-entry-log" onClick={() => setActivityLogOpen(true)}>{t.activityLog.title}</button>
+          </div>
           <QuickActions onNavigate={navigateFromQuickAction} />
           <GoalPlanCard compact onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
           </>}
@@ -1936,6 +1948,10 @@ export default function Home() {
           antrenman sekmesinden açılıyor ve sabit konumlu bir diyalog,
           yatay kaydırılan sayfalayıcı izinin içinde kırpılabilirdi. */}
       {activityOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}
+
+      {gpsTrackerOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.gpsActivity.title} onClick={(event) => { if (event.target === event.currentTarget) setGpsTrackerOpen(false); }}><div className="activity-modal"><GpsActivityTracker userId={authUser.id} weightKg={Number(weight) || 70} onClose={() => setGpsTrackerOpen(false)} /></div></div>}
+
+      {activityLogOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.activityLog.title} onClick={(event) => { if (event.target === event.currentTarget) setActivityLogOpen(false); }}><div className="activity-modal"><ActivityLog userId={authUser.id} onClose={() => setActivityLogOpen(false)} /></div></div>}
       {pendingSession && <div className="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="feedback-dialog"><div className="feedback-check">✓</div><div className="eyebrow">{t.feedback.completedEyebrow}</div><h2 id="feedback-title">{t.feedback.titleLine1}<br /><em>{t.feedback.titleEm}</em></h2>
         {/* Seans özeti: kullanıcı ne yaptığını görmeden geri bildirim vermek
             zorunda kalıyordu. Süre, yakım, tamamlanan hareket ve çalışılan

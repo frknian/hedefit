@@ -1128,6 +1128,72 @@ input,select,textarea { color-scheme:inherit; }
 .dark .activity-chart-bar { fill:#8ba844; }
 .dark .activity-chart-bar.today { fill:#c7dd7e; }
 
+/* Hedefit Rota: ana ekrandaki "aktivite başlat / günlük" giriş noktası */
+.gps-activity-entry { display:flex; gap:10px; margin-top:10px; }
+.gps-activity-entry button { flex:1; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:11px; font-weight:800; letter-spacing:.3px; cursor:pointer; }
+.gps-activity-entry-start { background:var(--lime) !important; border-color:var(--lime) !important; color:#2b3410 !important; }
+.gps-activity-entry button:hover { background:var(--control-hover); }
+.gps-activity-entry-start:hover { filter:brightness(0.97); }
+
+/* Hedefit Rota: MapLibre haritası */
+.gps-map-view { width:100%; border-radius:12px; overflow:hidden; background:var(--surface-soft); }
+.gps-map-view.live { height:260px; margin-top:10px; }
+.gps-map-view.summary { height:220px; margin-top:10px; }
+.gps-map-view.detail { height:260px; margin-top:10px; }
+
+/* Hedefit Rota: canlı takip ekranı */
+.gps-tracker { padding:20px; }
+.gps-tracker-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.gps-tracker-empty { margin-top:14px; padding:18px; border:1px dashed var(--line); border-radius:8px; color:var(--muted-text); font-size:11px; text-align:center; }
+.gps-tracker-setup { margin-top:16px; display:flex; flex-direction:column; gap:14px; }
+.gps-tracker-activity-picker { display:flex; gap:8px; flex-wrap:wrap; }
+.gps-tracker-activity-picker button { display:flex; align-items:center; gap:6px; padding:10px 14px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:11px; font-weight:700; cursor:pointer; }
+.gps-tracker-activity-picker button.active { background:var(--lime); border-color:var(--lime); color:#2b3410; }
+.gps-tracker-start { padding:14px; border:0; border-radius:10px; background:#7d9a2c; color:#fff; font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+.gps-tracker-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px; margin-top:12px; }
+.gps-tracker-stats div { padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); }
+.gps-tracker-stats span { display:block; color:#74872e; font-size:8px; font-weight:850; letter-spacing:1px; }
+.gps-tracker-stats strong { display:block; margin-top:4px; font-size:14px; }
+.gps-tracker-hr-connect { margin-top:10px; padding:10px; width:100%; border:1px dashed var(--line); border-radius:8px; background:transparent; color:var(--muted-text); font-family:inherit; font-size:10px; font-weight:700; cursor:pointer; }
+.gps-tracker-controls { display:flex; gap:10px; margin-top:14px; }
+.gps-tracker-controls button { flex:1; padding:14px; border:0; border-radius:10px; background:var(--surface-elevated); border:1px solid var(--line); color:var(--ink); font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+.gps-tracker-stop { background:#c0442f !important; border-color:#c0442f !important; color:#fff !important; }
+.gps-tracker-summary { margin-top:14px; display:flex; flex-direction:column; gap:6px; }
+.gps-tracker-intensity, .gps-tracker-notes { display:flex; flex-direction:column; gap:6px; margin-top:10px; font-size:9px; font-weight:800; letter-spacing:.5px; color:var(--muted-text); }
+.gps-tracker-intensity select, .gps-tracker-notes textarea { padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:12px; font-weight:500; }
+.gps-tracker-notes textarea { min-height:60px; resize:vertical; }
+.gps-tracker-save { margin-top:14px; padding:14px; border:0; border-radius:10px; background:#7d9a2c; color:#fff; font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+.gps-tracker-save:disabled { opacity:.6; cursor:default; }
+.gps-tracker-message { margin-top:10px; font-size:11px; color:var(--muted-text); }
+
+/* Hedefit Rota: rota önizleme küçük resmi (liste satırları) */
+.route-preview-thumb-bg { fill:var(--surface-soft); }
+.route-preview-thumb-line { fill:none; stroke:#7d9a2c; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.route-preview-thumb-dot { fill:var(--muted-text); }
+.route-preview-thumb-placeholder { flex:0 0 88px; width:88px; height:88px; border-radius:10px; background:var(--surface-soft); }
+
+/* Hedefit Rota: aktivite günlüğü */
+.activity-log { padding:20px; }
+.activity-log-list { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.activity-log-row { display:flex; align-items:center; gap:12px; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-soft); cursor:pointer; }
+.activity-log-row:hover { background:var(--control-hover); }
+.activity-log-row > div { flex:1; display:flex; flex-direction:column; gap:2px; }
+.activity-log-row strong { font-size:12px; }
+.activity-log-row small { color:var(--muted-text); font-size:10px; }
+.activity-log-row b { font-size:11px; font-weight:800; color:#7d9a2c; white-space:nowrap; }
+.activity-log-detail { margin-top:10px; }
+.activity-log-detail h3 { margin:10px 0 0; font-size:16px; }
+.activity-log-detail-loading { margin-top:10px; padding:18px; border:1px dashed var(--line); border-radius:8px; color:var(--muted-text); font-size:11px; text-align:center; }
+.activity-log-detail-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px; margin-top:12px; }
+.activity-log-detail-stats div { padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); }
+.activity-log-detail-stats span { display:block; color:#74872e; font-size:8px; font-weight:850; letter-spacing:1px; }
+.activity-log-detail-stats strong { display:block; margin-top:4px; font-size:14px; }
+.activity-log-detail-notes { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); font-size:12px; }
+.dark .gps-tracker-activity-picker button.active { background:#3f4d21; color:#e2f2ad; }
+.dark .gps-activity-entry-start { background:#3f4d21 !important; border-color:#3f4d21 !important; color:#e2f2ad !important; }
+.dark .route-preview-thumb-line { stroke:#8ba844; }
+.dark .activity-log-row b { color:#8ba844; }
+
 /* Antrenman ekranı: bölgesel çalış girişi ve hareket listesi başlığı */
 .region-launch-btn { display:block; width:100%; margin-top:14px; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); color:var(--ink); font-family:inherit; font-size:11px; font-weight:800; letter-spacing:.2px; cursor:pointer; }
 .region-launch-btn:hover { border-color:#a9bf57; }

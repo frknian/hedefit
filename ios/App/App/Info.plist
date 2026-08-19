@@ -45,6 +45,17 @@
 	<string>Günlük adım sayını otomatik gösterebilmemiz için Sağlık verilerine erişim gerekir.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Uygulama Sağlık verilerine yazma yapmaz; bu izin sistem tarafından zorunlu tutulur.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aktivite takibi sırasında rotanı haritada gösterebilmemiz için konumuna erişim gerekir.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Ekran kapalıyken veya uygulama arka plandayken de rotanı ve mesafeni kaydedebilmemiz için konumuna sürekli erişim gerekir.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Nabız ölçüm cihazınla eşleşip canlı nabzını gösterebilmemiz için Bluetooth erişimi gerekir.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>bluetooth-central</string>
+	</array>
 	<key>GADApplicationIdentifier</key>
 	<!-- Aşağıdaki değer Google'ın herkese açık TEST kimliğidir. Yayına almadan
 	     önce kendi AdMob hesabından alacağın gerçek uygulama kimliğiyle

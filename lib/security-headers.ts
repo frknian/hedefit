@@ -26,7 +26,11 @@ export const securityHeaders: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
+  // geolocation=(self): Hedefit Rota'nın canlı GPS takibi, native cihazlarda
+  // Capacitor plugin köprüsünden geçse de, plugin'in web-fallback yolu ve
+  // masaüstü tarayıcı testleri tarayıcının navigator.geolocation API'sini
+  // kullanır; bu başlık kapalıyken o çağrı sessizce reddedilir.
+  "Permissions-Policy": "camera=(self), microphone=(), geolocation=(self), interest-cohort=()",
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   // Google Identity Services popup'ı kimlik bilgisini ana pencereye postMessage ile iletir.
   // İzolasyonu korurken yalnızca bu popup iletişimine izin ver.
