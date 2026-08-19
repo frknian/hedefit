@@ -6,7 +6,7 @@ import { createActivityRepository } from "@/lib/activity-service";
 import { coreActivityCatalog, activityIntensityOptions, estimateActivityCalories, type ActivityIntensity } from "@/lib/sports";
 import { localDateKey, userTimeZone, type ActivityType } from "@/lib/streak";
 import { encodePolyline, routeDistanceKm, type LatLng } from "@/lib/polyline";
-import { isGpsTrackingAvailable, startGpsTracking, stopGpsTracking, type TrackedPoint } from "@/lib/gps-tracking";
+import { getCurrentPosition, isGpsTrackingAvailable, startGpsTracking, stopGpsTracking, type TrackedPoint } from "@/lib/gps-tracking";
 import { connectHeartRateMonitor, type HeartRateMonitor } from "@/lib/ble-heart-rate";
 import { useTranslations, translateIntensity } from "@/lib/i18n/translate";
 import { GpsMapView } from "@/components/GpsMapView";
@@ -41,6 +41,8 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  /** İlk GPS sinyali gelene kadar haritanın nereye bakacağı. */
+  const [initialPosition, setInitialPosition] = useState<LatLng | null>(null);
 
   const watcherIdRef = useRef("");
   const hrMonitorRef = useRef<HeartRateMonitor | null>(null);
@@ -54,6 +56,16 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
   useEffect(() => () => {
     if (watcherIdRef.current) void stopGpsTracking(watcherIdRef.current);
     if (hrMonitorRef.current) void hrMonitorRef.current.disconnect();
+  }, []);
+
+  // Takip başlamadan önce anlık konumu al: harita dünyanın neresinde olursa
+  // olsun ilk karede doğru yere bakar, boş bir dünya görünümüyle açılmaz.
+  useEffect(() => {
+    let cancelled = false;
+    void getCurrentPosition().then((point) => {
+      if (!cancelled && point) setInitialPosition({ lat: point.lat, lng: point.lng });
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const route: LatLng[] = points.map((p) => ({ lat: p.lat, lng: p.lng }));
@@ -175,15 +187,17 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
 
     {phase === "idle" && <div className="gps-tracker-setup">
       <div className="gps-tracker-activity-picker" role="group" aria-label={t.gpsActivity.activityPickerLabel}>
+        {/* Yalnız adı yazar: katalogdaki iki harflik kısaltma ("YÜ Yürüyüş")
+            etiketin önünde okunmayan bir gürültüydü. */}
         {TRACKABLE_ACTIVITIES.map((activity) => <button type="button" key={activity.key} aria-pressed={activityKey === activity.key} className={activityKey === activity.key ? "active" : ""} onClick={() => setActivityKey(activity.key)}>
-          <span>{activity.icon}</span>{activity.name}
+          {activity.name}
         </button>)}
       </div>
       <button type="button" className="gps-tracker-start" onClick={() => void handleStart()}>{t.gpsActivity.start}</button>
     </div>}
 
     {(phase === "tracking" || phase === "paused") && <div className="gps-tracker-live">
-      <GpsMapView route={route} currentPosition={route[route.length - 1] || null} className="gps-map-view live" />
+      <GpsMapView route={route} currentPosition={route[route.length - 1] || initialPosition} className="gps-map-view live" />
       <div className="gps-tracker-stats">
         <div><span>{t.gpsActivity.statDuration}</span><strong>{formatDuration(elapsedMs)}</strong></div>
         <div><span>{t.gpsActivity.statDistance}</span><strong>{distanceKm.toFixed(2)} km</strong></div>

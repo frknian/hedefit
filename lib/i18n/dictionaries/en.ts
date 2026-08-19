@@ -1193,6 +1193,7 @@ export const en: typeof tr = {
     activityCloseLabel: "Close activity log",
     bmrLabel: "BASAL ENERGY · BMR",
     tdeeLabel: "DAILY TOTAL · TDEE",
+    energyOpenLabel: "Open calorie tracking",
     energyRemaining: "kcal left",
     energyOver: "kcal over",
     energyNoTarget: "no target",

@@ -1944,7 +1944,7 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 /* VKİ ana ekrandan kaldırıldı; hedef planı henüz kurulmamışken de burada durur. */
 .goal-plan-compact-bmi { display:block; margin-top:8px; color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
 .goal-plan-compact-bmi strong { color:var(--ink); font-size:15px; letter-spacing:-.3px; font-variant-numeric:tabular-nums; }
-.goal-plan-compact-stats > div { min-width:0; }
+.goal-plan-compact-stats > div { min-width:0; text-align:center; }
 .goal-plan-compact-stats strong { display:block; font-size:18px; letter-spacing:-.4px; font-variant-numeric:tabular-nums; }
 .goal-plan-compact-stats strong small { font-size:10px; font-weight:600; }
 .goal-plan-compact-stats span { display:block; margin-top:2px; color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
@@ -1969,7 +1969,7 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
    değişmeyen bilgiydi. */
 /* Kalori dengesi ve adım sayar yan yana. Adım kartı yalnız native uygulamada
    render edilir; web'de tek çocuk kalır ve auto-fit sayesinde tam genişler. */
-.home-top-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); align-items:stretch; gap:12px; margin:18px 0; }
+.home-top-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); align-items:stretch; gap:10px; margin:18px 0; }
 
 /* Kalori çemberi: ortada BUGÜN kalan kalori, çevresinde alınanın hedefe
    oranı. Yanında alınan/harcanan/hedef üçlüsü. */
@@ -1989,9 +1989,30 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .dark .energy-ring-card { background:#181915; }
 @media (prefers-reduced-motion: reduce) { .energy-ring-fill { transition:none; } }
 
+/* Ana ekran dar ve ortalanmış bir sütunda durur: kartlar kabuğun 1120 piksellik
+   genişliğine yayıldığında aralarında okunmayan geniş boşluklar kalıyordu. */
+.home-column { width:100%; max-width:640px; margin-inline:auto; }
+
+/* Kalori kartı tıklanınca kalori takibine gider; düğme olduğu için tarayıcı
+   varsayılanları sıfırlanmalı. */
+.energy-ring-card.is-tappable { width:100%; font:inherit; color:inherit; text-align:left; cursor:pointer; }
+.energy-ring-card.is-tappable:hover { border-color:#a9bf57; }
+.energy-ring-card.is-tappable:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+
+/* Kalori ve adım kartları telefonda da yan yana; o genişlikte halka ile
+   açıklama yan yana sığmadığı için kart içi dikey ve ortalı akışa geçer. */
+@media (max-width:620px) {
+  .energy-ring-card, .step-ring-card { grid-template-columns:1fr; justify-items:center; gap:8px; padding:12px 10px; }
+  .energy-ring-legend, .step-ring-legend { justify-items:center; text-align:center; gap:5px; }
+  .energy-ring, .step-ring { width:76px; height:76px; }
+  .energy-ring-legend strong, .step-ring-legend strong { font-size:12px; }
+  .energy-ring-legend span, .step-ring-legend span { font-size:7px; letter-spacing:.5px; }
+  .step-ring-legend small { font-size:9px; }
+}
+
 /* Adım sayar kartı: energy-ring ile aynı görsel dil, sadece native app'te
    (HealthKit/Health Connect) görünür — web'de bileşen hiç render edilmez. */
-.step-ring-card { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:14px; min-width:0; margin-top:10px; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
+.step-ring-card { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:14px; min-width:0; padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
 .step-ring { position:relative; width:88px; height:88px; }
 .step-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
 .step-ring-track { fill:none; stroke:var(--line); stroke-width:9; }

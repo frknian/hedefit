@@ -1194,6 +1194,7 @@ export const tr = {
     activityCloseLabel: "Aktivite günlüğünü kapat",
     bmrLabel: "BAZAL ENERJİ · BMR",
     tdeeLabel: "GÜNLÜK TOPLAM · TDEE",
+    energyOpenLabel: "Kalori takibini aç",
     energyRemaining: "kcal kaldı",
     energyOver: "kcal aşıldı",
     energyNoTarget: "hedef yok",

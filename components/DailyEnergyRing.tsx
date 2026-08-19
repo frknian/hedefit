@@ -16,8 +16,10 @@ const CIRCUMFERENCE = 2 * Math.PI * 42;
  *
  * `burnedKcal`: bugün kaydedilen antrenman/aktivite yakımı (ebeveyn hesaplar).
  * `fallbackTargetKcal`: beslenme sekmesi hiç açılmamışsa profilden gelen TDEE.
+ * `onOpen`: verilirse kart tıklanabilir olur ve kalori takibi sekmesine gider —
+ *   "bugün daha ne yiyebilirim?" sorusunun devamı hep öğün eklemek oluyor.
  */
-export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal }: { userId?: string; burnedKcal: number; fallbackTargetKcal?: number | null }) {
+export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal, onOpen }: { userId?: string; burnedKcal: number; fallbackTargetKcal?: number | null; onOpen?: () => void }) {
   const t = useTranslations();
   const [consumed, setConsumed] = useState(0);
   const [savedTarget, setSavedTarget] = useState<number | null>(null);
@@ -77,7 +79,10 @@ export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal }: { us
 
   const over = remaining !== null && remaining < 0;
 
-  return <div className={over ? "energy-ring-card over" : "energy-ring-card"}>
+  const Card = onOpen ? "button" : "div";
+  const cardProps = onOpen ? { type: "button" as const, onClick: onOpen, "aria-label": t.dashboard.energyOpenLabel } : {};
+
+  return <Card className={`energy-ring-card${over ? " over" : ""}${onOpen ? " is-tappable" : ""}`} {...cardProps}>
     <div className="energy-ring" role="img" aria-label={remaining === null ? t.dashboard.energyRingNoTarget : t.dashboard.energyRingLabel(Math.abs(remaining))}>
       <svg viewBox="0 0 100 100" aria-hidden="true">
         <circle className="energy-ring-track" cx="50" cy="50" r="42" />
@@ -93,5 +98,5 @@ export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal }: { us
       <div><span>{t.dashboard.energyBurned}</span><strong>{burned}<small>kcal</small></strong></div>
       {target !== null && <div><span>{t.dashboard.energyTarget}</span><strong>{target}<small>kcal</small></strong></div>}
     </div>
-  </div>;
+  </Card>;
 }

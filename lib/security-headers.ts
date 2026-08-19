@@ -1,6 +1,8 @@
 // OWASP A05 – Security Misconfiguration: tüm yanıtlara eklenen tarayıcı savunma başlıkları.
 // Tek kaynak: hem Cloudflare Worker girişinde hem de Next `headers()` yapılandırmasında kullanılır.
 
+import { MAP_TILE_CSP_ORIGINS } from "./map-tiles.ts";
+
 // CSP, tema betiği satır içi olduğu için script-src'de 'unsafe-inline' gerektirir;
 // bu betik statik bir sabittir ve kullanıcı girdisi içermez.
 export const contentSecurityPolicy = [
@@ -14,7 +16,9 @@ export const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "frame-src https://accounts.google.com",
-  "connect-src 'self' https://*.supabase.co https://*.supabase.in https://accounts.google.com",
+  // Harita döşemeleri: MapLibre bunları bir worker'dan fetch ile çeker, yani
+  // img-src değil connect-src izni gerekir (bkz. lib/map-tiles.ts).
+  `connect-src 'self' https://*.supabase.co https://*.supabase.in https://accounts.google.com ${MAP_TILE_CSP_ORIGINS.join(" ")}`,
   "media-src 'self' data: blob:",
   "worker-src 'self' blob:",
   "manifest-src 'self'",

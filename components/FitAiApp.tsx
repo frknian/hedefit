@@ -1938,17 +1938,20 @@ export default function Home() {
               ile aynı satırda durur. Eskiden bunlar 4 ayrı kaydırmalı sayfaydı
               ve hedef planı tek başına grafik+analizle koca bir sayfa
               kaplıyordu; şimdi hepsi tek bakışta sığıyor. */}
+          {/* Ana ekran dar ve ortalanmış bir sütunda: kartlar 1120 piksellik
+              kabuk genişliğine yayıldığında aralarında okunmayan boşluklar
+              kalıyordu. Sıralama bugünün sorusuna göre: önce hedefe ne kadar
+              kaldı, sonra bugün ne yaktın/ne kadar yürüdün, en altta
+              kısayollar. VKİ artık yalnız hedef planında. */}
+          <div className="home-column">
           <div className="dashboard-head"><div><h1 className="dashboard-greeting"><span>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></span><ActivityStreak userId={authUser.id} compact /></h1></div></div>
-          {/* Sıralama bugünün sorusuna göre: önce hedefe ne kadar kaldı, sonra
-              bugün ne yaktın/ne kadar yürüdün, en altta kısayollar. VKİ artık
-              yalnız hedef planında — her gün bakılan bir sayı değil ve iki
-              yerde durunca ana ekranın en üstünü boşuna işgal ediyordu. */}
           <GoalPlanCard compact bmi={bmi} onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
           <div className="home-top-row">
-            <DailyEnergyRing userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} />
+            <DailyEnergyRing userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} onOpen={() => navigateFromQuickAction("nutrition")} />
             <StepCounterCard userId={authUser?.id} />
           </div>
           <QuickActions onNavigate={navigateFromQuickAction} />
+          </div>
           </>}
           </>}
         </section>
