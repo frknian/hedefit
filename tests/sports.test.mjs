@@ -42,7 +42,11 @@ test("aktivite günlükleri geçmişe ve seri özetine güvenli biçimde bağlan
   assert.match(component, /t\.activityLogger\.estimatedCalorie/);
   assert.match(component, /estimateActivityCalories/);
   assert.match(component, /t\.activityLogger\.historyTitle/);
-  assert.match(component, /t\.activityLogger\.guideTitle/);
+  // Sporlar artık "Diğer spor ekle" başlığının altındaki ayrı ızgarada değil,
+  // hepsi tek bir dikey listede alt alta duruyor.
+  assert.match(component, /allActivityCatalog/);
+  assert.match(component, /activity-entry-stacked/);
+  assert.doesNotMatch(component, /t\.activityLogger\.guideTitle|sport-guide-grid/);
   assert.doesNotMatch(component, /GPS|Strava|akıllı saat|harita|yakında/i);
   assert.match(service, /interface ActivityRepository/);
   assert.match(service, /externalActivityId/);

@@ -68,6 +68,15 @@ export const coreActivityCatalog: SportDefinition[] = [
   ...sportCatalog.filter((sport) => ["running", "cycling", "swimming"].includes(sport.key)),
 ];
 
+// Aktivite günlüğündeki tek düz liste: önce en sık kaydedilen dört aktivite,
+// ardından geri kalan sporlar. Eskiden sporlar "Diğer spor ekle" başlığının
+// altında ayrı bir ızgarada duruyordu; kullanıcı basit bir spor kaydı için
+// iki adım atmak zorunda kalıyordu.
+export const allActivityCatalog: SportDefinition[] = [
+  ...coreActivityCatalog,
+  ...sportCatalog.filter((sport) => !coreActivityCatalog.some((core) => core.key === sport.key)),
+];
+
 export function sportByKey(key: string) {
   return sportCatalog.find((sport) => sport.key === key) || null;
 }

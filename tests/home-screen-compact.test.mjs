@@ -19,9 +19,14 @@ test("ana ekran mobil sayfalayıcı olmadan tek akışta durur", () => {
   const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
   assert.match(home, /<ActivityStreak userId=\{authUser\.id\} compact \/>/, "mini seri selamlamanın yanında olmalı");
   assert.match(home, /<QuickActions onNavigate=\{navigateFromQuickAction\} \/>/);
-  assert.match(home, /<GoalPlanCard compact onOpen=\{\(\) => setGoalPlanOpen\(true\)\}/);
+  assert.match(home, /<GoalPlanCard compact bmi=\{bmi\} onOpen=\{\(\) => setGoalPlanOpen\(true\)\}/);
   assert.match(home, /className="home-top-row"/);
-  assert.match(home, /<DailyEnergyRing userId=/, "kalori çemberi VKİ'nin yanında olmalı");
+  assert.match(home, /<DailyEnergyRing userId=/, "kalori çemberi adım sayarla aynı satırda olmalı");
+  assert.match(home, /<StepCounterCard userId=/, "adım sayar kalori çemberiyle aynı satırda olmalı");
+  // "BUGÜNÜN PLANI" şeridi kaldırıldı: ekranın en üstünde artık selamlama var.
+  assert.doesNotMatch(home, /t\.dashboard\.todaysPlan/, "bugünün planı başlığı kalkmalı");
+  // Hedefit Rota giriş şeridi ana ekrandan kalktı; kendi sekmesinde ve kısayollarda.
+  assert.doesNotMatch(home, /gps-activity-entry/, "Hedefit Rota şeridi ana ekranda olmamalı");
 });
 
 test("hedef planının tam hâli yalnız kaplamada, dokununca açılır", () => {
@@ -54,13 +59,27 @@ test("hedef planı kompakt şeridi hafta, kalan ve günlük hedefi yan yana gös
   assert.doesNotMatch(compactBlock, /goal-plan-analysis/);
 });
 
-test("VKİ ve kalori çemberi yan yana, kısayollar tek sırada dört sütun", () => {
+test("kalori çemberi ve adım sayar yan yana, kısayollar üç sütun ve kırpılmaz", () => {
   const topRow = css.match(/\.home-top-row \{([^}]*)\}/)?.[1] ?? "";
   assert.match(topRow, /display:grid/);
-  assert.match(topRow, /grid-template-columns:minmax\(0,0\.8fr\) minmax\(0,1\.2fr\)/, "iki sütun, alt alta değil");
-  assert.match(css, /\.quick-actions-list \{ grid-template-columns:repeat\(4,minmax\(0,1fr\)\); \}/);
+  assert.match(topRow, /grid-template-columns:repeat\(auto-fit/, "iki sütun; adım kartı yoksa tek çocuk genişler");
+  // Dört sütunda "Hareket kütüphanesi"/"Aktivite günlüğüm" kutuya sığmıyordu.
+  assert.match(css, /\.quick-actions-list \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \}/);
+  const button = css.match(/\.quick-actions-list button,\.quick-actions-picker button \{([^}]*)\}/)?.[1] ?? "";
+  assert.doesNotMatch(button, /text-overflow:ellipsis|white-space:nowrap/, "etiket kırpılmamalı, sarmalı");
+  assert.match(button, /overflow-wrap:anywhere/);
   // Hedef ve ortam sütunları ana ekrandan kalktı.
   assert.doesNotMatch(app.slice(app.indexOf('className="dashboard-head"')), /t\.dashboard\.environmentLabel/);
+});
+
+test("VKİ ana ekranda değil, yalnız hedef planında yazar", () => {
+  const homeStart = app.indexOf('className="dashboard-head"');
+  const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
+  assert.doesNotMatch(home, /home-bmi/, "VKİ kutusu ana ekrandan kalkmalı");
+  assert.match(home, /<GoalPlanCard compact bmi=\{bmi\}/, "VKİ hedef planına geçmeli");
+  // Hedef planı henüz kurulmamışken de VKİ görünür, aksi halde hiç görünmezdi.
+  assert.match(goalCard, /goal-plan-compact-bmi/);
+  assert.match(goalCard, /t\.goalPlan\.compactBmiLabel/);
 });
 
 test("kalori çemberi hedeften düşer: alınan eksi, antrenman yakımı artı", () => {

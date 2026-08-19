@@ -52,7 +52,7 @@ function intensityCopy(t: ReturnType<typeof useTranslations>, intensity: GoalInt
  * render edilmez. Dokunulunca `onOpen` çağrılır — ebeveyn aynı bileşeni
  * `compact` olmadan bir kaplamada açar.
  */
-export function GoalPlanCard({ userId, currentWeightKg, profileBmr, compact = false, onOpen }: { userId?: string; currentWeightKg?: number | null; profileBmr?: number | null; compact?: boolean; onOpen?: () => void }) {
+export function GoalPlanCard({ userId, currentWeightKg, profileBmr, bmi, compact = false, onOpen }: { userId?: string; currentWeightKg?: number | null; profileBmr?: number | null; /** Vücut kitle indeksi. Ana ekrandan kaldırıldı; tek yeri burası. */ bmi?: string | null; compact?: boolean; onOpen?: () => void }) {
   const t = useTranslations();
   const locale = useLocale();
   const unit = useWeightUnit();
@@ -166,15 +166,21 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr, compact = fa
   // --- Kompakt şerit: sihirbaz ve tam kart burada render edilmez, her şey
   // dokunmayla açılan kaplamaya devredilir. ---
   if (compact) {
+    // VKİ ana ekrandan kaldırıldığı için plan henüz kurulmamışken de burada
+    // görünmeli; aksi halde hedefini belirlememiş kullanıcı VKİ'sini hiç göremez.
+    const compactBmi = bmi ? <span className="goal-plan-compact-bmi">{t.goalPlan.compactBmiLabel} <strong>{bmi}</strong></span> : null;
+
     if (!saved || !plan) return <button type="button" className="goal-plan goal-plan-compact" onClick={onOpen}>
       <div className="eyebrow">{t.goalPlan.eyebrow}</div>
       <strong>{t.goalPlan.start}</strong>
+      {compactBmi}
       <span className="goal-plan-compact-arrow">→</span>
     </button>;
 
     if (plan.status !== "ready") return <button type="button" className="goal-plan goal-plan-compact" onClick={onOpen}>
       <div className="eyebrow">{t.goalPlan.eyebrow}</div>
       <strong>{plan.status === "reached" ? t.goalPlan.reached : t.goalPlan.needsWeight}</strong>
+      {compactBmi}
       <span className="goal-plan-compact-arrow">→</span>
     </button>;
 
@@ -207,6 +213,7 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr, compact = fa
         <div><strong>{plan.weeks}</strong><span>{t.goalPlan.compactDurationLabel}</span></div>
         <div><strong>{formatWeight(plan.remainingKg, unit, { withUnit: true })}</strong><span>{t.goalPlan.compactRemainingLabel}</span></div>
         {plan.dailyIntakeKcal !== null && <div><strong>{plan.dailyIntakeKcal} <small>kcal</small></strong><span>{t.goalPlan.compactIntakeLabel}</span></div>}
+        {bmi && <div><strong>{bmi}</strong><span>{t.goalPlan.compactBmiLabel}</span></div>}
       </div>
     </button>;
   }
@@ -298,6 +305,7 @@ export function GoalPlanCard({ userId, currentWeightKg, profileBmr, compact = fa
       <div><span>{t.goalPlan.weeksValue(plan.weeks)}</span><strong>{etaText}</strong><small>{t.goalPlan.etaLabel}</small></div>
       <div><span>{t.goalPlan.remainingLabel(formatWeight(plan.remainingKg, unit, { withUnit: true }))}</span><strong>{plan.losing ? "−" : "+"}{formatWeight(Math.abs(plan.weeklyRateKg), unit, { decimals: 2 })}</strong><small>{t.goalPlan.rateLabel}</small></div>
       {plan.dailyIntakeKcal !== null && <div><span>{t.goalPlan.intakeLabel}</span><strong>{plan.dailyIntakeKcal} <small>kcal</small></strong><small>{t.goalPlan.trainingLabel(plan.dailyTrainingBurnKcal)}</small></div>}
+      {bmi && <div><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div>}
     </div>
 
     {/* Grafik: bugünden hedefe uzanan tahmini eğri. Hedef çizgisi kesikli. */}

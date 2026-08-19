@@ -36,6 +36,7 @@ export const en: typeof tr = {
     kinds: { exercise: "Exercise", program: "Program", view: "Screen" },
     viewKeywords: {
       plan: "home overview daily plan calories steps",
+      activity: "activity log add sport running walking route gps heart rate",
       workout: "workout program exercise session",
       nutrition: "nutrition calories meal water macro",
       progress: "progress record measurement chart",
@@ -46,6 +47,7 @@ export const en: typeof tr = {
   },
   nav: {
     home: "Home",
+    activity: "Activity",
     workout: "My workout",
     nutrition: "Calorie tracker",
     progress: "My progress",
@@ -999,6 +1001,8 @@ export const en: typeof tr = {
   gpsActivity: {
     eyebrow: "HEDEFIT ROTA",
     title: "Live activity tracking",
+    pageBody: "Draw your route on the map while walking, running, or cycling — with live distance, speed, and heart rate from a connected strap.",
+    viewRoutes: "My past routes",
     closeLabel: "Close activity tracking",
     activityPickerLabel: "Activity type",
     start: "Start activity",
@@ -1078,6 +1082,7 @@ export const en: typeof tr = {
     compactOpen: "See full plan",
     compactDurationLabel: "Duration",
     compactRemainingLabel: "Remaining",
+    compactBmiLabel: "BMI",
     compactIntakeLabel: "Target",
     weeksValue: (weeks: number) => `${weeks} weeks`,
     etaLabel: "Estimated arrival",
@@ -1161,6 +1166,8 @@ export const en: typeof tr = {
     hint: "Pick what you want on your home screen.",
     startWorkout: "Start workout",
     readyPrograms: "Ready programs",
+    startActivity: "Start activity",
+    activityLog: "My activity log",
     addMeal: "Add meal",
     water: "Add water",
     progress: "My progress",

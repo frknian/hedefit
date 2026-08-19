@@ -93,33 +93,49 @@ test("sık yediklerin öğün ekleme panelinin altında", () => {
   assert.ok(frequent > panel, "sık yenenler formdan sonra gelmeli");
 });
 
-test("spor ekle antrenman sekmesinde, program listesinin en üstünde", () => {
-  // Buton program LİSTESİNDE durur: bir programın içine girildiğinde ekran o
-  // antrenmana aittir, koşu/yürüyüş kaydı oraya kadar peşinden gelmemeli.
-  const listStart = training.indexOf('return <section className="programs" id="ready-programs">\n    {/* Spor ekle');
-  assert.ok(listStart > 0, "buton program listesi dalında olmalı");
-  assert.equal(training.split('className="activity-open"').length - 1, 1, "tek kez render edilmeli");
-  assert.doesNotMatch(app, /className="activity-open"/, "buton artık FitAiApp'te değil");
-  assert.match(app, /onOpenActivityLog=\{\(\) => setActivityOpen\(true\)\}/);
-  // Başlık şeridi kaldırıldı; "Spor ekle" ve açıklaması aynen kalır.
-  const button = training.slice(training.indexOf('className="activity-open"'), training.indexOf("activity-open-cta"));
-  assert.doesNotMatch(button, /activityEyebrow/);
-  assert.match(button, /t\.dashboard\.activityTitle/);
-  assert.match(button, /t\.dashboard\.activityBody/);
+test("spor ekle kendi sekmesinde, antrenman sekmesinden kalktı", () => {
+  // Spor ekleme artık antrenman sekmesindeki bir düğmenin arkasında değil:
+  // "Aktivite günlüğü" kendi sekmesi oldu ve ActivityLogger orada satır içi durur.
+  assert.doesNotMatch(training, /className="activity-open"/, "buton antrenman sekmesinden kalkmalı");
+  assert.doesNotMatch(training, /onOpenActivityLog/, "prop tamamen kalkmalı");
+  assert.doesNotMatch(app, /onOpenActivityLog/);
+  const page = app.slice(app.indexOf('activeView === "activity" ?'), app.indexOf('</> : <>', app.indexOf('activeView === "activity" ?')));
+  assert.ok(page.length > 0, "aktivite sekmesi dalı olmalı");
+  assert.match(page, /<ActivityLogger userId=\{authUser\.id\}/, "spor ekleme bu sayfada satır içi olmalı");
 });
 
-test("aktivite kaplaması görünüm dallarının dışında kalır", () => {
-  // Antrenman sekmesinden açılıyor; ana ekran bölümünün içinde kalsaydı
-  // koşullu dallarda beklenmedik biçimde kırpılabilirdi.
-  const overlay = app.indexOf('className="activity-overlay"');
+test("Hedefit Rota aktivite sayfasının başında, ana ekranda değil", () => {
+  const marker = app.indexOf('activeView === "activity" ?');
+  const page = app.slice(marker, app.indexOf('</> : <>', marker));
+  const rota = page.indexOf('className="hedefit-rota-card"');
+  const logger = page.indexOf("<ActivityLogger");
+  assert.ok(rota > 0 && logger > rota, "Hedefit Rota kartı spor ekleme listesinin üstünde olmalı");
+  assert.match(page, /setGpsTrackerOpen\(true\)/);
+  // Ana ekranda ne kart ne de eski iki düğmelik şerit kalmalı.
+  const homeStart = app.indexOf('className="dashboard-head"');
+  const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
+  assert.doesNotMatch(home, /hedefit-rota-card|gps-activity-entry/);
+});
+
+test("aktiviteyi başlat ve aktivite günlüğü kısayollarda", async () => {
+  const quick = await readFile(new URL("../lib/quick-actions.ts", import.meta.url), "utf8");
+  assert.match(quick, /\{ id: "startActivity", view: "activity", overlay: "gpsTracker" \}/);
+  assert.match(quick, /\{ id: "activityLog", view: "activity" \}/);
+  // Kısayoldan açılan kaplama: sayfa değil diyalog olduğu için ayrı bir alan.
+  assert.match(app, /if \(overlay === "gpsTracker"\) \{ setGpsTrackerOpen\(true\); return; \}/);
+});
+
+test("aktivite kaplamaları görünüm dallarının dışında kalır", () => {
+  // Ana ekran bölümünün içinde kalsaydı koşullu dallarda kırpılabilirdi.
   const homeEnd = app.indexOf("</section>", app.indexOf('className="dashboard-head"'));
-  assert.ok(overlay > homeEnd, "kaplama dashboard bölümünün dışında olmalı");
-  assert.match(app, /\{activityOpen && authUser && <div className="activity-overlay"/, "kullanıcı yokken render edilmemeli");
+  assert.ok(app.indexOf('{gpsTrackerOpen && authUser &&') > homeEnd, "canlı takip kaplaması dışarıda olmalı");
+  assert.ok(app.indexOf('{activityLogOpen && authUser &&') > homeEnd, "günlük kaplaması dışarıda olmalı");
+  // Eski, ayrı ActivityLogger kaplaması kalktı: artık kendi sayfasında satır içi.
+  assert.doesNotMatch(app, /activityOpen/);
 });
 
-test("ana ekran mini seri, kısayollar, hedef şeridi ve enerji satırını tek ekranda sıralar", () => {
-  // Sayfalama kaldırıldı: her şey artık tek, sığan bir ekranda dikey sırayla
-  // durur (mini seri selamlamanın yanında, hedef planı yalnız özet şeridiyle).
+test("ana ekran hedef planı, enerji satırı ve kısayolları bu sırayla dizer", () => {
+  // İstenen sıra: selamlama → hedef planı → kalori dengesi + adım sayar → kısayollar.
   const homeStart = app.indexOf('className="dashboard-head"');
   const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
   const at = (needle) => {
@@ -128,12 +144,11 @@ test("ana ekran mini seri, kısayollar, hedef şeridi ve enerji satırını tek 
     return index;
   };
   const header = at("<ActivityStreak");
-  const actions = at("<QuickActions");
   const goal = at("<GoalPlanCard compact");
   const energy = at('className="home-top-row"');
-  assert.match(home.slice(0, actions), /<ActivityStreak userId=\{authUser\.id\} compact \/>/, "seri mini ve selamlamanın yanında olmalı");
-  assert.ok(header < actions, "mini seri selamlamadan sonra, kısayollardan önce olmalı");
-  assert.ok(energy < actions, "VKİ + kalori çemberi satırı kısayolların üstünde olmalı");
-  assert.ok(actions < goal, "hedef planı kısayolların altında olmalı");
+  const actions = at("<QuickActions");
+  assert.ok(header < goal, "selamlama en üstte olmalı");
+  assert.ok(goal < energy, "hedef planı enerji satırının üstünde olmalı");
+  assert.ok(energy < actions, "kısayollar en altta olmalı");
   assert.doesNotMatch(home, /<MobilePager/, "sayfalama kaldırılmalı");
 });

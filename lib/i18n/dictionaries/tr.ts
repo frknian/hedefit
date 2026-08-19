@@ -34,6 +34,7 @@ export const tr = {
     kinds: { exercise: "Hareket", program: "Program", view: "Ekran" },
     viewKeywords: {
       plan: "ana ekran özet günlük plan kalori adım",
+      activity: "aktivite günlüğü spor ekle koşu yürüyüş rota gps nabız",
       workout: "antrenman program egzersiz seans",
       nutrition: "beslenme kalori öğün su makro",
       progress: "ilerleme rekor ölçüm grafik",
@@ -44,6 +45,7 @@ export const tr = {
   },
   nav: {
     home: "Ana ekran",
+    activity: "Aktivite",
     workout: "Antrenmanım",
     nutrition: "Kalori takibi",
     progress: "İlerlemem",
@@ -999,6 +1001,8 @@ export const tr = {
   gpsActivity: {
     eyebrow: "HEDEFİT ROTA",
     title: "Canlı aktivite takibi",
+    pageBody: "Yürüyüş, koşu ve bisiklette rotanı haritada çiz; mesafe, hız ve bağlı bir bant varsa nabzın anlık görünsün.",
+    viewRoutes: "Geçmiş rotalarım",
     closeLabel: "Aktivite takibini kapat",
     activityPickerLabel: "Aktivite türü",
     start: "Aktiviteyi başlat",
@@ -1078,6 +1082,7 @@ export const tr = {
     compactOpen: "Tüm planı gör",
     compactDurationLabel: "Süre",
     compactRemainingLabel: "Kalan",
+    compactBmiLabel: "VKİ",
     compactIntakeLabel: "Hedef",
     // Sonuç
     weeksValue: (weeks: number) => `${weeks} hafta`,
@@ -1162,6 +1167,8 @@ export const tr = {
     hint: "Ana ekranda görmek istediklerini seç.",
     startWorkout: "Antrenmana başla",
     readyPrograms: "Hazır programlar",
+    startActivity: "Aktiviteyi başlat",
+    activityLog: "Aktivite günlüğüm",
     addMeal: "Öğün ekle",
     water: "Su ekle",
     progress: "İlerlemem",

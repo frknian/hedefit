@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { CalendarDays, Dumbbell, House, LibraryBig, LineChart, UserRound, Utensils } from "lucide-react";
+import { CalendarDays, Dumbbell, Footprints, House, LibraryBig, LineChart, UserRound, Utensils } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { AppShell, type ShellNavItem } from "@/components/layout/AppShell";
 import { AiInsight, StatTile } from "@/components/design";
@@ -828,11 +828,10 @@ export default function Home() {
   const [aiProgression, setAiProgression] = useState<string[]>([]);
   const [aiFingerprint, setAiFingerprint] = useState("");
   const [aiStage, setAiStage] = useState<AiStage>("profile");
-  const [chosenView, setChosenView] = useState<"plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile" | null>(null);
+  const [chosenView, setChosenView] = useState<AppView | null>(null);
   const activeView = chosenView ?? "plan";
   const setActiveView = setChosenView;
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
-  const [activityOpen, setActivityOpen] = useState(false);
   const [goalPlanOpen, setGoalPlanOpen] = useState(false);
   const [gpsTrackerOpen, setGpsTrackerOpen] = useState(false);
   const [activityLogOpen, setActivityLogOpen] = useState(false);
@@ -1274,8 +1273,11 @@ export default function Home() {
   // Kısayoldan gelen gezinme: önce görünüm değişir, sonra hedef bölüm görünür
   // hâle getirilir. Kaydırma bir sonraki boyama karesine bırakılır; aksi halde
   // hedef henüz DOM'a girmemiş olur ve scroll hiçbir şey yapmaz.
-  function navigateFromQuickAction(view: AppView, anchorId?: string) {
+  function navigateFromQuickAction(view: AppView, anchorId?: string, overlay?: "gpsTracker") {
     setActiveView(view);
+    // "Aktiviteyi başlat" bir sayfa değil, canlı takip diyaloğu: arkasına
+    // aktivite günlüğü sayfası açılır ki kapatınca kullanıcı boşlukta kalmasın.
+    if (overlay === "gpsTracker") { setGpsTrackerOpen(true); return; }
     if (!anchorId) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1747,6 +1749,7 @@ export default function Home() {
   // ikon olarak kalır — hiçbir ekran erişilemez hâle gelmez.
   const navItems: ShellNavItem[] = [
     { id: "plan", label: t.nav.home, icon: House, primary: true },
+    { id: "activity", label: t.nav.activity, icon: Footprints, primary: true },
     { id: "workout", label: t.nav.workout, icon: Dumbbell, primary: true },
     { id: "nutrition", label: t.nav.nutrition, icon: Utensils, primary: true },
     { id: "progress", label: t.nav.progress, icon: LineChart, primary: true },
@@ -1864,7 +1867,22 @@ export default function Home() {
         >
         <section className="dashboard">
 {syncNotice ? <div role="alert" style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between", padding: "12px 16px", margin: "0 0 16px", borderRadius: 12, background: "var(--hf-error-container)", color: "var(--hf-on-error-container)", fontSize: 14 }}><span>{syncNotice}</span><button type="button" onClick={() => setSyncNotice("")} aria-label={t.common.dismiss} style={{ border: "none", background: "transparent", color: "inherit", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>{t.common.dismiss}</button></div> : null}
-<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onRefreshPlan={refreshPlanFromProfile} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} isPremium={isPremium} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "library" ? <LibraryView initialExerciseId={libraryExerciseId} onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : <>
+<WorkoutCalendar active={activeView === "calendar"} userId={authUser?.id} onStartWorkout={() => setActiveView("workout")} />{activeView === "calendar" ? null : activeView === "profile" ? <ProfileManager user={authUser} profile={{ displayName: name, birthDate, gender, heightCm: Number(height) || null, weightKg: Number(weight) || null, goalText, environment: gym === "Salon" ? "Salon" : "Evde", equipmentText, requestedExercises, avatarPath }} avatarUrl={avatarUrl} onSaved={applySavedProfile} onFrozen={() => setAccountStatus("frozen")} onDeleted={clearDeletedAccount} onProgressReset={resetSavedProgress} onRetakeTest={retakeProfileTest} onRefreshPlan={refreshPlanFromProfile} onSignOut={handleSignOut} injuryAnswer={history[QUESTION.injuries] || ""} onInjuryChange={(next) => setHistory((current) => { const copy = current.slice(); copy[QUESTION.injuries] = next; return copy; })} isPremium={isPremium} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "progress" ? <><PersonalRecordCelebration records={newRecords} unit={weightUnit} onDismiss={() => setNewRecords([])} /><ProgressView name={name} sessions={sessionHistory} referenceTime={progressReferenceTime} energyMetrics={energyMetrics} userId={authUser?.id} goalText={goalText || planGoal} /></> : activeView === "nutrition" ? <CalorieTracker userId={authUser?.id} bmr={energyMetrics?.bmr} tdee={energyMetrics?.tdee} weightKg={Number(weight) || undefined} activityFactor={energyMetrics?.activityFactor} workoutDays={inferWorkoutDays(history[QUESTION.availableDays] || history[QUESTION.recentFrequency])} profileGoal={goalText || planGoal} onUpgradeRequest={() => setPaywallOpen(true)} /> : activeView === "library" ? <LibraryView initialExerciseId={libraryExerciseId} onOpenWorkout={(exercise) => openWorkout(0, [exercise])} onAddWorkout={(exercise) => setAiWorkouts((current) => current.some((item) => item.id === exercise.id) ? current : [...current, exercise])} /> : activeView === "activity" ? <>
+          {/* Aktivite günlüğü kendi sekmesinde: üstte Hedefit Rota (canlı GPS
+              takibi), altında spor ekleme ve geçmiş. Eskiden spor ekleme
+              antrenman sekmesindeki bir düğmenin arkasındaydı ve program
+              listesiyle aynı ekranı paylaşıyordu. */}
+          <section className="hedefit-rota-card">
+            <div className="eyebrow">{t.gpsActivity.eyebrow}</div>
+            <h1>{t.gpsActivity.title}</h1>
+            <p>{t.gpsActivity.pageBody}</p>
+            <div className="hedefit-rota-actions">
+              <button type="button" className="hedefit-rota-start" onClick={() => setGpsTrackerOpen(true)}>{t.gpsActivity.start}</button>
+              <button type="button" className="hedefit-rota-routes" onClick={() => setActivityLogOpen(true)}>{t.gpsActivity.viewRoutes}</button>
+            </div>
+          </section>
+          <ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} />
+          </> : <>
           {activeView === "workout" && activeWorkout !== null && currentWorkout && currentGuide && currentPrescription ? <div className="workout-player">
             <button className="back-btn" type="button" onClick={() => { setIsRunning(false); setActiveWorkout(null); }}>{t.workoutPlayer.backToPlan}</button>
             <div className="workout-session-progress" aria-label={t.workoutPlayer.progressLabel}>{playerQueue.map((exercise, index) => <span key={`${exercise.name}-${index}`} className={completedExercises.includes(index) ? "complete" : skippedExercises.includes(index) ? "skipped" : index === activeWorkout ? "active" : ""} />)}</div>
@@ -1906,7 +1924,6 @@ export default function Home() {
             </>}
             equipmentText={equipmentText}
             isGym={gym === "Salon"}
-            onOpenActivityLog={() => setActivityOpen(true)}
             customPrograms={customPrograms}
             progress={programProgress}
             onStart={startProgram}
@@ -1921,21 +1938,17 @@ export default function Home() {
               ile aynı satırda durur. Eskiden bunlar 4 ayrı kaydırmalı sayfaydı
               ve hedef planı tek başına grafik+analizle koca bir sayfa
               kaplıyordu; şimdi hepsi tek bakışta sığıyor. */}
-          <div className="dashboard-head"><div><div className="eyebrow">{t.dashboard.todaysPlan}</div><h1 className="dashboard-greeting"><span>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></span><ActivityStreak userId={authUser.id} compact /></h1></div></div>
-          {/* Üst satır: VKİ ve günlük kalori çemberi yan yana. "Hedef" ve
-              "Ortam" sütunları buradan kalktı — ikisi de profilde duran, her
-              gün bakılmayan bilgi; yerini bugün değişen tek sayı aldı. */}
+          <div className="dashboard-head"><div><h1 className="dashboard-greeting"><span>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></span><ActivityStreak userId={authUser.id} compact /></h1></div></div>
+          {/* Sıralama bugünün sorusuna göre: önce hedefe ne kadar kaldı, sonra
+              bugün ne yaktın/ne kadar yürüdün, en altta kısayollar. VKİ artık
+              yalnız hedef planında — her gün bakılan bir sayı değil ve iki
+              yerde durunca ana ekranın en üstünü boşuna işgal ediyordu. */}
+          <GoalPlanCard compact bmi={bmi} onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
           <div className="home-top-row">
-            <div className="home-bmi"><span>{t.dashboard.bmiLabel}</span><strong>{bmi}</strong><small>{t.dashboard.bmiHint}</small></div>
             <DailyEnergyRing userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} />
-          </div>
-          <StepCounterCard userId={authUser?.id} />
-          <div className="gps-activity-entry">
-            <button type="button" className="gps-activity-entry-start" onClick={() => setGpsTrackerOpen(true)}>{t.gpsActivity.start}</button>
-            <button type="button" className="gps-activity-entry-log" onClick={() => setActivityLogOpen(true)}>{t.activityLog.title}</button>
+            <StepCounterCard userId={authUser?.id} />
           </div>
           <QuickActions onNavigate={navigateFromQuickAction} />
-          <GoalPlanCard compact onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
           </>}
           </>}
         </section>
@@ -1944,11 +1957,8 @@ export default function Home() {
       {/* Hedef planının tam hâli (grafik, AI analizi, sihirbaz) yalnız burada,
           kompakt şeride dokununca açılır — ana ekranda yer kaplamaz. */}
       {goalPlanOpen && authUser && <div className="goal-plan-overlay" role="dialog" aria-modal="true" aria-label={t.goalPlan.eyebrow} onClick={(event) => { if (event.target === event.currentTarget) setGoalPlanOpen(false); }}><div className="goal-plan-overlay-inner"><button type="button" className="activity-modal-close" onClick={() => setGoalPlanOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><GoalPlanCard userId={authUser.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} /></div></div>}
-      {/* Kaplama görünüm dallarının DIŞINDA: aktivite günlüğü artık
-          antrenman sekmesinden açılıyor ve sabit konumlu bir diyalog,
+      {/* Kaplama görünüm dallarının DIŞINDA: sabit konumlu bir diyalog,
           yatay kaydırılan sayfalayıcı izinin içinde kırpılabilirdi. */}
-      {activityOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.dashboard.activityDialogLabel} onClick={(event) => { if (event.target === event.currentTarget) setActivityOpen(false); }}><div className="activity-modal"><button type="button" className="activity-modal-close" onClick={() => setActivityOpen(false)} aria-label={t.dashboard.activityCloseLabel}>×</button><ActivityLogger userId={authUser.id} weightKg={Number(weight) || 70} /></div></div>}
-
       {gpsTrackerOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.gpsActivity.title} onClick={(event) => { if (event.target === event.currentTarget) setGpsTrackerOpen(false); }}><div className="activity-modal"><GpsActivityTracker userId={authUser.id} weightKg={Number(weight) || 70} onClose={() => setGpsTrackerOpen(false)} /></div></div>}
 
       {activityLogOpen && authUser && <div className="activity-overlay" role="dialog" aria-modal="true" aria-label={t.activityLog.title} onClick={(event) => { if (event.target === event.currentTarget) setActivityLogOpen(false); }}><div className="activity-modal"><ActivityLog userId={authUser.id} onClose={() => setActivityLogOpen(false)} /></div></div>}

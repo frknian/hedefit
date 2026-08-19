@@ -10,18 +10,26 @@ import { notifyPreferenceChange } from "./preference-sync.ts";
 // Seçim localStorage'da tutulur ve oturum açıkken hesaba eşitlenir
 // (components/PreferenceSync.tsx), böylece her cihazda aynı kısayollar çıkar.
 
-export type AppView = "plan" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile";
+export type AppView = "plan" | "activity" | "workout" | "progress" | "library" | "nutrition" | "calendar" | "profile";
 
 export type QuickAction = {
   id: string;
   view: AppView;
   /** Görünüm açıldıktan sonra kaydırılacak öğenin id'si. */
   anchor?: string;
+  /**
+   * Görünüme gitmek yerine bir kaplama açar. "Aktiviteyi başlat" bir sayfa
+   * değil, canlı takip diyaloğudur; kısayoldan tek dokunuşla açılması için
+   * ayrı bir alan gerekiyor.
+   */
+  overlay?: "gpsTracker";
 };
 
 export const QUICK_ACTIONS: QuickAction[] = [
   { id: "startWorkout", view: "workout", anchor: "workout-plan-list" },
   { id: "readyPrograms", view: "workout", anchor: "ready-programs" },
+  { id: "startActivity", view: "activity", overlay: "gpsTracker" },
+  { id: "activityLog", view: "activity" },
   { id: "addMeal", view: "nutrition", anchor: "food-entry-panel" },
   { id: "water", view: "nutrition", anchor: "hydration-card" },
   { id: "progress", view: "progress" },
@@ -29,7 +37,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { id: "library", view: "library" },
 ];
 
-export const DEFAULT_QUICK_ACTION_IDS = ["startWorkout", "addMeal", "water", "calendar"];
+export const DEFAULT_QUICK_ACTION_IDS = ["startWorkout", "startActivity", "addMeal", "water", "calendar", "progress"];
 const MAX_VISIBLE = 6;
 const STORAGE_KEY = "hedefit:quick-actions";
 

@@ -14,7 +14,7 @@ function actionLabel(t: Dictionary, id: string) {
  * bölüme kaydırır ve hangi kısayolların görüneceği kullanıcı tarafından
  * değiştirilebilir.
  */
-export function QuickActions({ onNavigate }: { onNavigate: (view: AppView, anchor?: string) => void }) {
+export function QuickActions({ onNavigate }: { onNavigate: (view: AppView, anchor?: string, overlay?: "gpsTracker") => void }) {
   const t = useTranslations();
   const selected = useQuickActionIds();
   const [editing, setEditing] = useState(false);
@@ -44,7 +44,7 @@ export function QuickActions({ onNavigate }: { onNavigate: (view: AppView, ancho
     </> : <div className="quick-actions-list">{visible.map((action) => <button
       type="button"
       key={action.id}
-      onClick={() => onNavigate(action.view, action.anchor)}
+      onClick={() => onNavigate(action.view, action.anchor, action.overlay)}
     >{actionLabel(t, action.id)}</button>)}</div>}
   </section>;
 }

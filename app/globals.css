@@ -41,8 +41,8 @@ button,input { font:inherit; } button { cursor:pointer; }
 .activity-streak { width:min(270px,100%); padding:15px; border:1px solid #c4d86b; border-radius:10px; background:var(--lime); color:#29310e; }.activity-streak > div:first-child { display:flex; align-items:flex-start; gap:10px; }.activity-streak > div:first-child > span { font-size:18px; }.activity-streak small,.activity-streak p { display:block; margin:0; color:#4c5c19; font-size:10px; }.activity-streak strong { display:block; margin:2px 0; font-size:25px; line-height:1; }
 .dark .activity-streak { border-color:#71833a; background:#35431a; color:#eef7cf; }.dark .activity-streak small,.dark .activity-streak p { color:#c9dca3; }
 @media (max-width:700px) { .activity-streak { margin-top:20px; } }
-.activity-logger { margin:0 0 24px; padding:22px; border:1px solid var(--line); border-radius:11px; background:var(--surface); }.activity-logger-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }.activity-logger-head .eyebrow { margin-bottom:7px; }.activity-logger-head h2 { margin:0 0 6px; font-size:20px; }.activity-logger-head p { max-width:570px; margin:0; color:var(--muted-text); font-size:10px; line-height:1.5; }.activity-close { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border:1px solid var(--line); border-radius:50%; background:transparent; color:var(--muted-text); font-size:21px; }.activity-close:hover { background:var(--control-hover); color:var(--ink); }.activity-entry-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }.activity-entry-options > button { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; min-height:82px; padding:14px; border:1px solid var(--line); border-radius:9px; background:var(--surface-elevated); color:var(--ink); text-align:left; }.activity-entry-options > button:hover { border-color:#a9bf57; background:color-mix(in srgb,var(--lime) 9%,var(--surface-elevated)); }.activity-entry-options strong,.activity-entry-options small { display:block; }.activity-entry-options strong { font-size:12px; }.activity-entry-options small { margin-top:4px; color:var(--muted-text); font-size:9px; }.activity-entry-options b,.sport-guide-grid b { color:#8da42f; }.activity-option-icon,.activity-form-title > span { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#e8f3c2; color:#56691c; font-size:10px; font-weight:900; letter-spacing:.5px; }.activity-option-icon.sport { background:#e5edf4; color:#42647a; }.sport-guide { margin-top:18px; }.sport-guide-heading { display:flex; justify-content:space-between; gap:12px; padding:0 2px 10px; color:#65752d; font-size:9px; letter-spacing:1px; }.sport-guide-heading span { color:var(--muted-text); letter-spacing:0; }.sport-guide-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }.sport-guide-grid button { display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:9px; min-height:72px; padding:11px; border:1px solid var(--line); border-radius:8px; background:var(--surface-elevated); color:var(--ink); text-align:left; }.sport-guide-grid button:hover { border-color:#a9bf57; transform:translateY(-1px); }.sport-guide-grid button > span { display:grid; place-items:center; width:32px; height:32px; border-radius:8px; background:var(--surface-soft); color:#6d812b; font-size:9px; font-weight:900; }.sport-guide-grid strong,.sport-guide-grid small { display:block; }.sport-guide-grid strong { font-size:10px; }.sport-guide-grid small { margin-top:3px; color:var(--muted-text); font-size:8px; line-height:1.3; }.activity-form { margin-top:18px; padding:17px; border:1px solid #d9e4b7; border-radius:9px; background:color-mix(in srgb,var(--lime) 7%,var(--surface-soft)); }.sport-guide-back { margin:0 0 13px; padding:0; border:0; background:transparent; color:#6b7e2a; font-size:9px; font-weight:800; }.activity-form-title { display:flex; align-items:center; gap:11px; margin-bottom:15px; }.activity-form-title small,.activity-form-title strong { display:block; }.activity-form-title small { color:#73862e; font-size:8px; font-weight:850; letter-spacing:1px; }.activity-form-title strong { margin-top:4px; font-size:12px; }.activity-form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }.activity-form label { color:var(--muted-text); font-size:8px; font-weight:850; letter-spacing:.8px; }.activity-form input,.activity-form select,.activity-form textarea { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:6px; outline:0; background:var(--surface-elevated); color:var(--ink); font:inherit; font-size:11px; }.activity-form input,.activity-form select { height:38px; padding:0 10px; }.activity-form textarea { min-height:72px; padding:10px; resize:vertical; }.activity-form input:focus,.activity-form select:focus,.activity-form textarea:focus { border-color:#91aa3b; box-shadow:0 0 0 3px rgba(177,207,69,.15); }.activity-notes { display:block; margin-top:10px; }.activity-save { min-height:40px; margin-top:11px; padding:0 14px; border:0; border-radius:6px; background:var(--ink); color:var(--paper); font-size:10px; font-weight:850; }.activity-save:disabled { opacity:.6; }.activity-logger-message { margin:12px 0 0; color:#65772b; font-size:10px; font-weight:750; }
-.dark .activity-logger,.dark .activity-entry-options > button,.dark .sport-guide-grid button { background:var(--surface); }.dark .activity-form { border-color:#46502c; background:#20231a; }.dark .activity-option-icon,.dark .activity-form-title > span { background:#303a23; color:#d3e991; }.dark .activity-option-icon.sport { background:#26333a; color:#a9d3e7; }.dark .sport-guide-grid button > span { background:#292c24; color:#c9df82; }.dark .activity-save { background:var(--lime); color:#1d1d1b; }.dark .activity-logger-message,.dark .sport-guide-back { color:#c5dc7d; }
+.activity-logger { margin:0 0 24px; padding:22px; border:1px solid var(--line); border-radius:11px; background:var(--surface); }.activity-logger-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }.activity-logger-head .eyebrow { margin-bottom:7px; }.activity-logger-head h2 { margin:0 0 6px; font-size:20px; }.activity-logger-head p { max-width:570px; margin:0; color:var(--muted-text); font-size:10px; line-height:1.5; }.activity-close { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border:1px solid var(--line); border-radius:50%; background:transparent; color:var(--muted-text); font-size:21px; }.activity-close:hover { background:var(--control-hover); color:var(--ink); }.activity-entry-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; }.activity-entry-options > button { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; min-height:82px; padding:14px; border:1px solid var(--line); border-radius:9px; background:var(--surface-elevated); color:var(--ink); text-align:left; }.activity-entry-options > button:hover { border-color:#a9bf57; background:color-mix(in srgb,var(--lime) 9%,var(--surface-elevated)); }.activity-entry-options strong,.activity-entry-options small { display:block; }.activity-entry-options strong { font-size:12px; }.activity-entry-options small { margin-top:4px; color:var(--muted-text); font-size:9px; }.activity-entry-options b { color:#8da42f; }.activity-option-icon,.activity-form-title > span { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#e8f3c2; color:#56691c; font-size:10px; font-weight:900; letter-spacing:.5px; }.activity-form { margin-top:18px; padding:17px; border:1px solid #d9e4b7; border-radius:9px; background:color-mix(in srgb,var(--lime) 7%,var(--surface-soft)); }.sport-guide-back { margin:0 0 13px; padding:0; border:0; background:transparent; color:#6b7e2a; font-size:9px; font-weight:800; }.activity-form-title { display:flex; align-items:center; gap:11px; margin-bottom:15px; }.activity-form-title small,.activity-form-title strong { display:block; }.activity-form-title small { color:#73862e; font-size:8px; font-weight:850; letter-spacing:1px; }.activity-form-title strong { margin-top:4px; font-size:12px; }.activity-form-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }.activity-form label { color:var(--muted-text); font-size:8px; font-weight:850; letter-spacing:.8px; }.activity-form input,.activity-form select,.activity-form textarea { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:6px; outline:0; background:var(--surface-elevated); color:var(--ink); font:inherit; font-size:11px; }.activity-form input,.activity-form select { height:38px; padding:0 10px; }.activity-form textarea { min-height:72px; padding:10px; resize:vertical; }.activity-form input:focus,.activity-form select:focus,.activity-form textarea:focus { border-color:#91aa3b; box-shadow:0 0 0 3px rgba(177,207,69,.15); }.activity-notes { display:block; margin-top:10px; }.activity-save { min-height:40px; margin-top:11px; padding:0 14px; border:0; border-radius:6px; background:var(--ink); color:var(--paper); font-size:10px; font-weight:850; }.activity-save:disabled { opacity:.6; }.activity-logger-message { margin:12px 0 0; color:#65772b; font-size:10px; font-weight:750; }
+.dark .activity-logger,.dark .activity-entry-options > button { background:var(--surface); }.dark .activity-form { border-color:#46502c; background:#20231a; }.dark .activity-option-icon,.dark .activity-form-title > span { background:#303a23; color:#d3e991; }.dark .activity-save { background:var(--lime); color:#1d1d1b; }.dark .activity-logger-message,.dark .sport-guide-back { color:#c5dc7d; }
 .activity-core-fields { grid-template-columns:repeat(4,minmax(0,1fr)); }.activity-core-fields label > small { float:right; color:#999; font-size:7px; }.activity-core-fields input[readonly] { color:var(--muted-text); background:var(--surface-soft); cursor:default; }.activity-history { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }.activity-history-head { display:flex; align-items:end; justify-content:space-between; gap:12px; }.activity-history-head span,.activity-history-head strong { display:block; }.activity-history-head span { color:#74872e; font-size:8px; font-weight:850; letter-spacing:1px; }.activity-history-head strong { margin-top:4px; font-size:14px; }.activity-history-head small { color:var(--muted-text); font-size:8px; }.activity-history-empty { margin:14px 0 0; padding:18px; border:1px dashed var(--line); border-radius:8px; color:var(--muted-text); background:var(--surface-soft); font-size:10px; text-align:center; }.activity-daily-summaries { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px; }.activity-daily-summaries article { padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--surface-soft); }.activity-daily-summaries span,.activity-daily-summaries strong,.activity-daily-summaries small { display:block; }.activity-daily-summaries span { color:var(--muted-text); font-size:8px; text-transform:capitalize; }.activity-daily-summaries strong { margin:7px 0 4px; font-size:17px; }.activity-daily-summaries small { color:var(--muted-text); font-size:8px; line-height:1.4; }.activity-history-list { display:grid; margin-top:10px; }.activity-history-list article { display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:10px; padding:10px 2px; border-bottom:1px solid var(--line); }.activity-history-icon { display:grid; place-items:center; width:32px; height:32px; border-radius:8px; background:#edf4d4; color:#63752a; font-size:8px; font-weight:900; }.activity-history-list strong,.activity-history-list small { display:block; }.activity-history-list strong { font-size:10px; }.activity-history-list small,.activity-history-list p { color:var(--muted-text); font-size:8px; }.activity-history-list p { margin:3px 0 0; }.activity-history-list > article > b { color:#71842d; font-size:9px; text-transform:capitalize; }.dark .activity-daily-summaries article,.dark .activity-history-empty { background:var(--surface-soft); }.dark .activity-history-icon { background:#303a23; color:#d3e991; }.dark .activity-history-list > article > b { color:#c7dd7e; }
 .activity-open { display:flex; align-items:center; gap:16px; width:100%; margin:0 0 24px; padding:18px 20px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--ink); text-align:left; cursor:pointer; transition:border-color .15s ease, background .15s ease; }
 .activity-open:hover { border-color:#a9bf57; background:color-mix(in srgb,var(--lime) 8%,var(--surface)); }
@@ -61,8 +61,8 @@ button,input { font:inherit; } button { cursor:pointer; }
 .dark .activity-open-icon { background:#303a23; }
 .dark .activity-open-cta { color:#c7dd7e; }
 @media (max-width:700px) { .activity-open { padding:15px; gap:12px; }.activity-open-icon { flex-basis:40px; width:40px; height:40px; font-size:18px; }.activity-open-cta { display:none; }.activity-overlay { padding:0; place-items:end stretch; }.activity-modal { max-height:92vh; border-radius:14px 14px 0 0; }.activity-modal .activity-logger { border-radius:14px 14px 0 0; } }
-@media (max-width:850px) { .sport-guide-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.activity-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media (max-width:700px) { .activity-logger { padding:16px; }.activity-entry-options,.sport-guide-grid { grid-template-columns:1fr; }.sport-guide-heading { flex-direction:column; }.activity-form { padding:14px; }.activity-form-grid { grid-template-columns:1fr 1fr; }.activity-daily-summaries { grid-template-columns:1fr; }.activity-history-list article { align-items:start; }.activity-history-list > article > b { grid-column:2; } }
+@media (max-width:850px) { .activity-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:700px) { .activity-logger { padding:16px; }.activity-entry-options { grid-template-columns:1fr; }.activity-form { padding:14px; }.activity-form-grid { grid-template-columns:1fr 1fr; }.activity-daily-summaries { grid-template-columns:1fr; }.activity-history-list article { align-items:start; }.activity-history-list > article > b { grid-column:2; } }
 .subview { padding:8px 0 80px; }.subview h1 { margin:8px 0 11px; }.subview > .lead { max-width:580px; }.progress-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:36px 0 28px; }.progress-cards > div { min-height:128px; padding:18px; border:1px solid var(--line); border-radius:9px; background:#fbfbf7; }.progress-cards span,.progress-cards small { display:block; color:#999; font-size:10px; letter-spacing:1px; }.progress-cards strong { display:block; margin:17px 0 5px; font-size:25px; }.progress-cards small { letter-spacing:0; }.progress-panel { padding:22px; border:1px solid var(--line); border-radius:9px; background:#fbfbf7; }.progress-status { border-radius:20px; padding:8px 12px; background:#e8f7b5; color:#53641a; font-size:10px; }.empty-progress { display:flex; align-items:center; gap:15px; min-height:120px; border-top:1px solid var(--line); margin-top:20px; color:#888; }.empty-progress span { color:#9cbc31; font-size:27px; }.empty-progress p { max-width:430px; font-size:12px; line-height:1.5; }.library-toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:34px 0 14px; color:#999; font-size:11px; }.library-toolbar strong { color:var(--ink); font-size:12px; }.library-toolbar a { color:#6d8c18; text-decoration:none; }.library-filters { display:flex; gap:10px; margin-bottom:18px; }.library-filters input,.library-filters select { min-height:38px; border:1px solid var(--line); border-radius:6px; background:#fbfbf7; color:var(--ink); padding:0 12px; font:inherit; font-size:11px; }.library-filters input { flex:1; }.library-filters select { min-width:160px; }.library-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }.library-card { display:flex; gap:15px; align-items:center; padding:11px; border:1px solid var(--line); border-radius:9px; background:#fbfbf7; }.library-card h3 { margin:5px 0 2px; font-size:16px; }.library-card > div:last-child > small { color:#aaa; font-size:10px; }.library-actions { display:flex; gap:12px; margin-top:12px; align-items:center; }.library-actions a,.play-library { border:0; background:transparent; padding:0; color:#6d8c18; font-size:10px; cursor:pointer; text-decoration:none; }.play-library { color:#555; }.library-more { display:block; width:auto; height:auto; margin:20px auto 0; padding:11px 16px; }.library-empty { padding:30px 0; color:#999; font-size:12px; }
 @media (max-width:700px) { .progress-cards,.library-grid,.ready-grid { grid-template-columns:1fr; }.profile-editor { grid-template-columns:1fr; padding:16px; }.profile-editor-fields .choice { width:48%; }.library-toolbar { align-items:flex-start; gap:12px; flex-direction:column; }.library-filters { flex-direction:column; }.library-filters select { width:100%; }.ai-scan.compact { max-width:none; }.top-links { display:flex; gap:12px; overflow:auto; max-width:55vw; }.top-links button { white-space:nowrap; font-size:10px; } }
 
@@ -1128,12 +1128,24 @@ input,select,textarea { color-scheme:inherit; }
 .dark .activity-chart-bar { fill:#8ba844; }
 .dark .activity-chart-bar.today { fill:#c7dd7e; }
 
-/* Hedefit Rota: ana ekrandaki "aktivite başlat / günlük" giriş noktası */
-.gps-activity-entry { display:flex; gap:10px; margin-top:10px; }
-.gps-activity-entry button { flex:1; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:11px; font-weight:800; letter-spacing:.3px; cursor:pointer; }
-.gps-activity-entry-start { background:var(--lime) !important; border-color:var(--lime) !important; color:#2b3410 !important; }
-.gps-activity-entry button:hover { background:var(--control-hover); }
-.gps-activity-entry-start:hover { filter:brightness(0.97); }
+/* Hedefit Rota kartı: aktivite günlüğü sayfasının başında duran, canlı GPS
+   takibinin giriş noktası. Ana ekrandaki iki düğmelik şeridin yerini aldı —
+   o iki eylem artık yalnızca kısayollarda. */
+.hedefit-rota-card { margin:0 0 20px; padding:20px 22px; border:1px solid #d9e4b7; border-radius:12px; background:color-mix(in srgb,var(--lime) 8%,var(--surface-soft)); }
+.hedefit-rota-card h1 { margin:6px 0 0; font-size:20px; letter-spacing:-.4px; }
+.hedefit-rota-card p { max-width:560px; margin:8px 0 0; color:var(--muted-text); font-size:11px; line-height:1.55; }
+.hedefit-rota-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.hedefit-rota-actions button { min-height:44px; padding:0 18px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:11px; font-weight:800; letter-spacing:.3px; cursor:pointer; }
+.hedefit-rota-start { border-color:#a9bf57 !important; background:#7d9a2c !important; color:#fff !important; }
+.hedefit-rota-actions button:hover { background:var(--control-hover); }
+.hedefit-rota-start:hover { filter:brightness(1.06); }
+.dark .hedefit-rota-card { border-color:#46502c; background:#20231a; }
+.dark .hedefit-rota-actions button { border-color:#46502c; }
+
+/* Spor ekleme listesi tek sütun, alt alta: bütün aktiviteler (yürüyüş,
+   koşu ve 15 spor) artık ayrı bir "diğer sporlar" ızgarasında değil. */
+.activity-entry-stacked { grid-template-columns:1fr !important; gap:8px; }
+.activity-entry-stacked > button { min-height:64px !important; }
 
 /* Hedefit Rota: MapLibre haritası */
 .gps-map-view { width:100%; border-radius:12px; overflow:hidden; background:var(--surface-soft); }
@@ -1411,8 +1423,8 @@ input,select,textarea { color-scheme:inherit; }
 .quick-actions-edit { min-height:30px; padding:0 11px; border:1px solid var(--line); border-radius:999px; background:transparent; color:var(--muted-text); font-size:10px; font-weight:700; cursor:pointer; }
 .quick-actions-edit[aria-pressed="true"] { background:#e8f7b5; border-color:#c6e55f; color:#3f4a1d; }
 .quick-actions-hint { margin:0 0 10px; color:var(--muted-text); font-size:10px; line-height:1.45; }
-.quick-actions-list,.quick-actions-picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; }
-.quick-actions-list button,.quick-actions-picker button { min-height:46px; min-width:0; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--ink); font-size:12px; font-weight:600; text-align:left; cursor:pointer; overflow-wrap:anywhere; }
+.quick-actions-list,.quick-actions-picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(104px,1fr)); gap:8px; }
+.quick-actions-list button,.quick-actions-picker button { display:flex; align-items:center; min-height:46px; min-width:0; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:transparent; color:var(--ink); font-size:11px; line-height:1.3; font-weight:600; text-align:left; cursor:pointer; overflow-wrap:anywhere; hyphens:auto; }
 .quick-actions-list button:hover,.quick-actions-picker button:hover { border-color:#c6e55f; }
 .quick-actions-picker button { color:var(--muted-text); font-weight:500; }
 .quick-actions-picker button.active { background:#e8f7b5; border-color:#c6e55f; color:#3f4a1d; font-weight:700; }
@@ -1928,7 +1940,10 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .goal-plan-compact > strong { display:block; margin-top:10px; font-size:15px; }
 .goal-plan-compact-disabled { cursor:default; color:var(--muted-text); }
 .goal-plan-compact-disabled p { margin:10px 0 0; font-size:12px; }
-.goal-plan-compact-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:12px; }
+.goal-plan-compact-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(74px,1fr)); gap:10px; margin-top:12px; }
+/* VKİ ana ekrandan kaldırıldı; hedef planı henüz kurulmamışken de burada durur. */
+.goal-plan-compact-bmi { display:block; margin-top:8px; color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+.goal-plan-compact-bmi strong { color:var(--ink); font-size:15px; letter-spacing:-.3px; font-variant-numeric:tabular-nums; }
 .goal-plan-compact-stats > div { min-width:0; }
 .goal-plan-compact-stats strong { display:block; font-size:18px; letter-spacing:-.4px; font-variant-numeric:tabular-nums; }
 .goal-plan-compact-stats strong small { font-size:10px; font-weight:600; }
@@ -1952,12 +1967,9 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 /* Üst satır: VKİ ve günlük kalori çemberi YAN YANA (mobilde de). "Hedef" ve
    "Ortam" sütunları kaldırıldı; ikisi de profilde duran, gün içinde
    değişmeyen bilgiydi. */
-.home-top-row { display:grid; grid-template-columns:minmax(0,0.8fr) minmax(0,1.2fr); align-items:stretch; gap:12px; margin:24px 0 18px; }
-.home-bmi { display:flex; flex-direction:column; justify-content:center; min-width:0; padding:16px 18px; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); }
-.home-bmi span { color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
-.home-bmi strong { display:block; margin:8px 0 3px; font-size:34px; line-height:1; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; }
-.home-bmi small { color:var(--muted-text); font-size:10px; }
-.dark .home-bmi { background:#181915; }
+/* Kalori dengesi ve adım sayar yan yana. Adım kartı yalnız native uygulamada
+   render edilir; web'de tek çocuk kalır ve auto-fit sayesinde tam genişler. */
+.home-top-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); align-items:stretch; gap:12px; margin:18px 0; }
 
 /* Kalori çemberi: ortada BUGÜN kalan kalori, çevresinde alınanın hedefe
    oranı. Yanında alınan/harcanan/hedef üçlüsü. */
@@ -1998,9 +2010,10 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .dark .step-ring-card { background:#181915; }
 @media (prefers-reduced-motion: reduce) { .step-ring-fill { transition:none; } }
 
-/* Kısayollar tek sırada dört sütun: mobilde de alt alta uzayıp ana ekranı
-   ikinci sayfaya taşımasın. */
-.quick-actions-list { grid-template-columns:repeat(4,minmax(0,1fr)); }
+/* Kısayollar sırada üç sütun: dört sütunda etiketler ("Hareket kütüphanesi",
+   "Aktivite günlüğüm") kutuya sığmayıp kırpılıyordu. Üç sütun + küçük punto
+   ile her etiket tam yazılıyor, kutu gerekirse iki satıra uzuyor. */
+.quick-actions-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
 
 /* Hedef planı şeridindeki küçük eğri: ana ekranda plan grafiği de görünsün. */
 .goal-plan-chart-mini svg { height:52px; }
@@ -2013,13 +2026,11 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
      420px bloğu var ve bazı testler "son 420px bloğu" varsayımıyla o
      satırı arıyor; aynı değeri burada tekrarlamak o testi kırardı. */
   .home-top-row { gap:8px; }
-  .home-bmi { padding:12px 13px; }
-  .home-bmi strong { font-size:26px; }
   .energy-ring-card { gap:10px; padding:12px 13px; }
   .energy-ring { width:70px; height:70px; }
   .energy-ring-center strong { font-size:17px; }
   .energy-ring-legend strong { font-size:13px; }
-  .quick-actions-list button { padding:9px 8px; font-size:10px; }
+  .quick-actions-list button { padding:8px 7px; font-size:9px; }
 }
 
 /* Öğün ekleme alanı dikey bir akış: önce porsiyon (gram/ml + ev ölçüleri),
@@ -2043,11 +2054,7 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
    ekranı büyütür (min-width:701px), mobil kurallara hiç dokunmaz — dosyanın
    sonunda durur ki temel değerleri ezebilsin. */
 @media (min-width:701px) {
-  .home-top-row { grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); gap:18px; margin:30px 0 22px; }
-  .home-bmi { padding:22px 26px; }
-  .home-bmi span { font-size:10px; }
-  .home-bmi strong { margin:12px 0 5px; font-size:46px; }
-  .home-bmi small { font-size:11px; }
+  .home-top-row { gap:18px; margin:22px 0; }
 
   .energy-ring-card { grid-template-columns:auto minmax(0,1fr); gap:24px; padding:20px 26px; }
   .energy-ring { width:118px; height:118px; }
@@ -2061,7 +2068,7 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
   .energy-ring-legend strong small { font-size:10px; }
 
   .quick-actions { padding:18px 22px; }
-  .quick-actions-list button { min-height:56px; padding:14px 16px; font-size:13px; }
+  .quick-actions-list button { min-height:56px; padding:13px 14px; font-size:12px; }
 
   .goal-plan-compact { padding:20px 26px; }
   .goal-plan-chart-mini svg { height:84px; }
@@ -2112,7 +2119,7 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 /* --- 1. Tipografi: başlıklar Montserrat, veri ve gövde Inter ------------- */
 body { font-family:var(--hf-font-body); font-size:var(--hf-body-md-size); line-height:var(--hf-body-md-line); -webkit-font-smoothing:antialiased; }
 h1, h2, h3, .brand, .dashboard h1, .step-content h1, .workout-player h1,
-.progress-cards strong, .stats-row strong, .home-bmi strong, .timer-card strong,
+.progress-cards strong, .stats-row strong, .timer-card strong,
 .report-grid strong, .activity-daily-summaries strong, .goal-plan-compact-stats strong {
   font-family:var(--hf-font-display); font-weight:var(--hf-headline-lg-weight);
 }
@@ -2187,6 +2194,9 @@ h1, h2, h3, .brand, .dashboard h1, .step-content h1, .workout-player h1,
   transition:background .16s var(--hf-ease), color .16s var(--hf-ease);
 }
 .hf-tab span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Aktivite sekmesiyle birlikte altta altı sekme var; dar telefonlarda
+   etiketler kırpılmasın diye punto ve iç boşluk küçülür. */
+@media (max-width:430px) { .hf-tab { font-size:9px; padding:6px 1px; gap:3px; } }
 .hf-tab.active { background:var(--hf-primary-container); color:var(--hf-on-primary-container); font-weight:750; }
 /* Sekme çubuğu içeriğin üstüne biner: alt boşluk ve yüzen koç düğmesi kalkar. */
 .hf-shell .hf-main { padding-bottom:96px; }
@@ -2219,7 +2229,7 @@ h1, h2, h3, .brand, .dashboard h1, .step-content h1, .workout-player h1,
 /* --- 4. Yüzeyler: tonal katman + saç teli kenar + ortam gölgesi ---------- */
 .workout-card, .library-card, .ready-card, .question-card, .progress-panel, .progress-cards > div,
 .activity-logger, .activity-daily-summaries article, .premium-plan-card, .quick-actions,
-.exercise-media, .integration-card, .player-how-to, .home-bmi, .set-tracker, .swap-panel {
+.exercise-media, .integration-card, .player-how-to, .set-tracker, .swap-panel {
   border:1px solid var(--hf-hairline); border-radius:var(--hf-radius-xl);
   background:var(--hf-surface-lowest); box-shadow:var(--hf-elevation-card);
 }
