@@ -69,6 +69,14 @@ class StepCounterService : Service(), SensorEventListener {
     private var stepCounterSensor: Sensor? = null
     /** Bu servis çalışması boyunca sensörden gelen ham (cihaz açılışından beri) değer. */
     private var rawBaseline = -1f
+    /**
+     * JS tarafı start()'ı birden fazla kez çağırabilir (ör. kullanıcı sekme
+     * değiştirip ana ekrana dönünce StepCounterCard yeniden bağlanır).
+     * Servis START_STICKY olduğu için bu ikinci intent AYNI çalışan
+     * örneğe gider; dinleyiciyi tekrar kaydetmek "registerListener fail"
+     * uyarısına yol açıyordu. Tek seferlik kayıt burada garanti edilir.
+     */
+    private var isListening = false
 
     override fun onCreate() {
         super.onCreate()
@@ -84,10 +92,11 @@ class StepCounterService : Service(), SensorEventListener {
         }
         startForegroundWithNotification()
         val sensor = stepCounterSensor
-        if (sensor != null) {
-            sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
-        } else {
+        if (sensor == null) {
             stopSelf()
+        } else if (!isListening) {
+            sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+            isListening = true
         }
         // START_STICKY: sistem belleği boşaltmak için servisi öldürürse yeniden başlatmayı dener.
         return START_STICKY
@@ -97,6 +106,7 @@ class StepCounterService : Service(), SensorEventListener {
 
     override fun onDestroy() {
         sensorManager?.unregisterListener(this)
+        isListening = false
         super.onDestroy()
     }
 
