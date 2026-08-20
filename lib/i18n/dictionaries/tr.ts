@@ -930,6 +930,8 @@ export const tr = {
   stepCounter: {
     eyebrow: "GÜNLÜK ADIM",
     openDetailLabel: "Adım ayrıntılarını aç",
+    goalEditLabel: "Günlük hedef",
+    goalSave: "Kaydet",
     title: "Adım Sayar",
     unit: "adım",
     goalLabel: "Hedef",

@@ -2015,14 +2015,22 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .step-ring-card.is-tappable:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 .dark .step-ring-card.is-tappable { background:#181915; }
 
-/* Adım ayrıntıları: kısa bir kaplama, tam sayfa değil — kullanıcı hızlıca
-   bakıp kapatsın diye alttan yükselen küçük bir sac (bottom sheet). */
-.step-detail-overlay { position:fixed; z-index:100; inset:0; display:grid; place-items:end center; padding:0; background:rgba(24,24,21,.68); backdrop-filter:blur(8px); }
-.step-detail-sheet { position:relative; width:100%; max-width:420px; padding:28px 22px 24px; border-radius:16px 16px 0 0; background:var(--surface); box-shadow:0 -20px 60px rgba(0,0,0,.28); display:flex; flex-direction:column; align-items:center; }
-.step-detail-sheet .step-ring.large { width:120px; height:120px; margin-bottom:6px; }
-.step-detail-sheet .step-ring-legend { align-items:center; text-align:center; }
-@media (min-width:640px) { .step-detail-overlay { place-items:center; padding:20px; } .step-detail-sheet { border-radius:16px; } }
+/* Adım ayrıntıları: ekranın ortasında kısa bir kaplama. */
+.step-detail-overlay { position:fixed; z-index:100; inset:0; display:grid; place-items:center; padding:20px; background:rgba(24,24,21,.68); backdrop-filter:blur(8px); }
+.step-detail-sheet { position:relative; width:100%; max-width:360px; padding:20px 24px 26px; border-radius:16px; background:var(--surface); box-shadow:0 30px 80px rgba(0,0,0,.28); display:flex; flex-direction:column; align-items:center; }
+.step-detail-sheet .activity-close { align-self:flex-end; margin-bottom:8px; }
+.step-detail-sheet .step-ring.large { width:120px; height:120px; margin-bottom:10px; }
+.step-detail-sheet .step-ring-legend { align-items:center; text-align:center; width:100%; }
 .dark .step-detail-sheet { background:#1c1d19; }
+
+/* Adım hedefi ayarlama: pop-up içindeki sayı girişi ve kaydet düğmesi. */
+.step-goal-edit { display:flex; align-items:center; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); width:100%; justify-content:center; }
+.step-goal-edit label { display:flex; flex-direction:column; gap:4px; color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; }
+.step-goal-edit input { width:84px; height:36px; padding:0 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-elevated); color:var(--ink); font:inherit; font-size:13px; text-align:center; }
+.step-goal-edit input:focus { border-color:#91aa3b; box-shadow:0 0 0 3px rgba(177,207,69,.15); }
+.step-goal-edit button { align-self:flex-end; height:36px; padding:0 14px; border:0; border-radius:8px; background:var(--ink); color:var(--paper); font-size:11px; font-weight:800; cursor:pointer; }
+.step-goal-edit button:disabled { opacity:.5; cursor:default; }
+.dark .step-goal-edit button { background:var(--lime); color:#1d1d1b; }
 
 /* Kalori ve adım kartları telefonda da yan yana; o genişlikte halka ile
    açıklama yan yana sığmadığı için kart içi dikey ve ortalı akışa geçer. */

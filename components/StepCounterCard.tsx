@@ -14,6 +14,20 @@ const CIRCUMFERENCE = 2 * Math.PI * 42;
 const HEALTH_CONNECTED_KEY = "fit-ai-step-counter-connected";
 /** Cihaz sayacının günlük birikimi (bkz. lib/step-counter.ts). */
 const DEVICE_STEPS_KEY = "hedefit:device-steps";
+/** Kullanıcının kendi belirlediği günlük adım hedefi; verilmezse `goal` prop'u kullanılır. */
+const STEP_GOAL_KEY = "hedefit:step-goal";
+const MIN_STEP_GOAL = 1000;
+const MAX_STEP_GOAL = 50000;
+
+function readStoredGoal(fallback: number): number {
+  try {
+    const raw = window.localStorage.getItem(STEP_GOAL_KEY);
+    const parsed = Number(raw);
+    return raw && Number.isFinite(parsed) && parsed >= MIN_STEP_GOAL && parsed <= MAX_STEP_GOAL ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 type Status = "idle" | "checking" | "unavailable" | "ready";
 
@@ -44,6 +58,16 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
 
   const [healthConnected, setHealthConnected] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [customGoal, setCustomGoal] = useState(() => (typeof window === "undefined" ? goal : readStoredGoal(goal)));
+  const [goalDraft, setGoalDraft] = useState("");
+
+  function saveGoal() {
+    const parsed = Math.round(Number(goalDraft));
+    if (!Number.isFinite(parsed) || parsed < MIN_STEP_GOAL || parsed > MAX_STEP_GOAL) return;
+    try { window.localStorage.setItem(STEP_GOAL_KEY, String(parsed)); } catch { /* depolama kapalı */ }
+    setCustomGoal(parsed);
+    setGoalDraft("");
+  }
 
   useEffect(() => {
     if (!isNativeApp()) return undefined;
@@ -129,9 +153,9 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
   if (!isNativeApp() || status === "idle" || status === "unavailable") return null;
 
   const current = steps ?? 0;
-  const ratio = Math.min(1, current / Math.max(1, goal));
+  const ratio = Math.min(1, current / Math.max(1, customGoal));
   const dash = CIRCUMFERENCE * ratio;
-  const remaining = Math.max(0, goal - current);
+  const remaining = Math.max(0, customGoal - current);
 
   return <>
     {/* Ana ekranda yalnız çember: ayrıntılar (hedef, kalan, sağlık bağlantısı)
@@ -167,10 +191,25 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
         <div className="step-ring-legend">
           <span>{t.stepCounter.eyebrow}</span>
           <strong>{ratio >= 1 ? t.stepCounter.goalReached : t.stepCounter.remaining(remaining)}</strong>
-          <small>{t.stepCounter.goalLabel}: {goal.toLocaleString("tr-TR")} {t.stepCounter.unit}</small>
+          <small>{t.stepCounter.goalLabel}: {customGoal.toLocaleString("tr-TR")} {t.stepCounter.unit}</small>
           {/* Sağlık bağlantısı isteğe bağlı: uygulama kapalıyken atılan
               adımları da toplayabilmek için. Cihaz sayacı zaten çalışıyor. */}
           {!healthConnected && <button type="button" className="step-ring-health-link" onClick={() => void connectHealth()}>{t.stepCounter.connect}</button>}
+        </div>
+        <div className="step-goal-edit">
+          <label>{t.stepCounter.goalEditLabel}
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_STEP_GOAL}
+              max={MAX_STEP_GOAL}
+              step={500}
+              placeholder={String(customGoal)}
+              value={goalDraft}
+              onChange={(event) => setGoalDraft(event.target.value)}
+            />
+          </label>
+          <button type="button" onClick={saveGoal} disabled={!goalDraft.trim()}>{t.stepCounter.goalSave}</button>
         </div>
       </div>
     </div>}

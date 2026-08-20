@@ -930,6 +930,8 @@ export const en: typeof tr = {
   stepCounter: {
     eyebrow: "DAILY STEPS",
     openDetailLabel: "Open step details",
+    goalEditLabel: "Daily goal",
+    goalSave: "Save",
     title: "Step Counter",
     unit: "steps",
     goalLabel: "Goal",
