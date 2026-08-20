@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
 import com.hedefit.app.localai.HedefitLocalAiPlugin;
+import com.hedefit.app.stepcounter.HedefitStepCounterPlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -12,6 +13,8 @@ public class MainActivity extends BridgeActivity {
         // kaynağı olduğu için capacitor.plugins.json'a girmez; burada elle
         // kaydedilir (Capacitor'ın yerel eklenti yöntemi).
         registerPlugin(HedefitLocalAiPlugin.class);
+        // Arka planda adım sayan foreground service köprüsü; aynı sebeple elle kaydedilir.
+        registerPlugin(HedefitStepCounterPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

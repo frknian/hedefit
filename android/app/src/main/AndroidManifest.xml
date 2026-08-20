@@ -68,6 +68,14 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
+
+        <!-- Arka planda adım sayan foreground service (bkz. stepcounter/StepCounterService.kt).
+             GPS takibindeki BackgroundGeolocationService ile aynı ilke: uygulama
+             kapansa bile Android'in servisi öldürmemesi için foreground service. -->
+        <service
+            android:name="com.hedefit.app.stepcounter.StepCounterService"
+            android:exported="false"
+            android:foregroundServiceType="health" />
     </application>
 
     <queries>
@@ -81,6 +89,9 @@
     <!-- Adım sayar: cihazın kendi donanım sayacı (Android 10+ runtime izni).
          Health Connect boş olabildiği için birincil kaynak budur. -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <!-- Adım sayar arka plan servisi (Android 14+ foreground-service türü zorunluluğu).
+         "health" türü, uygulamanın zaten sahip olduğu ACTIVITY_RECOGNITION iznini şart koşar. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <!-- Adım sayar: Health Connect'ten günlük adım okuma (isteğe bağlı ek) -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
 

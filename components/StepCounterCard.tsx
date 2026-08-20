@@ -6,6 +6,7 @@ import { createStepRepository } from "@/lib/step-service";
 import { localDateKey } from "@/lib/streak";
 import { fetchTodaySteps, isNativeApp, isPedometerAvailable, isStepCounterAvailable, requestPedometerPermission, requestStepPermission, startPedometer } from "@/lib/mobile";
 import { combineStepSources, mergeSessionSteps, stepsForToday, type StoredStepState } from "@/lib/step-counter";
+import { getBackgroundStepsToday, isBackgroundStepServiceAvailable, isBackgroundStepServiceSupported, requestBackgroundStepPermissions, startBackgroundStepService } from "@/lib/native-step-counter";
 import { useTranslations } from "@/lib/i18n/translate";
 
 const DEFAULT_GOAL = 8000;
@@ -75,6 +76,7 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
     let stopPedometer: (() => void) | null = null;
     // Eklentinin oturum sayacı; artışı bulmak için son işlenen değer saklanır.
     let lastSessionSteps = 0;
+    let pollInterval: number | undefined;
 
     async function persist(total: number) {
       if (!userId) return;
@@ -90,9 +92,54 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
       return combineStepSources(deviceSteps, health);
     }
 
+    /**
+     * Android: adım sayan native foreground service birincil kaynak (bkz.
+     * android/.../stepcounter/StepCounterService.kt) — uygulama tamamen
+     * kapansa bile Android'in servisi öldürmemesi için kalıcı bildirimle
+     * çalışır. @capgo/capacitor-pedometer'ın Android tarafında bu koruma
+     * yok; dinleyici JS/aktivite ömrüyle sınırlı, kapanınca adım kaçırır.
+     *
+     * iOS'ta bu dal atlanır: CMPedometer sistemin hareket veritabanından
+     * geçmişe dönük sorgu yapabildiği için ayrı bir servise gerek yok.
+     */
+    async function initAndroidBackgroundService(): Promise<boolean> {
+      if (!isBackgroundStepServiceSupported()) return false;
+      const available = await isBackgroundStepServiceAvailable();
+      if (cancelled) return true;
+      if (!available) { setStatus("unavailable"); return true; }
+
+      const granted = await requestBackgroundStepPermissions();
+      if (cancelled) return true;
+      if (!granted) { setStatus("unavailable"); return true; }
+
+      await startBackgroundStepService();
+      async function poll() {
+        const nativeSteps = await getBackgroundStepsToday();
+        if (cancelled || nativeSteps === null) return;
+        const total = await syncHealth(nativeSteps);
+        if (cancelled) return;
+        setSteps(total);
+        setStatus("ready");
+        void persist(total);
+      }
+      await poll();
+      pollInterval = window.setInterval(() => void poll(), 30_000);
+      return true;
+    }
+
+    let androidHandled = false;
+
     async function init() {
       setStatus("checking");
       setHealthConnected(window.localStorage.getItem(HEALTH_CONNECTED_KEY) === "1");
+
+      // Android dalı yalnız ilk seferde kurulur: servis zaten sürekli
+      // arka planda sayıyor, odaklanma her seferinde onu yeniden başlatıp
+      // eski interval'ı sızdırmasın diye burada tekrar çağrılmaz.
+      if (isBackgroundStepServiceSupported()) {
+        if (!androidHandled) { androidHandled = true; await initAndroidBackgroundService(); }
+        return;
+      }
 
       const available = await isPedometerAvailable();
       if (cancelled) return;
@@ -131,6 +178,7 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
     return () => {
       cancelled = true;
       stopPedometer?.();
+      if (pollInterval !== undefined) window.clearInterval(pollInterval);
       window.removeEventListener("focus", onFocus);
     };
   }, [userId]);
