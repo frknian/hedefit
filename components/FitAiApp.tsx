@@ -23,6 +23,7 @@ import { tr } from "@/lib/i18n/dictionaries/tr";
 import { CalorieTracker } from "@/components/CalorieTracker";
 import { BodyMeasurements } from "@/components/BodyMeasurements";
 import { StepHistoryCard } from "@/components/StepHistoryCard";
+import { hasPersistedGpsSession } from "@/lib/gps-session-store";
 import { RouteHistoryCard } from "@/components/RouteHistoryCard";
 import { WorkoutCalendar } from "@/components/WorkoutCalendar";
 import { ActivityStreak } from "@/components/ActivityStreak";
@@ -840,7 +841,13 @@ export default function Home() {
   const setActiveView = setChosenView;
   const [, setAiStatus] = useState<"idle" | "scanning" | "complete" | "fallback">("idle");
   const [goalPlanOpen, setGoalPlanOpen] = useState(false);
-  const [gpsTrackerOpen, setGpsTrackerOpen] = useState(false);
+  // Ekran kapanıp WebView süreci öldürüldüğünde bütün React state'i (bu
+  // boolean dahil) sıfırlanır. Rota diske yazılmış olsa bile (bkz.
+  // lib/gps-session-store.ts) kaplama kapalı başlarsa GpsActivityTracker hiç
+  // mount olmaz ve kurtarma mantığı tetiklenmez — kullanıcı "Aktiviteyi
+  // başlat"a yeniden basana kadar rotası varmış gibi görünmez. Diskte
+  // yarım kalan bir oturum varsa kaplama doğrudan açık başlar.
+  const [gpsTrackerOpen, setGpsTrackerOpen] = useState(hasPersistedGpsSession);
   const [activityLogOpen, setActivityLogOpen] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);

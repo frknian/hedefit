@@ -10,6 +10,7 @@ import { readFile } from "node:fs/promises";
 //      hareket etmedi) harita boş kaldı ve paylaşım hiçbir şey üretmeden
 //      sessizce başarısız oldu.
 const tracker = await readFile(new URL("../components/GpsActivityTracker.tsx", import.meta.url), "utf8");
+const app = await readFile(new URL("../components/FitAiApp.tsx", import.meta.url), "utf8");
 
 test("canlı rota her yeni noktada diske yazılır", () => {
   assert.match(tracker, /writePersistedGpsSession\(\{ activityKey, startedAt, points, hrSamples \}\)/);
@@ -37,4 +38,12 @@ test("çok az GPS noktası varsa paylaşım sessizce başarısız olmaz", () => 
 
 test("özet haritası boşsa kullanıcıya sebebi söylenir", () => {
   assert.match(tracker, /route\.length < 2 && <p className="gps-tracker-route-warning">/);
+});
+
+test("yarım kalan oturum varsa takip kaplaması cihazda otomatik açılır", () => {
+  // Diskte kayıt olsa da kaplama (gpsTrackerOpen) kapalı başlarsa
+  // GpsActivityTracker hiç mount olmaz ve kurtarma mantığı tetiklenmez —
+  // rota kullanıcıya asla gösterilmez. Cihazda doğrulanan gerçek hata.
+  assert.match(app, /const \[gpsTrackerOpen, setGpsTrackerOpen\] = useState\(hasPersistedGpsSession\)/);
+  assert.match(app, /import \{ hasPersistedGpsSession \} from "@\/lib\/gps-session-store"/);
 });

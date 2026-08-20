@@ -43,6 +43,20 @@ export function writePersistedGpsSession(session: PersistedGpsSession): void {
   try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session)); } catch { /* depolama kapalı */ }
 }
 
+/**
+ * Kaplama açılmadan (GpsActivityTracker hiç mount olmadan) yarım kalan bir
+ * oturum olup olmadığını ucuzca kontrol eder — FitAiApp bunu, uygulama
+ * yeniden açıldığında kaplamayı otomatik açık başlatmak için kullanır.
+ */
+export function hasPersistedGpsSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 export function clearPersistedGpsSession(): void {
   if (typeof window === "undefined") return;
   try { window.localStorage.removeItem(STORAGE_KEY); } catch { /* depolama kapalı */ }
