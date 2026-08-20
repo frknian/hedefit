@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Plus, Sparkles, Trash2, Utensils } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DailyEnergyRing } from "@/components/DailyEnergyRing";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
@@ -26,6 +27,8 @@ interface CalorieTrackerProps {
   activityFactor?: number;
   workoutDays?: number;
   profileGoal?: string;
+  /** Bugün antrenman/aktiviteyle yakılan kalori; ana ekrandaki kompakt çemberle aynı kaynak. */
+  burnedKcal?: number;
   onUpgradeRequest?: () => void;
 }
 
@@ -56,7 +59,7 @@ function todayLabel(offset: number, dateLocale: string) {
   return new Intl.DateTimeFormat(dateLocale, { weekday: "long", day: "numeric", month: "long" }).format(date);
 }
 
-export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70, activityFactor = 1.375, workoutDays = 3, profileGoal = "", onUpgradeRequest }: CalorieTrackerProps) {
+export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70, activityFactor = 1.375, workoutDays = 3, profileGoal = "", burnedKcal = 0, onUpgradeRequest }: CalorieTrackerProps) {
   const t = useTranslations();
   const locale = useLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
@@ -492,6 +495,10 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       <div className="calorie-page-title"><div className="eyebrow">{t.calorieTracker.eyebrow}</div><h1>{t.calorieTracker.heroTitle1} <em>{t.calorieTracker.heroTitle2}</em></h1></div>
       <div className="date-switcher"><button type="button" aria-label={t.calorieTracker.previousDay} onClick={() => setDateOffset((day) => day - 1)}><ChevronLeft size={17} /></button><div><span>{dateOffset === 0 ? t.calorieTracker.today : t.calorieTracker.dailyLabel}</span><strong>{todayLabel(dateOffset, dateLocale)}</strong></div><button type="button" aria-label={t.calorieTracker.nextDay} disabled={dateOffset >= 0} onClick={() => setDateOffset((day) => Math.min(0, day + 1))}><ChevronRight size={17} /></button></div>
     </div>
+
+    {/* Ana ekrandaki çemberin tam hâli: alınan/harcanan/hedef dökümü artık
+        yalnız burada — ana ekrandaki kart tıklanınca buraya geliniyor. */}
+    <DailyEnergyRing userId={userId} burnedKcal={burnedKcal} fallbackTargetKcal={tdee} />
 
     {/* Günün özeti en üstte: bu ekranın ilk sorusu "ne kadar kaldı". Eskiden
         formun altındaydı ve kullanıcı öğün ekledikten sonra sonucu görmek

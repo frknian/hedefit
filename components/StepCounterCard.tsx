@@ -43,6 +43,7 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
   const [steps, setSteps] = useState<number | null>(null);
 
   const [healthConnected, setHealthConnected] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   useEffect(() => {
     if (!isNativeApp()) return undefined;
@@ -132,24 +133,46 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
   const dash = CIRCUMFERENCE * ratio;
   const remaining = Math.max(0, goal - current);
 
-  return <div className="step-ring-card">
-    <div className="step-ring" role="img" aria-label={t.stepCounter.ariaLabel(current)}>
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle className="step-ring-track" cx="50" cy="50" r="42" />
-        <circle className="step-ring-fill" cx="50" cy="50" r="42" strokeDasharray={`${dash} ${CIRCUMFERENCE}`} />
-      </svg>
-      <div className="step-ring-center">
-        <strong>{status === "checking" ? "…" : current.toLocaleString("tr-TR")}</strong>
-        <small>{t.stepCounter.unit}</small>
+  return <>
+    {/* Ana ekranda yalnız çember: ayrıntılar (hedef, kalan, sağlık bağlantısı)
+        dokununca açılan kısa bir kaplamaya taşındı — kalori kartıyla aynı
+        satırda iki kartın da metin yığını sığdırmaya çalışması yerine. */}
+    <button type="button" className="step-ring-card is-tappable" onClick={() => setDetailOpen(true)} aria-label={t.stepCounter.openDetailLabel}>
+      <div className="step-ring" role="img" aria-label={t.stepCounter.ariaLabel(current)}>
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle className="step-ring-track" cx="50" cy="50" r="42" />
+          <circle className="step-ring-fill" cx="50" cy="50" r="42" strokeDasharray={`${dash} ${CIRCUMFERENCE}`} />
+        </svg>
+        <div className="step-ring-center">
+          <strong>{status === "checking" ? "…" : current.toLocaleString("tr-TR")}</strong>
+          <small>{t.stepCounter.unit}</small>
+        </div>
       </div>
-    </div>
-    <div className="step-ring-legend">
-      <span>{t.stepCounter.eyebrow}</span>
-      <strong>{ratio >= 1 ? t.stepCounter.goalReached : t.stepCounter.remaining(remaining)}</strong>
-      <small>{t.stepCounter.goalLabel}: {goal.toLocaleString("tr-TR")} {t.stepCounter.unit}</small>
-      {/* Sağlık bağlantısı isteğe bağlı: uygulama kapalıyken atılan adımları
-          da toplayabilmek için. Cihaz sayacı zaten çalışıyor. */}
-      {!healthConnected && <button type="button" className="step-ring-health-link" onClick={() => void connectHealth()}>{t.stepCounter.connect}</button>}
-    </div>
-  </div>;
+      <span className="step-ring-caption">{t.stepCounter.eyebrow}</span>
+    </button>
+
+    {detailOpen && <div className="step-detail-overlay" role="dialog" aria-modal="true" aria-label={t.stepCounter.eyebrow} onClick={(event) => { if (event.target === event.currentTarget) setDetailOpen(false); }}>
+      <div className="step-detail-sheet">
+        <button type="button" className="activity-close" onClick={() => setDetailOpen(false)} aria-label={t.common.dismiss}>×</button>
+        <div className="step-ring large" role="img" aria-label={t.stepCounter.ariaLabel(current)}>
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle className="step-ring-track" cx="50" cy="50" r="42" />
+            <circle className="step-ring-fill" cx="50" cy="50" r="42" strokeDasharray={`${dash} ${CIRCUMFERENCE}`} />
+          </svg>
+          <div className="step-ring-center">
+            <strong>{status === "checking" ? "…" : current.toLocaleString("tr-TR")}</strong>
+            <small>{t.stepCounter.unit}</small>
+          </div>
+        </div>
+        <div className="step-ring-legend">
+          <span>{t.stepCounter.eyebrow}</span>
+          <strong>{ratio >= 1 ? t.stepCounter.goalReached : t.stepCounter.remaining(remaining)}</strong>
+          <small>{t.stepCounter.goalLabel}: {goal.toLocaleString("tr-TR")} {t.stepCounter.unit}</small>
+          {/* Sağlık bağlantısı isteğe bağlı: uygulama kapalıyken atılan
+              adımları da toplayabilmek için. Cihaz sayacı zaten çalışıyor. */}
+          {!healthConnected && <button type="button" className="step-ring-health-link" onClick={() => void connectHealth()}>{t.stepCounter.connect}</button>}
+        </div>
+      </div>
+    </div>}
+  </>;
 }

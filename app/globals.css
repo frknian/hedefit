@@ -2005,6 +2005,25 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .energy-ring-card.is-tappable:hover { border-color:#a9bf57; }
 .energy-ring-card.is-tappable:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 
+/* Ana ekranda kalori/adım kartları yalnız çember: metin yığını iki kartı
+   aynı satırda sıkışık gösteriyordu, ayrıntılar tıklayınca açılan yerlere taşındı. */
+.energy-ring-card, .step-ring-card { justify-content:center; }
+.energy-ring-caption, .step-ring-caption { display:block; margin-top:8px; color:var(--muted-text); font-size:9px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; text-align:center; }
+.step-ring-card { flex-direction:column; align-items:center; grid-template-columns:none !important; text-align:center; }
+.step-ring-card.is-tappable { width:100%; border:1px solid var(--line); border-radius:var(--r-md,10px); background:var(--surface-soft,#fbfbf7); font:inherit; color:inherit; cursor:pointer; }
+.step-ring-card.is-tappable:hover { border-color:#a9bf57; }
+.step-ring-card.is-tappable:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+.dark .step-ring-card.is-tappable { background:#181915; }
+
+/* Adım ayrıntıları: kısa bir kaplama, tam sayfa değil — kullanıcı hızlıca
+   bakıp kapatsın diye alttan yükselen küçük bir sac (bottom sheet). */
+.step-detail-overlay { position:fixed; z-index:100; inset:0; display:grid; place-items:end center; padding:0; background:rgba(24,24,21,.68); backdrop-filter:blur(8px); }
+.step-detail-sheet { position:relative; width:100%; max-width:420px; padding:28px 22px 24px; border-radius:16px 16px 0 0; background:var(--surface); box-shadow:0 -20px 60px rgba(0,0,0,.28); display:flex; flex-direction:column; align-items:center; }
+.step-detail-sheet .step-ring.large { width:120px; height:120px; margin-bottom:6px; }
+.step-detail-sheet .step-ring-legend { align-items:center; text-align:center; }
+@media (min-width:640px) { .step-detail-overlay { place-items:center; padding:20px; } .step-detail-sheet { border-radius:16px; } }
+.dark .step-detail-sheet { background:#1c1d19; }
+
 /* Kalori ve adım kartları telefonda da yan yana; o genişlikte halka ile
    açıklama yan yana sığmadığı için kart içi dikey ve ortalı akışa geçer. */
 @media (max-width:620px) {

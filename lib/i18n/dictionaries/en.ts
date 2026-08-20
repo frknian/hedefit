@@ -929,6 +929,7 @@ export const en: typeof tr = {
   },
   stepCounter: {
     eyebrow: "DAILY STEPS",
+    openDetailLabel: "Open step details",
     title: "Step Counter",
     unit: "steps",
     goalLabel: "Goal",
@@ -1203,6 +1204,7 @@ export const en: typeof tr = {
     bmrLabel: "BASAL ENERGY · BMR",
     tdeeLabel: "DAILY TOTAL · TDEE",
     energyOpenLabel: "Open calorie tracking",
+    energyCaption: "Calorie balance",
     energyRemaining: "kcal left",
     energyOver: "kcal over",
     energyNoTarget: "no target",

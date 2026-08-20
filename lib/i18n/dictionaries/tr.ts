@@ -929,6 +929,7 @@ export const tr = {
   },
   stepCounter: {
     eyebrow: "GÜNLÜK ADIM",
+    openDetailLabel: "Adım ayrıntılarını aç",
     title: "Adım Sayar",
     unit: "adım",
     goalLabel: "Hedef",
@@ -1204,6 +1205,7 @@ export const tr = {
     bmrLabel: "BAZAL ENERJİ · BMR",
     tdeeLabel: "GÜNLÜK TOPLAM · TDEE",
     energyOpenLabel: "Kalori takibini aç",
+    energyCaption: "Kalori dengesi",
     energyRemaining: "kcal kaldı",
     energyOver: "kcal aşıldı",
     energyNoTarget: "hedef yok",

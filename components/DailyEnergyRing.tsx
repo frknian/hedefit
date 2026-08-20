@@ -18,8 +18,11 @@ const CIRCUMFERENCE = 2 * Math.PI * 42;
  * `fallbackTargetKcal`: beslenme sekmesi hiç açılmamışsa profilden gelen TDEE.
  * `onOpen`: verilirse kart tıklanabilir olur ve kalori takibi sekmesine gider —
  *   "bugün daha ne yiyebilirim?" sorusunun devamı hep öğün eklemek oluyor.
+ * `compact`: ana ekranda yalnız çemberi gösterir; alınan/harcanan/hedef
+ *   dökümü artık kalori takibi sayfasında (bkz. CalorieTracker) duruyor —
+ *   iki kartın (kalori + adım) aynı satırda metin yığınına boğulmaması için.
  */
-export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal, onOpen }: { userId?: string; burnedKcal: number; fallbackTargetKcal?: number | null; onOpen?: () => void }) {
+export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal, onOpen, compact = false }: { userId?: string; burnedKcal: number; fallbackTargetKcal?: number | null; onOpen?: () => void; compact?: boolean }) {
   const t = useTranslations();
   const [consumed, setConsumed] = useState(0);
   const [savedTarget, setSavedTarget] = useState<number | null>(null);
@@ -93,10 +96,12 @@ export function DailyEnergyRing({ userId, burnedKcal, fallbackTargetKcal, onOpen
         <small>{remaining === null ? t.dashboard.energyNoTarget : over ? t.dashboard.energyOver : t.dashboard.energyRemaining}</small>
       </div>
     </div>
-    <div className="energy-ring-legend">
-      <div><span>{t.dashboard.energyConsumed}</span><strong>{consumed}<small>kcal</small></strong></div>
-      <div><span>{t.dashboard.energyBurned}</span><strong>{burned}<small>kcal</small></strong></div>
-      {target !== null && <div><span>{t.dashboard.energyTarget}</span><strong>{target}<small>kcal</small></strong></div>}
-    </div>
+    {compact
+      ? <span className="energy-ring-caption">{t.dashboard.energyCaption}</span>
+      : <div className="energy-ring-legend">
+          <div><span>{t.dashboard.energyConsumed}</span><strong>{consumed}<small>kcal</small></strong></div>
+          <div><span>{t.dashboard.energyBurned}</span><strong>{burned}<small>kcal</small></strong></div>
+          {target !== null && <div><span>{t.dashboard.energyTarget}</span><strong>{target}<small>kcal</small></strong></div>}
+        </div>}
   </Card>;
 }

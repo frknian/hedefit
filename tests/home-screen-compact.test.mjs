@@ -21,7 +21,7 @@ test("ana ekran mobil sayfalayıcı olmadan tek akışta durur", () => {
   assert.match(home, /<QuickActions onNavigate=\{navigateFromQuickAction\} \/>/);
   assert.match(home, /<GoalPlanCard compact bmi=\{bmi\} onOpen=\{\(\) => setGoalPlanOpen\(true\)\}/);
   assert.match(home, /className="home-top-row"/);
-  assert.match(home, /<DailyEnergyRing userId=/, "kalori çemberi adım sayarla aynı satırda olmalı");
+  assert.match(home, /<DailyEnergyRing compact userId=/, "kalori çemberi adım sayarla aynı satırda olmalı");
   assert.match(home, /<StepCounterCard userId=/, "adım sayar kalori çemberiyle aynı satırda olmalı");
   // "BUGÜNÜN PLANI" şeridi kaldırıldı: ekranın en üstünde artık selamlama var.
   assert.doesNotMatch(home, /t\.dashboard\.todaysPlan/, "bugünün planı başlığı kalkmalı");
