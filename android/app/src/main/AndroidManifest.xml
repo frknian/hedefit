@@ -78,7 +78,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Adım sayar: Health Connect'ten günlük adım okuma -->
+    <!-- Adım sayar: cihazın kendi donanım sayacı (Android 10+ runtime izni).
+         Health Connect boş olabildiği için birincil kaynak budur. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <!-- Adım sayar: Health Connect'ten günlük adım okuma (isteğe bağlı ek) -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
 
     <!-- Vücut analizi ve profil fotoğrafı için kamerayla çekim -->

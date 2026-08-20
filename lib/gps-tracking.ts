@@ -1,7 +1,7 @@
 import { registerPlugin } from "@capacitor/core";
 import type { BackgroundGeolocationPlugin, Location } from "@capacitor-community/background-geolocation";
 import { Geolocation } from "@capacitor/geolocation";
-import { isNativeApp } from "./mobile.ts";
+import { isNativeApp, requestMobileNotificationPermission } from "./mobile.ts";
 
 // Bu eklenti JS tarafında hiçbir modül dışa aktarmaz (yalnızca native
 // kaynak + tip tanımları); resmi kullanım şekli budur, bkz. paketin README'i.
@@ -45,6 +45,28 @@ function markGpsPermissionPrompted() {
 export function isGpsTrackingAvailable(): boolean {
   if (isNativeApp()) return true;
   return typeof navigator !== "undefined" && "geolocation" in navigator;
+}
+
+/**
+ * Arka plan konum iznini ister. Android 10+ bunu ön plan izniyle AYNI anda
+ * vermez: önce "uygulamayı kullanırken" alınmalı, ardından ikinci bir istek
+ * "her zaman"a yükseltir. Tek adımda istenirse sistem sessizce reddeder ve
+ * ekran kapanınca takip durur — gerçek cihazda bu iznin verilmemiş olduğu
+ * görüldü. Reddedilirse takip yine de ön planda çalışmaya devam eder.
+ */
+export async function ensureBackgroundLocationPermission(): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const current = await Geolocation.checkPermissions();
+    if (current.location !== "granted") {
+      const asked = await Geolocation.requestPermissions({ permissions: ["location"] });
+      if (asked.location !== "granted") return false;
+    }
+    const withBackground = await Geolocation.requestPermissions({ permissions: ["coarseLocation", "location"] });
+    return withBackground.location === "granted";
+  } catch {
+    return false;
+  }
 }
 
 /** Haritayı ilk konuma ortalamak gibi tek seferlik ihtiyaçlar için anlık konum. */
@@ -94,6 +116,14 @@ export async function startGpsTracking(
   markGpsPermissionPrompted();
 
   if (isNativeApp()) {
+    // Android, konum ön plan servisi için KALICI BİR BİLDİRİM zorunlu tutar.
+    // Bildirim izni yokken o bildirim gösterilemez ve sistem servisi erkenden
+    // öldürebilir; gerçek cihazda bu iznin verilmediği görüldü.
+    await requestMobileNotificationPermission().catch(() => undefined);
+    // Ekran kapalıyken takip için ayrı bir "her zaman izin ver" gerekir
+    // (Android 10+). Bu istenmezse takip yalnız uygulama önplandayken sürer.
+    await ensureBackgroundLocationPermission().catch(() => undefined);
+
     return BackgroundGeolocation.addWatcher(
       {
         backgroundTitle: "Hedefit Rota",

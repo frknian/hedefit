@@ -58,15 +58,26 @@ function toGeoJsonPoint(point: LatLng | null): GeoJSON.FeatureCollection<GeoJSON
   };
 }
 
+/** Rota çizgisinin varsayılan rengi. Paylaşım kartında aynı yeşil kullanılır. */
+export const ROUTE_COLOR = "#5fbf3f";
+
+/**
+ * Haritanın o anki karesini PNG data URL'ine çevirir. Paylaşım görseli bunun
+ * üstüne kurulur, bu yüzden döşemeler yüklenene kadar (`idle`) beklenir.
+ */
+export type MapCapture = { capture: () => Promise<string | null> };
+
 export type GpsMapViewProps = {
   route: LatLng[];
   currentPosition?: LatLng | null;
   interactive?: boolean;
   className?: string;
+  /** Verilirse harita kare dışa aktarımına hazırlanır (preserveDrawingBuffer). */
+  captureRef?: { current: MapCapture | null };
 };
 
 /** Canlı takip, rota detayı ve önizlemede paylaşılan MapLibre yaşam döngüsü sarmalayıcısı. */
-export function GpsMapView({ route, currentPosition = null, interactive = true, className }: GpsMapViewProps) {
+export function GpsMapView({ route, currentPosition = null, interactive = true, className, captureRef }: GpsMapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const readyRef = useRef(false);
@@ -77,6 +88,7 @@ export function GpsMapView({ route, currentPosition = null, interactive = true, 
     if (!containerRef.current) return undefined;
     let cancelled = false;
     let map: maplibregl.Map | null = null;
+    const exportable = Boolean(captureRef);
     // Bilinen bir nokta yoksa dünya görünümü açılır. Burada bir şehir
     // sabitlemek (eskiden İstanbul'du) uygulamayı o ülkeye aitmiş gibi
     // gösteriyordu; OSM döşemeleri tüm dünyayı kapsar ve harita her zaman
@@ -93,6 +105,9 @@ export function GpsMapView({ route, currentPosition = null, interactive = true, 
         zoom: known ? 15 : 1,
         interactive,
         attributionControl: interactive ? {} : false,
+        // WebGL varsayılanı her kareden sonra tamponu boşaltır; bu açık
+        // olmadan getCanvas().toDataURL() bomboş bir görsel döner.
+        canvasContextAttributes: { preserveDrawingBuffer: exportable },
       });
       mapRef.current = map;
       map.on("load", () => {
@@ -100,7 +115,10 @@ export function GpsMapView({ route, currentPosition = null, interactive = true, 
         readyRef.current = true;
         centeredRef.current = Boolean(known);
         map.addSource(ROUTE_SOURCE_ID, { type: "geojson", data: toGeoJsonLine(route) });
-        map.addLayer({ id: ROUTE_LAYER_ID, type: "line", source: ROUTE_SOURCE_ID, paint: { "line-color": "#7d9a2c", "line-width": 4 }, layout: { "line-cap": "round", "line-join": "round" } });
+        // Beyaz bir dış hat, rotanın açık renkli döşemeler üzerinde de
+        // seçilmesini sağlar (paylaşım görselinde bu belirgin fark yaratıyor).
+        map.addLayer({ id: `${ROUTE_LAYER_ID}-halo`, type: "line", source: ROUTE_SOURCE_ID, paint: { "line-color": "#ffffff", "line-width": 8, "line-opacity": 0.85 }, layout: { "line-cap": "round", "line-join": "round" } });
+        map.addLayer({ id: ROUTE_LAYER_ID, type: "line", source: ROUTE_SOURCE_ID, paint: { "line-color": ROUTE_COLOR, "line-width": 5 }, layout: { "line-cap": "round", "line-join": "round" } });
         map.addSource(POSITION_SOURCE_ID, { type: "geojson", data: toGeoJsonPoint(currentPosition) });
         map.addLayer({ id: POSITION_LAYER_ID, type: "circle", source: POSITION_SOURCE_ID, paint: { "circle-radius": 7, "circle-color": "#bfe94a", "circle-stroke-width": 2, "circle-stroke-color": "#41501a" } });
         if (route.length > 1) {
@@ -108,6 +126,19 @@ export function GpsMapView({ route, currentPosition = null, interactive = true, 
           map.fitBounds(bounds, { padding: 32, maxZoom: 17, duration: 0 });
         }
       });
+
+      if (captureRef) captureRef.current = {
+        capture: () => new Promise((resolve) => {
+          const current = mapRef.current;
+          if (!current) { resolve(null); return; }
+          const grab = () => {
+            try { resolve(current.getCanvas().toDataURL("image/png")); }
+            catch { resolve(null); } // döşeme sunucusu CORS vermezse canvas kirlenir
+          };
+          if (current.loaded() && !current.isMoving()) grab();
+          else current.once("idle", grab);
+        }),
+      };
     });
 
     return () => {
@@ -116,6 +147,7 @@ export function GpsMapView({ route, currentPosition = null, interactive = true, 
       mapRef.current = null;
       readyRef.current = false;
       centeredRef.current = false;
+      if (captureRef) captureRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -108,6 +108,59 @@ export async function showRewardedAd(adUnitId: string): Promise<{ rewarded: bool
   }
 }
 
+// --- Cihazın kendi adım sayacı ---------------------------------------------
+// Sağlık uygulaması (Health Connect / HealthKit) BOŞ olabilir: Android 14'te
+// Health Connect işletim sistemine gömülüdür ama başka bir uygulama adım
+// yazmadıkça sorgu 0 döner. O yüzden birincil kaynak cihazın kendi donanım
+// sayacıdır; sağlık verisi varsa üzerine eklenir (bkz. combineStepSources).
+
+/** Cihazda donanım adım sayacı var mı? */
+export async function isPedometerAvailable(): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const { CapacitorPedometer } = await import("@capgo/capacitor-pedometer");
+    const result = await CapacitorPedometer.isAvailable();
+    return Boolean(result.stepCounting);
+  } catch {
+    return false;
+  }
+}
+
+/** Android'de ACTIVITY_RECOGNITION, iOS'ta hareket izni ister. */
+export async function requestPedometerPermission(): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  try {
+    const { CapacitorPedometer } = await import("@capgo/capacitor-pedometer");
+    const status = await CapacitorPedometer.requestPermissions();
+    return status.activityRecognition === "granted";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Adım akışını başlatır. Eklenti Android'de yalnızca bu çağrıdan SONRAKİ
+ * adımları sayar; günlük toplamı lib/step-counter.ts biriktirir.
+ * Geri dönen fonksiyon dinlemeyi bırakır.
+ */
+export async function startPedometer(onSteps: (sessionSteps: number) => void): Promise<() => void> {
+  if (!isNativeApp()) return () => undefined;
+  try {
+    const { CapacitorPedometer } = await import("@capgo/capacitor-pedometer");
+    const handle = await CapacitorPedometer.addListener("measurement", (event) => {
+      const steps = Number(event?.numberOfSteps);
+      if (Number.isFinite(steps)) onSteps(steps);
+    });
+    await CapacitorPedometer.startMeasurementUpdates();
+    return () => {
+      void handle.remove();
+      void CapacitorPedometer.stopMeasurementUpdates().catch(() => undefined);
+    };
+  } catch {
+    return () => undefined;
+  }
+}
+
 /** Adım sayar için sağlık verisi (HealthKit / Health Connect) erişilebilir mi? Web'de her zaman false. */
 export async function isStepCounterAvailable(): Promise<boolean> {
   if (!isNativeApp()) return false;

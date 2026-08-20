@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createActivityRepository, type ActivityEntry, type ActivityRoute } from "@/lib/activity-service";
 import { decodePolyline } from "@/lib/polyline";
+import { renderShareCard } from "@/lib/share-card";
+import { shareActivityImage } from "@/lib/share-activity";
 import { useTranslations, translateIntensity } from "@/lib/i18n/translate";
 import { useLocale } from "@/lib/i18n/locale";
-import { GpsMapView } from "@/components/GpsMapView";
+import { GpsMapView, type MapCapture } from "@/components/GpsMapView";
 import { RoutePreviewThumbnail } from "@/components/RoutePreviewThumbnail";
 
 function formatEntryDate(value: string, locale: string) {
@@ -18,6 +20,9 @@ function ActivityDetail({ entry, userId, onBack }: { entry: ActivityEntry; userI
   const dateLocale = useLocale() === "en" ? "en-US" : "tr-TR";
   const [route, setRoute] = useState<ActivityRoute | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sharing, setSharing] = useState(false);
+  const [shareNote, setShareNote] = useState("");
+  const mapCaptureRef = useRef<MapCapture | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,12 +42,38 @@ function ActivityDetail({ entry, userId, onBack }: { entry: ActivityEntry; userI
 
   const points = route ? decodePolyline(route.encodedPolyline) : [];
 
+  async function handleShare() {
+    setSharing(true);
+    setShareNote("");
+    try {
+      const mapDataUrl = await mapCaptureRef.current?.capture().catch(() => null);
+      const blob = await renderShareCard({
+        title: entry.activityName,
+        distanceKm: entry.distanceKm ?? 0,
+        durationMs: entry.durationMinutes * 60_000,
+        mapDataUrl,
+        route: points,
+        labels: { pace: t.gpsActivity.sharePace, time: t.gpsActivity.shareTime, distance: t.gpsActivity.shareDistance },
+      });
+      const outcome = await shareActivityImage(blob, {
+        title: entry.activityName,
+        text: t.gpsActivity.shareText(entry.activityName, (entry.distanceKm ?? 0).toFixed(2)),
+      });
+      if (outcome === "downloaded") setShareNote(t.gpsActivity.shareDownloaded);
+      else if (outcome === "failed") setShareNote(t.gpsActivity.shareFailed);
+    } catch {
+      setShareNote(t.gpsActivity.shareFailed);
+    } finally {
+      setSharing(false);
+    }
+  }
+
   return <div className="activity-log-detail">
     <button type="button" className="sport-guide-back" onClick={onBack}>{t.activityLog.backToList}</button>
     <h3>{entry.activityName}</h3>
     <small>{formatEntryDate(entry.localDate, dateLocale)}</small>
     {loading && <p className="activity-log-detail-loading">{t.activityLog.loadingRoute}</p>}
-    {!loading && points.length > 1 && <GpsMapView route={points} interactive className="gps-map-view detail" />}
+    {!loading && points.length > 1 && <GpsMapView route={points} interactive className="gps-map-view detail" captureRef={mapCaptureRef} />}
     {!loading && points.length <= 1 && <p className="activity-log-detail-loading">{t.activityLog.noRoute}</p>}
     <div className="activity-log-detail-stats">
       <div><span>{t.activityLog.statDuration}</span><strong>{entry.durationMinutes} {t.activityLogger.chartUnitMinutes}</strong></div>
@@ -55,6 +86,8 @@ function ActivityDetail({ entry, userId, onBack }: { entry: ActivityEntry; userI
       <div><span>{t.activityLog.statIntensity}</span><strong>{translateIntensity(t, entry.intensity)}</strong></div>
     </div>
     {entry.notes && <p className="activity-log-detail-notes">{entry.notes}</p>}
+    {points.length > 1 && <button type="button" className="gps-tracker-share activity-log-share" disabled={sharing} onClick={() => void handleShare()}>{sharing ? t.gpsActivity.sharing : t.gpsActivity.share}</button>}
+    {shareNote && <p className="gps-tracker-message" role="status">{shareNote}</p>}
   </div>;
 }
 

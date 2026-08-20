@@ -4,14 +4,33 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createStepRepository } from "@/lib/step-service";
 import { localDateKey } from "@/lib/streak";
-import { fetchTodaySteps, isNativeApp, isStepCounterAvailable, requestStepPermission } from "@/lib/mobile";
+import { fetchTodaySteps, isNativeApp, isPedometerAvailable, isStepCounterAvailable, requestPedometerPermission, requestStepPermission, startPedometer } from "@/lib/mobile";
+import { combineStepSources, mergeSessionSteps, stepsForToday, type StoredStepState } from "@/lib/step-counter";
 import { useTranslations } from "@/lib/i18n/translate";
 
 const DEFAULT_GOAL = 8000;
 const CIRCUMFERENCE = 2 * Math.PI * 42;
-const CONNECTED_KEY = "fit-ai-step-counter-connected";
+/** Sağlık uygulamasına bağlanma İSTEĞE BAĞLI bir ek; ayrı bayrakta tutulur. */
+const HEALTH_CONNECTED_KEY = "fit-ai-step-counter-connected";
+/** Cihaz sayacının günlük birikimi (bkz. lib/step-counter.ts). */
+const DEVICE_STEPS_KEY = "hedefit:device-steps";
 
-type Status = "idle" | "checking" | "connect" | "denied" | "unavailable" | "ready";
+type Status = "idle" | "checking" | "unavailable" | "ready";
+
+function readStored(): StoredStepState | null {
+  try {
+    const raw = window.localStorage.getItem(DEVICE_STEPS_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredStepState;
+    return typeof parsed?.localDate === "string" && Number.isFinite(parsed?.steps) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(state: StoredStepState) {
+  try { window.localStorage.setItem(DEVICE_STEPS_KEY, JSON.stringify(state)); } catch { /* depolama kapalı */ }
+}
 
 /**
  * Ana ekranın adım sayar kartı: HealthKit/Health Connect'ten bugünün adımını
@@ -23,49 +42,86 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
   const [status, setStatus] = useState<Status>("idle");
   const [steps, setSteps] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!isNativeApp()) return;
-    let cancelled = false;
+  const [healthConnected, setHealthConnected] = useState(false);
 
-    async function sync() {
-      const value = await fetchTodaySteps();
-      if (cancelled || value === null) return;
-      setSteps(value);
-      setStatus("ready");
+  useEffect(() => {
+    if (!isNativeApp()) return undefined;
+    let cancelled = false;
+    let stopPedometer: (() => void) | null = null;
+    // Eklentinin oturum sayacı; artışı bulmak için son işlenen değer saklanır.
+    let lastSessionSteps = 0;
+
+    async function persist(total: number) {
       if (!userId) return;
       const supabase = createClient();
       if (!supabase) return;
-      await createStepRepository(supabase, userId).upsertToday(localDateKey(), value).catch(() => undefined);
+      await createStepRepository(supabase, userId).upsertToday(localDateKey(), total).catch(() => undefined);
+    }
+
+    /** Sağlık uygulaması bağlıysa oradaki değerle karşılaştırır (toplamaz). */
+    async function syncHealth(deviceSteps: number) {
+      if (window.localStorage.getItem(HEALTH_CONNECTED_KEY) !== "1") return deviceSteps;
+      const health = await fetchTodaySteps();
+      return combineStepSources(deviceSteps, health);
     }
 
     async function init() {
       setStatus("checking");
-      const available = await isStepCounterAvailable();
+      setHealthConnected(window.localStorage.getItem(HEALTH_CONNECTED_KEY) === "1");
+
+      const available = await isPedometerAvailable();
       if (cancelled) return;
-      if (!available) { setStatus("unavailable"); return; }
-      const alreadyConnected = window.localStorage.getItem(CONNECTED_KEY) === "1";
-      if (!alreadyConnected) { setStatus("connect"); return; }
-      await sync();
+
+      // Kayıtlı günlük toplam hemen gösterilir; sensör beklenmez.
+      const stored = readStored();
+      const today = localDateKey();
+      let total = stepsForToday(stored, today);
+      setSteps(total);
+      setStatus("ready");
+
+      if (available && (await requestPedometerPermission())) {
+        if (cancelled) return;
+        stopPedometer = await startPedometer((sessionSteps) => {
+          const next = mergeSessionSteps({ stored: readStored(), todayKey: localDateKey(), sessionSteps, lastSessionSteps });
+          lastSessionSteps = sessionSteps;
+          writeStored(next);
+          setSteps(next.steps);
+          void persist(next.steps);
+        });
+      } else if (!available && window.localStorage.getItem(HEALTH_CONNECTED_KEY) !== "1") {
+        // Ne donanım sayacı ne de sağlık bağlantısı var: kart bir şey diyemez.
+        const healthCapable = await isStepCounterAvailable();
+        if (!cancelled && !healthCapable) { setStatus("unavailable"); return; }
+      }
+
+      total = await syncHealth(total);
+      if (cancelled) return;
+      setSteps(total);
+      void persist(total);
     }
 
     void init();
-    const interval = window.setInterval(() => { if (window.localStorage.getItem(CONNECTED_KEY) === "1") void sync(); }, 5 * 60_000);
-    function onFocus() { if (window.localStorage.getItem(CONNECTED_KEY) === "1") void sync(); }
+    function onFocus() { void init(); }
     window.addEventListener("focus", onFocus);
-    return () => { cancelled = true; window.clearInterval(interval); window.removeEventListener("focus", onFocus); };
+    return () => {
+      cancelled = true;
+      stopPedometer?.();
+      window.removeEventListener("focus", onFocus);
+    };
   }, [userId]);
 
-  async function connect() {
-    setStatus("checking");
+  /** Sağlık uygulaması bağlantısı isteğe bağlı: cihaz sayacı zaten çalışıyor. */
+  async function connectHealth() {
     const granted = await requestStepPermission();
-    if (!granted) { setStatus("denied"); return; }
-    window.localStorage.setItem(CONNECTED_KEY, "1");
-    const value = await fetchTodaySteps();
-    setSteps(value);
-    setStatus("ready");
-    if (value !== null && userId) {
+    if (!granted) return;
+    window.localStorage.setItem(HEALTH_CONNECTED_KEY, "1");
+    setHealthConnected(true);
+    const health = await fetchTodaySteps();
+    const total = combineStepSources(stepsForToday(readStored(), localDateKey()), health);
+    setSteps(total);
+    if (userId) {
       const supabase = createClient();
-      if (supabase) await createStepRepository(supabase, userId).upsertToday(localDateKey(), value).catch(() => undefined);
+      if (supabase) await createStepRepository(supabase, userId).upsertToday(localDateKey(), total).catch(() => undefined);
     }
   }
 
@@ -77,30 +133,23 @@ export function StepCounterCard({ userId, goal = DEFAULT_GOAL }: { userId?: stri
   const remaining = Math.max(0, goal - current);
 
   return <div className="step-ring-card">
-    {status === "connect" || status === "denied" ? (
-      <div className="step-ring-connect">
-        <span>{t.stepCounter.eyebrow}</span>
-        <p>{status === "denied" ? t.stepCounter.permissionDenied : t.stepCounter.connectHint}</p>
-        <button type="button" onClick={() => void connect()}>{t.stepCounter.connect}</button>
+    <div className="step-ring" role="img" aria-label={t.stepCounter.ariaLabel(current)}>
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle className="step-ring-track" cx="50" cy="50" r="42" />
+        <circle className="step-ring-fill" cx="50" cy="50" r="42" strokeDasharray={`${dash} ${CIRCUMFERENCE}`} />
+      </svg>
+      <div className="step-ring-center">
+        <strong>{status === "checking" ? "…" : current.toLocaleString("tr-TR")}</strong>
+        <small>{t.stepCounter.unit}</small>
       </div>
-    ) : (
-      <>
-        <div className="step-ring" role="img" aria-label={t.stepCounter.ariaLabel(current)}>
-          <svg viewBox="0 0 100 100" aria-hidden="true">
-            <circle className="step-ring-track" cx="50" cy="50" r="42" />
-            <circle className="step-ring-fill" cx="50" cy="50" r="42" strokeDasharray={`${dash} ${CIRCUMFERENCE}`} />
-          </svg>
-          <div className="step-ring-center">
-            <strong>{status === "checking" ? "…" : current.toLocaleString("tr-TR")}</strong>
-            <small>{t.stepCounter.unit}</small>
-          </div>
-        </div>
-        <div className="step-ring-legend">
-          <span>{t.stepCounter.eyebrow}</span>
-          <strong>{ratio >= 1 ? t.stepCounter.goalReached : t.stepCounter.remaining(remaining)}</strong>
-          <small>{t.stepCounter.goalLabel}: {goal.toLocaleString("tr-TR")} {t.stepCounter.unit}</small>
-        </div>
-      </>
-    )}
+    </div>
+    <div className="step-ring-legend">
+      <span>{t.stepCounter.eyebrow}</span>
+      <strong>{ratio >= 1 ? t.stepCounter.goalReached : t.stepCounter.remaining(remaining)}</strong>
+      <small>{t.stepCounter.goalLabel}: {goal.toLocaleString("tr-TR")} {t.stepCounter.unit}</small>
+      {/* Sağlık bağlantısı isteğe bağlı: uygulama kapalıyken atılan adımları
+          da toplayabilmek için. Cihaz sayacı zaten çalışıyor. */}
+      {!healthConnected && <button type="button" className="step-ring-health-link" onClick={() => void connectHealth()}>{t.stepCounter.connect}</button>}
+    </div>
   </div>;
 }

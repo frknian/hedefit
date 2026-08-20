@@ -1174,8 +1174,14 @@ input,select,textarea { color-scheme:inherit; }
 .gps-tracker-intensity, .gps-tracker-notes { display:flex; flex-direction:column; gap:6px; margin-top:10px; font-size:9px; font-weight:800; letter-spacing:.5px; color:var(--muted-text); }
 .gps-tracker-intensity select, .gps-tracker-notes textarea { padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:12px; font-weight:500; }
 .gps-tracker-notes textarea { min-height:60px; resize:vertical; }
-.gps-tracker-save { margin-top:14px; padding:14px; border:0; border-radius:10px; background:#7d9a2c; color:#fff; font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; }
-.gps-tracker-save:disabled { opacity:.6; cursor:default; }
+.gps-tracker-summary-actions { display:flex; gap:10px; margin-top:14px; }
+.gps-tracker-save { flex:1; padding:14px; border:0; border-radius:10px; background:#7d9a2c; color:#fff; font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+/* Paylaş ikincil bir eylem: kaydetmenin önüne geçmemeli. */
+.gps-tracker-share { flex:0 0 auto; padding:14px 18px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font-family:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+.gps-tracker-share:hover { border-color:#a9bf57; background:var(--control-hover); }
+.gps-tracker-save:disabled,.gps-tracker-share:disabled { opacity:.6; cursor:default; }
+.dark .gps-tracker-share { border-color:#46502c; }
+.activity-log-share { display:block; width:100%; margin-top:14px; }
 .gps-tracker-message { margin-top:10px; font-size:11px; color:var(--muted-text); }
 
 /* Hedefit Rota: rota önizleme küçük resmi (liste satırları) */
@@ -2024,6 +2030,9 @@ button.brand:hover .brand-mark { transform:scale(1.06); }
 .step-ring-legend span { color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
 .step-ring-legend strong { font-size:13px; line-height:1.2; letter-spacing:-.2px; }
 .step-ring-legend small { color:var(--muted-text); font-size:10px; }
+/* Sağlık uygulamasına bağlanma isteğe bağlı bir ek; cihaz sayacı zaten çalışır. */
+.step-ring-health-link { justify-self:start; margin-top:4px; padding:0; border:0; background:transparent; color:#7d9a2c; font-family:inherit; font-size:9px; font-weight:800; text-decoration:underline; cursor:pointer; }
+.dark .step-ring-health-link { color:#a9c85f; }
 .step-ring-connect { display:grid; gap:8px; grid-column:1/-1; }
 .step-ring-connect span { color:var(--muted-text); font-size:8px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
 .step-ring-connect p { margin:0; font-size:12px; color:var(--muted-text); }

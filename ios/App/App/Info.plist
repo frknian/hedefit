@@ -45,6 +45,8 @@
 	<string>Günlük adım sayını otomatik gösterebilmemiz için Sağlık verilerine erişim gerekir.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Uygulama Sağlık verilerine yazma yapmaz; bu izin sistem tarafından zorunlu tutulur.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Günlük adım sayını uygulama içinde gösterebilmemiz için hareket verisine erişim gerekir.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Aktivite takibi sırasında rotanı haritada gösterebilmemiz için konumuna erişim gerekir.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

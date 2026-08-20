@@ -8,22 +8,16 @@ import { localDateKey, userTimeZone, type ActivityType } from "@/lib/streak";
 import { encodePolyline, routeDistanceKm, type LatLng } from "@/lib/polyline";
 import { getCurrentPosition, isGpsTrackingAvailable, startGpsTracking, stopGpsTracking, type TrackedPoint } from "@/lib/gps-tracking";
 import { connectHeartRateMonitor, type HeartRateMonitor } from "@/lib/ble-heart-rate";
+import { formatDuration, formatPace } from "@/lib/activity-format";
+import { renderShareCard } from "@/lib/share-card";
+import { shareActivityImage } from "@/lib/share-activity";
 import { useTranslations, translateIntensity } from "@/lib/i18n/translate";
-import { GpsMapView } from "@/components/GpsMapView";
+import { GpsMapView, type MapCapture } from "@/components/GpsMapView";
 
 type Phase = "idle" | "unavailable" | "tracking" | "paused" | "summary";
 
 // GPS'e uygun, mesafe bazlı aktiviteler; diğer sporlar manuel ActivityLogger'da kalır.
 const TRACKABLE_ACTIVITIES = coreActivityCatalog.filter((activity) => ["walking", "running", "cycling"].includes(activity.key));
-
-function formatDuration(ms: number) {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
-}
 
 export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId: string; weightKg?: number; onClose: () => void }) {
   const t = useTranslations();
@@ -44,8 +38,11 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
   /** İlk GPS sinyali gelene kadar haritanın nereye bakacağı. */
   const [initialPosition, setInitialPosition] = useState<LatLng | null>(null);
 
+  const [sharing, setSharing] = useState(false);
   const watcherIdRef = useRef("");
   const hrMonitorRef = useRef<HeartRateMonitor | null>(null);
+  /** Özet haritasının karesini paylaşım görseline aktarmak için. */
+  const mapCaptureRef = useRef<MapCapture | null>(null);
 
   useEffect(() => {
     if (phase !== "tracking") return undefined;
@@ -133,6 +130,33 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
     }
   }
 
+  async function handleShare() {
+    if (!selectedActivity) return;
+    setSharing(true);
+    setMessage("");
+    try {
+      const mapDataUrl = await mapCaptureRef.current?.capture().catch(() => null);
+      const blob = await renderShareCard({
+        title: selectedActivity.name,
+        distanceKm,
+        durationMs: elapsedMs,
+        mapDataUrl,
+        route,
+        labels: { pace: t.gpsActivity.sharePace, time: t.gpsActivity.shareTime, distance: t.gpsActivity.shareDistance },
+      });
+      const outcome = await shareActivityImage(blob, {
+        title: selectedActivity.name,
+        text: t.gpsActivity.shareText(selectedActivity.name, distanceKm.toFixed(2)),
+      });
+      if (outcome === "downloaded") setMessage(t.gpsActivity.shareDownloaded);
+      else if (outcome === "failed") setMessage(t.gpsActivity.shareFailed);
+    } catch {
+      setMessage(t.gpsActivity.shareFailed);
+    } finally {
+      setSharing(false);
+    }
+  }
+
   async function handleSave() {
     if (!selectedActivity || !startedAt || !endedAt) return;
     setSaving(true);
@@ -213,10 +237,11 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
     </div>}
 
     {phase === "summary" && <div className="gps-tracker-summary">
-      <GpsMapView route={route} interactive className="gps-map-view summary" />
+      <GpsMapView route={route} interactive className="gps-map-view summary" captureRef={mapCaptureRef} />
       <div className="gps-tracker-stats">
         <div><span>{t.gpsActivity.statDuration}</span><strong>{formatDuration(elapsedMs)}</strong></div>
         <div><span>{t.gpsActivity.statDistance}</span><strong>{distanceKm.toFixed(2)} km</strong></div>
+        <div><span>{t.gpsActivity.statPace}</span><strong>{formatPace(distanceKm, elapsedMs)}</strong></div>
         <div><span>{t.gpsActivity.statAvgSpeed}</span><strong>{avgSpeedKmh.toFixed(1)} km/s</strong></div>
         <div><span>{t.gpsActivity.statMaxSpeed}</span><strong>{maxSpeedKmh.toFixed(1)} km/s</strong></div>
         {hrSamples.length > 0 && <div><span>{t.gpsActivity.statAvgHeartRate}</span><strong>{Math.round(hrSamples.reduce((s, v) => s + v, 0) / hrSamples.length)} bpm</strong></div>}
@@ -228,7 +253,10 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
         </select>
       </label>
       <label className="gps-tracker-notes">{t.gpsActivity.noteLabel}<textarea maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={t.gpsActivity.notePlaceholder} /></label>
-      <button type="button" className="gps-tracker-save" disabled={saving} onClick={() => void handleSave()}>{saving ? t.gpsActivity.saving : t.gpsActivity.save}</button>
+      <div className="gps-tracker-summary-actions">
+        <button type="button" className="gps-tracker-save" disabled={saving} onClick={() => void handleSave()}>{saving ? t.gpsActivity.saving : t.gpsActivity.save}</button>
+        <button type="button" className="gps-tracker-share" disabled={sharing} onClick={() => void handleShare()}>{sharing ? t.gpsActivity.sharing : t.gpsActivity.share}</button>
+      </div>
     </div>}
 
     {message && <p className="gps-tracker-message" role="status">{message}</p>}
