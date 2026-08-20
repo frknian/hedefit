@@ -97,11 +97,19 @@ test("spor ekle kendi sekmesinde, antrenman sekmesinden kalktı", () => {
   // Spor ekleme artık antrenman sekmesindeki bir düğmenin arkasında değil:
   // "Aktivite günlüğü" kendi sekmesi oldu ve ActivityLogger orada satır içi durur.
   assert.doesNotMatch(training, /className="activity-open"/, "buton antrenman sekmesinden kalkmalı");
-  assert.doesNotMatch(training, /onOpenActivityLog/, "prop tamamen kalkmalı");
-  assert.doesNotMatch(app, /onOpenActivityLog/);
+  assert.doesNotMatch(training, /onOpenActivityLog/, "TrainingPrograms bu prop'u bir daha almamalı");
   const page = app.slice(app.indexOf('activeView === "activity" ?'), app.indexOf('</> : <>', app.indexOf('activeView === "activity" ?')));
   assert.ok(page.length > 0, "aktivite sekmesi dalı olmalı");
   assert.match(page, /<ActivityLogger userId=\{authUser\.id\}/, "spor ekleme bu sayfada satır içi olmalı");
+});
+
+test("İlerlemem sayfası adım geçmişi ve Hedefit Rota kartlarını gösterir", () => {
+  const progressStart = app.indexOf("function ProgressView");
+  const progressBody = app.slice(progressStart, app.indexOf("\nfunction ", progressStart + 10));
+  assert.match(progressBody, /<StepHistoryCard userId=\{userId\} \/>/);
+  assert.match(progressBody, /<RouteHistoryCard userId=\{userId\} onOpenAll=\{onOpenActivityLog\} \/>/);
+  // ProgressView çağrısı gerçek bir açma eylemi geçirmeli — aktivite günlüğü kaplamasını açan.
+  assert.match(app, /<ProgressView[^>]*onOpenActivityLog=\{\(\) => setActivityLogOpen\(true\)\}/);
 });
 
 test("Hedefit Rota aktivite sayfasının başında, ana ekranda değil", () => {

@@ -8,6 +8,8 @@ import { localDateKey, userTimeZone, type ActivityType } from "@/lib/streak";
 import { encodePolyline, routeDistanceKm, type LatLng } from "@/lib/polyline";
 import { getCurrentPosition, isGpsTrackingAvailable, startGpsTracking, stopGpsTracking, type TrackedPoint } from "@/lib/gps-tracking";
 import { connectHeartRateMonitor, type HeartRateMonitor } from "@/lib/ble-heart-rate";
+import { clearPersistedGpsSession, readPersistedGpsSession, writePersistedGpsSession } from "@/lib/gps-session-store";
+import { applyStepCredit, DEVICE_STEPS_STORAGE_KEY, estimateStepsFromDistance, type StoredStepState } from "@/lib/step-counter";
 import { formatDuration, formatPace } from "@/lib/activity-format";
 import { renderShareCard } from "@/lib/share-card";
 import { shareActivityImage } from "@/lib/share-activity";
@@ -21,20 +23,24 @@ const TRACKABLE_ACTIVITIES = coreActivityCatalog.filter((activity) => ["walking"
 
 export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId: string; weightKg?: number; onClose: () => void }) {
   const t = useTranslations();
-  const [phase, setPhase] = useState<Phase>(isGpsTrackingAvailable() ? "idle" : "unavailable");
-  const [activityKey, setActivityKey] = useState(TRACKABLE_ACTIVITIES[0]?.key || "walking");
+  // Ekran kapanıp WebView süreci öldürüldüğünde ya da uygulama yeniden
+  // açıldığında, disk üzerinde bitmemiş bir oturum varsa sıfırdan başlamak
+  // yerine "duraklatıldı" durumunda geri yüklenir (bkz. lib/gps-session-store.ts).
+  const [recovered] = useState(() => readPersistedGpsSession());
+  const [phase, setPhase] = useState<Phase>(() => (recovered ? "paused" : isGpsTrackingAvailable() ? "idle" : "unavailable"));
+  const [activityKey, setActivityKey] = useState(() => recovered?.activityKey || TRACKABLE_ACTIVITIES[0]?.key || "walking");
   const [intensity, setIntensity] = useState<ActivityIntensity>("Orta");
-  const [points, setPoints] = useState<TrackedPoint[]>([]);
-  const [startedAt, setStartedAt] = useState<string | null>(null);
+  const [points, setPoints] = useState<TrackedPoint[]>(() => recovered?.points || []);
+  const [startedAt, setStartedAt] = useState<string | null>(() => recovered?.startedAt || null);
   const [endedAt, setEndedAt] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [currentBpm, setCurrentBpm] = useState<number | null>(null);
   const [hrConnecting, setHrConnecting] = useState(false);
   const [hrConnected, setHrConnected] = useState(false);
-  const [hrSamples, setHrSamples] = useState<number[]>([]);
+  const [hrSamples, setHrSamples] = useState<number[]>(() => recovered?.hrSamples || []);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(() => (recovered ? t.gpsActivity.sessionRecovered : ""));
   /** İlk GPS sinyali gelene kadar haritanın nereye bakacağı. */
   const [initialPosition, setInitialPosition] = useState<LatLng | null>(null);
 
@@ -54,6 +60,13 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
     if (watcherIdRef.current) void stopGpsTracking(watcherIdRef.current);
     if (hrMonitorRef.current) void hrMonitorRef.current.disconnect();
   }, []);
+
+  // Her yeni konum/nabız noktasında oturumun TAMAMI diske yazılır — ekran
+  // kapanıp süreç öldürülürse rota kaybolmasın diye (bkz. lib/gps-session-store.ts).
+  useEffect(() => {
+    if (!startedAt || phase === "idle" || phase === "unavailable") return;
+    writePersistedGpsSession({ activityKey, startedAt, points, hrSamples });
+  }, [points, hrSamples, activityKey, startedAt, phase]);
 
   // Takip başlamadan önce anlık konumu al: harita dünyanın neresinde olursa
   // olsun ilk karede doğru yere bakar, boş bir dünya görünümüyle açılmaz.
@@ -132,6 +145,7 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
 
   async function handleShare() {
     if (!selectedActivity) return;
+    if (route.length < 2) { setMessage(t.gpsActivity.errorRouteTooShort); return; }
     setSharing(true);
     setMessage("");
     try {
@@ -192,6 +206,21 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
       const { data, error: streakError } = await client.rpc("record_streak_activity", { p_activity_type: activityType, p_timezone: userTimeZone() });
       const row = Array.isArray(data) ? (data[0] as { current_streak?: number } | undefined) : (data as { current_streak?: number } | null);
       window.dispatchEvent(new CustomEvent("fit-ai-activity-recorded", { detail: { streak: Number(row?.current_streak) || undefined } }));
+      clearPersistedGpsSession();
+      // Yürüyüş/koşuda kat edilen mesafeyi adım sayarın günlük toplamına
+      // ekler. Yalnız iOS/web'de görünür etkisi olur: Android'de gerçek
+      // adımlar zaten donanım sensörünü dinleyen arka plan servisinden
+      // (StepCounterService) geliyor ve bu anahtarı hiç okumaz, iki kez
+      // sayma riski yoktur (bkz. lib/step-counter.ts applyStepCredit).
+      if (selectedActivity.key === "walking" || selectedActivity.key === "running") {
+        try {
+          const raw = window.localStorage.getItem(DEVICE_STEPS_STORAGE_KEY);
+          const stored: StoredStepState | null = raw ? JSON.parse(raw) : null;
+          const credit = estimateStepsFromDistance(distanceKm, selectedActivity.key);
+          const todayKey = localDateKey(new Date(startedAt), userTimeZone());
+          window.localStorage.setItem(DEVICE_STEPS_STORAGE_KEY, JSON.stringify(applyStepCredit(stored, todayKey, credit)));
+        } catch { /* adım sayar rotayla senkron olmasa da aktivite kaydı başarıldı */ }
+      }
       setMessage(streakError ? t.gpsActivity.savedNoStreak(entry.activityName) : t.gpsActivity.savedWithStreak(entry.activityName, row?.current_streak || null));
       setTimeout(onClose, 1200);
     } catch {
@@ -237,7 +266,8 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
     </div>}
 
     {phase === "summary" && <div className="gps-tracker-summary">
-      <GpsMapView route={route} interactive className="gps-map-view summary" captureRef={mapCaptureRef} />
+      <GpsMapView route={route} currentPosition={route[route.length - 1] || initialPosition} interactive className="gps-map-view summary" captureRef={mapCaptureRef} />
+      {route.length < 2 && <p className="gps-tracker-route-warning">{t.gpsActivity.routeTooShortHint}</p>}
       <div className="gps-tracker-stats">
         <div><span>{t.gpsActivity.statDuration}</span><strong>{formatDuration(elapsedMs)}</strong></div>
         <div><span>{t.gpsActivity.statDistance}</span><strong>{distanceKm.toFixed(2)} km</strong></div>
