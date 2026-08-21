@@ -2,7 +2,6 @@
 
 import { ChevronLeft, ChevronRight, Plus, Sparkles, Trash2, Utensils } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DailyEnergyRing } from "@/components/DailyEnergyRing";
 import { NutritionGoalsPanel } from "@/components/NutritionGoalsPanel";
 import { HydrationFasting } from "@/components/HydrationFasting";
 import { frequentMeals } from "@/lib/frequent-meals";
@@ -213,12 +212,19 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
   const selectedDate = useMemo(() => { const date = new Date(); date.setDate(date.getDate() + dateOffset); return localDateKey(date); }, [dateOffset]);
   const dailyEntries = useMemo(() => entries.filter((entry) => localDateKey(new Date(entry.consumedAt)) === selectedDate), [entries, selectedDate]);
   const totals = useMemo(() => dailyEntries.reduce((total, entry) => ({ calories: total.calories + entry.calories, protein: total.protein + entry.protein, carbs: total.carbs + entry.carbs, fat: total.fat + entry.fat }), { calories: 0, protein: 0, carbs: 0, fat: 0 }), [dailyEntries]);
-  const remaining = Math.max(0, nutritionGoal.calorieTarget - totals.calories);
+  // Antrenman/Hedefit Rota'da yakılan kalori hedefe eklenir (harcadıkça daha
+  // fazla yiyebilirsin) — ama yalnız BUGÜN için: `burnedKcal` bugünün
+  // toplamıdır, geçmiş bir güne (dateOffset !== 0) uygulanırsa yanlış olur.
+  // Ayrı bir "kalori dengesi" çemberi eskiden bu sayfanın en üstünde AYRICA
+  // duruyordu; aynı sayıyı iki kez, iki farklı görselle göstermek yerine
+  // artık tek gösterge (aşağıdaki calorie-hero) bu hesaba dahil ediyor.
+  const budget = nutritionGoal.calorieTarget + (dateOffset === 0 ? Math.max(0, burnedKcal) : 0);
+  const remaining = Math.max(0, budget - totals.calories);
   // Hedef aşıldığında yüzde 100'de sabitlenip "kalan 0" göstermek, aşımı
   // hedefe tam ulaşmaktan ayırt edilemez hâle getiriyordu. Aşım miktarını ayrı
   // tutuyoruz ki kullanıcı ne kadar geçtiğini görebilsin.
-  const overBy = Math.max(0, totals.calories - nutritionGoal.calorieTarget);
-  const rawProgress = Math.round((totals.calories / Math.max(1, nutritionGoal.calorieTarget)) * 100);
+  const overBy = Math.max(0, totals.calories - budget);
+  const rawProgress = Math.round((totals.calories / Math.max(1, budget)) * 100);
   const progress = Math.min(100, rawProgress);
 
   // Bu istek her öğün eklendiğinde otomatik tetiklenir ve nutrition_advice
@@ -496,36 +502,38 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
       <div className="date-switcher"><button type="button" aria-label={t.calorieTracker.previousDay} onClick={() => setDateOffset((day) => day - 1)}><ChevronLeft size={17} /></button><div><span>{dateOffset === 0 ? t.calorieTracker.today : t.calorieTracker.dailyLabel}</span><strong>{todayLabel(dateOffset, dateLocale)}</strong></div><button type="button" aria-label={t.calorieTracker.nextDay} disabled={dateOffset >= 0} onClick={() => setDateOffset((day) => Math.min(0, day + 1))}><ChevronRight size={17} /></button></div>
     </div>
 
-    {/* Ana ekrandaki çemberin tam hâli: alınan/harcanan/hedef dökümü artık
-        yalnız burada — ana ekrandaki kart tıklanınca buraya geliniyor. */}
-    <DailyEnergyRing userId={userId} burnedKcal={burnedKcal} fallbackTargetKcal={tdee} />
-
     {/* Günün özeti en üstte: bu ekranın ilk sorusu "ne kadar kaldı". Eskiden
         formun altındaydı ve kullanıcı öğün ekledikten sonra sonucu görmek
         için kaydırmak zorunda kalıyordu. Hedef DÜZENLEME paneli aşağıda
         kalır; o ayda bir dokunulan bir ayar. */}
-    <section className="calorie-hero">
-      <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}>
-        <div><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span></div>
-      </div>
-      <div className="calorie-hero-copy">
-        <div className="calorie-hero-numbers">
-          <div><span>{t.calorieTracker.todayIntake}</span><strong>{totals.calories}<em>kcal</em></strong></div>
-          <div><span>{t.calorieTracker.dailyGoal}</span><strong>{nutritionGoal.calorieTarget}<em>kcal</em></strong></div>
-          <p className={overBy ? "calorie-hero-percent over" : "calorie-hero-percent"}>{t.calorieTracker.percentOfGoal(rawProgress)}</p>
+    {/* Bento düzeni: masaüstünde günün özeti geniş, su/oruç kartı yanında dar
+        sütunda durur (Stitch "Bento Grid Layout") — telefonda alt alta akar. */}
+    <div className="nutrition-bento">
+      <section className="calorie-hero">
+        <div className={overBy ? "calorie-progress over" : "calorie-progress"} style={{ "--progress": `${progress}%` } as React.CSSProperties}>
+          <div><strong>{overBy ? `+${overBy}` : remaining}</strong><small>kcal</small><span>{overBy ? t.calorieTracker.overLabel : t.calorieTracker.remainingLabel}</span></div>
         </div>
-        <p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p>
-        {/* Makrolar artık çubuklu: "0/112g" metni tek başına ne kadar yol
-            alındığını göstermiyordu, kullanıcı oranı kafadan hesaplıyordu. */}
-        <div className="macro-row">
-          {macroBars.map((macro) => <span key={macro.key} style={{ "--macro-progress": `${Math.min(100, Math.round((macro.value / Math.max(1, macro.target)) * 100))}%` } as React.CSSProperties}>
-            <i className={macro.key} />
-            <small>{macro.label}</small>
-            <b>{macro.value}<em>/{macro.target}g</em></b>
-          </span>)}
+        <div className="calorie-hero-copy">
+          <div className="calorie-hero-numbers">
+            <div><span>{t.calorieTracker.todayIntake}</span><strong>{totals.calories}<em>kcal</em></strong></div>
+            <div><span>{t.calorieTracker.dailyGoal}</span><strong>{budget}<em>kcal</em></strong></div>
+            <p className={overBy ? "calorie-hero-percent over" : "calorie-hero-percent"}>{t.calorieTracker.percentOfGoal(rawProgress)}</p>
+          </div>
+          {dateOffset === 0 && burnedKcal > 0 && <p className="calorie-hero-burned">{t.calorieTracker.burnedNote(Math.round(burnedKcal))}</p>}
+          <p>{overBy ? t.calorieTracker.overMessage(overBy) : remaining ? t.calorieTracker.remainingMessage(remaining) : t.calorieTracker.goalReached}</p>
+          {/* Makrolar artık çubuklu: "0/112g" metni tek başına ne kadar yol
+              alındığını göstermiyordu, kullanıcı oranı kafadan hesaplıyordu. */}
+          <div className="macro-row">
+            {macroBars.map((macro) => <span key={macro.key} style={{ "--macro-progress": `${Math.min(100, Math.round((macro.value / Math.max(1, macro.target)) * 100))}%` } as React.CSSProperties}>
+              <i className={macro.key} />
+              <small>{macro.label}</small>
+              <b>{macro.value}<em>/{macro.target}g</em></b>
+            </span>)}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <HydrationFasting userId={userId} weightKg={weightKg} />
+    </div>
 
     <section className="food-entry-panel" id="food-entry-panel">
       <div className="section-title"><div><div className="eyebrow">{t.calorieTracker.addMealEyebrow}</div><h2>{t.calorieTracker.addMealTitle}</h2><p className="section-lead">{t.calorieTracker.lead}</p></div><span className="food-entry-note"><Sparkles size={14} /> {t.calorieTracker.quickAndPractical}</span></div>
@@ -620,8 +628,6 @@ export function CalorieTracker({ userId, bmr = 1600, tdee = 2100, weightKg = 70,
     <section className="meal-ai-advice" aria-labelledby="meal-ai-advice-title">
       <div className="meal-ai-icon" aria-hidden="true">✦</div><div><span>{t.calorieTracker.mealAdviceEyebrow}</span><h2 id="meal-ai-advice-title">{t.calorieTracker.mealAdviceTitle}</h2><p>{mealAdviceLoading ? t.calorieTracker.mealAdviceLoading : mealAdvice || t.calorieTracker.mealAdvicePreparing}</p><small>{mealAdviceSource === "ai" ? t.calorieTracker.mealAdviceAiNote : t.calorieTracker.mealAdviceFallbackNote} {t.calorieTracker.mealAdviceDisclaimer}</small></div><button type="button" disabled={mealAdviceLoading} onClick={() => setAdviceRevision((value) => value + 1)}>{mealAdviceLoading ? t.calorieTracker.refreshing : t.calorieTracker.refresh}</button>
     </section>
-
-    <HydrationFasting userId={userId} weightKg={weightKg} />
 
     {/* Hedef paneli en sonda: ayda bir dokunulan bir ayar, günlük akışın
         ortasında durunca her gün üzerinden kaydırılıyordu. */}

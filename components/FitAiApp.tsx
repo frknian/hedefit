@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { CalendarDays, Dumbbell, Footprints, House, LibraryBig, LineChart, UserRound, Utensils } from "lucide-react";
+import { Bolt, CalendarDays, Dumbbell, Footprints, House, LibraryBig, LineChart, UserRound, Utensils } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { AppShell, type ShellNavItem } from "@/components/layout/AppShell";
 import { AiInsight, StatTile } from "@/components/design";
@@ -655,6 +655,37 @@ function AiScanFigure({ compact = false, status = "scanning", stage = "profile" 
 function AiPlanInsights({ analysis, schedule, progression, fingerprint }: { analysis: AiPlanAnalysis; schedule: AiScheduleDay[]; progression: string[]; fingerprint: string }) {
   const t = useTranslations();
   return <section className="ai-insights"><div className="section-title"><div><div className="eyebrow">{t.insights.eyebrow}</div><h2>{t.insights.title}</h2></div><span className="analysis-id">{t.insights.analysisId(fingerprint || t.insights.local)}</span></div><div className="analysis-grid"><article><span>{t.insights.levelLabel}</span><strong>{analysis.experienceLevel}</strong><small>{t.insights.intensitySuffix(analysis.intensity)}</small></article><article><span>{t.insights.frequencyLabel}</span><strong>{analysis.weeklyFrequency}</strong><small>{t.insights.perSession(analysis.sessionMinutes)}</small></article><article><span>{t.insights.environmentLabel}</span><strong>{analysis.equipmentMode}</strong><small>{analysis.focusAreas.join(" · ")}</small></article></div><div className="adaptation-list"><div><span>{t.insights.whyDifferent}</span>{analysis.adaptations.map((adaptation) => <p key={adaptation}>✓ {adaptation}</p>)}</div><div><span>{t.insights.fourWeekProgress}</span>{progression.slice(0, 4).map((item, index) => <p key={`${item}-${index}`}><b>{index + 1}</b>{item}</p>)}</div></div>{schedule.length > 0 && <div className="week-schedule">{schedule.map((item) => <div key={`${item.day}-${item.focus}`}><span>{item.day}</span><strong>{item.focus}</strong><small>{t.insights.dayMinutes(item.durationMinutes)}</small></div>)}</div>}</section>;
+}
+
+/**
+ * Ana ekranda "Bugünün Planı" özeti (Stitch "Today's Workout Card").
+ *
+ * Antrenman sekmesindeki akıllı program listesiyle AYNI veriden çizilir
+ * (aiWorkouts/localPlan, aynı getMotionGuide) — iki farklı hareket listesi
+ * göstermemek için. Ev sahibi bileşen zaten filtreleyip en fazla dört hareket
+ * gönderir; "tümünü gör" antrenman sekmesine gider.
+ */
+function TodaysWorkoutCard({ exercises, level, fallback, onStart, onSeeAll }: { exercises: AiWorkout[]; level: string; fallback: boolean; onStart: () => void; onSeeAll: () => void }) {
+  const t = useTranslations();
+  if (!exercises.length) return null;
+  const preview = exercises.slice(0, 4);
+  return <section className="today-workout-card">
+    <div className="today-workout-head"><div className="eyebrow">{t.dashboard.todayEyebrow}</div><h2>{t.dashboard.myWorkout(level)}</h2>{fallback && <small className="programs-fallback">{t.programs.smartFallbackNote}</small>}</div>
+    <div className="today-workout-list">{preview.map((item, index) => {
+      const guide = getMotionGuide(item);
+      return <article key={`${item.name}-${index}`} className="today-workout-row">
+        <div className="today-workout-row-head">
+          <span className="today-workout-icon" aria-hidden="true"><Dumbbell className="size-5" /></span>
+          <div><strong>{item.name}</strong><small>{item.sets}{item.rest ? ` · ${item.rest}` : ""}</small></div>
+        </div>
+        <details className="how-to"><summary>{t.dashboard.howTo}</summary>
+          <ol className="mini-steps"><li>{guide.start}</li><li>{item.instructions}</li><li>{guide.finish}</li></ol>
+        </details>
+      </article>;
+    })}</div>
+    {exercises.length > preview.length && <button type="button" className="today-workout-seeall" onClick={onSeeAll}>{t.nav.workout} →</button>}
+    <button type="button" className="start-btn today-workout-start" onClick={onStart}><Bolt className="size-4" aria-hidden />{t.dashboard.startWorkout}</button>
+  </section>;
 }
 
 function AdaptivePlanCard({ adaptation, sessionCount }: { adaptation: TrainingAdaptation; sessionCount: number }) {
@@ -1979,11 +2010,21 @@ export default function Home() {
           <div className="home-column">
           <div className="dashboard-head"><div><h1 className="dashboard-greeting"><span>{t.dashboard.greeting(name || t.dashboard.defaultName)}<em>{t.dashboard.greetingEm}</em></span><ActivityStreak userId={authUser.id} compact /></h1></div></div>
           <GoalPlanCard compact bmi={bmi} onOpen={() => setGoalPlanOpen(true)} userId={authUser?.id} currentWeightKg={Number(weight) || null} profileBmr={energyMetrics?.bmr ?? null} />
+          <QuickActions onNavigate={navigateFromQuickAction} />
           <div className="home-top-row">
             <DailyEnergyRing compact userId={authUser?.id} burnedKcal={burnedTodayCalories} fallbackTargetKcal={energyMetrics?.tdee ?? null} onOpen={() => navigateFromQuickAction("nutrition")} />
             <StepCounterCard userId={authUser?.id} />
           </div>
-          <QuickActions onNavigate={navigateFromQuickAction} />
+          {/* Antrenman sekmesindekiyle AYNI liste (aiWorkouts ya da localPlan):
+              kullanıcı bugün ne yapacağını sekme değiştirmeden görür. */}
+          <TodaysWorkoutCard
+            exercises={aiWorkouts.length ? aiWorkouts : localPlan}
+            level={aiAnalysis?.experienceLevel || history[QUESTION.level] || t.exerciseLibrary.none}
+            fallback={!aiWorkouts.length && localPlan.length > 0}
+            onStart={() => startProgram(aiWorkouts.length ? aiWorkouts : localPlan, "smart")}
+            onSeeAll={() => setActiveView("workout")}
+          />
+          {sessionHistory.length > 0 && <AdaptivePlanCard adaptation={adaptation} sessionCount={sessionHistory.length} />}
           </div>
           </>}
           </>}

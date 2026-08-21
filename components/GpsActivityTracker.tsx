@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Pause, Play, Square } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { createActivityRepository } from "@/lib/activity-service";
 import { coreActivityCatalog, activityIntensityOptions, estimateActivityCalories, type ActivityIntensity } from "@/lib/sports";
 import { localDateKey, userTimeZone, type ActivityType } from "@/lib/streak";
 import { encodePolyline, routeDistanceKm, type LatLng } from "@/lib/polyline";
 import { getCurrentPosition, isGpsTrackingAvailable, startGpsTracking, stopGpsTracking, type TrackedPoint } from "@/lib/gps-tracking";
+import { isUsableGpsPoint, smoothSpeedMps } from "@/lib/gps-smoothing";
 import { connectHeartRateMonitor, type HeartRateMonitor } from "@/lib/ble-heart-rate";
 import { clearPersistedGpsSession, readPersistedGpsSession, writePersistedGpsSession } from "@/lib/gps-session-store";
 import { applyStepCredit, DEVICE_STEPS_STORAGE_KEY, estimateStepsFromDistance, type StoredStepState } from "@/lib/step-counter";
@@ -45,6 +47,12 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
   const [initialPosition, setInitialPosition] = useState<LatLng | null>(null);
 
   const [sharing, setSharing] = useState(false);
+  // Ham GPS hızı saniyeden saniyeye 0-8 km/s zıplayabilir (drift); canlı
+  // ekranda gösterilen değer bunun yerine yumuşatılmış hızdır (bkz.
+  // lib/gps-smoothing.ts). Sık güncellendiği için ref'te tutulur, ekrana
+  // ayrı bir state ile yansıtılır.
+  const smoothedSpeedRef = useRef(0);
+  const [displaySpeedMps, setDisplaySpeedMps] = useState(0);
   const watcherIdRef = useRef("");
   const hrMonitorRef = useRef<HeartRateMonitor | null>(null);
   /** Özet haritasının karesini paylaşım görseline aktarmak için. */
@@ -61,10 +69,11 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
     if (hrMonitorRef.current) void hrMonitorRef.current.disconnect();
   }, []);
 
-  // Her yeni konum/nabız noktasında oturumun TAMAMI diske yazılır — ekran
-  // kapanıp süreç öldürülürse rota kaybolmasın diye (bkz. lib/gps-session-store.ts).
+  // Yalnız DEVAM EDEN oturum diske yazılır. Özet ekranındaki bitmiş
+  // aktiviteyi yeniden yazmak, kaplama kapatılıp tekrar açıldığında eski
+  // rotayı "duraklatılmış" gibi geri getiriyordu.
   useEffect(() => {
-    if (!startedAt || phase === "idle" || phase === "unavailable") return;
+    if (!startedAt || (phase !== "tracking" && phase !== "paused")) return;
     writePersistedGpsSession({ activityKey, startedAt, points, hrSamples });
   }, [points, hrSamples, activityKey, startedAt, phase]);
 
@@ -82,45 +91,60 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
   const distanceKm = routeDistanceKm(route);
   const elapsedMs = startedAt ? (endedAt ? new Date(endedAt).getTime() : now) - new Date(startedAt).getTime() : 0;
   const elapsedMinutes = elapsedMs / 60000;
-  const lastPoint = points[points.length - 1];
-  const currentSpeedKmh = lastPoint?.speedMps != null ? Math.max(0, lastPoint.speedMps) * 3.6 : 0;
+  const currentSpeedKmh = displaySpeedMps * 3.6;
   const avgSpeedKmh = elapsedMinutes > 0.05 ? distanceKm / (elapsedMinutes / 60) : 0;
   const maxSpeedKmh = points.reduce((max, p) => (p.speedMps != null ? Math.max(max, p.speedMps * 3.6) : max), 0);
   const selectedActivity = TRACKABLE_ACTIVITIES.find((activity) => activity.key === activityKey) || TRACKABLE_ACTIVITIES[0];
   const estimatedCalories = selectedActivity ? estimateActivityCalories(selectedActivity.key, Math.round(elapsedMinutes), weightKg, intensity) : 0;
 
+  /**
+   * Doğruluğu kötü noktalar (bkz. lib/gps-smoothing.ts) rotaya hiç
+   * eklenmez — hem mesafeyi hem canlı hızı gerçekten sabote eden onlardır.
+   * Kabul edilen noktalarda hız yumuşatılarak gösterilir.
+   */
+  function acceptPoint(point: TrackedPoint) {
+    if (!isUsableGpsPoint(point)) return;
+    smoothedSpeedRef.current = smoothSpeedMps(smoothedSpeedRef.current, point.speedMps);
+    setDisplaySpeedMps(smoothedSpeedRef.current);
+    setPoints((current) => [...current, point]);
+  }
+
   async function handleStart() {
     setMessage("");
+    // Yeni aktivite, önceki bir oturumdan kalmış rota ile asla birleşmez.
+    clearPersistedGpsSession();
     setPoints([]);
     setEndedAt(null);
     setHrSamples([]);
+    smoothedSpeedRef.current = 0;
+    setDisplaySpeedMps(0);
     const start = new Date().toISOString();
     setStartedAt(start);
     setPhase("tracking");
-    watcherIdRef.current = await startGpsTracking(
-      (point) => setPoints((current) => [...current, point]),
-      (error) => setMessage(error),
-    );
+    watcherIdRef.current = await startGpsTracking(acceptPoint, (error) => setMessage(error));
   }
 
   async function handlePause() {
     if (watcherIdRef.current) await stopGpsTracking(watcherIdRef.current);
     watcherIdRef.current = "";
+    smoothedSpeedRef.current = 0;
+    setDisplaySpeedMps(0);
     setPhase("paused");
   }
 
   async function handleResume() {
     setPhase("tracking");
-    watcherIdRef.current = await startGpsTracking(
-      (point) => setPoints((current) => [...current, point]),
-      (error) => setMessage(error),
-    );
+    watcherIdRef.current = await startGpsTracking(acceptPoint, (error) => setMessage(error));
   }
 
   async function handleStop() {
     if (watcherIdRef.current) await stopGpsTracking(watcherIdRef.current);
     watcherIdRef.current = "";
     if (hrMonitorRef.current) { await hrMonitorRef.current.disconnect(); hrMonitorRef.current = null; setHrConnected(false); }
+    // Aktivite artık tamamlandı; yalnızca bu bileşenin özet state'inde
+    // kalır. Kullanıcı kaydetmeden kapatsa bile bir sonraki açılışta eski
+    // rota canlı oturum sanılarak açılmaz.
+    clearPersistedGpsSession();
     setEndedAt(new Date().toISOString());
     setPhase("summary");
   }
@@ -250,23 +274,28 @@ export function GpsActivityTracker({ userId, weightKg = 70, onClose }: { userId:
     </div>}
 
     {(phase === "tracking" || phase === "paused") && <div className="gps-tracker-live">
-      <GpsMapView route={route} currentPosition={route[route.length - 1] || initialPosition} className="gps-map-view live" />
-      <div className="gps-tracker-stats">
-        <div><span>{t.gpsActivity.statDuration}</span><strong>{formatDuration(elapsedMs)}</strong></div>
-        <div><span>{t.gpsActivity.statDistance}</span><strong>{distanceKm.toFixed(2)} km</strong></div>
-        <div><span>{t.gpsActivity.statSpeed}</span><strong>{currentSpeedKmh.toFixed(1)} km/s</strong></div>
-        <div><span>{t.gpsActivity.statHeartRate}</span><strong>{currentBpm != null ? `${currentBpm} bpm` : "–"}</strong></div>
+      {/* İstatistik kartları haritanın ÜSTÜNE biner; bu yüzden ikisi ortak bir
+          konumlandırma kutusunda durur. Kutu olmadan kartlar aşağıdaki nabız
+          bandı ve başlat/bitir düğmelerinin üstüne biniyordu. */}
+      <div className="gps-tracker-map-wrap">
+        <GpsMapView live route={route} currentPosition={route[route.length - 1] || initialPosition} className="gps-map-view live" />
+        <div className="gps-tracker-stats">
+          <div><span>{t.gpsActivity.statDuration}</span><strong>{formatDuration(elapsedMs)}</strong></div>
+          <div><span>{t.gpsActivity.statDistance}</span><strong>{distanceKm.toFixed(2)} km</strong></div>
+          <div><span>{t.gpsActivity.statSpeed}</span><strong>{currentSpeedKmh.toFixed(1)} km/s</strong></div>
+          <div><span>{t.gpsActivity.statHeartRate}</span><strong>{currentBpm != null ? `${currentBpm} bpm` : "–"}</strong></div>
+        </div>
       </div>
       {!hrConnected && <button type="button" className="gps-tracker-hr-connect" disabled={hrConnecting} onClick={() => void handleConnectHeartRate()}>{hrConnecting ? t.gpsActivity.connectingHeartRate : t.gpsActivity.connectHeartRate}</button>}
       <div className="gps-tracker-controls">
-        {phase === "tracking" && <button type="button" onClick={() => void handlePause()}>{t.gpsActivity.pause}</button>}
-        {phase === "paused" && <button type="button" onClick={() => void handleResume()}>{t.gpsActivity.resume}</button>}
-        <button type="button" className="gps-tracker-stop" onClick={() => void handleStop()}>{t.gpsActivity.stop}</button>
+        {phase === "tracking" && <button type="button" className="gps-tracker-round" aria-label={t.gpsActivity.pause} onClick={() => void handlePause()}><Pause className="size-6" aria-hidden /></button>}
+        {phase === "paused" && <button type="button" className="gps-tracker-round" aria-label={t.gpsActivity.resume} onClick={() => void handleResume()}><Play className="size-6" aria-hidden /></button>}
+        <button type="button" className="gps-tracker-stop gps-tracker-round" aria-label={t.gpsActivity.stop} onClick={() => void handleStop()}><Square className="size-6" aria-hidden /></button>
       </div>
     </div>}
 
     {phase === "summary" && <div className="gps-tracker-summary">
-      <GpsMapView route={route} currentPosition={route[route.length - 1] || initialPosition} interactive className="gps-map-view summary" captureRef={mapCaptureRef} />
+      <GpsMapView reveal route={route} currentPosition={route[route.length - 1] || initialPosition} interactive className="gps-map-view summary" captureRef={mapCaptureRef} />
       {route.length < 2 && <p className="gps-tracker-route-warning">{t.gpsActivity.routeTooShortHint}</p>}
       <div className="gps-tracker-stats">
         <div><span>{t.gpsActivity.statDuration}</span><strong>{formatDuration(elapsedMs)}</strong></div>

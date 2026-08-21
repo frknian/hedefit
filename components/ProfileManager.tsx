@@ -69,6 +69,14 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
   const [exporting, setExporting] = useState(false);
   const deleteEmailRef = useRef<HTMLInputElement>(null);
   const age = useMemo(() => calculateAge(draft.birthDate), [draft.birthDate]);
+  // Stitch "Physical Measurements" ızgarası: aynı VKİ formülü (bkz.
+  // FitAiApp'teki `bmi`), yalnız burada gerçek veri yoksa "22.4" gibi bir
+  // varsayılana düşmüyor — profil ekranı kendi cevabını gösterir.
+  const profileBmi = useMemo(() => {
+    const h = (draft.heightCm ?? 0) / 100;
+    const w = draft.weightKg ?? 0;
+    return h && w ? (w / (h * h)).toFixed(1) : null;
+  }, [draft.heightCm, draft.weightKg]);
   const shownAvatar = avatarPreview || avatarUrl;
   const unit = useWeightUnit();
 
@@ -248,6 +256,14 @@ export function ProfileManager({ user, profile, avatarUrl, onSaved, onFrozen, on
     <div className="profile-manager-intro">
       <div className="eyebrow">{t.profileManager.eyebrow}</div><h2 id="profile-manager-title">{t.profileManager.title}</h2><p>{t.profileManager.body}</p>
       <div className="profile-avatar-card"><div className="profile-avatar-preview">{shownAvatar ? <Image className="profile-avatar-image" src={shownAvatar} alt={t.profileManager.avatarAlt} width={76} height={76} unoptimized /> : <span>{draft.displayName.charAt(0).toLocaleUpperCase(dateLocale) || "S"}</span>}</div><div><strong>{t.profileManager.profilePhoto}</strong><small>{t.profileManager.photoSizeHint}</small><label className="profile-avatar-button">{t.profileManager.changePhotoPrefix} {shownAvatar ? t.profileManager.changePhoto : t.profileManager.uploadPhoto}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseAvatar} /></label></div></div>
+      {/* Stitch "Physical Measurements" bento kartlarının sade karşılığı: boy,
+          kilo ve VKİ formda zaten düzenlenebilir; burada yalnız özet olarak
+          büyük punto ile görünür. */}
+      <div className="profile-stat-row">
+        <div className="profile-stat-tile"><span>{t.profileManager.heightLabel}</span><strong>{draft.heightCm ?? "—"}<small>cm</small></strong></div>
+        <div className="profile-stat-tile"><span>{t.profileManager.weightLabel(unit.toLocaleUpperCase(dateLocale))}</span><strong>{draft.weightKg ? kgToInputValue(draft.weightKg, unit) : "—"}<small>{unit}</small></strong></div>
+        <div className="profile-stat-tile"><span>{t.dashboard.bmiLabel}</span><strong>{profileBmi ?? "—"}</strong></div>
+      </div>
       <div className="profile-account"><span>{t.profileManager.verifiedAccount}</span><strong>{user.email}</strong><small>{t.profileManager.emailVerified}</small></div>
     </div>
 

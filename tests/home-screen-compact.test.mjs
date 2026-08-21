@@ -63,8 +63,9 @@ test("kalori çemberi ve adım sayar yan yana, kısayollar üç sütun ve kırp�
   const topRow = css.match(/\.home-top-row \{([^}]*)\}/)?.[1] ?? "";
   assert.match(topRow, /display:grid/);
   assert.match(topRow, /grid-template-columns:repeat\(auto-fit/, "iki sütun; adım kartı yoksa tek çocuk genişler");
-  // Dört sütunda "Hareket kütüphanesi"/"Aktivite günlüğüm" kutuya sığmıyordu.
-  assert.match(css, /\.quick-actions-list \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \}/);
+  // Stitch "Shortcuts Grid": iki sütun, her kutuda ikon + etiket yan yana.
+  // (Üç sütunda ikon eklenince etiketler yeniden kırpılmaya başlıyordu.)
+  assert.match(css, /\.quick-actions-list \{ grid-template-columns:repeat\(2,minmax\(0,1fr\)\); \}/);
   const button = css.match(/\.quick-actions-list button,\.quick-actions-picker button \{([^}]*)\}/)?.[1] ?? "";
   assert.doesNotMatch(button, /text-overflow:ellipsis|white-space:nowrap/, "etiket kırpılmamalı, sarmalı");
   assert.match(button, /overflow-wrap:anywhere/);
@@ -97,7 +98,8 @@ test("hazır programlar tek listede, kendi programların en altta", () => {
   assert.ok(panel > 0 && customRow > panel, "kendi programların en altta olmalı");
   // Üç kart da her zaman listede; dar ekranda alt alta, geniş ekranda yan yana.
   assert.equal(training.split('className="program-card program-panel-item"').length - 1, 3);
-  assert.match(css, /@media \(min-width:860px\) \{ \.program-panel \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \} \}/);
+  // Akıllı Program tam genişlikte öne çıkan kart, diğer ikisi altında yan yana.
+  assert.match(css, /@media \(min-width:860px\) \{ \.program-panel \{ grid-template-columns:repeat\(2,minmax\(0,1fr\)\); \} \.program-panel-item:first-child \{ grid-column:1 \/ -1; \} \}/);
   const panelBlock = training.slice(panel, customRow);
   assert.match(panelBlock, /t\.programs\.smartTitle/);
   assert.match(panelBlock, /t\.programs\.fullBodyTitle/);

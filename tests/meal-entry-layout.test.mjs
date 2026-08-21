@@ -143,7 +143,9 @@ test("aktivite kaplamaları görünüm dallarının dışında kalır", () => {
 });
 
 test("ana ekran hedef planı, enerji satırı ve kısayolları bu sırayla dizer", () => {
-  // İstenen sıra: selamlama → hedef planı → kalori dengesi + adım sayar → kısayollar.
+  // İstenen sıra: selamlama → hedef planı → kısayollar → kalori dengesi + adım
+  // sayar → bugünün antrenmanı. Kısayollar yukarı alındı: en sık kullanılan
+  // eylemler başparmakla ilk erişilen yerde olmalı (Stitch ana ekran düzeni).
   const homeStart = app.indexOf('className="dashboard-head"');
   const home = app.slice(homeStart, app.indexOf("</section>", homeStart));
   const at = (needle) => {
@@ -156,7 +158,8 @@ test("ana ekran hedef planı, enerji satırı ve kısayolları bu sırayla dizer
   const energy = at('className="home-top-row"');
   const actions = at("<QuickActions");
   assert.ok(header < goal, "selamlama en üstte olmalı");
-  assert.ok(goal < energy, "hedef planı enerji satırının üstünde olmalı");
-  assert.ok(energy < actions, "kısayollar en altta olmalı");
+  assert.ok(goal < actions, "hedef planı kısayolların üstünde olmalı");
+  assert.ok(actions < energy, "kısayollar enerji satırının üstünde olmalı");
+  assert.ok(energy < at("<TodaysWorkoutCard"), "bugünün antrenmanı enerji satırının altında olmalı");
   assert.doesNotMatch(home, /<MobilePager/, "sayfalama kaldırılmalı");
 });

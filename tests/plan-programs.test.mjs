@@ -223,7 +223,16 @@ test("antrenman sekmesi tek bir program sistemi gösterir", () => {
   // listesi vardı; ikisi farklı hareketler gösterip aynı şeyi anlatıyordu.
   assert.match(appSource, /activeView === "workout" \? <>\s*\{\/\*[^]*?<TrainingPrograms/, "antrenman sekmesi program sistemine bağlanmamış");
   assert.doesNotMatch(appSource, /workout-plan-list/, "günün antrenmanı bloğu kalmış");
-  assert.doesNotMatch(appSource, /t\.dashboard\.myWorkout/, "günün antrenmanı başlığı kalmış");
+  // Yasak olan, ANTRENMAN SEKMESİNDE program listesiyle yarışan ikinci bir
+  // liste. Ana ekrandaki "Bugünün antrenmanı" kartı ayrı bir şey: aynı
+  // kaynaktan (aiWorkouts/localPlan) beslenir ve "Antrenmanım" sekmesine
+  // götürür, farklı hareketler göstermez.
+  const workoutTab = appSource.slice(
+    appSource.indexOf('activeView === "workout" ? <>'),
+    appSource.indexOf('className="home-column"'),
+  );
+  assert.ok(workoutTab.length > 0, "antrenman sekmesi bloğu bulunamadı");
+  assert.doesNotMatch(workoutTab, /t\.dashboard\.myWorkout/, "antrenman sekmesinde ikinci bir günün antrenmanı listesi kalmış");
   assert.doesNotMatch(appSource, /<PlanEditor/, "plan düzenleyici yerini program kurucuya bıraktı");
   // Eski tarama sisteminden hiçbir kalıntı kalmamalı.
   for (const dead of ["browseProgram", "browseDetail", "regionPickerOpen", "startBrowseSession"]) {

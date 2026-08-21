@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
+import { CalendarDays, Droplet, History, LibraryBig, ListChecks, LineChart, Play, Plus, Utensils } from "lucide-react";
 import { QUICK_ACTIONS, setStoredQuickActionIds, toggleQuickActionId, useQuickActionIds, type AppView } from "@/lib/quick-actions";
 import { useTranslations, type Dictionary } from "@/lib/i18n/translate";
 
@@ -8,6 +9,22 @@ function actionLabel(t: Dictionary, id: string) {
   const labels = t.quickActions as unknown as Record<string, string>;
   return labels[id] ?? id;
 }
+
+// Kısayol ikonları: Stitch tasarımındaki "lime/turuncu vurgulu ikon + etiket"
+// kartını eşlemek için. Isı taşıyan eylemler (aktivite başlat, su ekle)
+// turuncu; geri kalanı marka lime'ı alır.
+const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  startWorkout: Play,
+  readyPrograms: ListChecks,
+  startActivity: Plus,
+  activityLog: History,
+  addMeal: Utensils,
+  water: Droplet,
+  progress: LineChart,
+  calendar: CalendarDays,
+  library: LibraryBig,
+};
+const HEAT_ACTIONS = new Set(["startActivity", "water"]);
 
 /**
  * Ana ekrandaki kısayol şeridi. Hedef görünüme geçer, gerekiyorsa oradaki
@@ -41,10 +58,14 @@ export function QuickActions({ onNavigate }: { onNavigate: (view: AppView, ancho
           onClick={() => setStoredQuickActionIds(toggleQuickActionId(selected, action.id))}
         >{actionLabel(t, action.id)}</button>;
       })}</div>
-    </> : <div className="quick-actions-list">{visible.map((action) => <button
-      type="button"
-      key={action.id}
-      onClick={() => onNavigate(action.view, action.anchor, action.overlay)}
-    >{actionLabel(t, action.id)}</button>)}</div>}
+    </> : <div className="quick-actions-list">{visible.map((action) => {
+      const Icon = ACTION_ICONS[action.id];
+      return <button
+        type="button"
+        key={action.id}
+        className={HEAT_ACTIONS.has(action.id) ? "heat" : ""}
+        onClick={() => onNavigate(action.view, action.anchor, action.overlay)}
+      >{Icon && <Icon className="quick-action-icon" />}<span>{actionLabel(t, action.id)}</span></button>;
+    })}</div>}
   </section>;
 }

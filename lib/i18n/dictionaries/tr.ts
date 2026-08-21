@@ -362,6 +362,7 @@ export const tr = {
     todayIntake: "BUGÜN ALINAN",
     percentOfGoal: (percentage: number) => `Hedefinin %${percentage}'i`,
     dailyGoal: "GÜNLÜK HEDEF",
+    burnedNote: (kcal: number) => `Bugün antrenman/aktivitede ${kcal} kcal yaktın; hedefine eklendi.`,
     remainingMessage: (remaining: number) => `${remaining} kcal hakkın kaldı. Dengeli bir sonraki öğün planlayabilirsin.`,
     goalReached: "Günlük hedefe ulaştın. Bugünkü açlığını ve antrenmanını dikkate al.",
     macroProtein: "Protein",

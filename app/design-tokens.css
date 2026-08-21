@@ -96,6 +96,10 @@
   --hf-primary-strong: #5d7100;
   --hf-primary-soft: #eef7cf;
   --hf-primary-fixed-dim: #b6d24b;
+  /* Stitch "Kinetic Precision": lime düğme metni her zaman bu neredeyse-siyah
+     tonu alır, temaya göre değişmez — koyu temada on-primary-container'ın
+     yeşilimsi #2a3400'ünden daha yüksek kontrast verir. */
+  --hf-on-lime-text: #1c1c1a;
 
   --hf-secondary: #a0410b;
   --hf-on-secondary: #ffffff;
@@ -223,6 +227,7 @@
   --color-hf-on-primary-container: var(--hf-on-primary-container);
   --color-hf-primary-strong: var(--hf-primary-strong);
   --color-hf-primary-soft: var(--hf-primary-soft);
+  --color-hf-on-lime-text: var(--hf-on-lime-text);
 
   --color-hf-secondary: var(--hf-secondary);
   --color-hf-on-secondary: var(--hf-on-secondary);

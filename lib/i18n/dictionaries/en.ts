@@ -364,6 +364,7 @@ export const en: typeof tr = {
     todayIntake: "TAKEN TODAY",
     percentOfGoal: (percentage: number) => `${percentage}% of your goal`,
     dailyGoal: "DAILY GOAL",
+    burnedNote: (kcal: number) => `You burned ${kcal} kcal from training/activity today; added to your goal.`,
     remainingMessage: (remaining: number) => `You have ${remaining} kcal left. You can plan a balanced next meal.`,
     goalReached: "You've reached your daily goal. Consider your hunger and training today.",
     macroProtein: "Protein",
