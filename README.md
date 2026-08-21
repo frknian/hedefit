@@ -42,18 +42,33 @@ Set ve dinlenme sayaçları, ağırlık · tekrar · zorluk kaydı. Bir önceki
 performansına bakıp güvenli bir sonraki adım önerir — ağrı veya yüksek
 yorgunluk bildirdiysen **yükü artırmayı reddeder**.
 
-### 106 hareket, hepsi animasyonlu
+### 873 hareket, hepsi animasyonlu
 Her hareketin nasıl yapıldığını gösteren yerel animasyon kareleri, kas grubu ve
 ekipman filtreleri, Türkçe hareket ve kas adları.
+
+### Hedefit Rota — canlı GPS takibi
+Yürüyüş, koşu ve bisiklet için haritada canlı rota kaydı: mesafe, süre, tempo,
+hız ve harcanan kalori. Uygulama arka plana atılsa ya da öldürülse bile
+devam eden kayıt kaybolmaz, açıldığında kaldığın yerden geri yüklenir.
+Bittiğinde rota görselini paylaşabilirsin.
+
+Bluetooth (BLE) nabız kayışın varsa bağlayıp anlık nabzını da kaydedebilirsin.
+GPS'e uygun olmayan sporlar (yüzme, kürek vb.) manuel aktivite günlüğünde kalır.
+
+### Adım sayar
+Günlük adımların cihazın kendi sensöründen okunur; Android'de ön plan servisiyle
+uygulama kapalıyken de sayılır. Kendi günlük adım hedefini belirleyebilirsin.
 
 ### AI kalori takibi
 - **Yazarak** — yemek adını ve tarttığın gramajı gir; yapay zeka porsiyonun
   kalori, protein, karbonhidrat, yağ ve lif değerlerini hesaplasın
+- **AI beslenme önerisi** — kalan kalori ve makro hedefine göre öğün önerisi al
 
 ### İlerlemeni gör
 Vücut ölçümleri ve trend grafikleri, tahmini 1RM ile kişisel rekorlar, günlük
-seri takibi, koşu/yürüyüş/bisiklet/yüzme gibi aktivite kayıtları ve haftalık
-yapay zeka değerlendirmesi.
+seri takibi, adım geçmişi, kaydedilmiş rotaların haritalı geçmişi,
+koşu/yürüyüş/bisiklet/yüzme gibi aktivite kayıtları ve haftalık yapay zeka
+değerlendirmesi.
 
 ### AI koç sohbeti
 Programın, hareketlerin veya beslenmen hakkında soru sor. Koç senin profilini
@@ -82,20 +97,28 @@ Türkçe ve İngilizce · tüm verilerini tek JSON dosyası olarak indirme
 | Antrenman planı, oynatıcı, hareket kütüphanesi | ✔ | ✔ |
 | Manuel öğün kaydı ve makro takibi | ✔ | ✔ |
 | Ölçümler, rekorlar, seri, takvim | ✔ | ✔ |
-| AI koç sohbeti | günde 5 mesaj | günde 20 mesaj |
-| Yazarak AI besin tahmini | günde 3 öğün | günde 20 öğün |
-| Planı AI ile yeniden düzenleme | ayda 1 | adil kullanım kapsamında |
-| Haftalık AI değerlendirmesi | örnek özet | tam kişisel analiz |
-| Hedef tahmini ve gelişmiş içgörüler | — | ✔ |
+| Hedefit Rota, adım sayar, aktivite günlüğü | ✔ | ✔ |
+| AI koç sohbeti | günde 5 mesaj | sınırsız |
+| Yazarak AI besin tahmini | günde 3 | sınırsız |
+| AI beslenme önerisi | günde 5 | sınırsız |
+| Haftalık AI değerlendirmesi | 2 haftada 1 | her hafta |
+| Planı AI ile yeniden düzenleme | günde 3 | sınırsız |
 
 Premium: **₺89/ay** veya **₺799/yıl**.
+
+> Ödeme altyapısı henüz açılmadı; premium erişim şimdilik iletişim yoluyla
+> veriliyor.
 
 Ücretsiz kullanıcı günlük AI hakkını doldurduğunda, isterse kısa bir ödüllü
 reklam izleyip o gün için ekstra hak kazanabilir (bkz. Gizliliğin bölümü).
 
 ## Gizliliğin
 
-- **Konum toplanmaz.** Uygulamada GPS izni yok.
+- **Konumun yalnızca senin kaydettiğin rota içindir.** Hedefit Rota'yı
+  başlattığında GPS izni istenir; kayıt bittiğinde rota tek bir kodlanmış
+  çizgi olarak yalnızca senin hesabına yazılır (satır bazlı erişim kuralları
+  ile korunur), üçüncü taraflara gönderilmez. Rotayı silebilir, izni
+  reddedersen uygulamanın geri kalanını kullanmaya devam edebilirsin.
 - **Reklam yalnızca isteğe bağlı.** Ücretsiz kullanıcı, günlük AI hakkı dolduğunda isterse
   ödüllü bir reklam (Google AdMob) izleyerek ekstra hak kazanabilir; sürekli görünen banner
   veya interstitial reklam yoktur. AdMob, reklam kimliği gibi verileri Google'ın kendi
@@ -146,8 +169,8 @@ does the opposite: it gets to know you on day one, then **listens after every
 workout**. Too hard, and it backs the load off. Too easy, and it pushes. Report
 pain somewhere, and it routes around that area.
 
-There's a nutrition side too — log what you eat by photographing it or entering
-the food name and measured weight for an AI calorie and macro estimate.
+There's a nutrition side too — enter the food name and measured weight, and the
+AI estimates calories and macros for that portion.
 
 ## Highlights
 
@@ -162,20 +185,34 @@ Set and rest timers, weight · reps · effort logging. It reads your last
 performance to suggest a safe next step — and **refuses to raise the load** if
 you reported pain or high fatigue.
 
-### 106 exercises, all animated
+### 873 exercises, all animated
 Local animation frames showing how each move is performed, filters by muscle
 group and equipment, exercise and muscle names in both languages.
 
+### Hedefit Rota — live GPS tracking
+Live route recording on a map for walking, running and cycling: distance,
+duration, pace, speed and calories burned. An in-progress recording survives
+the app being backgrounded or killed — it is restored where you left off. When
+you finish, you can share the route image.
+
+Pair a Bluetooth (BLE) heart rate strap to record live BPM alongside it.
+Sports GPS can't measure (swimming, rowing and the like) stay in the manual
+activity log.
+
+### Step counter
+Daily steps are read from the device's own sensor; on Android a foreground
+service keeps counting while the app is closed. You set your own daily goal.
+
 ### AI calorie tracking
-- **Photo** — snap your plate, let the AI identify the meal and estimate
-  portion size and macros
 - **Text** — enter the food name and measured weight; AI estimates calories,
   protein, carbohydrates, fat and fiber for that portion
+- **AI meal suggestion** — get a meal idea that fits your remaining calorie and
+  macro budget
 
 ### Watch yourself progress
 Body measurements with trend charts, personal records via estimated 1RM, daily
-streaks, activity logging for running, walking, cycling and swimming, and a
-weekly AI review.
+streaks, step history, a mapped history of your recorded routes, activity
+logging for running, walking, cycling and swimming, and a weekly AI review.
 
 ### AI coach chat
 Ask about your program, a specific movement, or your nutrition. The coach
@@ -201,22 +238,27 @@ Turkish and English · export all your data as a single JSON file
 | Training plan, player, exercise library | ✔ | ✔ |
 | Manual meal and macro tracking | ✔ | ✔ |
 | Measurements, records, streaks, calendar | ✔ | ✔ |
-| AI coach chat | 5 messages/day | 20 messages/day |
-| Meal photo analysis | 1 photo/day | 10 photos/day |
-| AI nutrition estimate from text | 3 meals/day | 20 meals/day |
-| AI plan regeneration | 1/month | fair-use access |
-| Weekly AI review | sample summary | full personal analysis |
-| Goal forecast and advanced insights | — | ✔ |
+| Hedefit Rota, step counter, activity log | ✔ | ✔ |
+| AI coach chat | 5 messages/day | unlimited |
+| AI nutrition estimate from text | 3/day | unlimited |
+| AI meal suggestion | 5/day | unlimited |
+| Weekly AI review | every 2 weeks | every week |
+| AI plan regeneration | 3/day | unlimited |
 
 Premium: **₺89/month** or **₺799/year** in Türkiye.
+
+> Payments aren't live yet; premium access is currently granted on request.
 
 Free users who hit their daily AI limit can optionally watch a short rewarded
 ad for one extra use that day (see Your privacy below).
 
 ## Your privacy
 
-- **Meal photos aren't stored.** Only the result (name, grams, macros) is saved.
-- **No location collected.** The app requests no GPS permission.
+- **Location is only for the route you record.** GPS permission is requested
+  when you start Hedefit Rota; when the recording ends the route is stored as a
+  single encoded line on your account alone (protected by row-level access
+  rules) and never sent to third parties. You can delete a route, and if you
+  decline the permission the rest of the app keeps working.
 - **Ads are opt-in only.** When a free user hits their daily AI limit, they can choose to
   watch a rewarded ad (Google AdMob) for extra usage; there are no always-on banner or
   interstitial ads. AdMob processes data like the advertising ID under Google's own

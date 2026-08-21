@@ -58,3 +58,20 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Yerel model eğitim/dönüştürme çalışma alanı (repoya girmez)
+.hedefit-ml/
+
+# Android Studio / IntelliJ proje ayarları (kişiye ve makineye özel)
+android/.idea/
+.idea/
+
+# Yerel model benchmark çıktıları
+/.benchmark/
+
+# Supabase CLI geçici çalışma dizini
+supabase/.temp/
+
+# Python derleme artıkları (scripts/ml)
+__pycache__/
+*.pyc

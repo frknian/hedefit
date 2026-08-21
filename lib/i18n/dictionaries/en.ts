@@ -1534,7 +1534,7 @@ export const en: typeof tr = {
   },
   premium: {
     title: "Hedefit Premium",
-    subtitle: "More AI coaching, higher daily limits.",
+    subtitle: "AI coaching with no daily limits.",
     freeLabel: "Free",
     premiumLabel: "Premium",
     priceMonthly: "₺89/month",
@@ -1550,10 +1550,10 @@ export const en: typeof tr = {
       nutritionAdvice: "5/day",
     },
     premiumLimits: {
-      chat: "20/day",
-      nutritionText: "30/day",
+      chat: "Unlimited",
+      nutritionText: "Unlimited",
       weeklyReview: "Every week",
-      nutritionAdvice: "20/day",
+      nutritionAdvice: "Unlimited",
     },
     ctaUpgrade: "Upgrade to Premium",
     comingSoonNotice: "Payments are launching soon. For premium access now, get in touch with us.",

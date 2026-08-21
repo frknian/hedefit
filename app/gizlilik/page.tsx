@@ -15,7 +15,7 @@ export default function GizlilikPage() {
       <h1 className="mb-1 text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
         Hedefit Gizlilik Politikası
       </h1>
-      <p className="mb-8 text-sm text-neutral-500">Son güncelleme: 26 Temmuz 2026</p>
+      <p className="mb-8 text-sm text-neutral-500">Son güncelleme: 21 Ağustos 2026</p>
 
       <Section title="1. Veri sorumlusu">
         <p>
@@ -82,18 +82,9 @@ export default function GizlilikPage() {
         <h3 className="mt-4 mb-1 font-medium">2.3 Fotoğraflar</h3>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <strong>Öğün fotoğrafı:</strong> Kalori tahmini için çektiğiniz fotoğraf, analiz
-            amacıyla yapay zeka sağlayıcımıza (Moonshot AI&apos;nin Kimi modelleri) gönderilir.
-            Fotoğrafın kendisi sunucularımızda saklanmaz; yalnızca analiz sonucu (besin adı,
-            gramaj, makrolar) kaydedilir.
-          </li>
-          <li>
-            <strong>Barkod tarama:</strong> Barkod tamamen cihazınızda okunur; hiçbir görüntü
-            veya veri sunucuya ya da üçüncü tarafa gönderilmez.
-          </li>
-          <li>
             <strong>İsteğe bağlı vücut fotoğrafı:</strong> Program kişiselleştirmesi için
-            gönderebilirsiniz. Zorunlu değildir ve saklanmaz.
+            gönderebilirsiniz. Zorunlu değildir; plan üretilirken yapay zeka sağlayıcımıza
+            iletilir ve sunucularımızda saklanmaz.
           </li>
           <li>
             <strong>Profil fotoğrafı:</strong> Yüklerseniz özel (public olmayan) depolamada
@@ -102,12 +93,33 @@ export default function GizlilikPage() {
         </ul>
 
         <h3 className="mt-4 mb-1 font-medium">2.4 Cihaz izinleri</h3>
+        <p className="mb-2">
+          Aşağıdaki izinlerin tamamı isteğe bağlıdır ve yalnızca ilgili özelliği ilk
+          kullandığınızda istenir. Reddederseniz uygulamanın geri kalanı çalışmaya devam eder.
+        </p>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <strong>Kamera:</strong> barkod tarama ve öğün fotoğrafı
+            <strong>Kamera ve fotoğraf arşivi:</strong> isteğe bağlı vücut fotoğrafı ile profil
+            fotoğrafı çekme veya seçme
           </li>
           <li>
-            <strong>Fotoğraf arşivi:</strong> öğün/profil fotoğrafı seçme
+            <strong>Konum (GPS):</strong> Hedefit Rota ile yürüyüş, koşu ve bisiklet
+            aktivitelerinde rotanızı, mesafenizi ve tempinizi kaydetmek. Ekran kapalıyken veya
+            uygulama arka plandayken kaydın kesilmemesi için arka plan konum izni de istenir;
+            konum yalnızca siz bir kayıt başlattığınızda okunur.
+          </li>
+          <li>
+            <strong>Hareket ve aktivite tanıma:</strong> günlük adım sayınızı cihazın kendi
+            sensöründen okumak. Android&apos;de uygulama kapalıyken de sayabilmek için bir ön
+            plan servisi (kalıcı bildirimle) çalışır.
+          </li>
+          <li>
+            <strong>Sağlık verisi (adım okuma):</strong> iOS Sağlık ve Android Health Connect
+            üzerinden yalnızca adım sayınız okunur; bu servislere veri yazılmaz.
+          </li>
+          <li>
+            <strong>Bluetooth:</strong> isteğe bağlı nabız kayışınıza bağlanıp canlı nabzınızı
+            göstermek ve aktiviteye kaydetmek
           </li>
           <li>
             <strong>Bildirimler:</strong> antrenman hatırlatmaları
@@ -117,13 +129,27 @@ export default function GizlilikPage() {
             saat dilimi okunur ve kaydedilir
           </li>
         </ul>
-        <p className="mt-2">Konum (GPS) verisi toplanmaz.</p>
+
+        <h3 className="mt-4 mb-1 font-medium">2.5 Konum ve rota verisi</h3>
+        <p>
+          Hedefit Rota ile kaydettiğiniz aktivitenin GPS noktaları, kayıt bittiğinde tek bir
+          kodlanmış çizgi (polyline) olarak hesabınıza yazılır. Bu veri satır bazlı erişim
+          kurallarıyla korunur: yalnızca siz okuyabilirsiniz. Rota verisi yapay zeka
+          sağlayıcısına, reklam ağına veya başka bir üçüncü tarafa gönderilmez ve
+          pazarlama amacıyla kullanılmaz. Bir aktiviteyi sildiğinizde rotası da silinir.
+          Rotanızın görselini paylaşmayı yalnızca siz seçersiniz; paylaşım cihazınızın kendi
+          paylaşım menüsüyle yapılır.
+        </p>
       </Section>
 
       <Section title="3. Verileri neden işliyoruz">
         <ul className="list-disc space-y-1 pl-5">
           <li>Kişisel antrenman ve beslenme planı üretmek</li>
           <li>İlerlemenizi zaman içinde takip etmek ve göstermek</li>
+          <li>
+            Kaydettiğiniz rotayı, günlük adım sayınızı ve aktivite geçmişinizi size geri
+            göstermek
+          </li>
           <li>Antrenman hatırlatmaları göndermek</li>
           <li>Hesabınızı güvenli tutmak (e-posta doğrulama, oturum yönetimi)</li>
         </ul>
@@ -154,19 +180,17 @@ export default function GizlilikPage() {
               <tr className="border-b border-neutral-200 align-top dark:border-neutral-800">
                 <td className="py-2 pr-3">AI sağlayıcısı (Moonshot AI, Kimi modelleri)</td>
                 <td className="py-2 pr-3">
-                  Plan üretimi, öğün fotoğrafı analizi, koç sohbeti, haftalık değerlendirme
+                  Plan üretimi, yazdığınız besinin kalori/makro tahmini, koç sohbeti, haftalık
+                  değerlendirme
                 </td>
                 <td className="py-2">
-                  Anonim profil özeti, öğün fotoğrafı, sohbet mesajları. Kimlik bilgileriniz
+                  Anonim profil özeti, gönderdiyseniz isteğe bağlı vücut fotoğrafı, yazdığınız
+                  besin adı ve gramajı, sohbet mesajları. Konum ve rota verisi
+                  gönderilmez. Kimlik bilgileriniz
                   (e-posta, ad) gönderilmez. Kalori, kilo ve ilerleme hesapları AI
                   sağlayıcısına yaptırılmaz; kendi sunucumuzda hesaplanır. Acil sağlık
                   belirtisi içeren mesajlar AI sağlayıcısına hiç gönderilmez.
                 </td>
-              </tr>
-              <tr className="border-b border-neutral-200 align-top dark:border-neutral-800">
-                <td className="py-2 pr-3">Open Food Facts</td>
-                <td className="py-2 pr-3">Ürün adı ile besin araması</td>
-                <td className="py-2">Yalnızca aradığınız ürün adı</td>
               </tr>
               <tr className="align-top">
                 <td className="py-2 pr-3">Google AdMob</td>

@@ -1,6 +1,6 @@
 # Hedefit Gizlilik Politikası
 
-**Son güncelleme:** 26 Temmuz 2026
+**Son güncelleme:** 21 Ağustos 2026
 
 > Bu metin `/gizlilik` adresinde (app/gizlilik/page.tsx) canlı olarak yayınlanır —
 > kalıcı prod domain bağlandığında Play Console'a o adresin `/gizlilik` yolu
@@ -35,29 +35,51 @@ kategorisine girer:
 - Hedefleriniz ve profil testi cevaplarınız
 
 ### 2.3 Fotoğraflar
-- **Öğün fotoğrafı:** Kalori tahmini için çektiğiniz fotoğraf, analiz amacıyla
-  yapay zeka sağlayıcımıza (Moonshot AI'nin Kimi K3 modeli) gönderilir. Fotoğrafın kendisi sunucularımızda saklanmaz;
-  yalnızca analiz sonucu (besin adı, gramaj, makrolar) kaydedilir.
-- **Barkod tarama:** Barkod tamamen cihazınızda okunur; hiçbir görüntü veya
-  veri sunucuya ya da üçüncü tarafa gönderilmez.
 - **İsteğe bağlı vücut fotoğrafı:** Program kişiselleştirmesi için
-  gönderebilirsiniz. Zorunlu değildir ve saklanmaz.
+  gönderebilirsiniz. Zorunlu değildir; plan üretilirken yapay zeka
+  sağlayıcımıza iletilir ve sunucularımızda saklanmaz.
 - **Profil fotoğrafı:** Yüklerseniz özel (public olmayan) depolamada tutulur ve
   yalnızca kısa süreli imzalı bağlantıyla size gösterilir.
 
 ### 2.4 Cihaz izinleri
-- **Kamera:** barkod tarama ve öğün fotoğrafı
-- **Fotoğraf arşivi:** öğün/profil fotoğrafı seçme
+
+Aşağıdaki izinlerin tamamı isteğe bağlıdır ve yalnızca ilgili özelliği ilk
+kullandığınızda istenir. Reddederseniz uygulamanın geri kalanı çalışmaya devam
+eder.
+
+- **Kamera ve fotoğraf arşivi:** isteğe bağlı vücut fotoğrafı ile profil
+  fotoğrafı çekme veya seçme
+- **Konum (GPS):** Hedefit Rota ile yürüyüş, koşu ve bisiklet aktivitelerinde
+  rotanızı, mesafenizi ve tempinizi kaydetmek. Ekran kapalıyken veya uygulama
+  arka plandayken kaydın kesilmemesi için arka plan konum izni de istenir;
+  konum yalnızca siz bir kayıt başlattığınızda okunur.
+- **Hareket ve aktivite tanıma:** günlük adım sayınızı cihazın kendi
+  sensöründen okumak. Android'de uygulama kapalıyken de sayabilmek için bir ön
+  plan servisi (kalıcı bildirimle) çalışır.
+- **Sağlık verisi (adım okuma):** iOS Sağlık ve Android Health Connect
+  üzerinden yalnızca adım sayınız okunur; bu servislere veri yazılmaz.
+- **Bluetooth:** isteğe bağlı nabız kayışınıza bağlanıp canlı nabzınızı
+  göstermek ve aktiviteye kaydetmek
 - **Bildirimler:** antrenman hatırlatmaları
 - **Saat dilimi:** hatırlatmaların doğru saatte gelmesi için cihazınızın saat
   dilimi okunur ve kaydedilir
 
-Konum (GPS) verisi **toplanmaz**.
+### 2.5 Konum ve rota verisi
+
+Hedefit Rota ile kaydettiğiniz aktivitenin GPS noktaları, kayıt bittiğinde tek
+bir kodlanmış çizgi (polyline) olarak hesabınıza yazılır. Bu veri satır bazlı
+erişim kurallarıyla korunur: yalnızca siz okuyabilirsiniz. Rota verisi yapay
+zeka sağlayıcısına, reklam ağına veya başka bir üçüncü tarafa gönderilmez ve
+pazarlama amacıyla kullanılmaz. Bir aktiviteyi sildiğinizde rotası da silinir.
+Rotanızın görselini paylaşmayı yalnızca siz seçersiniz; paylaşım cihazınızın
+kendi paylaşım menüsüyle yapılır.
 
 ## 3. Verileri neden işliyoruz
 
 - Kişisel antrenman ve beslenme planı üretmek
 - İlerlemenizi zaman içinde takip etmek ve göstermek
+- Kaydettiğiniz rotayı, günlük adım sayınızı ve aktivite geçmişinizi size geri
+  göstermek
 - Antrenman hatırlatmaları göndermek
 - Hesabınızı güvenli tutmak (e-posta doğrulama, oturum yönetimi)
 
@@ -71,8 +93,7 @@ reklam yoktur. Bu reklamlar Google AdMob üzerinden gösterilir (bkz. Bölüm 4)
 | Hizmet | Amaç | Paylaşılan veri |
 |---|---|---|
 | Supabase | Hesap, veritabanı ve dosya depolama | Bölüm 2'deki tüm veriler |
-| AI sağlayıcısı (Moonshot AI, Kimi K3) | Plan üretimi, öğün fotoğrafı analizi, koç sohbeti, haftalık değerlendirme | Anonim profil özeti, öğün fotoğrafı, sohbet mesajları. Kimlik bilgileriniz (e-posta, ad) gönderilmez. |
-| Open Food Facts | Ürün adı ile besin araması | Yalnızca aradığınız ürün adı |
+| AI sağlayıcısı (Moonshot AI, Kimi modelleri) | Plan üretimi, yazdığınız besinin kalori/makro tahmini, koç sohbeti, haftalık değerlendirme | Anonim profil özeti, gönderdiyseniz isteğe bağlı vücut fotoğrafı, yazdığınız besin adı ve gramajı, sohbet mesajları. Konum ve rota verisi gönderilmez. Kimlik bilgileriniz (e-posta, ad) gönderilmez. |
 | Google AdMob | Yalnızca ücretsiz plandaki kullanıcının kendi isteğiyle izlediği ödüllü reklam | Reklam kimliği ve cihaz/reklam etkileşim verileri; Google'ın kendi gizlilik politikasına tabidir |
 
 ## 5. Saklama ve silme

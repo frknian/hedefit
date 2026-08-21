@@ -1537,7 +1537,7 @@ export const tr = {
   },
   premium: {
     title: "Hedefit Premium",
-    subtitle: "Daha fazla AI koçluk, daha yüksek günlük limitler.",
+    subtitle: "Günlük sınır olmadan AI koçluk.",
     freeLabel: "Ücretsiz",
     premiumLabel: "Premium",
     priceMonthly: "₺89/ay",
@@ -1553,10 +1553,10 @@ export const tr = {
       nutritionAdvice: "5/gün",
     },
     premiumLimits: {
-      chat: "20/gün",
-      nutritionText: "30/gün",
+      chat: "Sınırsız",
+      nutritionText: "Sınırsız",
       weeklyReview: "Her hafta",
-      nutritionAdvice: "20/gün",
+      nutritionAdvice: "Sınırsız",
     },
     ctaUpgrade: "Premium'a Geç",
     comingSoonNotice: "Ödeme yakında aktif olacak. Şimdilik premium erişim için bizimle iletişime geçebilirsin.",
