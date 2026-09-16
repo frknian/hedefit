@@ -1,90 +1,44 @@
-// OpenAI-uyumlu HTTP sağlayıcısı.
-//
-// Moonshot (Kimi), OpenRouter, Together, Fireworks, kendi vLLM/Ollama
-// sunucunuz — hepsi aynı gövdeyi konuşur, bu yüzden tek uygulama yeter.
-// Göç öncesinde bu dosyanın içeriği tek bir lib/ai-provider.ts dosyasıydı; artık
-// yalnızca ZİNCİRDEKİ BİR HALKA. Kimi'ye özgü hiçbir bilgi burada
-// sabitlenmez, yalnızca ortam değişkeni varsayılanı olarak durur.
+// Sunucu tarafındaki OpenAI sağlayıcısı. Anahtar sadece Workers ortamında tutulur.
 
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createOpenAI } from "@ai-sdk/openai";
 import { asSchema, generateObject, generateText } from "ai";
 import { toModelMessages, type AIProvider, type AiObjectRequest, type AiObjectResponse, type AiRequest, type AiResponse, type ImageInput } from "../types.ts";
+import { modelForTask } from "../models.ts";
 
-// ÖLÇÜM (2026-08): sağlayıcının "akıl yürüten" modelleri bu uygulama için çok
-// yavaş. Aynı soru/plan için ölçülen süreler:
-//
-//   sohbet yanıtı   kimi-k3 42 sn · kimi-k2.6 104 sn · k2.7-highspeed  4,8 sn
-//   tam plan        kimi-k3 >100 sn (zaman aşımı)   · k2.7-highspeed 19 sn
-//
-// kimi-k3 ile sohbet 20 sn'lik pencereye yetişmediği için neredeyse her zaman
-// güvenli yerel yanıta düşüyor, plan ise hiç üretilemiyordu. Varsayılan bu
-// yüzden hızlı modele alındı; AI_MODEL ortam değişkeniyle yine ezilebilir.
-const DEFAULT_MODEL = "kimi-k2.7-code-highspeed";
-
-// Bazı modeller (ör. Kimi K3 — "always thinks", tamamen kapatılamaz) asıl
-// yanıttan önce ayrı bir "reasoning" bütçesi tüketir ve bu bütçe de
-// maxOutputTokens'a dahildir. Route'lardaki değerler (180–900) yalnızca
-// GÖRÜNEN yanıt için düşünülmüştü; reasoning modelinde bu, düşünme payını
-// tüketip asıl içeriğe hiç sıra bırakmadan sessizce boş sonuç döndürür (hata
-// fırlatmaz). Bu yüzden route'ların istediği değerden bağımsız bir taban
-// zorluyoruz; reasoning yapmayan modellerde zararsızdır.
-const MIN_OUTPUT_TOKENS = 4_000;
+const MIN_OUTPUT_TOKENS = 256;
 
 // Ortam değişkenleri modül yüklenirken DEĞİL, her çağrıda okunur — testlerde
-// (ve bazı edge çalışma zamanlarında) modül bir kez yüklenip önbelleğe alınır;
-// üst düzeyde okunsaydı `AI_API_KEY` sonradan tanımlansa bile hiç görülmezdi.
+// (ve bazı edge çalışma zamanlarında) modül bir kez yüklenip önbelleğe alınır.
 export function remoteApiKey() {
-  return process.env.AI_API_KEY || "";
+  // OPENAI_API_KEY is canonical. AI_API_KEY remains a read-only compatibility
+  // alias so existing Workers can roll forward without an outage.
+  return process.env.OPENAI_API_KEY || process.env.AI_API_KEY || "";
 }
 
 /**
  * "UZAK sağlayıcı yapılandırıldı mı?"
  *
- * Yerel (deterministik) sağlayıcı her zaman hazırdır, bu yüzden bu kontrol
- * yerel katmanı KAPSAMAZ. Rotalar bunu, ücretli çağrıya hiç girmeden kendi
- * güvenli yerel yedeklerine düşmek için kullanır.
+ * Anahtar yoksa bulut AI çağrısı başlatılmaz.
  */
 export function hasRemoteProvider() {
   return Boolean(remoteApiKey());
 }
 
 export function remoteModelId() {
-  return process.env.AI_MODEL || DEFAULT_MODEL;
+  return modelForTask("conversation");
 }
 
 function languageModel(modelId: string) {
-  const provider = createOpenAICompatible({
-    name: process.env.AI_PROVIDER_NAME || "moonshot",
-    baseURL: process.env.AI_BASE_URL || "https://api.moonshot.ai/v1",
+  const provider = createOpenAI({
     apiKey: remoteApiKey(),
     headers: {
-      // OpenRouter'ın kontrol panelinde uygulamayı tanımlamak için önerdiği
-      // isteğe bağlı başlıklar; Moonshot dahil diğer sağlayıcılarda zararsızca
-      // yok sayılır.
-      "HTTP-Referer": process.env.AI_SITE_URL || "https://hedefit.app",
-      "X-Title": "Hedefit",
+      "X-Client-Name": "Hedefit",
     },
   });
-  return provider.chatModel(modelId);
-}
-
-// Bazı modeller sıcaklık parametresini hiç kabul etmez veya yalnızca tek bir
-// sabit değeri (1) kabul eder; başka bir değer gönderildiğinde istek tamamen
-// reddedilir. Model listesi elle tutulamayacak kadar geniş ve sürekli
-// değiştiği için, "geçersiz sıcaklık" hatasını yakalayıp isteği sıcaklık
-// olmadan (sağlayıcının kendi varsayılanıyla) bir kez daha deneriz.
-function isUnsupportedTemperatureError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  return /temperature/i.test(message);
-}
-
-async function withTemperatureFallback<T>(attempt: (useTemperature: boolean) => Promise<T>) {
-  try {
-    return await attempt(true);
-  } catch (error) {
-    if (!isUnsupportedTemperatureError(error)) throw error;
-    return attempt(false);
-  }
+  // Official OpenAI provider defaults to the Responses API. Keeping this
+  // explicit prevents a future SDK default from silently moving Hedefit back
+  // to the legacy Chat Completions wire format.
+  return provider.responses(modelId);
 }
 
 function userContent(text: string, image?: ImageInput) {
@@ -95,15 +49,8 @@ function userContent(text: string, image?: ImageInput) {
   ];
 }
 
-// createOpenAICompatible() sağlayıcısı `supportsStructuredOutputs`'u
-// belirtmediğimiz için varsayılan `false` kalır; bu da AI SDK'nın modele
-// yalnızca `response_format: {type: "json_object"}` göndermesi anlamına
-// gelir — bu, geçerli JSON SÖZDİZİMİni garanti eder ama alan adlarını
-// (schema'yı) modele hiç iletmez. Sonuç: model kendi uydurduğu bir JSON
-// şekli döndürebilir (gerçek bir Kimi K3 testinde doğrulandı). Çözüm:
-// şemanın ham JSON Schema halini sistem promptuna açıkça ekleyip modele
-// "bu alanları kullan" demek — her route'un promptunu elle yazmasına gerek
-// kalmadan, tek yerden.
+// Şemayı sistem mesajında da açıkça taşımak, Responses API'nin strict
+// structured-output doğrulamasına ek bir semantik yönlendirme sağlar.
 async function withSchemaInSystemPrompt(system: string | undefined, schema: Parameters<typeof asSchema>[0]) {
   const jsonSchema = await asSchema(schema).jsonSchema;
   const instruction = `Yanıtını AŞAĞIDAKİ JSON şemasına harfiyen uyacak şekilde, tam olarak bu alan adlarıyla ver (başka alan uydurma, eksik bırakma):\n${JSON.stringify(jsonSchema)}`;
@@ -112,6 +59,22 @@ async function withSchemaInSystemPrompt(system: string | undefined, schema: Para
 
 function outputTokens(request: AiRequest) {
   return Math.max(request.maxOutputTokens ?? 0, request.minimumOutputTokens ?? MIN_OUTPUT_TOKENS);
+}
+
+function providerOptionsForModel(request: { providerOptions?: AiRequest["providerOptions"]; image?: ImageInput }, model: string) {
+  const options = request.image ? {
+    ...request.providerOptions,
+    openai: { ...(request.providerOptions?.openai as Record<string, unknown> | undefined), store: false },
+  } : request.providerOptions;
+  if (!/^(gpt-5|o\d)/i.test(model)) return options;
+  return {
+    ...options,
+    openai: {
+      ...(options?.openai as Record<string, unknown> | undefined),
+      reasoningEffort: "low",
+      textVerbosity: "low",
+    },
+  };
 }
 
 /**
@@ -126,16 +89,6 @@ function outputTokens(request: AiRequest) {
  * kaldırmayı hedeflediği bağımlılık. Artık alan modülleri yalnızca "kısa ve
  * yapılandırılmış çıktı istiyorum" der, nasıl elde edileceği buranın işidir.
  */
-function providerQuirks(modelId: string, request: AiRequest) {
-  const isMoonshotK2 = (process.env.AI_PROVIDER_NAME || "moonshot") === "moonshot" && /^kimi-k2(?:\.|$)/.test(modelId);
-  if (!isMoonshotK2) return { providerOptions: request.providerOptions, minimumOutputTokens: request.minimumOutputTokens };
-  return {
-    providerOptions: request.providerOptions ?? { moonshot: { thinking: { type: "disabled" } } },
-    // Düşünme kapalıyken 4.000 token'lık taban gereksiz; küçük bir taban yeter.
-    minimumOutputTokens: request.minimumOutputTokens ?? 350,
-  };
-}
-
 export const openAiCompatibleProvider: AIProvider = {
   id: "openai-compatible",
   kind: "remote",
@@ -149,20 +102,38 @@ export const openAiCompatibleProvider: AIProvider = {
   },
 
   async generateText(request: AiRequest): Promise<AiResponse> {
-    const model = request.model || remoteModelId();
-    const quirks = providerQuirks(model, request);
+    const model = request.model || modelForTask(request.category);
     const startedAt = Date.now();
-    const result = await withTemperatureFallback((useTemperature) => generateText({
-      model: languageModel(model),
-      system: request.system,
-      ...(request.messages?.length
-        ? { messages: toModelMessages(request.messages) }
-        : { prompt: [{ role: "user" as const, content: userContent(request.prompt ?? "", request.image) }] }),
-      maxOutputTokens: outputTokens({ ...request, minimumOutputTokens: quirks.minimumOutputTokens }),
-      temperature: useTemperature ? request.temperature : undefined,
-      providerOptions: quirks.providerOptions,
-      abortSignal: request.abortSignal,
-    }));
+    const result = await generateText({
+        model: languageModel(model),
+        // TEK DENEME. AI SDK varsayılanı 2 yeniden deneme (3 tam istek) ve bu,
+        // sağlayıcı hız sınırıyla birleştiğinde AKTİF OLARAK ZARARLI:
+        // sağlayıcının saydığı şey İSTEK, dolayısıyla tek bir kullanıcı sorusu
+        // dakikalık kotanın üç katını harcıyor. Denemeler saniyeler içinde
+        // ardışık geldiği için üçü de aynı sınıra çarpıyor — yani yeniden
+        // deneme hiçbir şey kurtarmıyor, yalnızca kotayı tüketip sonraki
+        // soruları da başarısız kılıyor.
+        //
+        // Ölçüm (org RPM 3): 4 arka arkaya soru → 1 başarılı, 3 başarısız.
+        // Tek denemeyle aynı kota 3 soruya yeter.
+        //
+        // Gerçek hata zaten kaybolmuyor: router uzak sağlayıcı başarısız
+        // olduğunda deterministik yedeğe düşüyor (bkz. lib/ai/router.ts).
+        // generateObject aynı gerekçeyle zaten tek deneme kullanıyor.
+        maxRetries: 0,
+        system: request.system,
+        ...(request.messages?.length
+          ? { messages: toModelMessages(request.messages) }
+          : { prompt: [{ role: "user" as const, content: userContent(request.prompt ?? "", request.image) }] }),
+        maxOutputTokens: outputTokens(request),
+        // GPT-5.6 reasoning models do not accept temperature. Output behavior
+        // is controlled with reasoning.effort and text.verbosity instead.
+        temperature: undefined,
+        // GPT-5.6'da düşük düşünme bütçesi hem yanıtın görünür kısmına alan
+        // bırakır hem de Fit Koç'un kısa sorularda beklemesini azaltır.
+        providerOptions: providerOptionsForModel(request, model),
+        abortSignal: request.abortSignal,
+    });
     return {
       text: result.text,
       provider: openAiCompatibleProvider.id,
@@ -173,24 +144,23 @@ export const openAiCompatibleProvider: AIProvider = {
   },
 
   async generateObject<T>(request: AiObjectRequest<T>): Promise<AiObjectResponse<T>> {
-    const model = request.model || remoteModelId();
-    const quirks = providerQuirks(model, request);
+    const model = request.model || modelForTask(request.category);
     const system = await withSchemaInSystemPrompt(request.system, request.schema);
     const startedAt = Date.now();
-    const result = await withTemperatureFallback((useTemperature) => generateObject({
-      model: languageModel(model),
-      // AI SDK varsayılanı 2 yeniden deneme, yani 3 tam üretim. Bu sağlayıcının
-      // akıl yürüten modellerinde tek üretim ~90 sn sürüyor; üç katı her zaman
-      // zaman aşımına düşüyordu. Tek deneme, verilen bütçenin tamamını kullanır.
-      maxRetries: 0,
-      system,
-      prompt: [{ role: "user", content: userContent(request.prompt, request.image) }],
-      schema: request.schema,
-      maxOutputTokens: outputTokens({ ...request, minimumOutputTokens: quirks.minimumOutputTokens }),
-      temperature: useTemperature ? request.temperature : undefined,
-      providerOptions: quirks.providerOptions,
-      abortSignal: request.abortSignal,
-    }));
+    const result = await generateObject({
+        model: languageModel(model),
+        // AI SDK varsayılanı 2 yeniden deneme, yani 3 tam üretim. Bu sağlayıcının
+        // akıl yürüten modellerinde tek üretim ~90 sn sürüyor; üç katı her zaman
+        // zaman aşımına düşüyordu. Tek deneme, verilen bütçenin tamamını kullanır.
+        maxRetries: 0,
+        system,
+        prompt: [{ role: "user", content: userContent(request.prompt, request.image) }],
+        schema: request.schema,
+        maxOutputTokens: outputTokens(request),
+        temperature: undefined,
+        providerOptions: providerOptionsForModel(request, model),
+        abortSignal: request.abortSignal,
+    });
     return {
       object: result.object,
       provider: openAiCompatibleProvider.id,

@@ -1,5 +1,6 @@
 import exerciseData from "../data/exercises.json" with { type: "json" };
-import { translateExerciseLabel } from "./exercise-translations.ts";
+import legacyExerciseData from "../data/legacy-exercises.json" with { type: "json" };
+import { translateExerciseLabel, translateExerciseName } from "./exercise-translations.ts";
 import type { AIExerciseContext, Exercise, ExerciseFilters } from "@/types/exercise";
 
 const safeText = (value: unknown, fallback = "", maxLength = 300) => typeof value === "string" ? value.trim().slice(0, maxLength) : fallback;
@@ -25,14 +26,46 @@ export function normalizeExercise(value: unknown): Exercise | null {
     instructions: safeList(item.instructions, 12, 1200),
     category: safeText(item.category, "strength"),
     images: safeList(item.images, 4).map(safeImage).filter((image): image is string => Boolean(image)),
+    source: item.source === "legacy" ? "legacy" : "repdb",
+    sourceExerciseId: safeText(item.sourceExerciseId) || undefined,
+    bodyPart: safeText(item.bodyPart) || undefined,
+    goalCompatibility: safeList(item.goalCompatibility, 10, 40),
+    environment: safeList(item.environment, 5, 20),
+    laterality: item.laterality === "unilateral" ? "unilateral" : "bilateral",
+    isBodyweight: Boolean(item.isBodyweight),
+    metValue: typeof item.metValue === "number" ? item.metValue : undefined,
+    imageStart: safeImage(item.imageStart),
+    imageEnd: safeImage(item.imageEnd),
+    mediaStatus: item.mediaStatus === "partial" || item.mediaStatus === "missing" ? item.mediaStatus : "complete",
+    isActive: item.isActive !== false,
   };
 }
 
-const exercises = Object.freeze((exerciseData as unknown[]).map(normalizeExercise).filter((exercise): exercise is Exercise => Boolean(exercise)));
-const exerciseById = new Map(exercises.map((exercise) => [exercise.id, exercise]));
+const importedExercises = (exerciseData as unknown[]).map(normalizeExercise).filter((exercise): exercise is Exercise => Boolean(exercise));
+
+/**
+ * Legacy (free-exercise-db) catalog, replaced as the primary source by RepDB
+ * (see scripts/import-repdb.mjs). Kept resolvable ONLY through `getExerciseById`
+ * so historical `workout_exercise_logs` rows (which store the id as free text,
+ * no FK \u2014 see db/supabase-schema.sql) never break; never surfaced in catalogs,
+ * search, or plan generation.
+ */
+const legacyExercises: Exercise[] = (legacyExerciseData as unknown[])
+  .map((raw) => {
+    const normalized = normalizeExercise(raw);
+    return normalized ? { ...normalized, source: "legacy" as const, isActive: false } : null;
+  })
+  .filter((exercise): exercise is NonNullable<typeof exercise> => exercise !== null);
+
+const exercises = Object.freeze(importedExercises);
+const exerciseById = new Map(importedExercises.map((exercise) => [exercise.id, exercise]));
+const legacyExerciseById = new Map(legacyExercises.map((exercise) => [exercise.id, exercise]));
 
 export const getAllExercises = () => [...exercises];
-export const getExerciseById = (id: string) => exerciseById.get(id.replace(/[^a-zA-Z0-9_-]/g, "")) ?? null;
+export function getExerciseById(id: string): Exercise | null {
+  const key = id.replace(/[^a-zA-Z0-9_-]/g, "");
+  return exerciseById.get(key) ?? legacyExerciseById.get(key) ?? null;
+}
 
 /**
  * Aranabilir metin ÖNCEDEN hesaplanır.
@@ -45,6 +78,7 @@ export const getExerciseById = (id: string) => exerciseById.get(id.replace(/[^a-
  */
 const searchHaystacks = exercises.map((exercise) => fold([
   exercise.name,
+  translateExerciseName(exercise.name),
   ...exercise.primaryMuscles,
   ...exercise.secondaryMuscles,
   exercise.equipment || "",
@@ -74,18 +108,55 @@ export function searchExercises(query: string) {
 
 export function filterExercises(filters: ExerciseFilters = {}) {
   const search = fold(filters.search || "").slice(0, 100);
-  const muscle = fold(filters.muscle || "");
+  const muscleTargets = expandMuscleFilter(filters.muscle || "");
   const equipment = fold(filters.equipment || "");
   const level = fold(filters.level || "");
   const category = fold(filters.category || "");
   return exercises.filter((exercise, index) => {
     return (!search || searchHaystacks[index].includes(search))
-      && (!muscle || exercise.primaryMuscles.some((item) => fold(item) === muscle) || exercise.secondaryMuscles.some((item) => fold(item) === muscle))
+      && (!muscleTargets.length || [...exercise.primaryMuscles, ...exercise.secondaryMuscles].some((item) => muscleTargets.includes(fold(item))))
       && (!equipment || fold(exercise.equipment || "none") === equipment)
       && (!level || fold(exercise.level) === level)
       && (!category || fold(exercise.category) === category);
   });
 }
+
+// RepDB uses a fixed 30-value muscle-slug vocabulary (see
+// scripts/import-repdb.mjs / lib/training/exercise-metadata.ts's
+// REPDB_MUSCLE_MAP). UI region + single-muscle labels expand into it here so
+// existing callers (search filters, lib/ai/exercise-atlas.ts) keep working
+// unchanged against the new catalog.
+const muscleGroups: Record<string, string[]> = {
+  arms: ["biceps_brachii", "brachialis", "brachioradialis", "triceps_brachii", "forearms", "forearm_flexors", "forearm_extensors"],
+  back: ["latissimus_dorsi", "trapezius", "rhomboids", "erector_spinae", "quadratus_lumborum"],
+  core: ["rectus_abdominis", "obliques", "transverse_abdominis"],
+  hips: ["gluteus_maximus", "gluteus_medius", "adductors", "abductors", "hip_flexors"],
+  legs: ["quadriceps", "hamstrings", "gastrocnemius", "soleus", "adductors"],
+  chest: ["pectoralis_major", "serratus_anterior"],
+  shoulders: ["anterior_deltoid", "lateral_deltoid", "posterior_deltoid", "supraspinatus"],
+  biceps: ["biceps_brachii", "brachialis", "brachioradialis"],
+  triceps: ["triceps_brachii"],
+  forearms: ["forearms", "forearm_flexors", "forearm_extensors"],
+  calves: ["gastrocnemius", "soleus"],
+  glutes: ["gluteus_maximus", "gluteus_medius"],
+  abdominals: ["rectus_abdominis", "obliques", "transverse_abdominis"],
+  lats: ["latissimus_dorsi"],
+  traps: ["trapezius"],
+  neck: ["trapezius"],
+};
+
+/** Expands a UI region (for example `back`) into the source catalog muscles. */
+export function expandMuscleFilter(muscle: string): string[] {
+  const normalized = fold(muscle);
+  if (!normalized) return [];
+  return muscleGroups[normalized] || [normalized];
+}
+
+export const getExerciseCatalogStats = () => ({
+  imported: importedExercises.length,
+  visible: exercises.length,
+  legacyFallback: legacyExercises.length,
+});
 
 export const getExercisesByMuscle = (muscle: string) => filterExercises({ muscle });
 export const getExercisesByEquipment = (equipment: string) => filterExercises({ equipment });
@@ -118,32 +189,81 @@ export function getExerciseFilterOptions(filters: ExerciseFilters = {}) {
   };
 }
 
-// Katalogdaki İngilizce `equipment` etiketlerinin, kullanıcının seçebildiği
-// ekipmanlara karşılığı. Salon dışındaki bir kullanıcıya barbell/cable/machine
-// göndermenin anlamı yok: model onları seçemez, ama tokenini yer.
+/**
+ * Bir filtre boyutundaki her seçeneğin kaç harekete karşılık geldiği.
+ *
+ * Kütüphane 873 hareket içeriyor ve seçenekler eskiden isimsiz bir açılır
+ * listede duruyordu: kullanıcı "sırt" seçmeden kaç hareket çıkacağını
+ * bilmiyor, seçtikten sonra boş sonuç ekranıyla karşılaşabiliyordu. Sayı
+ * seçeneğin yanında görünürse seçim körlemesine yapılmaz.
+ *
+ * Sayılar DİĞER filtreler uygulanmış hâlde hesaplanır: "dambıl" seçiliyken
+ * "sırt" rozeti, dambılla yapılan sırt hareketi sayısını gösterir.
+ */
+export function countExercisesByFacet(
+  filters: ExerciseFilters,
+  dimension: "muscle" | "equipment" | "level" | "category",
+): Record<string, number> {
+  const options = getExerciseFilterOptions(filters);
+  const values = dimension === "muscle" ? options.muscles
+    : dimension === "equipment" ? options.equipment
+    : dimension === "level" ? options.levels
+    : options.categories;
+  const counts: Record<string, number> = {};
+  for (const value of values) counts[value] = filterExercises({ ...filters, [dimension]: value }).length;
+  return counts;
+}
+
+// RepDB'nin ~55 ekipman etiketinin (bkz. scripts/import-repdb.mjs), kullanıcının
+// serbest metinle yazabileceği ekipman karşılıkları. Salon dışındaki bir
+// kullanıcıya barbell/cable/machine göndermenin anlamı yok: model onları
+// seçemez, ama tokenini yer.
 const EQUIPMENT_TAG_SYNONYMS: Record<string, string[]> = {
-  "dumbbell": ["dambıl"],
-  "kettlebells": ["kettlebell", "dambıl"],
-  "bands": ["band", "lastik"],
-  "exercise ball": ["yoga matı", "mat"],
-  "medicine ball": ["dambıl"],
-  "e-z curl bar": ["barfiks", "salon"],
-  "barbell": ["salon"],
-  "cable": ["salon", "makine"],
-  "machine": ["salon", "makine"],
+  dumbbell: ["dambıl", "dambil", "dumbbell", "dumbell"],
+  kettlebell: ["kettlebell"],
+  resistance_band: ["band", "bant", "lastik", "direnç"],
+  loop_band: ["band", "bant", "lastik", "direnç"],
+  stability_ball: ["egzersiz topu", "pilates topu", "swiss ball", "denge topu", "mat"],
+  slam_ball: ["medicine ball", "sağlık topu", "slam ball"],
+  ez_bar: ["ez bar", "e-z bar", "curl bar"],
+  barbell: ["barbell", "halter", "olimpik bar", "salon"],
+  trap_bar: ["barbell", "halter", "salon"],
+  plates: ["barbell", "halter", "salon", "ağırlık diski"],
+  cable: ["salon", "makine", "kablo"],
+  smith_machine: ["salon", "makine"],
+  pull_up_bar: ["barfiks", "pull-up bar", "pull up bar"],
+  flat_bench: ["sehpa", "bench"],
+  jump_rope: ["ip atlama", "jump rope", "atlama ipi"],
 };
 
 /** Ekipman gerektirmeyen etiketler; herkes yapabilir. */
-const BODYWEIGHT_TAGS = new Set(["body only", "", "other"]);
+const BODYWEIGHT_TAGS = new Set(["", "bodyweight"]);
+
+// Bazı veri satırları ekipmansız etiketlense de hareket adı gerçek bir
+// ekipman gerektirir. İsimdeki bu gizli gereksinimler ayrıca doğrulanır.
+const HIDDEN_EQUIPMENT_RULES: Array<{ pattern: RegExp; owned: RegExp }> = [
+  { pattern: /\b(?:resistance |exercise )?bands?\b/i, owned: /band|bant|lastik/i },
+  { pattern: /\b(?:pull[ -]?ups?|chin[ -]?ups?)\b/i, owned: /barfiks|pull[ -]?up bar/i },
+  { pattern: /\b(?:barbells?|olympic bar)\b/i, owned: /barbell|halter|olimpik bar|salon/i },
+  { pattern: /\b(?:kettlebells?)\b/i, owned: /kettlebell/i },
+  { pattern: /\bmedicine ball\b/i, owned: /medicine ball|sağlık topu/i },
+  { pattern: /\b(?:exercise|swiss|stability) ball\b/i, owned: /egzersiz topu|pilates topu|swiss ball|stability ball/i },
+  { pattern: /\b(?:cable|machine|smith)\b/i, owned: /kablo|makine|smith|salon/i },
+];
+
+function hiddenEquipmentAvailable(name: string, owned: string, isGym: boolean) {
+  if (isGym) return true;
+  return HIDDEN_EQUIPMENT_RULES.every((rule) => !rule.pattern.test(name) || rule.owned.test(owned));
+}
 
 /**
  * Plan istemine giden hareket sayısının üst sınırı.
  *
- * ÖLÇÜM: katalog 873 harekete çıkınca salon profilinde istemin yalnız katalog
- * kısmı ~31.400 token oluyor (106 hareketlik katalogda ~3.800'dü). Sağlayıcının
- * modeli akıl yürüten bir model ve plan üretimi zaten 60 sn'lik pencerede zar
- * zor tamamlanıyor; kataloğu sekiz katına çıkarmak üretimi o pencerenin dışına
- * taşırdı. Sınır kütüphaneyi DEĞİL yalnız istemi bağlar: kullanıcı 873 hareketin
+ * ÖLÇÜM: geniş bir kataloğun (RepDB: 601 hareket) salon profilinde istemin
+ * yalnız katalog kısmı on binlerce token oluyor. Sağlayıcının modeli akıl
+ * yürüten bir model ve plan üretimi zaten 60 sn'lik pencerede zar zor
+ * tamamlanıyor; kataloğun tamamını göndermek üretimi o pencerenin dışına
+ * taşırdı. Sınır kütüphaneyi DEĞİL yalnız istemi bağlar: kullanıcı kataloğun
  * tamamını uygulamada görmeye devam eder.
  */
 export const PROMPT_CATALOG_LIMIT = 240;
@@ -192,12 +312,34 @@ function balanceForPrompt(exercises: AIExerciseContext[], limit = PROMPT_CATALOG
  * model evdeki kullanıcıya lat pulldown öneremez. Ekipman elemesinden sonra
  * kalan liste ayrıca PROMPT_CATALOG_LIMIT ile sınırlanır.
  */
-export function getExercisesForProfile(isGym: boolean, equipmentText: string): AIExerciseContext[] {
+export function getExercisesForProfile(
+  isGym: boolean,
+  equipmentText: string,
+  environmentText = "",
+  trainingStyleText = "",
+): AIExerciseContext[] {
   const owned = equipmentText.toLocaleLowerCase("tr-TR");
+  // "Spor salonunda" ortamı, kullanıcının salondaki her ekipmana eriştiği
+  // anlamına gelmez. Açıkça yalnız dambıl dediğinde ortam seçimi bu kısıtı
+  // ezmemeli; tam salon erişimi ancak ekipman cevabı bunu söylüyorsa açılır.
+  const restrictiveEquipment = /(?:sadece|yalnız|yalniz|only)\b/.test(owned);
+  const fullGymAccess = isGym && !restrictiveEquipment && (owned.trim() === "" || /tam salon|salon ekipmanı|salon ekipmani|full (?:gym|equipment)|tüm ekipman|tum ekipman/.test(owned));
+  const outdoorRunning = /açık hava|outdoor/.test(environmentText.toLocaleLowerCase("tr-TR"))
+    && /koşu|run|jog/.test(trainingStyleText.toLocaleLowerCase("tr-TR"));
+  const outdoorMovement = /\b(?:run(?:ning)?|jog(?:ging)?|sprint(?:s)?|walk(?:ing)?)\b/i;
   return balanceForPrompt(getExercisesForAI().filter((exercise) => {
     const tag = (exercise.equipment || "").toLocaleLowerCase("en-US");
+    if (!hiddenEquipmentAvailable(exercise.name, owned, fullGymAccess)) return false;
+    const equipmentAvailable = BODYWEIGHT_TAGS.has(tag)
+      || fullGymAccess
+      || (EQUIPMENT_TAG_SYNONYMS[tag]?.some((word) => owned.includes(word)) ?? false);
+    if (!equipmentAvailable) return false;
+    // AI kataloğu token tasarrufu için `category` taşımaz. Burada kategoriye
+    // bakmak açık hava koşu profilini sessizce BOŞ kataloğa düşürüyordu.
+    // Kelime sınırları da zorunlu: çıplak /run/ ifadesi "crunch"ı koşu sanır.
+    if (outdoorRunning) return outdoorMovement.test(exercise.name);
     if (BODYWEIGHT_TAGS.has(tag)) return true;
-    if (isGym) return true;
+    if (fullGymAccess) return true;
     const synonyms = EQUIPMENT_TAG_SYNONYMS[tag];
     return synonyms ? synonyms.some((word) => owned.includes(word)) : false;
   }));

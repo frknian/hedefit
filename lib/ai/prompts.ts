@@ -7,7 +7,10 @@
 // `AI_COACH_PROMPT_VERSION` saklanır; prompt değişince sürüm artırılır ve eski
 // ölçümler yeni promptla karıştırılmaz.
 
-export const AI_COACH_PROMPT_VERSION = "v1";
+import { COACH_ACTIONS_INSTRUCTION } from "./coach-actions.ts";
+
+// v2: koç yanıtlarına eylem bloğu talimatı eklendi (bkz. coach-actions.ts).
+export const AI_COACH_PROMPT_VERSION = "v3";
 
 export type PromptInput = {
   locale: "tr" | "en";
@@ -15,8 +18,14 @@ export type PromptInput = {
   factsJson?: string;
   memoryLines?: string[];
   knowledgeLines?: string[];
+  /** Hareket atlasından seçilmiş, modelin uydurmadan önerebileceği hareketler. */
+  atlasLines?: string[];
   conversationSummary?: string;
   safetyInstruction?: string;
+  /** Aktif antrenman ve egzersiz bağlamı (mevcut hareket, set/tekrar vb.) */
+  workoutContextJson?: string;
+  /** Cihaz üstü model: kısa üslup + bilgi bölümü atlanır (prefill süresi TTFT'yi belirliyor). */
+  compact?: boolean;
 };
 
 const IDENTITY = {
@@ -24,14 +33,38 @@ const IDENTITY = {
   en: "You are Fit Coach, Hedefit's English-speaking personal fitness coach.",
 };
 
+const BEGINNER_RULE = {
+  tr: "Kullanıcı yeni başlıyorsa veya spor geçmişi yoksa fitness jargonunu (RPE, failure, progressive overload, hip hinge) açıklamasız KULLANMA. Sade, gündelik benzetmelerle açıkla (ör. 3x12: 'Bu hareketi 12 tekrar yapacaksın, dinlenip toplam 3 kez tamamlayacaksın'). Kullanıcı teknik detay isterse derinleştir.",
+  en: "If the user is a beginner or has no training background, NEVER use unexplained fitness jargon (RPE, failure, progressive overload, hip hinge). Use simple, everyday explanations. Elaborate technically only if the user asks for more details.",
+};
+
+const MEDICAL_SAFETY_RULE = {
+  tr: "Asla tıbbi teşhis koyma ('Bu kesin menisküs' veya 'fıtık olmuşsun' gibi teşhisler üretme). Keskin ağrı, eklem şişliği, hareket kaybı, baş dönmesi, göğüs ağrısı veya nefes darlığı gibi belirtilerde kullanıcıya egzersizi durdurmasını ve bir sağlık uzmanına başvurmasını öner.",
+  en: "Never provide medical diagnoses. For sharp pain, joint swelling, loss of range of motion, dizziness, chest pain, or shortness of breath, immediately advise the user to stop the exercise and consult a healthcare professional.",
+};
+
+/**
+ * Cihaz üstü modeller için KISA üslup.
+ *
+ * ÖLÇÜM (Gemma 4 E2B, Samsung SM-A525F): çıktı token medyanı 181 ve decode
+ * hızı 8,2 tok/s → yalnız üretim 22 saniye. Toplam medyan 26,4 sn, en kötü
+ * 45,9 sn. Mobil sohbette bu kullanılamaz. 140 kelime yerine ~70 kelime
+ * istemek üretim süresini yarıya indirir; koçluk yanıtı için 70 kelime
+ * zaten yeterli (benchmark alt sınırı 15 kelime).
+ */
+const COMPACT_STYLE = {
+  tr: "Yanıtın en fazla 70 kelime olsun; tek paragraf, doğrudan ve uygulanabilir yaz. Giriş cümlesi veya selamlama kullanma, doğrudan cevaba gir. Gereksiz uyarı yığma. Kullanıcının yazdığı dilde yanıtla.",
+  en: "Keep your answer under 70 words; a single direct, actionable paragraph. No greeting or preamble — answer directly. Don't pile on warnings. Reply in the language the user writes in.",
+};
+
 const STYLE = {
-  tr: "Yanıtın en fazla 140 kelime olsun; açık, uygulanabilir ve sıcak bir dille yaz. Gereksiz uyarı yığma, kullanıcıyı bunaltma. Kullanıcının yazdığı dilde yanıtla.",
-  en: "Keep your answer under 140 words; be clear, actionable and warm. Don't pile on unnecessary warnings. Reply in the language the user writes in.",
+  tr: "ChatGPT kalitesinde; doğru, bağlama uygun, açık, uygulanabilir ve sıcak cevap ver. Kullanıcının sorduğu kası, egzersizi veya yemeği doğrudan ele al; alakasız konuya geçme. Gerektiğinde tek bir kısa takip sorusu sor. Markdown, yıldız, çift yıldız ve kod biçimi kullanma; okunaklı düz metin yaz. Kullanıcının yazdığı dilde yanıtla.",
+  en: "Give a high-quality, accurate, context-aware, actionable and warm answer. Address the exact muscle, exercise, or food asked about and ask at most one useful follow-up question when needed. Use readable plain text without Markdown, asterisks or code formatting. Reply in the language the user writes in.",
 };
 
 const SCOPE = {
-  tr: "Kapsamın antrenman, beslenme, hareket ve alışkanlıklar. Tıbbi tanı koyma, ilaç veya doz önerme, kesin sağlık iddiası üretme.",
-  en: "Your scope is training, nutrition, movement and habits. Never diagnose, never recommend medication or dosages, never make definitive health claims.",
+  tr: "Kapsamın yalnızca antrenman, beslenme, hareket, toparlanma ve sağlıklı alışkanlıklar. Spor ve beslenme dışındaki her soruyu nazikçe reddet: kısa biçimde bu konularda yardımcı olamadığını söyle ve kullanıcıyı hedefi, antrenmanı veya öğünleriyle ilgili bir soruya yönlendir. Tıbbi tanı koyma, ilaç veya doz önerme, kesin sağlık iddiası üretme.",
+  en: "Your scope is only training, nutrition, movement, recovery, and healthy habits. Politely decline every question outside fitness and nutrition: briefly say you can't help with that topic and invite the user to ask about their goal, workout, or meals. Never diagnose, recommend medication or dosages, or make definitive health claims.",
 };
 
 // Halüsinasyona karşı asıl savunma. Sayılar zaten deterministik motordan
@@ -56,6 +89,11 @@ const MEMORY_RULE = {
   en: "<memory> holds lasting preferences the user stated earlier. Shape your advice around them (e.g. don't keep suggesting an exercise they dislike), but don't recite them in every reply.",
 };
 
+const ATLAS_RULE = {
+  tr: "<atlas> varsa, hareket önerilerini yalnız bu listeden seç; hareket adı uydurma. Kullanıcının ortamı/ekipmanı bu seçkiye zaten uygulanmıştır.",
+  en: "When <atlas> is present, choose exercise recommendations only from that list; do not invent exercise names. The user's environment and equipment are already applied.",
+};
+
 /**
  * Sohbet DIŞI görevlerin (haftalık değerlendirme, hedef analizi, plan üretimi,
  * öğün önerisi) sistem promptu.
@@ -72,6 +110,7 @@ export function buildTaskSystemPrompt(input: PromptInput & { domainRules: string
   const { locale } = input;
   const hasMemory = Boolean(input.memoryLines?.length);
   const hasKnowledge = Boolean(input.knowledgeLines?.length);
+  const hasAtlas = Boolean(input.atlasLines?.length);
   const untrustedTags = [hasMemory && "<memory>", hasKnowledge && "<knowledge>"]
     .filter(Boolean)
     .join(locale === "en" ? " and " : " ve ");
@@ -80,6 +119,7 @@ export function buildTaskSystemPrompt(input: PromptInput & { domainRules: string
     input.domainRules,
     FACTS_RULE[locale],
     hasMemory ? MEMORY_RULE[locale] : "",
+    hasAtlas ? ATLAS_RULE[locale] : "",
     untrustedTags ? UNTRUSTED_RULE[locale](untrustedTags) : "",
     input.safetyInstruction,
   ].filter(Boolean);
@@ -100,24 +140,34 @@ export function buildCoachSystemPrompt(input: PromptInput): string {
   const { locale } = input;
   const hasMemory = Boolean(input.memoryLines?.length);
   const hasKnowledge = Boolean(input.knowledgeLines?.length);
+  const hasAtlas = Boolean(input.atlasLines?.length);
   const untrustedTags = [hasMemory && "<memory>", hasKnowledge && "<knowledge>"]
     .filter(Boolean)
     .join(locale === "en" ? " and " : " ve ");
 
   const parts = [
     IDENTITY[locale],
-    STYLE[locale],
+    input.compact ? COMPACT_STYLE[locale] : STYLE[locale],
     SCOPE[locale],
     FACTS_RULE[locale],
     hasMemory ? MEMORY_RULE[locale] : "",
+    hasAtlas ? ATLAS_RULE[locale] : "",
+    BEGINNER_RULE[locale],
+    MEDICAL_SAFETY_RULE[locale],
     untrustedTags ? UNTRUSTED_RULE[locale](untrustedTags) : "",
+    // Eylem talimatı YALNIZ uzak modele gider. Cihaz üstü model (compact)
+    // hem yapılandırılmış çıktıda güvenilir değil hem de her ek talimat
+    // prefill süresine doğrudan yansıyor.
+    input.compact ? "" : COACH_ACTIONS_INSTRUCTION[locale],
     input.safetyInstruction,
   ].filter(Boolean);
 
   return parts.join(" ")
     + section("facts", input.factsJson)
+    + section("workout_context", input.workoutContextJson)
     + section("memory", input.memoryLines)
     + section("knowledge", input.knowledgeLines)
+    + section("atlas", input.atlasLines)
     + section("conversation_summary", input.conversationSummary);
 }
 

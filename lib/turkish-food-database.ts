@@ -1,0 +1,1675 @@
+/**
+ * Kapsamlı Türk Yemekleri Veri Tabanı, Varyantlar, Porsiyonlar ve Alias Sistemi.
+ *
+ * Çorbalar, kahvaltılıklar, yumurtalı yemekler, et/tavuk/balık yemekleri,
+ * kebaplar, köfteler, dönerler, ev yemekleri, bakliyatlar, sebze yemekleri,
+ * dolma ve sarmalar, pilavlar, hamur işleri, pideler, mantı, mezeler,
+ * salatalar, tatlılar, sokak lezzetleri ve içecekleri kapsar.
+ */
+
+export interface FoodPortion {
+  name: string;
+  unit: string;
+  grams: number;
+  isDefault?: boolean;
+}
+
+export interface FoodVariant {
+  id: string;
+  name: string;
+  calories: number; // 100g için kcal
+  protein: number; // 100g için g
+  carbohydrates: number; // 100g için g
+  fat: number; // 100g için g
+  fiber: number; // 100g için g
+  aliases?: string[];
+  defaultGrams?: number;
+}
+
+export interface TurkishFood {
+  id: string;
+  name: string;
+  category: string;
+  calories: number; // 100g için kcal
+  protein: number; // 100g için g
+  carbohydrates: number; // 100g için g
+  fat: number; // 100g için g
+  fiber: number; // 100g için g
+  sugar?: number;
+  sodiumMg?: number;
+  potassiumMg?: number;
+  calciumMg?: number;
+  ironMg?: number;
+  vitaminCMg?: number;
+  aliases: string[];
+  portions: FoodPortion[];
+  variants?: FoodVariant[];
+}
+
+export function normalizeTurkishText(value: string): string {
+  if (!value) return "";
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/(\d+)[,.](\d+)/g, "$1__DOT__$2")
+    .replace(/[^a-z0-9\s_]+/g, " ")
+    .replace(/__DOT__/g, ".")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export const TURKISH_FOOD_DATABASE: TurkishFood[] = [
+  // -------------------------------------------------------------
+  // 1. ÇORBALAR
+  // -------------------------------------------------------------
+  {
+    id: "mercimek-corbasi",
+    name: "Mercimek Çorbası",
+    category: "Çorbalar",
+    calories: 68,
+    protein: 3.6,
+    carbohydrates: 10.2,
+    fat: 1.5,
+    fiber: 2.4,
+    sodiumMg: 310,
+    potassiumMg: 210,
+    calciumMg: 20,
+    ironMg: 1.2,
+    vitaminCMg: 3,
+    aliases: [
+      "mercimek corbasi",
+      "mercimek corba",
+      "kırmızı mercimek çorbası",
+      "süzme mercimek",
+      "süzme mercimek çorbası",
+      "mercimek",
+    ],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 250 },
+      { name: "1 tabak", unit: "tabak", grams: 300 },
+    ],
+  },
+  {
+    id: "ezogelin-corbasi",
+    name: "Ezogelin Çorbası",
+    category: "Çorbalar",
+    calories: 72,
+    protein: 3.4,
+    carbohydrates: 11.5,
+    fat: 1.8,
+    fiber: 2.6,
+    sodiumMg: 340,
+    potassiumMg: 220,
+    calciumMg: 22,
+    ironMg: 1.3,
+    vitaminCMg: 4,
+    aliases: ["ezogelin", "ezogelin corbasi", "ezo gelin", "ezo gelin çorbası"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 250 },
+    ],
+  },
+  {
+    id: "tarhana-corbasi",
+    name: "Tarhana Çorbası",
+    category: "Çorbalar",
+    calories: 65,
+    protein: 2.8,
+    carbohydrates: 10.8,
+    fat: 1.4,
+    fiber: 1.8,
+    sodiumMg: 320,
+    potassiumMg: 180,
+    calciumMg: 35,
+    ironMg: 0.9,
+    vitaminCMg: 2,
+    aliases: ["tarhana", "tarhana corbasi", "ev tarhanası"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+    ],
+  },
+  {
+    id: "yayla-corbasi",
+    name: "Yayla Çorbası",
+    category: "Çorbalar",
+    calories: 62,
+    protein: 2.5,
+    carbohydrates: 7.8,
+    fat: 2.4,
+    fiber: 0.6,
+    sodiumMg: 280,
+    potassiumMg: 160,
+    calciumMg: 65,
+    ironMg: 0.4,
+    vitaminCMg: 1,
+    aliases: ["yayla", "yayla corbasi", "yoğurt çorbası", "yogurt corbasi"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+    ],
+  },
+  {
+    id: "kelle-paca-corbasi",
+    name: "Kelle Paça Çorbası",
+    category: "Çorbalar",
+    calories: 135,
+    protein: 11.5,
+    carbohydrates: 1.2,
+    fat: 9.6,
+    fiber: 0.2,
+    sodiumMg: 420,
+    potassiumMg: 190,
+    calciumMg: 40,
+    ironMg: 1.8,
+    vitaminCMg: 2,
+    aliases: ["kelle paça", "kelle paca", "kelle paça çorbası", "paça çorbası", "paca"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 300 },
+    ],
+  },
+  {
+    id: "iskembe-corbasi",
+    name: "İşkembe Çorbası",
+    category: "Çorbalar",
+    calories: 118,
+    protein: 9.8,
+    carbohydrates: 2.0,
+    fat: 7.8,
+    fiber: 0.1,
+    sodiumMg: 390,
+    potassiumMg: 150,
+    calciumMg: 30,
+    ironMg: 1.4,
+    vitaminCMg: 1,
+    aliases: ["iskembe", "işkembe", "iskembe corbasi", "tuzlama", "damar"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+    ],
+  },
+  {
+    id: "tavuk-suyu-corba",
+    name: "Tavuk Suyu Çorba",
+    category: "Çorbalar",
+    calories: 55,
+    protein: 4.8,
+    carbohydrates: 5.2,
+    fat: 1.6,
+    fiber: 0.4,
+    sodiumMg: 350,
+    potassiumMg: 140,
+    calciumMg: 15,
+    ironMg: 0.6,
+    vitaminCMg: 1,
+    aliases: ["tavuk çorbası", "tavuk suyu çorbası", "tavuk corbasi", "şehriyeli tavuk çorbası"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 250, isDefault: true },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 2. KAHVALTILIKLAR & PEYNİRLER
+  // -------------------------------------------------------------
+  {
+    id: "beyaz-peynir",
+    name: "Beyaz Peynir",
+    category: "Kahvaltılıklar",
+    calories: 260,
+    protein: 16.0,
+    carbohydrates: 2.5,
+    fat: 21.0,
+    fiber: 0,
+    sodiumMg: 950,
+    potassiumMg: 120,
+    calciumMg: 450,
+    ironMg: 0.4,
+    vitaminCMg: 0,
+    aliases: ["peynir", "tam yağlı beyaz peynir", "ezine", "ezine peyniri", "feta"],
+    portions: [
+      { name: "1 dilim", unit: "dilim", grams: 30, isDefault: true },
+      { name: "2 dilim", unit: "dilim", grams: 60 },
+      { name: "kalıp", unit: "adet", grams: 100 },
+    ],
+  },
+  {
+    id: "kasar-peyniri",
+    name: "Kaşar Peyniri",
+    category: "Kahvaltılıklar",
+    calories: 350,
+    protein: 26.0,
+    carbohydrates: 1.5,
+    fat: 27.0,
+    fiber: 0,
+    sodiumMg: 750,
+    potassiumMg: 90,
+    calciumMg: 700,
+    ironMg: 0.5,
+    vitaminCMg: 0,
+    aliases: ["kaşar", "kasar", "taze kaşar", "eski kaşar"],
+    portions: [
+      { name: "1 dilim", unit: "dilim", grams: 25, isDefault: true },
+      { name: "2 dilim", unit: "dilim", grams: 50 },
+    ],
+  },
+  {
+    id: "lor-peyniri",
+    name: "Lor Peyniri",
+    category: "Kahvaltılıklar",
+    calories: 98,
+    protein: 12.5,
+    carbohydrates: 3.2,
+    fat: 3.8,
+    fiber: 0,
+    sodiumMg: 350,
+    potassiumMg: 130,
+    calciumMg: 180,
+    ironMg: 0.3,
+    vitaminCMg: 0,
+    aliases: ["lor", "tatlı lor", "börek loru"],
+    portions: [
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 25 },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 100, isDefault: true },
+    ],
+  },
+  {
+    id: "siyah-zeytin",
+    name: "Siyah Zeytin",
+    category: "Kahvaltılıklar",
+    calories: 205,
+    protein: 1.8,
+    carbohydrates: 4.5,
+    fat: 21.0,
+    fiber: 3.2,
+    sodiumMg: 1200,
+    potassiumMg: 90,
+    calciumMg: 90,
+    ironMg: 1.6,
+    vitaminCMg: 0,
+    aliases: ["zeytin", "siyah zeytin", "kalamata", "gemlik zeytini"],
+    portions: [
+      { name: "5 adet", unit: "adet", grams: 20, isDefault: true },
+      { name: "10 adet", unit: "adet", grams: 40 },
+      { name: "1 adet", unit: "adet", grams: 4 },
+      { name: "avuç", unit: "avuç", grams: 30 },
+    ],
+  },
+  {
+    id: "bal-kaymak",
+    name: "Bal Kaymak",
+    category: "Kahvaltılıklar",
+    calories: 420,
+    protein: 2.0,
+    carbohydrates: 45.0,
+    fat: 27.0,
+    fiber: 0,
+    aliases: ["bal ve kaymak", "kaymak bal", "bal kaymak ikilisi"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 60, isDefault: true },
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 30 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 3. YUMURTALI YEMEKLER
+  // -------------------------------------------------------------
+  {
+    id: "haslanmis-yumurta",
+    name: "Haşlanmış Yumurta",
+    category: "Yumurtalı yemekler",
+    calories: 143,
+    protein: 12.8,
+    carbohydrates: 0.7,
+    fat: 9.9,
+    fiber: 0,
+    sodiumMg: 140,
+    potassiumMg: 130,
+    calciumMg: 50,
+    ironMg: 1.8,
+    vitaminCMg: 0,
+    aliases: ["yumurta", "haslanmis yumurta", "katı yumurta", "haşlama yumurta", "rafadan yumurta"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 50, isDefault: true },
+      { name: "2 adet", unit: "adet", grams: 100 },
+      { name: "tane", unit: "tane", grams: 50 },
+    ],
+  },
+  {
+    id: "menemen",
+    name: "Menemen",
+    category: "Yumurtalı yemekler",
+    calories: 110,
+    protein: 5.5,
+    carbohydrates: 4.8,
+    fat: 8.0,
+    fiber: 1.5,
+    sodiumMg: 280,
+    potassiumMg: 240,
+    calciumMg: 45,
+    ironMg: 1.2,
+    vitaminCMg: 18,
+    aliases: ["menemen", "sade menemen", "domatesli yumurta"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+      { name: "tava", unit: "tava", grams: 300 },
+    ],
+    variants: [
+      { id: "sade", name: "Sade Menemen", calories: 110, protein: 5.5, carbohydrates: 4.8, fat: 8.0, fiber: 1.5, aliases: ["sade menemen", "menemen sade"] },
+      { id: "soganli", name: "Soğanlı Menemen", calories: 105, protein: 5.3, carbohydrates: 5.6, fat: 7.5, fiber: 1.8, aliases: ["soğanlı menemen", "soganli menemen"] },
+      { id: "peynirli", name: "Peynirli Menemen", calories: 140, protein: 8.2, carbohydrates: 4.6, fat: 10.2, fiber: 1.4, aliases: ["peynirli menemen", "lorlu menemen"] },
+      { id: "kasarli", name: "Kaşarlı Menemen", calories: 165, protein: 9.8, carbohydrates: 4.5, fat: 12.4, fiber: 1.3, aliases: ["kaşarlı menemen", "kasarli menemen"] },
+      { id: "sucuklu", name: "Sucuklu Menemen", calories: 195, protein: 10.5, carbohydrates: 4.2, fat: 15.5, fiber: 1.2, aliases: ["sucuklu menemen"] },
+    ],
+  },
+  {
+    id: "sucuklu-yumurta",
+    name: "Sucuklu Yumurta",
+    category: "Yumurtalı yemekler",
+    calories: 235,
+    protein: 14.5,
+    carbohydrates: 1.8,
+    fat: 19.0,
+    fiber: 0.2,
+    sodiumMg: 680,
+    potassiumMg: 210,
+    calciumMg: 60,
+    ironMg: 2.1,
+    vitaminCMg: 1,
+    aliases: ["sucuklu yumurta", "tavada sucuklu yumurta", "sucuk yumurta"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 160, isDefault: true },
+      { name: "1 sahan", unit: "sahan", grams: 200 },
+    ],
+  },
+  {
+    id: "omlet",
+    name: "Omlet",
+    category: "Yumurtalı yemekler",
+    calories: 155,
+    protein: 11.5,
+    carbohydrates: 1.2,
+    fat: 11.8,
+    fiber: 0.1,
+    aliases: ["sade omlet", "tava omlet", "çırpılmış yumurta"],
+    portions: [
+      { name: "1 porsiyon (2 yumurta)", unit: "porsiyon", grams: 120, isDefault: true },
+      { name: "1 adet", unit: "adet", grams: 120 },
+    ],
+    variants: [
+      { id: "sade", name: "Sade Omlet", calories: 155, protein: 11.5, carbohydrates: 1.2, fat: 11.8, fiber: 0.1 },
+      { id: "peynirli", name: "Peynirli Omlet", calories: 185, protein: 13.8, carbohydrates: 1.5, fat: 14.2, fiber: 0.1, aliases: ["peynirli omlet"] },
+      { id: "kasarli", name: "Kaşarlı Omlet", calories: 210, protein: 15.2, carbohydrates: 1.4, fat: 16.5, fiber: 0.1, aliases: ["kaşarlı omlet", "kasarli omlet"] },
+      { id: "sebzeli", name: "Sebzeli Omlet", calories: 135, protein: 10.2, carbohydrates: 3.5, fat: 9.2, fiber: 1.2, aliases: ["sebzeli omlet", "mantarlı omlet"] },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 4. ET, TAVUK VE BALIK YEMEKLERİ
+  // -------------------------------------------------------------
+  {
+    id: "tas-kebabi",
+    name: "Tas Kebabı",
+    category: "Et yemekleri",
+    calories: 145,
+    protein: 15.2,
+    carbohydrates: 5.6,
+    fat: 7.2,
+    fiber: 1.1,
+    sodiumMg: 380,
+    potassiumMg: 350,
+    calciumMg: 25,
+    ironMg: 2.4,
+    vitaminCMg: 8,
+    aliases: ["tas kebabı", "tas kebabi", "dana tas kebabı", "patatesli tas kebabı"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+    ],
+  },
+  {
+    id: "hunkar-begendi",
+    name: "Hünkar Beğendi",
+    category: "Et yemekleri",
+    calories: 175,
+    protein: 13.5,
+    carbohydrates: 6.2,
+    fat: 10.8,
+    fiber: 1.8,
+    aliases: ["hünkar beğendi", "hunkar begendi", "beğendi", "begendili et"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 260, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 280 },
+    ],
+  },
+  {
+    id: "tavuk-sote",
+    name: "Tavuk Sote",
+    category: "Tavuk yemekleri",
+    calories: 125,
+    protein: 16.8,
+    carbohydrates: 4.2,
+    fat: 4.8,
+    fiber: 1.2,
+    aliases: ["tavuk sote", "sebzeli tavuk sote", "mantarlı tavuk sote"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+    ],
+  },
+  {
+    id: "hamsi-tava",
+    name: "Hamsi Tava",
+    category: "Balık yemekleri",
+    calories: 210,
+    protein: 18.5,
+    carbohydrates: 6.5,
+    fat: 12.4,
+    fiber: 0.5,
+    aliases: ["hamsi", "hamsi tava", "mısır unlu hamsi", "kızarmış hamsi"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 200, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+    ],
+  },
+  {
+    id: "levrek-izgara",
+    name: "Levrek Izgara",
+    category: "Balık yemekleri",
+    calories: 124,
+    protein: 23.5,
+    carbohydrates: 0,
+    fat: 3.2,
+    fiber: 0,
+    aliases: ["levrek", "ızgara levrek", "balik", "balık", "fırında levrek"],
+    portions: [
+      { name: "1 adet (bütün)", unit: "adet", grams: 300, isDefault: true },
+      { name: "1 porsiyon (fileto)", unit: "porsiyon", grams: 200 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 5. KEBAPLAR, KÖFTELER VE DÖNER
+  // -------------------------------------------------------------
+  {
+    id: "adana-kebap",
+    name: "Adana Kebap",
+    category: "Kebaplar",
+    calories: 240,
+    protein: 16.5,
+    carbohydrates: 3.2,
+    fat: 18.0,
+    fiber: 1.0,
+    sodiumMg: 520,
+    potassiumMg: 280,
+    calciumMg: 30,
+    ironMg: 2.2,
+    vitaminCMg: 5,
+    aliases: ["adana", "adana kebap", "acılı kebap", "kıyma kebabı"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 şiş", unit: "adet", grams: 120 },
+      { name: "1.5 porsiyon", unit: "porsiyon", grams: 270 },
+      { name: "1 dürüm", unit: "dürüm", grams: 250 },
+    ],
+  },
+  {
+    id: "urfa-kebap",
+    name: "Urfa Kebap",
+    category: "Kebaplar",
+    calories: 235,
+    protein: 16.5,
+    carbohydrates: 3.0,
+    fat: 17.5,
+    fiber: 0.8,
+    aliases: ["urfa", "urfa kebap", "acısız kebap"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 şiş", unit: "adet", grams: 120 },
+      { name: "1 dürüm", unit: "dürüm", grams: 250 },
+    ],
+  },
+  {
+    id: "iskender-kebap",
+    name: "İskender Kebap",
+    category: "Kebaplar",
+    calories: 220,
+    protein: 13.5,
+    carbohydrates: 12.0,
+    fat: 13.8,
+    fiber: 1.2,
+    sodiumMg: 620,
+    potassiumMg: 310,
+    calciumMg: 85,
+    ironMg: 1.9,
+    vitaminCMg: 4,
+    aliases: ["iskender", "iskender kebap", "bursa kebabı", "tereyağlı iskender"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 320, isDefault: true },
+      { name: "1.5 porsiyon", unit: "porsiyon", grams: 480 },
+      { name: "1 tabak", unit: "tabak", grams: 320 },
+    ],
+  },
+  {
+    id: "ali-nazik",
+    name: "Ali Nazik",
+    category: "Kebaplar",
+    calories: 160,
+    protein: 11.5,
+    carbohydrates: 5.5,
+    fat: 10.5,
+    fiber: 2.2,
+    aliases: ["ali nazik", "alinazik", "yoğurtlu patlıcanlı kebap"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 280, isDefault: true },
+    ],
+  },
+  {
+    id: "et-doner",
+    name: "Et Döner",
+    category: "Döner çeşitleri",
+    calories: 225,
+    protein: 18.5,
+    carbohydrates: 3.5,
+    fat: 15.2,
+    fiber: 0.4,
+    sodiumMg: 490,
+    potassiumMg: 260,
+    calciumMg: 28,
+    ironMg: 2.3,
+    vitaminCMg: 1,
+    aliases: ["döner", "et döner", "doner", "yaprak döner", "et doner"],
+    portions: [
+      { name: "1 porsiyon (tabakta)", unit: "porsiyon", grams: 150, isDefault: true },
+      { name: "1 dürüm", unit: "dürüm", grams: 220 },
+      { name: "yarım ekmek", unit: "yarım ekmek", grams: 240 },
+      { name: "tam ekmek", unit: "tam ekmek", grams: 380 },
+      { name: "pilav üstü", unit: "porsiyon", grams: 320 },
+    ],
+    variants: [
+      { id: "porsiyon", name: "Porsiyon Et Döner", calories: 225, protein: 18.5, carbohydrates: 3.5, fat: 15.2, fiber: 0.4, defaultGrams: 150, aliases: ["porsiyon döner", "sade döner"] },
+      { id: "durum", name: "Et Döner Dürüm", calories: 235, protein: 14.5, carbohydrates: 24.5, fat: 9.8, fiber: 1.8, defaultGrams: 220, aliases: ["döner dürüm", "et dürüm"] },
+      { id: "yarim-ekmek", name: "Yarım Ekmek Et Döner", calories: 245, protein: 13.8, carbohydrates: 28.0, fat: 9.5, fiber: 2.0, defaultGrams: 240, aliases: ["yarım ekmek döner", "yarım ekmek et döner"] },
+      { id: "tam-ekmek", name: "Tam Ekmek Et Döner", calories: 250, protein: 13.0, carbohydrates: 32.0, fat: 8.8, fiber: 2.2, defaultGrams: 380, aliases: ["tam ekmek döner"] },
+      { id: "pilav-ustu", name: "Pilav Üstü Et Döner", calories: 195, protein: 12.0, carbohydrates: 19.5, fat: 8.2, fiber: 1.0, defaultGrams: 320, aliases: ["pilav üstü döner", "pilav üstü et döner"] },
+    ],
+  },
+  {
+    id: "tavuk-doner",
+    name: "Tavuk Döner",
+    category: "Döner çeşitleri",
+    calories: 185,
+    protein: 17.2,
+    carbohydrates: 4.0,
+    fat: 11.0,
+    fiber: 0.3,
+    aliases: ["tavuk döner", "tavuk doner"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 150, isDefault: true },
+      { name: "1 dürüm", unit: "dürüm", grams: 230 },
+      { name: "yarım ekmek", unit: "yarım ekmek", grams: 250 },
+      { name: "tam ekmek", unit: "tam ekmek", grams: 390 },
+      { name: "pilav üstü", unit: "porsiyon", grams: 330 },
+    ],
+    variants: [
+      { id: "porsiyon", name: "Porsiyon Tavuk Döner", calories: 185, protein: 17.2, carbohydrates: 4.0, fat: 11.0, fiber: 0.3, defaultGrams: 150, aliases: ["porsiyon tavuk döner"] },
+      { id: "durum", name: "Tavuk Döner Dürüm", calories: 210, protein: 13.5, carbohydrates: 26.0, fat: 6.8, fiber: 1.6, defaultGrams: 230, aliases: ["tavuk dürüm", "tavuk döner dürüm"] },
+      { id: "yarim-ekmek", name: "Yarım Ekmek Tavuk Döner", calories: 220, protein: 12.8, carbohydrates: 29.5, fat: 6.5, fiber: 1.8, defaultGrams: 250, aliases: ["yarım ekmek tavuk döner", "yarim ekmek tavuk doner"] },
+      { id: "tam-ekmek", name: "Tam Ekmek Tavuk Döner", calories: 230, protein: 12.0, carbohydrates: 33.0, fat: 6.0, fiber: 2.0, defaultGrams: 390, aliases: ["tam ekmek tavuk döner"] },
+      { id: "pilav-ustu", name: "Pilav Üstü Tavuk Döner", calories: 175, protein: 11.5, carbohydrates: 21.0, fat: 5.5, fiber: 0.8, defaultGrams: 330, aliases: ["pilav üstü tavuk döner"] },
+    ],
+  },
+  {
+    id: "izgara-kofte",
+    name: "Izgara Köfte",
+    category: "Köfteler",
+    calories: 235,
+    protein: 21.5,
+    carbohydrates: 4.8,
+    fat: 14.5,
+    fiber: 0.8,
+    sodiumMg: 560,
+    potassiumMg: 310,
+    calciumMg: 35,
+    ironMg: 2.5,
+    vitaminCMg: 2,
+    aliases: ["köfte", "izgara kofte", "kofte", "tükürük köftesi", "anne köftesi", "kuru köfte"],
+    portions: [
+      { name: "1 porsiyon (5 adet)", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 adet", unit: "adet", grams: 35 },
+      { name: "1 porsiyon", unit: "tabak", grams: 180 },
+    ],
+  },
+  {
+    id: "izmir-kofte",
+    name: "İzmir Köfte",
+    category: "Köfteler",
+    calories: 145,
+    protein: 11.8,
+    carbohydrates: 8.5,
+    fat: 7.2,
+    fiber: 1.4,
+    aliases: ["izmir köfte", "izmir kofte", "patatesli köfte yemeği"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 250, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 280 },
+    ],
+  },
+  {
+    id: "kadinbudu-kofte",
+    name: "Kadınbudu Köfte",
+    category: "Köfteler",
+    calories: 220,
+    protein: 14.2,
+    carbohydrates: 12.5,
+    fat: 12.8,
+    fiber: 0.6,
+    aliases: ["kadınbudu köfte", "kadinbudu kofte", "kadınbudu"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 70 },
+      { name: "1 porsiyon (2 adet)", unit: "porsiyon", grams: 140, isDefault: true },
+    ],
+  },
+  {
+    id: "icli-kofte",
+    name: "İçli Köfte",
+    category: "Köfteler",
+    calories: 225,
+    protein: 10.8,
+    carbohydrates: 23.5,
+    fat: 10.2,
+    fiber: 2.8,
+    aliases: ["içli köfte", "icli kofte", "oruk", "haşlama içli köfte", "kızartma içli köfte"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 85, isDefault: true },
+      { name: "2 adet", unit: "adet", grams: 170 },
+    ],
+  },
+  {
+    id: "cig-kofte",
+    name: "Çiğ Köfte",
+    category: "Köfteler",
+    calories: 180,
+    protein: 6.2,
+    carbohydrates: 31.0,
+    fat: 3.8,
+    fiber: 4.5,
+    sodiumMg: 650,
+    potassiumMg: 280,
+    calciumMg: 35,
+    ironMg: 2.2,
+    vitaminCMg: 10,
+    aliases: ["çiğ köfte", "cig kofte", "etsiz çiğ köfte", "çiğköfte", "cigkofte"],
+    portions: [
+      { name: "1 porsiyon (6 sıkım)", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 sıkım", unit: "adet", grams: 30 },
+      { name: "1 dürüm", unit: "dürüm", grams: 220 },
+    ],
+  },
+  {
+    id: "mercimek-koftesi",
+    name: "Mercimek Köftesi",
+    category: "Köfteler",
+    calories: 145,
+    protein: 5.8,
+    carbohydrates: 24.5,
+    fat: 2.8,
+    fiber: 3.8,
+    aliases: ["mercimek köftesi", "mercimek koftesi", "mercimekli köfte"],
+    portions: [
+      { name: "1 sıkım", unit: "adet", grams: 35 },
+      { name: "1 porsiyon (5 sıkım)", unit: "porsiyon", grams: 175, isDefault: true },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 6. BAKLİYAT VE EV YEMEKLERİ
+  // -------------------------------------------------------------
+  {
+    id: "kuru-fasulye",
+    name: "Kuru Fasulye",
+    category: "Bakliyat yemekleri",
+    calories: 125,
+    protein: 7.8,
+    carbohydrates: 18.5,
+    fat: 2.4,
+    fiber: 5.8,
+    sodiumMg: 390,
+    potassiumMg: 420,
+    calciumMg: 55,
+    ironMg: 2.6,
+    vitaminCMg: 3,
+    aliases: ["kuru fasulye", "kuru fasülye", "kurufasulye", "fasulye yemeği", "kuru"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 250, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 300 },
+      { name: "1 kase", unit: "kase", grams: 200 },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+    ],
+    variants: [
+      { id: "etsiz", name: "Etsiz Kuru Fasulye", calories: 110, protein: 6.8, carbohydrates: 18.5, fat: 1.2, fiber: 5.8, aliases: ["etsiz kuru fasulye", "sade kuru fasulye"] },
+      { id: "etli", name: "Etli Kuru Fasulye", calories: 155, protein: 11.2, carbohydrates: 16.5, fat: 5.2, fiber: 5.2, aliases: ["etli kuru fasulye", "etli fasulye"] },
+      { id: "pastirmali", name: "Pastırmalı Kuru Fasulye", calories: 170, protein: 12.5, carbohydrates: 16.0, fat: 6.4, fiber: 5.0, aliases: ["pastırmalı kuru fasulye", "pastirmali kuru fasulye"] },
+      { id: "sucuklu", name: "Sucuklu Kuru Fasulye", calories: 185, protein: 11.8, carbohydrates: 15.5, fat: 8.5, fiber: 4.8, aliases: ["sucuklu kuru fasulye"] },
+    ],
+  },
+  {
+    id: "nohut-yemegi",
+    name: "Nohut Yemeği",
+    category: "Bakliyat yemekleri",
+    calories: 140,
+    protein: 7.2,
+    carbohydrates: 21.0,
+    fat: 3.2,
+    fiber: 6.2,
+    aliases: ["nohut", "nohut yemeği", "etli nohut", "etsiz nohut"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 250, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 300 },
+      { name: "1 kepçe", unit: "kepçe", grams: 100 },
+    ],
+    variants: [
+      { id: "etsiz", name: "Etsiz Nohut", calories: 130, protein: 6.5, carbohydrates: 21.5, fat: 2.0, fiber: 6.5 },
+      { id: "etli", name: "Etli Nohut", calories: 165, protein: 10.8, carbohydrates: 18.5, fat: 5.6, fiber: 5.8, aliases: ["etli nohut"] },
+    ],
+  },
+  {
+    id: "barbunya-pilaki",
+    name: "Barbunya Pilaki",
+    category: "Bakliyat yemekleri",
+    calories: 145,
+    protein: 6.5,
+    carbohydrates: 20.2,
+    fat: 4.5,
+    fiber: 5.5,
+    aliases: ["barbunya", "barbunya pilaki", "zeytinyağlı barbunya"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 260 },
+    ],
+  },
+  {
+    id: "karniyarik",
+    name: "Karnıyarık",
+    category: "Sebze yemekleri",
+    calories: 135,
+    protein: 7.2,
+    carbohydrates: 6.8,
+    fat: 9.0,
+    fiber: 2.8,
+    sodiumMg: 360,
+    potassiumMg: 320,
+    calciumMg: 35,
+    ironMg: 1.5,
+    vitaminCMg: 14,
+    aliases: ["karnıyarık", "karniyarik", "kıymalı patlıcan"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 190, isDefault: true },
+      { name: "1 porsiyon (1 büyük)", unit: "porsiyon", grams: 220 },
+    ],
+  },
+  {
+    id: "imam-bayildi",
+    name: "İmam Bayıldı",
+    category: "Sebze yemekleri",
+    calories: 110,
+    protein: 2.1,
+    carbohydrates: 8.5,
+    fat: 7.8,
+    fiber: 3.2,
+    aliases: ["imam bayıldı", "imam bayildi", "zeytinyağlı imam bayıldı"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 180, isDefault: true },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 200 },
+    ],
+  },
+  {
+    id: "taze-fasulye",
+    name: "Taze Fasulye",
+    category: "Sebze yemekleri",
+    calories: 72,
+    protein: 1.9,
+    carbohydrates: 7.2,
+    fat: 4.2,
+    fiber: 2.6,
+    aliases: ["taze fasulye", "zeytinyağlı taze fasulye", "yeşil fasulye"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+    ],
+  },
+  {
+    id: "turlu",
+    name: "Türlü",
+    category: "Sebze yemekleri",
+    calories: 85,
+    protein: 2.8,
+    carbohydrates: 8.5,
+    fat: 4.5,
+    fiber: 2.9,
+    aliases: ["türlü", "turlu", "türlü yemeği", "sebze güveç"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 240, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 280 },
+    ],
+  },
+  {
+    id: "etli-bezelye",
+    name: "Etli Bezelye",
+    category: "Sebze yemekleri",
+    calories: 115,
+    protein: 7.5,
+    carbohydrates: 11.2,
+    fat: 4.8,
+    fiber: 3.5,
+    aliases: ["bezelye", "etli bezelye", "kıymalı bezelye", "bezelye yemeği"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 240, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 270 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 7. DOLMALAR VE SARMALAR
+  // -------------------------------------------------------------
+  {
+    id: "yaprak-sarma",
+    name: "Yaprak Sarma",
+    category: "Dolma ve sarmalar",
+    calories: 165,
+    protein: 3.5,
+    carbohydrates: 22.0,
+    fat: 7.2,
+    fiber: 2.8,
+    sodiumMg: 480,
+    potassiumMg: 210,
+    calciumMg: 65,
+    ironMg: 1.8,
+    vitaminCMg: 6,
+    aliases: [
+      "sarma",
+      "yaprak dolması",
+      "zeytinyağlı sarma",
+      "zeytinyagli yaprak sarma",
+      "üzüm yaprağı sarması",
+      "etli yaprak sarma",
+      "etli sarma",
+    ],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 25 },
+      { name: "1 porsiyon (6 adet)", unit: "porsiyon", grams: 150, isDefault: true },
+      { name: "1 tabak (8 adet)", unit: "tabak", grams: 200 },
+    ],
+    variants: [
+      { id: "zeytinyagli", name: "Zeytinyağlı Yaprak Sarma", calories: 175, protein: 2.8, carbohydrates: 24.0, fat: 7.8, fiber: 2.8, aliases: ["zeytinyağlı yaprak sarma", "zeytinyagli sarma"] },
+      { id: "etli", name: "Etli Yaprak Sarma", calories: 150, protein: 7.2, carbohydrates: 16.5, fat: 6.2, fiber: 2.4, aliases: ["etli yaprak sarma", "etli sarma"] },
+    ],
+  },
+  {
+    id: "biber-dolmasi",
+    name: "Biber Dolması",
+    category: "Dolma ve sarmalar",
+    calories: 135,
+    protein: 4.8,
+    carbohydrates: 15.2,
+    fat: 6.2,
+    fiber: 2.2,
+    aliases: ["biber dolması", "biber dolmasi", "kıymalı biber dolması", "zeytinyağlı biber dolması"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 120 },
+      { name: "2 adet (1 porsiyon)", unit: "porsiyon", grams: 240, isDefault: true },
+      { name: "tane", unit: "tane", grams: 120 },
+    ],
+    variants: [
+      { id: "kiymali", name: "Kıymalı Biber Dolması", calories: 140, protein: 6.8, carbohydrates: 12.8, fat: 6.8, fiber: 2.0, aliases: ["kıymalı biber dolması", "kiymali biber dolmasi"] },
+      { id: "zeytinyagli", name: "Zeytinyağlı Biber Dolması", calories: 130, protein: 2.6, carbohydrates: 18.0, fat: 5.5, fiber: 2.4, aliases: ["zeytinyağlı biber dolması"] },
+    ],
+  },
+  {
+    id: "kabak-dolmasi",
+    name: "Kabak Dolması",
+    category: "Dolma ve sarmalar",
+    calories: 105,
+    protein: 5.2,
+    carbohydrates: 9.8,
+    fat: 5.0,
+    fiber: 1.9,
+    aliases: ["kabak dolması", "kabak dolmasi", "kıymalı kabak dolması"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 130 },
+      { name: "2 adet (1 porsiyon)", unit: "porsiyon", grams: 260, isDefault: true },
+    ],
+  },
+  {
+    id: "lahana-sarmasi",
+    name: "Lahana Sarması",
+    category: "Dolma ve sarmalar",
+    calories: 128,
+    protein: 5.8,
+    carbohydrates: 13.5,
+    fat: 5.8,
+    fiber: 2.4,
+    aliases: ["lahana sarması", "lahana sarmasi", "etli lahana sarması"],
+    portions: [
+      { name: "1 porsiyon (4 adet)", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 adet", unit: "adet", grams: 55 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 8. PİLAVLAR VE BULGUR YEMEKLERİ
+  // -------------------------------------------------------------
+  {
+    id: "pirinc-pilavi",
+    name: "Pirinç Pilavı",
+    category: "Pilavlar",
+    calories: 145,
+    protein: 2.8,
+    carbohydrates: 28.5,
+    fat: 2.2,
+    fiber: 0.6,
+    sodiumMg: 280,
+    potassiumMg: 75,
+    calciumMg: 12,
+    ironMg: 0.8,
+    vitaminCMg: 0,
+    aliases: [
+      "pilav",
+      "pirinç pilavı",
+      "pirinc pilavi",
+      "pirinç pilav",
+      "pirinc",
+      "şehriyeli pilav",
+      "sehriyeli pilav",
+      "beyaz pilav",
+      "tavuk pilav",
+      "tavuklu pilav",
+      "pilav üstü tavuk",
+    ],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 220 },
+      { name: "1 kase", unit: "kase", grams: 150 },
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 25 },
+    ],
+    variants: [
+      { id: "sade", name: "Sade Pirinç Pilavı", calories: 135, protein: 2.6, carbohydrates: 29.0, fat: 0.8, fiber: 0.5, aliases: ["sade pilav", "sade pirinç pilavı"] },
+      { id: "tereyagli", name: "Tereyağlı Pirinç Pilavı", calories: 155, protein: 2.8, carbohydrates: 28.0, fat: 3.5, fiber: 0.5, aliases: ["tereyağlı pilav", "tereyagli pirinc pilavi"] },
+      { id: "sehriyeli", name: "Şehriyeli Pirinç Pilavı", calories: 150, protein: 3.0, carbohydrates: 28.5, fat: 2.5, fiber: 0.8, aliases: ["şehriyeli pilav", "arpa şehriyeli pilav"] },
+      { id: "tavuklu", name: "Tavuklu Pilav", calories: 175, protein: 8.5, carbohydrates: 24.5, fat: 4.8, fiber: 0.6, defaultGrams: 250, aliases: ["tavuklu pilav", "tavuk pilav", "pilav üstü tavuk", "pilav ustu tavuk"] },
+    ],
+  },
+  {
+    id: "bulgur-pilavi",
+    name: "Bulgur Pilavı",
+    category: "Bulgur yemekleri",
+    calories: 128,
+    protein: 3.8,
+    carbohydrates: 24.5,
+    fat: 1.8,
+    fiber: 4.2,
+    sodiumMg: 240,
+    potassiumMg: 160,
+    calciumMg: 18,
+    ironMg: 1.4,
+    vitaminCMg: 3,
+    aliases: ["bulgur", "bulgur pilavı", "bulgur pilavi", "meyhane pilavı", "sebzeli bulgur"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 220 },
+      { name: "1 kase", unit: "kase", grams: 150 },
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 25 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 9. MAKARNALAR VE MANTI
+  // -------------------------------------------------------------
+  {
+    id: "makarna",
+    name: "Makarna",
+    category: "Makarnalar",
+    calories: 155,
+    protein: 5.5,
+    carbohydrates: 30.5,
+    fat: 1.2,
+    fiber: 1.8,
+    aliases: ["makarna", "sade makarna", "salçalı makarna", "spagetti", "fiyonk"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 200, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+      { name: "1 kase", unit: "kase", grams: 160 },
+    ],
+    variants: [
+      { id: "sade", name: "Sade Makarna", calories: 150, protein: 5.5, carbohydrates: 31.0, fat: 0.8, fiber: 1.8 },
+      { id: "salcali", name: "Salçalı Makarna", calories: 165, protein: 5.6, carbohydrates: 30.0, fat: 2.8, fiber: 2.0, aliases: ["salçalı makarna", "salcali makarna"] },
+      { id: "peynirli", name: "Peynirli Makarna", calories: 185, protein: 8.2, carbohydrates: 28.5, fat: 4.8, fiber: 1.8, aliases: ["peynirli makarna"] },
+      { id: "kiymali", name: "Kıymalı Makarna", calories: 195, protein: 10.5, carbohydrates: 26.5, fat: 5.8, fiber: 1.9, aliases: ["kıymalı makarna", "kiymali makarna", "makarna kıyma"] },
+    ],
+  },
+  {
+    id: "manti",
+    name: "Mantı",
+    category: "Mantı",
+    calories: 195,
+    protein: 8.5,
+    carbohydrates: 28.5,
+    fat: 5.8,
+    fiber: 1.8,
+    sodiumMg: 450,
+    potassiumMg: 190,
+    calciumMg: 65,
+    ironMg: 1.6,
+    vitaminCMg: 1,
+    aliases: ["mantı", "manti", "kayseri mantısı", "kayseri mantisi", "yoğurtlu mantı"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 250, isDefault: true },
+      { name: "1 tabak", unit: "tabak", grams: 300 },
+      { name: "1 kase", unit: "kase", grams: 200 },
+    ],
+    variants: [
+      { id: "sade", name: "Sade Mantı (Sossuz)", calories: 175, protein: 8.2, carbohydrates: 29.5, fat: 3.2, fiber: 1.8, aliases: ["sade mantı", "sade manti"] },
+      { id: "yogurtlu", name: "Yoğurtlu Mantı", calories: 195, protein: 8.8, carbohydrates: 28.0, fat: 5.5, fiber: 1.8, aliases: ["yoğurtlu mantı", "yogurtlu manti"] },
+      { id: "tereyagli-soslu", name: "Tereyağlı Soslu Yoğurtlu Mantı", calories: 235, protein: 8.5, carbohydrates: 27.0, fat: 10.5, fiber: 1.7, aliases: ["tereyağlı mantı", "soslu mantı", "bol soslu mantı"] },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 10. BÖREKLER VE HAMUR İŞLERİ
+  // -------------------------------------------------------------
+  {
+    id: "su-boregi",
+    name: "Su Böreği",
+    category: "Börekler",
+    calories: 275,
+    protein: 9.8,
+    carbohydrates: 28.0,
+    fat: 14.2,
+    fiber: 1.2,
+    sodiumMg: 510,
+    potassiumMg: 110,
+    calciumMg: 140,
+    ironMg: 1.2,
+    vitaminCMg: 0,
+    aliases: ["su böreği", "su boregi", "peynirli su böreği", "tepsi böreği"],
+    portions: [
+      { name: "1 dilim", unit: "dilim", grams: 120, isDefault: true },
+      { name: "2 dilim", unit: "dilim", grams: 240 },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180 },
+    ],
+  },
+  {
+    id: "sigara-boregi",
+    name: "Sigara Böreği",
+    category: "Börekler",
+    calories: 295,
+    protein: 8.5,
+    carbohydrates: 31.5,
+    fat: 15.5,
+    fiber: 1.4,
+    aliases: ["sigara böreği", "sigara boregi", "kalem böreği", "peynirli börek"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 40 },
+      { name: "1 porsiyon (4 adet)", unit: "porsiyon", grams: 160, isDefault: true },
+    ],
+  },
+  {
+    id: "gozleme",
+    name: "Gözleme",
+    category: "Börekler",
+    calories: 245,
+    protein: 8.2,
+    carbohydrates: 34.0,
+    fat: 8.8,
+    fiber: 2.2,
+    aliases: ["gözleme", "gozleme"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 180, isDefault: true },
+      { name: "yarım", unit: "yarım", grams: 90 },
+    ],
+    variants: [
+      { id: "peynirli", name: "Peynirli Gözleme", calories: 255, protein: 9.5, carbohydrates: 33.0, fat: 9.5, fiber: 1.8, aliases: ["peynirli gözleme"] },
+      { id: "ispanakli", name: "Ispanaklı Gözleme", calories: 220, protein: 7.2, carbohydrates: 34.5, fat: 6.5, fiber: 2.8, aliases: ["ıspanaklı gözleme", "ispanakli gozleme"] },
+      { id: "kiymali", name: "Kıymalı Gözleme", calories: 265, protein: 11.2, carbohydrates: 32.0, fat: 10.5, fiber: 2.0, aliases: ["kıymalı gözleme"] },
+      { id: "patatesli", name: "Patatesli Gözleme", calories: 235, protein: 6.8, carbohydrates: 37.0, fat: 7.2, fiber: 2.5, aliases: ["patatesli gözleme"] },
+    ],
+  },
+  {
+    id: "simit",
+    name: "Simit",
+    category: "Hamur işleri",
+    calories: 290,
+    protein: 9.8,
+    carbohydrates: 53.5,
+    fat: 4.8,
+    fiber: 3.6,
+    sodiumMg: 420,
+    potassiumMg: 150,
+    calciumMg: 110,
+    ironMg: 2.4,
+    vitaminCMg: 0,
+    aliases: ["simit", "susamlı simit", "gevrek", "ankara simidi", "istanbul simidi"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 100, isDefault: true },
+      { name: "yarım simit", unit: "yarım", grams: 50 },
+      { name: "çeyrek simit", unit: "çeyrek", grams: 25 },
+    ],
+  },
+  {
+    id: "pogaca",
+    name: "Poğaça",
+    category: "Hamur işleri",
+    calories: 345,
+    protein: 7.8,
+    carbohydrates: 42.0,
+    fat: 16.8,
+    fiber: 1.8,
+    aliases: ["poğaça", "pogaca", "sade poğaça", "peynirli poğaça", "kaşarlı poğaça"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 80, isDefault: true },
+    ],
+    variants: [
+      { id: "sade", name: "Sade Poğaça", calories: 345, protein: 7.8, carbohydrates: 42.0, fat: 16.8, fiber: 1.8 },
+      { id: "peynirli", name: "Peynirli Poğaça", calories: 335, protein: 9.2, carbohydrates: 39.5, fat: 16.0, fiber: 1.8, aliases: ["peynirli poğaça"] },
+      { id: "kasarli", name: "Kaşarlı Poğaça", calories: 360, protein: 10.5, carbohydrates: 38.0, fat: 18.5, fiber: 1.7, aliases: ["kaşarlı poğaça"] },
+      { id: "zeytinli", name: "Zeytinli Poğaça", calories: 340, protein: 7.5, carbohydrates: 41.0, fat: 16.5, fiber: 2.2, aliases: ["zeytinli poğaça"] },
+    ],
+  },
+  {
+    id: "acma",
+    name: "Açma",
+    category: "Hamur işleri",
+    calories: 365,
+    protein: 7.5,
+    carbohydrates: 44.0,
+    fat: 18.2,
+    fiber: 1.6,
+    aliases: ["açma", "acma", "sade açma", "zeytinli açma"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 95, isDefault: true },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 11. PİDELER VE LAHMACUN
+  // -------------------------------------------------------------
+  {
+    id: "lahmacun",
+    name: "Lahmacun",
+    category: "Lahmacun",
+    calories: 195,
+    protein: 8.8,
+    carbohydrates: 27.5,
+    fat: 6.2,
+    fiber: 2.0,
+    sodiumMg: 460,
+    potassiumMg: 210,
+    calciumMg: 35,
+    ironMg: 1.8,
+    vitaminCMg: 8,
+    aliases: ["lahmacun", "fındık lahmacun", "çıtır lahmacun"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 140, isDefault: true },
+      { name: "2 adet", unit: "adet", grams: 280 },
+      { name: "1 porsiyon (2 adet)", unit: "porsiyon", grams: 280 },
+      { name: "tane", unit: "tane", grams: 140 },
+    ],
+  },
+  {
+    id: "kiymali-pide",
+    name: "Kıymalı Pide",
+    category: "Pideler",
+    calories: 225,
+    protein: 10.5,
+    carbohydrates: 31.0,
+    fat: 7.0,
+    fiber: 1.8,
+    aliases: ["kıymalı pide", "kiymali pide", "pide", "karadeniz pidesi"],
+    portions: [
+      { name: "1 porsiyon (1 adet)", unit: "porsiyon", grams: 220, isDefault: true },
+      { name: "1 adet", unit: "adet", grams: 220 },
+      { name: "1 dilim", unit: "dilim", grams: 55 },
+    ],
+  },
+  {
+    id: "kusbasili-pide",
+    name: "Kuşbaşılı Pide",
+    category: "Pideler",
+    calories: 235,
+    protein: 12.8,
+    carbohydrates: 30.0,
+    fat: 7.8,
+    fiber: 1.7,
+    aliases: ["kuşbaşılı pide", "kusbasili pide", "kuşbaşı kaşarlı pide"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 240, isDefault: true },
+      { name: "1 adet", unit: "adet", grams: 240 },
+    ],
+  },
+  {
+    id: "kasarli-pide",
+    name: "Kaşarlı Pide",
+    category: "Pideler",
+    calories: 260,
+    protein: 11.8,
+    carbohydrates: 33.0,
+    fat: 9.6,
+    fiber: 1.5,
+    aliases: ["kaşarlı pide", "kasarli pide", "peynirli pide"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 210, isDefault: true },
+      { name: "1 adet", unit: "adet", grams: 210 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 12. EKMEK ÇEŞİTLERİ
+  // -------------------------------------------------------------
+  {
+    id: "beyaz-ekmek",
+    name: "Beyaz Ekmek",
+    category: "Ekmek çeşitleri",
+    calories: 265,
+    protein: 8.5,
+    carbohydrates: 51.5,
+    fat: 1.5,
+    fiber: 2.7,
+    sodiumMg: 520,
+    potassiumMg: 110,
+    calciumMg: 30,
+    ironMg: 1.5,
+    vitaminCMg: 0,
+    aliases: ["ekmek", "somun ekmek", "beyaz ekmek", "francala"],
+    portions: [
+      { name: "1 dilim", unit: "dilim", grams: 30, isDefault: true },
+      { name: "2 dilim", unit: "dilim", grams: 60 },
+      { name: "yarım ekmek", unit: "yarım", grams: 100 },
+      { name: "çeyrek ekmek", unit: "çeyrek", grams: 50 },
+      { name: "tam ekmek", unit: "adet", grams: 200 },
+    ],
+  },
+  {
+    id: "tam-bugday-ekmegi",
+    name: "Tam Buğday Ekmeği",
+    category: "Ekmek çeşitleri",
+    calories: 247,
+    protein: 12.8,
+    carbohydrates: 41.5,
+    fat: 3.4,
+    fiber: 7.0,
+    aliases: ["tam buğday", "tam buğday ekmeği", "tam bugday", "kepekli ekmek", "çavdar ekmeği"],
+    portions: [
+      { name: "1 dilim", unit: "dilim", grams: 30, isDefault: true },
+      { name: "2 dilim", unit: "dilim", grams: 60 },
+    ],
+  },
+  {
+    id: "lavas",
+    name: "Lavaş",
+    category: "Ekmek çeşitleri",
+    calories: 280,
+    protein: 8.5,
+    carbohydrates: 56.0,
+    fat: 3.0,
+    fiber: 2.2,
+    aliases: ["lavaş", "lavas", "dürüm ekmeği", "tortilla"],
+    portions: [
+      { name: "1 adet", unit: "adet", grams: 65, isDefault: true },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 13. MEZELER, SALATALAR VE YOĞURTLU YEMEKLER
+  // -------------------------------------------------------------
+  {
+    id: "cacik",
+    name: "Cacık",
+    category: "Yoğurtlu yemekler",
+    calories: 58,
+    protein: 3.2,
+    carbohydrates: 4.2,
+    fat: 3.2,
+    fiber: 0.6,
+    sodiumMg: 190,
+    potassiumMg: 180,
+    calciumMg: 110,
+    ironMg: 0.4,
+    vitaminCMg: 4,
+    aliases: ["cacık", "cacik", "kuru cacık", "salatalıklı yoğurt"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 200, isDefault: true },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 200 },
+      { name: "1 kupa", unit: "bardak", grams: 200 },
+    ],
+  },
+  {
+    id: "haydari",
+    name: "Haydari",
+    category: "Mezeler",
+    calories: 145,
+    protein: 7.2,
+    carbohydrates: 5.5,
+    fat: 10.8,
+    fiber: 0.3,
+    aliases: ["haydari", "sarımsaklı süzme yoğurt", "nane yoğurt mezesi"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 100, isDefault: true },
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 30 },
+    ],
+  },
+  {
+    id: "humus",
+    name: "Humus",
+    category: "Mezeler",
+    calories: 175,
+    protein: 7.5,
+    carbohydrates: 16.5,
+    fat: 9.2,
+    fiber: 4.8,
+    aliases: ["humus", "tahinli nohut mezesi"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 120, isDefault: true },
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 35 },
+    ],
+  },
+  {
+    id: "coban-salata",
+    name: "Çoban Salata",
+    category: "Salatalar",
+    calories: 55,
+    protein: 1.2,
+    carbohydrates: 4.8,
+    fat: 3.6,
+    fiber: 1.6,
+    aliases: ["çoban salata", "coban salata", "mevsim salata", "salata"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 kase", unit: "kase", grams: 200 },
+      { name: "1 tabak", unit: "tabak", grams: 250 },
+    ],
+  },
+  {
+    id: "yogurt",
+    name: "Yoğurt",
+    category: "Yoğurtlu yemekler",
+    calories: 65,
+    protein: 3.8,
+    carbohydrates: 4.8,
+    fat: 3.5,
+    fiber: 0,
+    sodiumMg: 50,
+    potassiumMg: 155,
+    calciumMg: 125,
+    ironMg: 0.1,
+    vitaminCMg: 1,
+    aliases: ["yoğurt", "yogurt", "ev yoğurdu", "kase yoğurt"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 200, isDefault: true },
+      { name: "1 su bardağı", unit: "bardak", grams: 200 },
+      { name: "1 yemek kaşığı", unit: "yemek kaşığı", grams: 45 },
+      { name: "iki kaşık", unit: "kaşık", grams: 90 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 14. TATLILAR
+  // -------------------------------------------------------------
+  {
+    id: "baklava",
+    name: "Baklava",
+    category: "Tatlılar",
+    calories: 410,
+    protein: 5.5,
+    carbohydrates: 52.0,
+    fat: 20.5,
+    fiber: 2.2,
+    sodiumMg: 180,
+    potassiumMg: 140,
+    calciumMg: 45,
+    ironMg: 1.4,
+    vitaminCMg: 0,
+    aliases: ["baklava", "fıstıklı baklava", "cevizli baklava"],
+    portions: [
+      { name: "1 dilim", unit: "dilim", grams: 40 },
+      { name: "1 porsiyon (3 dilim)", unit: "porsiyon", grams: 120, isDefault: true },
+      { name: "tane", unit: "tane", grams: 40 },
+    ],
+  },
+  {
+    id: "kunefe",
+    name: "Künefe",
+    category: "Tatlılar",
+    calories: 360,
+    protein: 7.2,
+    carbohydrates: 46.0,
+    fat: 16.8,
+    fiber: 1.5,
+    aliases: ["künefe", "kunefe", "peynirli künefe"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+    ],
+  },
+  {
+    id: "sutlac",
+    name: "Sütlaç",
+    category: "Sütlü tatlılar",
+    calories: 138,
+    protein: 3.5,
+    carbohydrates: 24.5,
+    fat: 2.9,
+    fiber: 0.3,
+    aliases: ["sütlaç", "sutlac", "fırın sütlaç", "firin sutlac"],
+    portions: [
+      { name: "1 kase", unit: "kase", grams: 200, isDefault: true },
+      { name: "1 porsiyon", unit: "porsiyon", grams: 200 },
+    ],
+  },
+  {
+    id: "kazandibi",
+    name: "Kazandibi",
+    category: "Sütlü tatlılar",
+    calories: 145,
+    protein: 3.8,
+    carbohydrates: 25.5,
+    fat: 3.2,
+    fiber: 0.2,
+    aliases: ["kazandibi", "tavukgöğsü", "tavuk gogsu tatlisi"],
+    portions: [
+      { name: "1 porsiyon", unit: "porsiyon", grams: 180, isDefault: true },
+      { name: "1 dilim", unit: "dilim", grams: 180 },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 15. İÇECEKLER
+  // -------------------------------------------------------------
+  {
+    id: "ayran",
+    name: "Ayran",
+    category: "İçecekler",
+    calories: 38,
+    protein: 2.1,
+    carbohydrates: 2.9,
+    fat: 2.0,
+    fiber: 0,
+    sodiumMg: 140,
+    potassiumMg: 110,
+    calciumMg: 75,
+    ironMg: 0.1,
+    vitaminCMg: 0,
+    aliases: ["ayran", "yayık ayranı", "kutu ayran", "açık ayran"],
+    portions: [
+      { name: "1 bardak (su bardağı)", unit: "bardak", grams: 200, isDefault: true },
+      { name: "1 kutu (küçük)", unit: "kutu", grams: 200 },
+      { name: "1 büyük bardak", unit: "bardak", grams: 300 },
+      { name: "şişe", unit: "şişe", grams: 250 },
+    ],
+  },
+  {
+    id: "cay",
+    name: "Çay",
+    category: "İçecekler",
+    calories: 1,
+    protein: 0.1,
+    carbohydrates: 0.2,
+    fat: 0,
+    fiber: 0,
+    aliases: ["çay", "cay", "siyah çay", "bardak çay"],
+    portions: [
+      { name: "1 çay bardağı", unit: "bardak", grams: 100, isDefault: true },
+      { name: "1 kupa", unit: "kupa", grams: 250 },
+    ],
+  },
+  {
+    id: "turk-kahvesi",
+    name: "Türk Kahvesi",
+    category: "İçecekler",
+    calories: 12,
+    protein: 0.3,
+    carbohydrates: 1.5,
+    fat: 0.4,
+    fiber: 0.5,
+    aliases: ["türk kahvesi", "turk kahvesi", "orta türk kahvesi", "sade türk kahvesi"],
+    portions: [
+      { name: "1 fincan", unit: "fincan", grams: 70, isDefault: true },
+    ],
+  },
+  {
+    id: "salgam-suyu",
+    name: "Şalgam Suyu",
+    category: "İçecekler",
+    calories: 12,
+    protein: 0.5,
+    carbohydrates: 2.2,
+    fat: 0.1,
+    fiber: 0.4,
+    aliases: ["şalgam", "salgam", "acılı şalgam", "acısız şalgam"],
+    portions: [
+      { name: "1 bardak", unit: "bardak", grams: 250, isDefault: true },
+    ],
+  },
+
+  // -------------------------------------------------------------
+  // 16. KURUYEMİŞLER VE EKSTRALAR
+  // -------------------------------------------------------------
+  {
+    id: "findik",
+    name: "Fındık",
+    category: "Kahvaltılıklar",
+    calories: 628,
+    protein: 15.0,
+    carbohydrates: 16.7,
+    fat: 60.8,
+    fiber: 9.7,
+    aliases: ["fındık", "findik", "kavrulmuş fındık", "çiğ fındık"],
+    portions: [
+      { name: "1 avuç", unit: "avuç", grams: 30, isDefault: true },
+      { name: "10 adet", unit: "adet", grams: 15 },
+    ],
+  },
+  {
+    id: "ceviz",
+    name: "Ceviz",
+    category: "Kahvaltılıklar",
+    calories: 654,
+    protein: 15.2,
+    carbohydrates: 13.7,
+    fat: 65.2,
+    fiber: 6.7,
+    aliases: ["ceviz", "ceviz içi"],
+    portions: [
+      { name: "1 avuç", unit: "avuç", grams: 30, isDefault: true },
+      { name: "2 tam ceviz", unit: "adet", grams: 12 },
+    ],
+  },
+  {
+    id: "badem",
+    name: "Badem",
+    category: "Kahvaltılıklar",
+    calories: 579,
+    protein: 21.2,
+    carbohydrates: 21.6,
+    fat: 49.9,
+    fiber: 12.5,
+    aliases: ["badem", "çiğ badem", "kavrulmuş badem"],
+    portions: [
+      { name: "1 avuç", unit: "avuç", grams: 30, isDefault: true },
+      { name: "10 adet", unit: "adet", grams: 15 },
+    ],
+  },
+];
+
+/**
+ * Hızlı arama için indekse alınmış yemek listesi
+ */
+export function findTurkishFoodByAliasOrName(query: string): TurkishFood | null {
+  const clean = normalizeTurkishText(query);
+  if (!clean || clean.length < 2) return null;
+
+  // 1. Tam Ad Eşleşmesi
+  for (const food of TURKISH_FOOD_DATABASE) {
+    if (normalizeTurkishText(food.name) === clean) {
+      return food;
+    }
+  }
+
+  // 2. Tam Alias Eşleşmesi
+  for (const food of TURKISH_FOOD_DATABASE) {
+    for (const alias of food.aliases) {
+      if (normalizeTurkishText(alias) === clean) {
+        return food;
+      }
+    }
+  }
+
+  // 3. Varyant Ad veya Alias Eşleşmesi
+  for (const food of TURKISH_FOOD_DATABASE) {
+    if (food.variants) {
+      for (const v of food.variants) {
+        if (normalizeTurkishText(v.name) === clean) return food;
+        if (v.aliases) {
+          for (const va of v.aliases) {
+            if (normalizeTurkishText(va) === clean) return food;
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Token İçerme / Kısmi Başlangıç Eşleşmesi
+  let bestFood: TurkishFood | null = null;
+  let maxScore = 0;
+
+  for (const food of TURKISH_FOOD_DATABASE) {
+    const candidates = [food.name, ...food.aliases];
+    for (const c of candidates) {
+      const normCandidate = normalizeTurkishText(c);
+      if (normCandidate.startsWith(clean)) {
+        const score = 80 + (clean.length / normCandidate.length) * 20;
+        if (score > maxScore) {
+          maxScore = score;
+          bestFood = food;
+        }
+      } else if (normCandidate.includes(clean)) {
+        const score = 50 + (clean.length / normCandidate.length) * 20;
+        if (score > maxScore) {
+          maxScore = score;
+          bestFood = food;
+        }
+      }
+    }
+  }
+
+  return maxScore >= 60 ? bestFood : null;
+}

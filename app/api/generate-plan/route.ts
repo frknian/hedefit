@@ -7,8 +7,10 @@ import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
 import { hasRemoteProvider, parseImageDataUrl } from "../../../lib/ai/providers/openai-compatible.ts";
 import { generateCoachObject } from "../../../lib/ai/coach.ts";
 import { loadMemories } from "../../../lib/ai/memory.ts";
-import { checkAndConsumeUsage, refundUsage, usageLimitExceeded } from "../../../lib/usage-limits.ts";
-import { PROMPT_CATALOG_LIMIT } from "../../../lib/exercise-service.ts";
+import { checkAndConsumeUsage, outputTokenLimit, refundUsage, usageLimitExceeded } from "../../../lib/usage-limits.ts";
+import { PROMPT_CATALOG_LIMIT, getExerciseById, getExercisesForProfile } from "../../../lib/exercise-service.ts";
+import { normalizeExercise } from "../../../lib/exercise-service.ts";
+import { translateExerciseLabel, translateExerciseName, turkishExerciseInstructions } from "../../../lib/exercise-translations.ts";
 
 // İstek gövdesinin tamamı için kaba bir üst sınır (bkz. photoDataUrl zaten
 // parseImageDataUrl içinde ~7 MB base64 ile sınırlı; bu, geri kalan JSON
@@ -146,15 +148,43 @@ export function profileSignals(payload: Record<string, unknown>) {
     goalPlan,
     motivation: history[QUESTION.motivation] || "Belirtilmedi",
     pastBarrier: history[QUESTION.barrier] || "Belirtilmedi",
-    trainingPlace: history[QUESTION.location] || "Belirtilmedi",
-    equipmentAccess: history[QUESTION.equipment] || "Belirtilmedi",
+    environment: text(payload.environment) || history[QUESTION.location] || "Belirtilmedi",
+    equipment: text(payload.equipment) || history[QUESTION.equipment] || "Belirtilmedi",
+    trainingPlace: text(payload.environment) || history[QUESTION.location] || "Belirtilmedi",
+    equipmentAccess: text(payload.equipment) || history[QUESTION.equipment] || "Belirtilmedi",
     painAreas: history[QUESTION.injuries] || "Yok",
     movementLevel: history[QUESTION.dailyMovement] || "Belirtilmedi",
     sleepQuality: history[QUESTION.sleep] || "Belirtilmedi",
     preferredStyle: history[QUESTION.trainingStyles] || "Karışık",
     note: history[QUESTION.freeNote] || "Yok",
+    age: payload.age,
+    gender: payload.gender,
+    height: payload.height,
+    weight: payload.weight,
+    goal: payload.goal,
+    requestedExercises: payload.requestedExercises,
     fingerprint,
   };
+}
+
+import { generateWorkoutPlan } from "../../../lib/training/plan-orchestrator.ts";
+
+export function buildLocalPlan(signals: ReturnType<typeof profileSignals>, catalog: unknown[], locale: "tr" | "en"): GeneratedPlan {
+  const plan = generateWorkoutPlan(signals, catalog, locale);
+  return {
+    title: plan.title,
+    profileSummary: plan.profileSummary,
+    rationale: plan.rationale,
+    safetyNote: plan.safetyNote,
+    analysis: plan.analysis,
+    weeklySchedule: plan.weeklySchedule,
+    progression: plan.progression,
+    workouts: plan.workouts,
+    sessions: plan.sessions,
+    volumeTargets: plan.volumeTargets,
+    validation: plan.validation,
+    repaired: plan.repaired,
+  } as unknown as GeneratedPlan;
 }
 
 export async function POST(request: Request) {
@@ -162,8 +192,6 @@ export async function POST(request: Request) {
   if ("error" in auth) return auth.error;
   const rateLimitResult = rateLimit(`generate-plan:${auth.user.id}`, 5, 300000);
   if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
-
-  if (!hasRemoteProvider()) return Response.json({ error: "AI_API_KEY tanımlı değil" }, { status: 503 });
 
   let bodyText: string;
   try {
@@ -185,23 +213,51 @@ export async function POST(request: Request) {
     return Response.json({ error: "Profil verileri okunamadı" }, { status: 400 });
   }
 
-  const usage = await checkAndConsumeUsage(request, "plan", auth.user.id);
-  if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("plan", usage.used, usage.limit);
-
   const photoDataUrl = typeof payload.photoDataUrl === "string" ? payload.photoDataUrl : null;
   // Meşru istemci kataloğu zaten PROMPT_CATALOG_LIMIT ile kırpıyor (bkz.
   // lib/exercise-service.ts getExercisesForProfile); sunucu bunu asla
   // doğrulamıyordu. Sınırı burada da uygulamak, hazırlanmış bir istekle
   // kataloğun tamamının (873 hareket) veya uydurma bir dizinin gönderilip
   // istemi/maliyeti şişirmesini engeller.
-  const exerciseCatalog = (Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : []).slice(0, PROMPT_CATALOG_LIMIT);
+  // İstemci katalog GÖNDERMEZSE sunucu kendi kurar. Filtreleme kuralları
+  // (bodyweight etiketleri, ekipman eş anlamlıları, kas grubu dengesi) yalnız burada yaşamalı, her
+  // istemcide ikinci kez uygulanmamalı. Yedek olmadan katalogsuz bir istemci
+  // modele boş liste gönderip uydurma hareket kimlikleri alırdı.
+  const clientCatalog = Array.isArray(payload.exerciseCatalog) ? payload.exerciseCatalog : [];
+  const environment = text(payload.environment);
+  const equipment = text(payload.equipment);
+  const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
+  const trainingStyles = history[QUESTION.trainingStyles] || "";
+  const verifiedClientCatalog = clientCatalog.slice(0, PROMPT_CATALOG_LIMIT).map((value) => {
+    const compact = normalizeExercise(value);
+    const atlasExercise = compact ? getExerciseById(compact.id) : null;
+    return atlasExercise ? {
+      id: atlasExercise.id,
+      name: atlasExercise.name,
+      level: atlasExercise.level,
+      equipment: atlasExercise.equipment || undefined,
+      primaryMuscles: atlasExercise.primaryMuscles,
+    } : null;
+  }).filter((exercise) => exercise !== null);
+  const exerciseCatalog = verifiedClientCatalog.length
+    ? verifiedClientCatalog
+    : getExercisesForProfile(/salon|gym/i.test(environment), equipment, environment, trainingStyles);
   const locale = payload.locale === "en" ? "en" : "tr";
   const profile = { ...payload };
   delete profile.photoDataUrl;
   delete profile.exerciseCatalog;
   delete profile.locale;
   const signals = profileSignals(payload);
+  // Hareket seçimi her zaman doğrulanmış Hareket Atlası'nda kalır. OpenAI,
+  // 15 cevabı yorumlayıp açıklama ve ilerleme metnini kişiselleştirebilir;
+  // katalog dışı bir hareket ya da yanlış ekipman öneremez.
+  const atlasPlan = buildLocalPlan(signals, exerciseCatalog, locale);
+  if (!hasRemoteProvider()) {
+    return Response.json({ ...atlasPlan, profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
+  }
+  const usage = await checkAndConsumeUsage(request, "plan", auth.user.id);
+  if ("error" in usage) return usage.error;
+  if (!usage.allowed) return usageLimitExceeded("plan", usage.used, usage.limit);
   const trainingHistory = Array.isArray(payload.trainingHistory) ? payload.trainingHistory.slice(0, 8) : [];
   const adaptation = payload.adaptation && typeof payload.adaptation === "object" ? payload.adaptation : null;
   // Modele giden veriler <facts> içinde toplanır: hepsi uygulamada zaten
@@ -256,46 +312,70 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
   // KENDİSİNİ belirler; koç sohbetinde öğrenilen tercih burada işe yarar.
   const memories = await loadMemories(request);
 
+  const buildRequest = (policy?: Parameters<typeof generateCoachObject>[0]["policy"]) => ({
+    prompt,
+    image,
+    schema: responseSchema,
+    // Fotoğraf varsa yalnız görsel destekli sağlayıcı bu işi yapabilir.
+    // Görsel eklenmiş olsa da işin özü kişisel program muhakemesidir; bu rota
+    // her zaman güçlü plan modeline gider.
+    category: "plan_generation" as const,
+    locale: locale as "tr" | "en",
+    memories,
+    facts: planFacts,
+    knowledgeQuery: `${signals.primaryGoal} ${signals.preferredStyle} antrenman programı`,
+    // Kullanıcının serbest notu güvenlik katmanından geçer.
+    userText: signals.note,
+    domainRules: "Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın.",
+    temperature: 0.35,
+    // Bu sağlayıcının modelleri "akıl yürütme" token'ı harcıyor ve bu da
+    // aynı bütçeden düşüyor. 3.000 ile ölçüldü: 2.997 token düşünmeye gitti,
+    // içerik 0 karakter kaldı ve üretim HER SEFERİNDE "length" ile kesildi —
+    // yani plan hiç üretilemiyordu. 8.000'de düşünme 1.212'de kalıyor ve
+    // plan tamamlanıyor.
+    maxOutputTokens: outputTokenLimit("plan", usage.planTier),
+    // Kullanıcı profil testinden sonra boş bir yükleme ekranında beklememeli.
+    // Uzak model 15 saniyede tamamlamazsa doğrulanmış katalogdan yerel plan
+    // devreye girer; profil kaydı ve program oluşturma yine tamamlanır.
+    abortSignal: AbortSignal.timeout(15_000),
+    policy,
+  });
+
   try {
-    const result = await generateCoachObject({
-      prompt,
-      image,
-      schema: responseSchema,
-      // Fotoğraf varsa yalnız görsel destekli sağlayıcı bu işi yapabilir.
-      category: image ? "vision" : "complex_reasoning",
-      locale,
-      memories,
-      facts: planFacts,
-      knowledgeQuery: `${signals.primaryGoal} ${signals.preferredStyle} antrenman programı`,
-      // Kullanıcının serbest notu güvenlik katmanından geçer.
-      userText: signals.note,
-      domainRules: "Sen güvenli ve kişiselleştirilmiş fitness programı hazırlayan bir asistansın.",
-      temperature: 0.35,
-      // Bu sağlayıcının modelleri "akıl yürütme" token'ı harcıyor ve bu da
-      // aynı bütçeden düşüyor. 3.000 ile ölçüldü: 2.997 token düşünmeye gitti,
-      // içerik 0 karakter kaldı ve üretim HER SEFERİNDE "length" ile kesildi —
-      // yani plan hiç üretilemiyordu. 8.000'de düşünme 1.212'de kalıyor ve
-      // plan tamamlanıyor.
-      maxOutputTokens: 8_000,
-      // ÖLÇÜM: bu sağlayıcının akıl yürüten modellerinde tam plan üretimi tek
-      // denemede bile 100 sn'yi aşıyor. Daha uzun beklemek kullanıcıyı boşuna
-      // oyalar; yerel plan zaten anında hazır ve profile göre üretiliyor.
-      // Bu yüzden AI'a makul bir pencere verilir, yetişmezse yedeğe düşülür.
-      abortSignal: AbortSignal.timeout(60_000),
-    });
-    const plan = result.object;
-    if (plan.workouts.length < 3) {
-      // Kullanıcı gerçekte kullanılabilir bir plan ALMADI; günlük hakkı iade edilir.
-      if (Number.isFinite(usage.limit)) await refundUsage(request, "plan");
-      return Response.json({ error: "Model yeterli hareket üretmedi" }, { status: 502 });
+    let result = await generateCoachObject(buildRequest());
+    let plan = result.object;
+    // Yerel model şemaya UYGUN JSON döndürebilir (kısıtlı kod çözüm bunu
+    // garanti eder) ama ANLAMCA yetersiz bir plan üretebilir (ör. yeterli
+    // egzersiz seçmemiş). Bu rotada — goal-plan/weekly-review'ün aksine —
+    // şablon bir yedek YOK ("uydurulmuş" bir program güvenli değil); bu
+    // yüzden yerelin sonucu geçersizse UZAĞA BİR KEZ yeniden denenir. Böylece
+    // yerel yalnızca "önce dene" katmanı olur, kullanıcı hiçbir zaman
+    // gereksiz bir 502 görmez.
+    if (plan.workouts.length < 3 && result.provider !== "openai-compatible") {
+      result = await generateCoachObject(buildRequest({ mode: "remote" }));
+      plan = result.object;
     }
-    return Response.json({ ...plan, profileFingerprint: signals.fingerprint, model: result.model });
+    if (plan.workouts.length < 3) {
+      if (Number.isFinite(usage.limit)) await refundUsage(auth.user.id, "plan");
+      return Response.json({ ...buildLocalPlan(signals, exerciseCatalog, locale), profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
+    }
+    // Uzak modelin metinsel koçluğunu korurken programın kendisini Atlas'tan
+    // gelen güvenli, ekipman ve sakatlık filtreli seçimle sabit tut.
+    return Response.json({
+      ...atlasPlan,
+      title: plan.title || atlasPlan.title,
+      profileSummary: plan.profileSummary || atlasPlan.profileSummary,
+      rationale: plan.rationale || atlasPlan.rationale,
+      safetyNote: plan.safetyNote || atlasPlan.safetyNote,
+      analysis: plan.analysis || atlasPlan.analysis,
+      progression: plan.progression?.length ? plan.progression : atlasPlan.progression,
+      profileFingerprint: signals.fingerprint,
+      model: result.model,
+      atlasLocked: true,
+    });
   } catch (error) {
     console.error("AI plan generation error", error);
-    if (Number.isFinite(usage.limit)) await refundUsage(request, "plan");
-    return Response.json({
-      error: "Program üretimi başarısız",
-      detail: process.env.NODE_ENV === "development" ? String(error) : undefined,
-    }, { status: 502 });
+    if (Number.isFinite(usage.limit)) await refundUsage(auth.user.id, "plan");
+    return Response.json({ ...buildLocalPlan(signals, exerciseCatalog, locale), profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
   }
 }

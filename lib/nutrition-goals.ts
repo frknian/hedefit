@@ -1,4 +1,4 @@
-import type { Dictionary } from "./i18n/translate.ts";
+import type { Dictionary } from "./i18n/server.ts";
 
 /**
  * "lose" ile "fatLoss" bilerek ayrı: tartıdaki sayıyı düşürmek ile yağ kütlesini
@@ -101,22 +101,27 @@ export function calculateNutritionGoal(input: {
     ? Math.max(bmr, tdee + desiredAdjustment)
     : tdee + desiredAdjustment;
   const calorieAdjustment = calorieTarget - tdee;
-  // Açıktayken kası koruyan asıl değişken protein; yağ kaybı modunda en yüksek.
-  const proteinMultiplier = input.goalType === "fatLoss" ? 2.2 : input.goalType === "maintain" ? 1.6 : 1.8;
-  const proteinGrams = Math.round(weightKg * proteinMultiplier);
-  const fatMultiplier = input.goalType === "gain" ? 0.9 : 0.8;
-  const fatGrams = Math.round(Math.max(weightKg * fatMultiplier, calorieTarget * 0.2 / 9));
+  // Genel kullanıcı hedefi klinik veya performans reçetesi değildir. Ağırlığın
+  // ilk 90 kilosunu ve daha ılımlı aktivite çarpanlarını kullanmak, yüksek
+  // kiloda protein hedefinin gereksiz biçimde büyümesini önler. Ayrıca protein
+  // enerjisini %27,5 ile sınırlayarak yetişkin AMDR aralığının içinde tutarız.
+  const proteinBaseKg = clamp(weightKg, 45, 90);
+  const proteinMultiplier = workoutDays === 0 ? 1.0 : workoutDays <= 3 ? 1.2 : 1.4;
+  const proteinUpper = Math.max(50, Math.min(140, Math.floor(calorieTarget * 0.275 / 4)));
+  const proteinGrams = Math.round(clamp(proteinBaseKg * proteinMultiplier, 50, proteinUpper));
+  // Yağ kalorinin %27,5'i; kalan enerji karbonhidrata gider. Böylece üç makro
+  // yetişkinler için kullanılan 45–65 / 20–35 / 10–35 AMDR dağılımına yakın
+  // ve enerji toplamıyla tutarlı kalır.
+  const fatGrams = Math.round(calorieTarget * 0.275 / 9);
   const remainingCalories = Math.max(0, calorieTarget - proteinGrams * 4 - fatGrams * 9);
-  const trainingCarbBoost = workoutDays >= 4 ? Math.min(20, workoutDays * 3) : 0;
-  const carbsGrams = Math.round(remainingCalories / 4 + trainingCarbBoost);
-  const adjustedFatGrams = Math.max(30, Math.round((calorieTarget - proteinGrams * 4 - carbsGrams * 4) / 9));
+  const carbsGrams = Math.round(remainingCalories / 4);
 
   return {
     goalType: input.goalType,
     calorieTarget,
     proteinGrams,
     carbsGrams,
-    fatGrams: adjustedFatGrams,
+    fatGrams,
     bmr,
     tdee,
     calorieAdjustment,
@@ -135,7 +140,7 @@ export function sanitizeNutritionGoal(value: unknown): NutritionGoal | null {
     return Number.isFinite(parsed) ? clamp(Math.round(parsed), min, max) : null;
   };
   const calorieTarget = number("calorieTarget", 800, 7_000);
-  const proteinGrams = number("proteinGrams", 0, 600);
+  const proteinGrams = number("proteinGrams", 0, 220);
   const carbsGrams = number("carbsGrams", 0, 1_000);
   const fatGrams = number("fatGrams", 0, 400);
   const bmr = number("bmr", 800, 4_500);
