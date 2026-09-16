@@ -9,9 +9,22 @@ istemcisini içerir. Önceki web arayüzü ve Capacitor kabukları kaldırılmı
 - `worker`: Cloudflare Worker girişi ve Supabase proxy
 - `lib`: API rotalarının kullandığı iş kuralları ve servisler
 - `db`: Supabase şeması ve migrasyonlar
-- `data`: egzersiz kataloğu
+- `data`: egzersiz kataloğu (RepDB tabanlı, bkz. `data/RepDB_ATTRIBUTION.md`)
 - `public/exercise-images`: mobil istemciye sunulan egzersiz görselleri
 - `android`: Kotlin ve Jetpack Compose ile geliştirilen native Android uygulaması
+
+## Egzersiz veritabanı
+
+Egzersiz kataloğu [RepDB Free Exercise Dataset](https://github.com/RepDB/exercise-dataset)
+kaynağını kullanır (`scripts/import-repdb.mjs`). RepDB'nin ücretsiz katmanı,
+görünür bir atıf koşuluyla ticari kullanıma açıktır:
+
+> Exercise data by [RepDB](https://repdb.co)
+
+Tam lisans metni: `data/RepDB_LICENSE-DATA.md`. Eski free-exercise-db kataloğu
+(`data/legacy-exercises.json`) yalnızca geçmiş antrenman kayıtlarının eski
+egzersiz ID'lerini çözebilmesi için `lib/exercise-service.ts` içinde salt-okunur
+bir yedek olarak tutulur; aktif katalogda veya aramada görünmez.
 
 ## Canlı ortam
 

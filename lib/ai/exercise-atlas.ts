@@ -28,7 +28,7 @@ function targetFor(question: string) {
 }
 
 function availableAtHome(equipment: string | null) {
-  return ["body only", "none", "bands", "dumbbell", "kettlebells", "exercise ball"].includes(equipment || "none");
+  return ["", "resistance_band", "loop_band", "dumbbell", "kettlebell", "stability_ball", "jump_rope"].includes(equipment || "");
 }
 
 export function atlasLines(question: string, profile: { environment?: string; equipment?: string }, locale: "tr" | "en"): string[] {
@@ -37,7 +37,7 @@ export function atlasLines(question: string, profile: { environment?: string; eq
   const isHome = /ev|home/i.test(profile.environment || "");
   const candidates = filterExercises({ muscle: target })
     .filter((exercise) => !isHome || availableAtHome(exercise.equipment))
-    .filter((exercise) => exercise.level !== "expert")
+    .filter((exercise) => exercise.level !== "advanced")
     .sort((a, b) => {
       const aPrimary = a.primaryMuscles.includes(target) ? 0 : 1;
       const bPrimary = b.primaryMuscles.includes(target) ? 0 : 1;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildLocalPlan, profileSignals } from "../app/api/generate-plan/route.ts";
 import { getExercisesForProfile } from "../lib/exercise-service.ts";
+import { getStandardizedExerciseById } from "../lib/training/exercise-metadata.ts";
 import { planGoal, projectWeightSeries } from "../lib/goal-plan.ts";
 import { QUESTION, emptyHistory } from "../lib/onboarding-questions.ts";
 
@@ -76,7 +77,14 @@ test("beş profil bir aylık antrenman ve beslenme simülasyonunda güvenli kıs
     intensity: "easy", styles: "Vücut ağırlığı", location: "Evde", equipment: "Ekipman yok", injuries: "Diz • Omuz",
   });
   assert.equal(injurySafe.signals.painAreas, "Diz • Omuz");
-  assert.ok(injurySafe.workout.workouts.every((item) => !/jump|squat|lunge|leg press|pistol|step-up|overhead|shoulder press|military press|dip|upright row/i.test(item.english)), "diz ve omuz için riskli kalıplar elenmeli");
+  // RepDB'nin knee_safe/shoulder_safe etiketleri (bkz.
+  // lib/training/exercise-metadata.ts detectContraindications) bazı squat/dip
+  // varyasyonlarını isim benzerliğine rağmen meşru biçimde güvenli işaretler;
+  // asıl garanti gerçek contraindications alanıdır, isim regex'i değil.
+  assert.ok(injurySafe.workout.workouts.every((item) => {
+    const standardized = getStandardizedExerciseById(item.id);
+    return standardized && !standardized.contraindications.includes("knee") && !standardized.contraindications.includes("shoulder");
+  }), "diz ve omuz için riskli hareketler elenmeli");
 
   const weightGain = simulateProfile({
     goal: "Kilo alma", weightKg: 60, targetWeightKg: 63, bmr: 1500, days: 3, minutes: 45,

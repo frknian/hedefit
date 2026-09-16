@@ -16,6 +16,26 @@
 //      düğmeye basan kullanıcıdır. Model kendi başına hedef değiştiremez.
 //   2. Yerel yedek yanıtlarda eylem ayrıştırılmaz (bkz. çağıran taraf):
 //      cihaz üstü küçük modelin ürettiği yapılandırılmış çağrıya güvenilmez.
+//
+// ÜÇÜNCÜ KURAL: model var olmayan/uydurma bir exerciseId ÖNEREMEZ. Egzersiz
+// kataloğuna karşı doğrulanmayan tüm exerciseId/replacementId/regressionId/
+// progressionId alanları içeren eylemler burada sessizce düşürülür (bkz.
+// isKnownExerciseId / isSuggestableExerciseId). Bu, generate-plan rotasındaki
+// `atlasLocked` doğrulamasının (app/api/generate-plan/route.ts) sohbet
+// eylemleri için karşılığıdır.
+
+import { getExerciseById } from "../exercise-service.ts";
+
+/** Egzersiz zaten kullanıcının planında var (id çözülebiliyor mu — legacy dahil). */
+function isKnownExerciseId(id: string): boolean {
+  return getExerciseById(id) !== null;
+}
+
+/** Model YENİ bir egzersiz öneriyor: aktif, güncel katalogda olmalı (legacy hariç). */
+function isSuggestableExerciseId(id: string): boolean {
+  const exercise = getExerciseById(id);
+  return exercise !== null && exercise.isActive !== false && exercise.source !== "legacy";
+}
 
 export type CoachAction =
   /** Önerilen antrenmanı bugünün planına ekler. */
@@ -29,7 +49,29 @@ export type CoachAction =
   /** Günlük hatırlatma ayarlarını açar. */
   | { type: "remind" }
   /** Hedef planı ekranını açar. */
-  | { type: "changeGoal" };
+  | { type: "changeGoal" }
+  /** Egzersizi alternatif veya regresyon/progresyon hareketiyle değiştirir. */
+  | { type: "replace_exercise"; exerciseId?: string; replacementId: string; replacementName: string; sets?: number; reps?: string; restSeconds?: number; reason?: string }
+  /** Antrenman yoğunluğunu ve hacmini toparlanma için düşürür. */
+  | { type: "reduce_intensity"; percent?: number; reason?: string }
+  /** Antrenmanı yeni kısıtlara göre yeniden üretir. */
+  | { type: "regenerate_workout"; equipment?: string; focus?: string }
+  /** Antrenmanı hedef dakikaya (ör. 15, 20, 30 dk) uyarlar. */
+  | { type: "shorten_workout"; targetMinutes: number }
+  /** Hazırlık ve toparlanma kontrolünü başlatır. */
+  | { type: "start_recovery_check" }
+  /** Egzersiz form rehberini açar. */
+  | { type: "show_exercise_tutorial"; exerciseId: string; exerciseName?: string }
+  /** Egzersizin daha kolay regresyonunu önerir. */
+  | { type: "show_regression"; exerciseId: string; regressionId?: string; regressionName?: string }
+  /** Egzersizin daha zor progresyonunu önerir. */
+  | { type: "show_progression"; exerciseId: string; progressionId?: string; progressionName?: string }
+  /** Belirli bir hareketin set sayısını günceller. */
+  | { type: "modify_sets"; exerciseId: string; sets: number }
+  /** Belirli bir hareketin tekrar sayısını günceller. */
+  | { type: "modify_reps"; exerciseId: string; reps: string }
+  /** Belirli bir hareketin dinlenme süresini günceller. */
+  | { type: "modify_rest_time"; exerciseId: string; restSeconds: number };
 
 export type CoachActionType = CoachAction["type"];
 
@@ -49,16 +91,94 @@ function toAction(raw: unknown): CoachAction | null {
     case "startOutdoor": return { type: "startOutdoor" };
     case "remind": return { type: "remind" };
     case "changeGoal": return { type: "changeGoal" };
+    case "start_recovery_check": return { type: "start_recovery_check" };
     case "createWorkout": {
       const region = typeof value.region === "string" ? value.region.trim() : "";
       return REGIONS.has(region) ? { type: "createWorkout", region } : null;
     }
     case "suggestMeal": {
       const kcal = Number(value.targetKcal);
-      // Kalori hedefi modelin uydurduğu bir sayı OLABİLİR; makul aralık
-      // dışındaki değer taşınmaz, ekran kendi hesabını gösterir.
       const valid = Number.isFinite(kcal) && kcal >= 100 && kcal <= 2_000;
       return valid ? { type: "suggestMeal", targetKcal: Math.round(kcal) } : { type: "suggestMeal" };
+    }
+    case "replace_exercise": {
+      const replacementId = typeof value.replacementId === "string" ? value.replacementId.trim() : "";
+      const replacementName = typeof value.replacementName === "string" ? value.replacementName.trim() : "";
+      if (!replacementId && !replacementName) return null;
+      const finalReplacementId = replacementId || replacementName.toLowerCase().replace(/\s+/g, "-");
+      // Model kataloğa girmeyen bir hareket uydurduysa öneriyi hiç gösterme.
+      if (!isSuggestableExerciseId(finalReplacementId)) return null;
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      return {
+        type: "replace_exercise",
+        exerciseId: exerciseId && isKnownExerciseId(exerciseId) ? exerciseId : undefined,
+        replacementId: finalReplacementId,
+        replacementName: replacementName || replacementId,
+        sets: typeof value.sets === "number" ? Math.max(1, Math.min(10, value.sets)) : undefined,
+        reps: typeof value.reps === "string" ? value.reps : undefined,
+        restSeconds: typeof value.restSeconds === "number" ? value.restSeconds : undefined,
+        reason: typeof value.reason === "string" ? value.reason : undefined,
+      };
+    }
+    case "reduce_intensity": {
+      const percent = typeof value.percent === "number" ? Math.max(10, Math.min(60, value.percent)) : 25;
+      return { type: "reduce_intensity", percent, reason: typeof value.reason === "string" ? value.reason : undefined };
+    }
+    case "shorten_workout": {
+      const targetMinutes = typeof value.targetMinutes === "number" ? Math.max(10, Math.min(90, value.targetMinutes)) : 20;
+      return { type: "shorten_workout", targetMinutes };
+    }
+    case "regenerate_workout": {
+      return {
+        type: "regenerate_workout",
+        equipment: typeof value.equipment === "string" ? value.equipment : undefined,
+        focus: typeof value.focus === "string" ? value.focus : undefined,
+      };
+    }
+    case "show_exercise_tutorial": {
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      if (!exerciseId || !isKnownExerciseId(exerciseId)) return null;
+      return { type: "show_exercise_tutorial", exerciseId, exerciseName: typeof value.exerciseName === "string" ? value.exerciseName : undefined };
+    }
+    case "show_regression": {
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      if (!exerciseId || !isKnownExerciseId(exerciseId)) return null;
+      const regressionId = typeof value.regressionId === "string" ? value.regressionId.trim() : "";
+      return {
+        type: "show_regression",
+        exerciseId,
+        regressionId: regressionId && isSuggestableExerciseId(regressionId) ? regressionId : undefined,
+        regressionName: typeof value.regressionName === "string" ? value.regressionName : undefined,
+      };
+    }
+    case "show_progression": {
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      if (!exerciseId || !isKnownExerciseId(exerciseId)) return null;
+      const progressionId = typeof value.progressionId === "string" ? value.progressionId.trim() : "";
+      return {
+        type: "show_progression",
+        exerciseId,
+        progressionId: progressionId && isSuggestableExerciseId(progressionId) ? progressionId : undefined,
+        progressionName: typeof value.progressionName === "string" ? value.progressionName : undefined,
+      };
+    }
+    case "modify_sets": {
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      const sets = typeof value.sets === "number" ? Math.max(1, Math.min(10, value.sets)) : null;
+      if (!exerciseId || sets === null || !isKnownExerciseId(exerciseId)) return null;
+      return { type: "modify_sets", exerciseId, sets };
+    }
+    case "modify_reps": {
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      const reps = typeof value.reps === "string" ? value.reps.trim() : "";
+      if (!exerciseId || !reps || !isKnownExerciseId(exerciseId)) return null;
+      return { type: "modify_reps", exerciseId, reps };
+    }
+    case "modify_rest_time": {
+      const exerciseId = typeof value.exerciseId === "string" ? value.exerciseId.trim() : "";
+      const restSeconds = typeof value.restSeconds === "number" ? Math.max(15, Math.min(300, value.restSeconds)) : null;
+      if (!exerciseId || restSeconds === null || !isKnownExerciseId(exerciseId)) return null;
+      return { type: "modify_rest_time", exerciseId, restSeconds };
     }
     default: return null;
   }
@@ -115,16 +235,34 @@ export function parseCoachActions(rawText: string): ParsedCoachResponse {
  * küçük modelden yapılandırılmış çıktı beklenmiyor.
  */
 export const COACH_ACTIONS_INSTRUCTION = {
-  tr: `Yanıtın kullanıcıyı uygulamada bir işe yönlendiriyorsa, metnin SONUNA şu biçimde bir blok ekleyebilirsin:
+  tr: `Yanıtın kullanıcıyı uygulamada bir işe veya antrenman uyarlamasına yönlendiriyorsa, metnin SONUNA şu biçimde bir blok ekleyebilirsin:
 \`\`\`hedefit-actions
-[{"type":"openWorkout"}]
+[{"type":"replace_exercise","replacementId":"goblet-squat","replacementName":"Goblet Squat","reason":"too_hard"}]
 \`\`\`
-Geçerli eylemler: openWorkout (antrenmanı aç), createWorkout + region (Göğüs/Sırt/Omuz/Kol/Bacak/Kalça/Core/Kondisyon), startOutdoor (açık hava aktivitesi başlat), suggestMeal + targetKcal (beslenme ekranı), remind (hatırlatma ayarları), changeGoal (hedef planı).
+Geçerli eylemler:
+- openWorkout (antrenmanı aç), createWorkout + region, startOutdoor, suggestMeal + targetKcal, remind, changeGoal.
+- replace_exercise + replacementId + replacementName (+ exerciseId, sets, reps, restSeconds, reason)
+- reduce_intensity + percent (+ reason)
+- shorten_workout + targetMinutes (ör. 15, 20, 30)
+- start_recovery_check
+- show_regression + exerciseId (+ regressionId, regressionName)
+- show_progression + exerciseId (+ progressionId, progressionName)
+
+ÖNEMLİ KURAL: Kullanıcı bir hareketi değiştirmek istediğinde ("hareketi değiştir", "bu hareketi yapamıyorum / çok zor / ağrı yapıyor", "squat yerine ne yapabilirim" vb.), MUTLAKA uygun ve güvenli bir alternatif hareket öner ve \`\`\`hedefit-actions\`\`\` bloğuna {"type":"replace_exercise","replacementId":"...","replacementName":"...","exerciseId":"..."} eylemini ekle. Varsa kullanıcının değiştirmek istediği hareketin id'sini exerciseId olarak geç.
 En fazla 3 eylem öner. Eylem gerekmiyorsa blok ekleme. Blok dışında JSON yazma; eylemleri metin içinde tekrar anlatma.`,
-  en: `If your answer points the user to something in the app, you may append a block in this format at the END of your text:
+  en: `If your answer points the user to an app task or workout adaptation, you may append a block in this format at the END of your text:
 \`\`\`hedefit-actions
-[{"type":"openWorkout"}]
+[{"type":"replace_exercise","replacementId":"goblet-squat","replacementName":"Goblet Squat","reason":"too_hard"}]
 \`\`\`
-Valid actions: openWorkout, createWorkout + region (Göğüs/Sırt/Omuz/Kol/Bacak/Kalça/Core/Kondisyon), startOutdoor, suggestMeal + targetKcal, remind, changeGoal.
+Valid actions:
+- openWorkout, createWorkout + region, startOutdoor, suggestMeal + targetKcal, remind, changeGoal.
+- replace_exercise + replacementId + replacementName (+ exerciseId, sets, reps, restSeconds, reason)
+- reduce_intensity + percent (+ reason)
+- shorten_workout + targetMinutes (e.g. 15, 20, 30)
+- start_recovery_check
+- show_regression + exerciseId (+ regressionId, regressionName)
+- show_progression + exerciseId (+ progressionId, progressionName)
+
+IMPORTANT RULE: When the user requests to swap or replace an exercise ("hareketi değiştir", "replace exercise", "I can't do this", "too hard", "what can I do instead of X"), you MUST recommend a suitable replacement exercise and include the {"type":"replace_exercise","replacementId":"...","replacementName":"...","exerciseId":"..."} action in the \`\`\`hedefit-actions\`\`\` block. Include exerciseId if known from context.
 Suggest at most 3 actions. Omit the block when no action is needed. Do not write JSON outside the block and do not restate the actions in prose.`,
 } as const;

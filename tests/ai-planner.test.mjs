@@ -202,7 +202,7 @@ test("yerel kas geliştirme planı esneme yerine büyük kasları çalıştıran
   assert.ok(selected.every((exercise) => exercise.category !== "stretching"), "kas geliştirme planına esneme ana hareket olarak girmemeli");
   assert.ok(selected.filter((exercise) => exercise.mechanic === "compound").length >= 4, "planın omurgası bileşik hareketlerden oluşmalı");
   const majorGroups = new Set(selected.flatMap((exercise) => exercise.primaryMuscles).filter((muscle) =>
-    ["quadriceps", "hamstrings", "glutes", "chest", "lats", "middle back", "shoulders"].includes(muscle),
+    ["quadriceps", "hamstrings", "gluteus_maximus", "gluteus_medius", "pectoralis_major", "latissimus_dorsi", "anterior_deltoid", "lateral_deltoid", "posterior_deltoid"].includes(muscle),
   ));
   assert.ok(majorGroups.size >= 4, `büyük kas grubu çeşitliliği yetersiz: ${[...majorGroups].join(", ")}`);
 });

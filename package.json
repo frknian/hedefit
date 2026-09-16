@@ -13,7 +13,10 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint app lib worker --ignore-pattern dist --ignore-pattern .next",
     "data:import-exercises": "node scripts/import-free-exercise-db.mjs",
-    "data:sync-plan-media": "node scripts/sync-plan-exercise-media.mjs"
+    "data:import-repdb": "node scripts/import-repdb.mjs",
+    "data:sync-plan-media": "node scripts/sync-plan-exercise-media.mjs",
+    "data:build-exercise-migration-map": "node scripts/build-exercise-migration-map.mjs",
+    "data:exercise-quality-report": "node scripts/exercise-data-quality-report.mjs"
   },
   "//overrides": "Güvenlik yamaları: bu paketler geçişli bağımlılık olarak açıklı sürümlerde geliyor (OWASP A06).",
   "overrides": {
