@@ -54,7 +54,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.AlertDialog
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -253,14 +253,12 @@ private fun MealEntryCard(
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("100") }
     var unit by remember { mutableStateOf("g") }
-    var manuallySelectedUnit by remember { mutableStateOf(false) }
     var selectedFood by remember { mutableStateOf<FoodSearchData?>(null) }
     var meal by remember { mutableStateOf(smartMealForCurrentTime()) }
     var showRecipe by remember { mutableStateOf(false) }
     val numericAmount = amount.replace(',', '.').toDoubleOrNull()
-    val unitGrams = when (unit) { "adet" -> 100.0; "porsiyon" -> 200.0; else -> 1.0 }
+    val unitGrams = if (unit == "adet") selectedFood?.servingGrams?.coerceAtLeast(1.0) ?: 100.0 else 1.0
     val grams = numericAmount?.times(unitGrams)
-    val inferredUnit = smartFoodUnit(name)
     val cleanName = name.trim()
     val suggestions = if (cleanName.length >= 2 && searchedQuery == cleanName) results.take(4) else emptyList()
 
@@ -270,13 +268,6 @@ private fun MealEntryCard(
             onSearch(cleanName)
         }
     }
-    LaunchedEffect(inferredUnit) {
-        if (!manuallySelectedUnit && name.isNotBlank() && unit != inferredUnit) {
-            unit = inferredUnit
-            amount = defaultAmountForUnit(inferredUnit)
-        }
-    }
-
     HedefitCard(Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -286,7 +277,7 @@ private fun MealEntryCard(
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(if (en) "Smart meal entry" else "Akıllı öğün ekle", style = MaterialTheme.typography.titleLarge)
-                    Text(if (en) "Search, select a unit and scale instantly" else "Yaz, birimi seç; değerler otomatik hesaplansın", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    Text(if (en) "Enter a name, grams or count" else "Besin adı, gramaj veya adet gir", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
                 IconButton(enabled = enabled, onClick = onOpenCatalog, modifier = Modifier.background(HedefitColors.SurfaceHigh, CircleShape)) {
                     Icon(Icons.Default.MenuBook, if (en) "Food catalogue" else "Besin kataloğu", tint = HedefitColors.Lime)
@@ -303,17 +294,11 @@ private fun MealEntryCard(
             OutlinedTextField(
                 value = name,
                 onValueChange = {
-                    val parsed = parseNaturalFoodEntry(it)
-                    name = parsed.name.take(80)
-                    if (parsed.amount != null) amount = parsed.amount.cleanNumber()
-                    if (parsed.unit != null) {
-                        unit = parsed.unit
-                        manuallySelectedUnit = false
-                    }
+                    name = it.take(80)
                     if (selectedFood?.name != name) selectedFood = null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(if (en) "Start typing a food…" else "Besin yazmaya başla…") },
+                placeholder = { Text(if (en) "Food name" else "Besin adı") },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = HedefitColors.TextSecondary) },
                 trailingIcon = { if (searching) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = HedefitColors.Lime) },
                 singleLine = true,
@@ -326,15 +311,13 @@ private fun MealEntryCard(
                             Modifier.fillMaxWidth().clickable {
                                 selectedFood = food
                                 name = food.name
-                                manuallySelectedUnit = false
-                                unit = smartFoodUnit(food.name)
-                                amount = defaultAmountForUnit(unit)
+                                unit = "g"
+                                amount = food.servingGrams.coerceAtLeast(1.0).cleanNumber()
                             }.padding(horizontal = 10.dp, vertical = 9.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(food.name, fontWeight = FontWeight.SemiBold)
-                                Text("${food.calories} kcal / 100 g${food.brand?.let { " • $it" }.orEmpty()}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                             }
                             if (food.verified) Icon(Icons.Default.Verified, null, tint = HedefitColors.Lime, modifier = Modifier.size(18.dp))
                         }
@@ -349,7 +332,7 @@ private fun MealEntryCard(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                             items(recent) { log ->
                                 FilterChip(selected = false, onClick = {
-                                    name = log.name; amount = (log.grams ?: 100.0).cleanNumber(); unit = "g"; manuallySelectedUnit = true
+                                    name = log.name; amount = (log.grams ?: 100.0).cleanNumber(); unit = "g"
                                 }, label = { Text(log.name) })
                             }
                         }
@@ -359,7 +342,7 @@ private fun MealEntryCard(
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                             items(favorites.take(4)) { favorite ->
                                 FilterChip(selected = false, onClick = {
-                                    name = favorite.name; amount = favorite.grams.cleanNumber(); unit = "g"; manuallySelectedUnit = true
+                                    name = favorite.name; amount = favorite.grams.cleanNumber(); unit = "g"
                                 }, label = { Text("♥ ${favorite.name}") })
                             }
                         }
@@ -367,11 +350,11 @@ private fun MealEntryCard(
                 }
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(listOf("g", "ml", "porsiyon", "adet")) { value ->
+                items(listOf("g", "adet")) { value ->
                     FilterChip(
                         selected = unit == value,
-                        onClick = { manuallySelectedUnit = true; unit = value; amount = defaultAmountForUnit(value) },
-                        label = { Text(if (en && value == "porsiyon") "portion" else if (en && value == "adet") "piece" else value) },
+                        onClick = { unit = value; amount = if (value == "adet") "1" else "100" },
+                        label = { Text(if (en && value == "adet") "piece" else value) },
                     )
                 }
             }
@@ -381,7 +364,7 @@ private fun MealEntryCard(
                     amount,
                     { amount = it.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(7) },
                     Modifier.weight(1f),
-                    label = { Text(if (en) "Amount ($unit)" else "Miktar ($unit)") },
+                    label = { Text(if (unit == "adet") (if (en) "Count" else "Adet") else if (en) "Grams" else "Gramaj") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     colors = nutritionFieldColors(),
@@ -393,9 +376,7 @@ private fun MealEntryCard(
                 Column(Modifier.fillMaxWidth().background(HedefitColors.Lime.copy(alpha = .08f), RoundedCornerShape(13.dp)).padding(11.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         when (unit) {
-                            "adet" -> if (en) "${amount} piece × 100 g = ${totalGrams.cleanNumber()} g" else "${amount} adet × 100 g = ${totalGrams.cleanNumber()} g"
-                            "porsiyon" -> if (en) "${amount} portion × 200 g = ${totalGrams.cleanNumber()} g" else "${amount} porsiyon × 200 g = ${totalGrams.cleanNumber()} g"
-                            "ml" -> if (en) "${amount} ml ≈ ${totalGrams.cleanNumber()} g" else "${amount} ml ≈ ${totalGrams.cleanNumber()} g"
+                            "adet" -> if (en) "${amount} piece = ${totalGrams.cleanNumber()} g" else "${amount} adet = ${totalGrams.cleanNumber()} g"
                             else -> "${totalGrams.cleanNumber()} g"
                         },
                         color = HedefitColors.Lime,
@@ -403,9 +384,9 @@ private fun MealEntryCard(
                     )
                     selectedFood?.let { food ->
                         Text(
-                            "${(food.calories * ratio).toInt()} kcal • P ${(food.protein * ratio).toInt()} g • K ${(food.carbs * ratio).toInt()} g • Y ${(food.fat * ratio).toInt()} g",
-                            color = HedefitColors.TextSecondary,
-                            style = MaterialTheme.typography.bodySmall,
+                            if (en) "If eaten: ${(food.calories * ratio).toInt()} kcal" else "Yenirse: ${(food.calories * ratio).toInt()} kcal",
+                            color = HedefitColors.Lime,
+                            fontWeight = FontWeight.Bold,
                         )
                     }
                 }
@@ -427,7 +408,6 @@ private fun MealEntryCard(
                         selectedFood = null
                         unit = "g"
                         amount = "100"
-                        manuallySelectedUnit = false
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

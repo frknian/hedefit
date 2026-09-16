@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
@@ -29,10 +32,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import com.hedefit.app.data.model.CoachActionData
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.AlertDialog
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -75,6 +83,7 @@ fun CoachScreen(
     coachName: String = if (language == "en") "Fit Coach" else "Fit Koç",
     onCoachNameChange: (String) -> Unit = {},
     onClearChat: () -> Unit = {},
+    onExecuteAction: (com.hedefit.app.data.model.CoachActionData) -> Unit = {},
     usageUsed: Int? = null,
     usageLimit: Int? = null,
 ) {
@@ -103,7 +112,7 @@ fun CoachScreen(
                     usageLimit = usageLimit,
                 )
                 Spacer(Modifier.height(6.dp))
-                CoachConversation(messages, busy, input, { input = it }, send, onSendMessage, onOpenPlan, data, Modifier.weight(1f), en, coachName)
+                CoachConversation(messages, busy, input, { input = it }, send, onSendMessage, onOpenPlan, onExecuteAction, data, Modifier.weight(1f), en, coachName)
             }
         }
     }
@@ -176,6 +185,7 @@ private fun CoachConversation(
     onSend: () -> Unit,
     onQuickSend: (String) -> Unit,
     onOpenPlan: () -> Unit,
+    onExecuteAction: (CoachActionData) -> Unit,
     data: DashboardData?,
     modifier: Modifier,
     en: Boolean,
@@ -193,10 +203,7 @@ private fun CoachConversation(
             contentPadding = PaddingValues(top = 18.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            items(messages) { message -> MessageBubble(message, coachName) }
-            if (messages.size <= 1) {
-                item { QuickActions(en, data, onQuickSend, onOpenPlan) }
-            }
+            items(messages) { message -> MessageBubble(message, coachName, onExecuteAction, en) }
             if (busy && messages.lastOrNull()?.user != false) item { ThinkingIndicator(coachName, en) }
         }
         Composer(input, onInput, onSend, busy, en)
@@ -204,7 +211,12 @@ private fun CoachConversation(
 }
 
 @Composable
-private fun MessageBubble(message: ChatMessageState, coachName: String) {
+private fun MessageBubble(
+    message: ChatMessageState,
+    coachName: String,
+    onExecuteAction: (CoachActionData) -> Unit = {},
+    en: Boolean = false,
+) {
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = if (message.user) Arrangement.End else Arrangement.Start,
@@ -214,46 +226,52 @@ private fun MessageBubble(message: ChatMessageState, coachName: String) {
             FitCoachRobotAvatar(Modifier.size(38.dp))
             Spacer(Modifier.size(10.dp))
         }
-        Box(
-            Modifier.fillMaxWidth(if (message.user) .82f else 1f)
-                .then(if (message.user) Modifier.background(HedefitColors.SurfaceHigh, RoundedCornerShape(22.dp)) else Modifier)
-                .padding(if (message.user) 14.dp else 2.dp),
+        Column(
+            modifier = Modifier.fillMaxWidth(if (message.user) .82f else 1f),
+            horizontalAlignment = if (message.user) Alignment.End else Alignment.Start,
         ) {
-            Text(message.text, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodyLarge)
-        }
-    }
-}
-
-@Composable
-private fun QuickActions(en: Boolean, data: DashboardData?, onSelect: (String) -> Unit, onOpenPlan: () -> Unit) {
-    val hasPlan = data?.workouts?.isNotEmpty() == true
-    val actions = if (en) {
-        listOf(
-            if (hasPlan) "Review my workout plan" else "Suggest a workout",
-            "Review my nutrition",
-            "Summarize today's goals",
-        )
-    } else {
-        listOf(
-            if (hasPlan) "Antrenman programımı değerlendir" else "Antrenman önerisi ver",
-            "Beslenmemi değerlendir",
-            "Bugünkü hedeflerimi özetle",
-        )
-    }
-    Column(Modifier.fillMaxWidth().padding(start = 42.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-        Text(if (en) "How can I help?" else "Nasıl yardımcı olabilirim?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        actions.forEach { action ->
-            Row(
-                Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(18.dp)).clickable { onSelect(action) }
-                    .padding(horizontal = 15.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Box(
+                Modifier
+                    .then(if (message.user) Modifier.background(HedefitColors.SurfaceHigh, RoundedCornerShape(22.dp)) else Modifier)
+                    .padding(if (message.user) 14.dp else 2.dp),
             ) {
-                Icon(Icons.Default.FitnessCenter, null, tint = HedefitColors.Lime, modifier = Modifier.size(17.dp))
-                Text(action, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                Text(message.text, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodyLarge)
+            }
+
+            if (!message.user && message.actions.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    message.actions.forEach { action ->
+                        val actionLabel = when (action.type) {
+                            "replace_exercise" -> if (en) "Replace with: ${action.replacementName ?: "Alternative"}" else "Bu hareketle değiştir: ${action.replacementName ?: "Alternatif"}"
+                            "reduce_intensity" -> if (en) "Reduce intensity by ${action.percent ?: 25}%" else "Yoğunluğu %${action.percent ?: 25} hafiflet"
+                            "shorten_workout" -> if (en) "Shorten workout to ${action.targetMinutes ?: 20} min" else "Antrenmanı ${action.targetMinutes ?: 20} dakikaya uyarla"
+                            "start_recovery_check" -> if (en) "Start readiness & recovery check" else "Hazırlık ve toparlanma kontrolü yap"
+                            "modify_sets" -> if (en) "Set count: ${action.sets ?: 3}" else "Set sayısını ${action.sets ?: 3} yap"
+                            "modify_rest_time" -> if (en) "Rest time: ${action.restSeconds ?: 60}s" else "Dinlenmeyi ${action.restSeconds ?: 60}s yap"
+                            else -> if (en) "Apply recommendation" else "Önerilen eylemi uygula"
+                        }
+
+                        Button(
+                            onClick = { onExecuteAction(action) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = HedefitColors.Lime.copy(alpha = 0.2f),
+                                contentColor = HedefitColors.Lime,
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp),
+                        ) {
+                            Icon(Icons.Default.FlashOn, contentDescription = null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(actionLabel, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
-        TextButton(onClick = onOpenPlan) { Text(if (en) "Open my plan" else "Planımı aç", color = HedefitColors.Lime) }
     }
 }
 

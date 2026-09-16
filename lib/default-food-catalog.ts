@@ -86,13 +86,61 @@ const DEFAULT_FOODS: DefaultFood[] = [
   fiber: Number(fiber),
 }));
 
+import { TURKISH_FOOD_DATABASE, normalizeTurkishText } from "./turkish-food-database.ts";
+
+// Merge items from TURKISH_FOOD_DATABASE into DEFAULT_FOODS
+const existingIds = new Set(DEFAULT_FOODS.map((f) => f.id));
+
+for (const tf of TURKISH_FOOD_DATABASE) {
+  if (!existingIds.has(tf.id)) {
+    DEFAULT_FOODS.push({
+      id: tf.id,
+      name: tf.name,
+      nameEn: tf.name,
+      aliases: [
+        ...tf.aliases,
+        ...(tf.variants?.flatMap((v) => [v.name, ...(v.aliases || [])]) || []),
+      ],
+      calories: tf.calories,
+      protein: tf.protein,
+      carbohydrates: tf.carbohydrates,
+      fat: tf.fat,
+      fiber: tf.fiber,
+    });
+    existingIds.add(tf.id);
+  } else {
+    // If it already exists, enrich its aliases
+    const existing = DEFAULT_FOODS.find((f) => f.id === tf.id);
+    if (existing) {
+      const aliasSet = new Set([...existing.aliases, ...tf.aliases]);
+      existing.aliases = Array.from(aliasSet);
+    }
+  }
+
+  // Also register distinct variants as catalog entries if they differ
+  if (tf.variants) {
+    for (const v of tf.variants) {
+      const variantId = `${tf.id}-${v.id}`;
+      if (!existingIds.has(variantId)) {
+        DEFAULT_FOODS.push({
+          id: variantId,
+          name: v.name,
+          nameEn: v.name,
+          aliases: v.aliases || [],
+          calories: v.calories,
+          protein: v.protein,
+          carbohydrates: v.carbohydrates,
+          fat: v.fat,
+          fiber: v.fiber,
+        });
+        existingIds.add(variantId);
+      }
+    }
+  }
+}
+
 function normalize(value: string): string {
-  return value.toLocaleLowerCase("tr-TR")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  return normalizeTurkishText(value);
 }
 
 export function searchDefaultFoods(query: string, limit = 12, locale: "tr" | "en" = "tr"): DefaultFood[] {
@@ -101,8 +149,22 @@ export function searchDefaultFoods(query: string, limit = 12, locale: "tr" | "en
   const terms = clean.split(/\s+/);
   return DEFAULT_FOODS
     .map((food) => {
+      const primaryName = normalize(locale === "en" ? food.nameEn : food.name);
+      const isExact = primaryName === clean || food.aliases.some((a) => normalize(a) === clean);
       const haystack = normalize([locale === "en" ? food.nameEn : food.name, food.name, food.nameEn, ...food.aliases].join(" "));
-      const score = haystack === clean ? 100 : haystack.startsWith(clean) ? 80 : haystack.includes(clean) ? 60 : terms.every((term) => haystack.includes(term)) ? 40 : 0;
+      const score = isExact
+        ? 120
+        : haystack === clean
+        ? 100
+        : primaryName.startsWith(clean)
+        ? 85
+        : haystack.startsWith(clean)
+        ? 75
+        : haystack.includes(clean)
+        ? 60
+        : terms.every((term) => haystack.includes(term))
+        ? 40
+        : 0;
       return { food, score };
     })
     .filter(({ score }) => score > 0)
@@ -122,9 +184,6 @@ export function matchDefaultFood(query: string): DefaultFood | null {
     .trim();
   return DEFAULT_FOODS
     .flatMap((food) => [food.name, ...food.aliases].map((label) => ({ food, phrase: normalize(label) })))
-    // Only an exact name/alias may bypass AI. Partial token containment made
-    // "patates kızartması" resolve to boiled potato and compound meals lose
-    // their modifiers ("kıymalı makarna" -> plain pasta).
     .filter(({ phrase }) => phrase.length >= 3 && phrase === clean)
     .sort((a, b) => b.phrase.length - a.phrase.length)[0]?.food ?? null;
 }

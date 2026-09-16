@@ -76,3 +76,21 @@ test("düz metin veya dizi gövde güvenle reddedilir", () => {
   assert.deepEqual(sanitizeCoachSignals([1, 2, 3]), {});
   assert.deepEqual(sanitizeCoachSignals(null), {});
 });
+
+test("gym hacmi, kas dağılımı ve PR sinyalleri doğrulanarak koça aktarılır", () => {
+  const signals = sanitizeCoachSignals({ training: {
+    weeklyVolumeKg: 8_640,
+    muscleDistribution: [
+      { muscle: "chest", setEquivalent: 12, status: "high" },
+      { muscle: "hamstrings", setEquivalent: 4, status: "low" },
+      { muscle: "invalid", setEquivalent: -2, status: "made-up" },
+    ],
+    personalRecords: [{ exerciseName: "Bench Press", weightKg: 80, reps: 6, estimatedOneRepMaxKg: 96 }],
+  } });
+  assert.equal(signals.training.weeklyVolumeKg, 8_640);
+  assert.equal(signals.training.muscleDistribution.length, 2);
+  assert.equal(signals.training.personalRecords[0].estimatedOneRepMaxKg, 96);
+  const facts = analyze(signals);
+  assert.equal(facts.training.weeklyVolumeKg, 8_640);
+  assert.equal(facts.training.muscleDistribution[1].status, "low");
+});

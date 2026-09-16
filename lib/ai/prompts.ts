@@ -22,6 +22,8 @@ export type PromptInput = {
   atlasLines?: string[];
   conversationSummary?: string;
   safetyInstruction?: string;
+  /** Aktif antrenman ve egzersiz bağlamı (mevcut hareket, set/tekrar vb.) */
+  workoutContextJson?: string;
   /** Cihaz üstü model: kısa üslup + bilgi bölümü atlanır (prefill süresi TTFT'yi belirliyor). */
   compact?: boolean;
 };
@@ -29,6 +31,16 @@ export type PromptInput = {
 const IDENTITY = {
   tr: "Sen Fit Koç'sun; Hedefit uygulamasının Türkçe konuşan kişisel fitness koçusun.",
   en: "You are Fit Coach, Hedefit's English-speaking personal fitness coach.",
+};
+
+const BEGINNER_RULE = {
+  tr: "Kullanıcı yeni başlıyorsa veya spor geçmişi yoksa fitness jargonunu (RPE, failure, progressive overload, hip hinge) açıklamasız KULLANMA. Sade, gündelik benzetmelerle açıkla (ör. 3x12: 'Bu hareketi 12 tekrar yapacaksın, dinlenip toplam 3 kez tamamlayacaksın'). Kullanıcı teknik detay isterse derinleştir.",
+  en: "If the user is a beginner or has no training background, NEVER use unexplained fitness jargon (RPE, failure, progressive overload, hip hinge). Use simple, everyday explanations. Elaborate technically only if the user asks for more details.",
+};
+
+const MEDICAL_SAFETY_RULE = {
+  tr: "Asla tıbbi teşhis koyma ('Bu kesin menisküs' veya 'fıtık olmuşsun' gibi teşhisler üretme). Keskin ağrı, eklem şişliği, hareket kaybı, baş dönmesi, göğüs ağrısı veya nefes darlığı gibi belirtilerde kullanıcıya egzersizi durdurmasını ve bir sağlık uzmanına başvurmasını öner.",
+  en: "Never provide medical diagnoses. For sharp pain, joint swelling, loss of range of motion, dizziness, chest pain, or shortness of breath, immediately advise the user to stop the exercise and consult a healthcare professional.",
 };
 
 /**
@@ -140,6 +152,8 @@ export function buildCoachSystemPrompt(input: PromptInput): string {
     FACTS_RULE[locale],
     hasMemory ? MEMORY_RULE[locale] : "",
     hasAtlas ? ATLAS_RULE[locale] : "",
+    BEGINNER_RULE[locale],
+    MEDICAL_SAFETY_RULE[locale],
     untrustedTags ? UNTRUSTED_RULE[locale](untrustedTags) : "",
     // Eylem talimatı YALNIZ uzak modele gider. Cihaz üstü model (compact)
     // hem yapılandırılmış çıktıda güvenilir değil hem de her ek talimat
@@ -150,6 +164,7 @@ export function buildCoachSystemPrompt(input: PromptInput): string {
 
   return parts.join(" ")
     + section("facts", input.factsJson)
+    + section("workout_context", input.workoutContextJson)
     + section("memory", input.memoryLines)
     + section("knowledge", input.knowledgeLines)
     + section("atlas", input.atlasLines)

@@ -28,6 +28,7 @@ import com.hedefit.app.data.model.estimateManualActivityEnergy
 import com.hedefit.app.data.model.manualActivityTypes
 import com.hedefit.app.ui.components.HedefitCard
 import com.hedefit.app.ui.components.PrimaryButton
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.theme.HedefitColors
 
 @Composable
@@ -42,13 +43,15 @@ fun ManualActivityScreen(
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = manualActivityTypes.firstOrNull { it.key == selectedKey }
     BackHandler { if (selected != null) selectedKey = null else onBack() }
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background).systemBarsPadding()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { if (selected != null) selectedKey = null else onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri") }
-            Text("HEDEFIT", color = HedefitColors.Lime, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge)
+    ScreenContainer {
+        Column(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { if (selected != null) selectedKey = null else onBack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri") }
+                Text("HEDEFIT", color = HedefitColors.Lime, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge)
+            }
+            if (selected == null) ActivityPicker(en, onSelect = { selectedKey = it.key })
+            else ActivityForm(selected, en, weightKg, saving, onSave)
         }
-        if (selected == null) ActivityPicker(en, onSelect = { selectedKey = it.key })
-        else ActivityForm(selected, en, weightKg, saving, onSave)
     }
 }
 

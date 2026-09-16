@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hedefit.app.ui.components.HedefitCard
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.theme.HedefitColors
 
 private data class GuideSection(
@@ -117,7 +118,7 @@ fun AppUserGuideScreen(language: String, onBack: () -> Unit) {
             text.joinToString(" ").lowercase().contains(needle)
         }
     }
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background)) {
+    ScreenContainer { Column(Modifier.fillMaxSize()) {
         UtilityHeader(if (en) "User Guide" else "Kullanım Kılavuzu", onBack)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -176,5 +177,5 @@ fun AppUserGuideScreen(language: String, onBack: () -> Unit) {
                 }
             }
         }
-    }
+    } }
 }

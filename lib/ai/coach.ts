@@ -30,6 +30,7 @@ export type CoachRequest = {
   memories?: UserMemory[];
   category?: AiTaskCategory;
   policy?: RoutingPolicy;
+  workoutContext?: Record<string, unknown>;
   maxOutputTokens?: number;
   temperature?: number;
   abortSignal?: AbortSignal;
@@ -78,6 +79,7 @@ export async function generateCoachResponse(request: CoachRequest): Promise<Coac
     memories: request.memories,
     messages: request.messages,
     locale,
+    workoutContextJson: request.workoutContext ? JSON.stringify(request.workoutContext) : undefined,
   });
 
   const response = await routeText({

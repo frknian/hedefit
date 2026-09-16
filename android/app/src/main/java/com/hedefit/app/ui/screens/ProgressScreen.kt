@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,7 +31,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.AlertDialog
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -67,6 +68,7 @@ import com.hedefit.app.data.model.RouteActivityData
 import com.hedefit.app.data.model.WorkoutExercisePerformanceData
 import com.hedefit.app.data.model.manualActivityTypes
 import com.hedefit.app.route.formatDuration
+import com.hedefit.app.gym.compactKg
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -116,6 +118,7 @@ fun ProgressScreen(
                         }
                         Column(Modifier.weight(.8f), verticalArrangement = Arrangement.spacedBy(15.dp)) {
                             ProgressMetrics(filteredData, data?.sessions.orEmpty(), weeklyWorkoutGoal, en) { showGoalEditor = true }
+                            TrainingAnalysisSection(data?.exercisePerformance.orEmpty(), data?.exerciseCatalog.orEmpty(), language)
                             WorkoutHistory(filteredData, en)
                             ExercisePerformanceHistory(filteredData?.exercisePerformance.orEmpty(), en)
                             RouteHistory(filteredData?.routeActivities.orEmpty(), en, unitSystem, onDeleteRoute)
@@ -126,6 +129,7 @@ fun ProgressScreen(
             } else {
                 item { WeightChart(range, filteredData, en, unitSystem) }
                 item { ProgressMetrics(filteredData, data?.sessions.orEmpty(), weeklyWorkoutGoal, en) { showGoalEditor = true } }
+                item { TrainingAnalysisSection(data?.exercisePerformance.orEmpty(), data?.exerciseCatalog.orEmpty(), language) }
                 item { WorkoutHistory(filteredData, en) }
                 item { ExercisePerformanceHistory(filteredData?.exercisePerformance.orEmpty(), en) }
                 item { RouteHistory(filteredData?.routeActivities.orEmpty(), en, unitSystem, onDeleteRoute) }
@@ -246,21 +250,42 @@ private fun WeeklyGoalDialog(current: Int, en: Boolean, onDismiss: () -> Unit, o
 @Composable
 private fun WorkoutHistory(data: DashboardData?, en: Boolean) {
     val sessions = data?.sessions.orEmpty().take(5)
+    var selectedSession by remember { mutableStateOf<WorkoutSessionData?>(null) }
     HedefitCard(Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionTitle(if (en) "Recent workouts" else "Son antrenmanlar")
             if (sessions.isEmpty()) Text(if (en) "Completed workouts will appear here." else "Tamamladığın antrenmanlar burada tarihleriyle görünecek.", color = HedefitColors.TextSecondary)
             sessions.forEach { session ->
                 val manualActivity = session.manualActivityKey?.let { key -> manualActivityTypes.firstOrNull { it.key == key } }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                val sessionPerformance = data?.exercisePerformance.orEmpty().filter { it.sessionId == session.id }
+                val sessionSets = sessionPerformance.flatMap { it.sets }
+                val sessionVolume = sessionSets.sumOf { set -> com.hedefit.app.gym.setVolume(set.weightKg, set.reps) }
+                Row(Modifier.fillMaxWidth().clickable(enabled = manualActivity == null) { selectedSession = session }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(manualActivity?.let { "${it.emoji} ${if (en) it.titleEn else it.titleTr}" } ?: formatDate(session.completedAt.take(10), en), style = MaterialTheme.typography.titleMedium)
-                        Text(if (manualActivity != null) formatDate(session.completedAt.take(10), en) else if (en) "${session.completedExercises}/${session.totalExercises} movements completed" else "${session.completedExercises}/${session.totalExercises} hareket tamamlandı", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(if (manualActivity != null) formatDate(session.completedAt.take(10), en) else if (sessionSets.isNotEmpty()) "${sessionSets.size} set • ${sessionVolume.compactKg()}" else if (en) "${session.completedExercises}/${session.totalExercises} movements completed" else "${session.completedExercises}/${session.totalExercises} hareket tamamlandı", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                     }
                     Text("${session.durationSeconds / 60} ${if (en) "min" else "dk"} • ${session.calories} kcal", color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
+    }
+    selectedSession?.let { session ->
+        val performances = data?.exercisePerformance.orEmpty().filter { it.sessionId == session.id }
+        AlertDialog(
+            onDismissRequest = { selectedSession = null },
+            title = { Text(if (en) "Workout details" else "Antrenman Detayı") },
+            text = { LazyColumn(Modifier.height(420.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (performances.isEmpty()) item { Text(if (en) "Detailed set data is not available for this older workout." else "Bu eski antrenman için ayrıntılı set verisi bulunmuyor.", color = HedefitColors.TextSecondary) }
+                items(performances, key = { it.exerciseId ?: it.exerciseName }) { performance ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(performance.exerciseName, style = MaterialTheme.typography.titleMedium)
+                        performance.sets.forEach { set -> Text("Set ${set.setNumber}  •  ${set.weightKg?.let { "${it.toInt()} kg" } ?: if (en) "Bodyweight" else "Vücut ağırlığı"} × ${set.reps ?: "—"}", color = HedefitColors.TextSecondary) }
+                    }
+                }
+            } },
+            confirmButton = { TextButton(onClick = { selectedSession = null }) { Text(if (en) "Close" else "Kapat") } },
+        )
     }
 }
 

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.hedefit.app.data.model.ProfileData
 import com.hedefit.app.data.model.ProfileUpdateData
 import com.hedefit.app.ui.components.PrimaryButton
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.settings.estimatedGoalWeeks
 import com.hedefit.app.ui.theme.HedefitColors
 
@@ -43,7 +44,7 @@ private val profileQuestions = listOf(
     ProfileQuestion("Bir antrenman için ne kadar süren var?", "Isınma ve soğuma dahil ayırabileceğin toplam süre.", listOf("15 dk", "30 dk", "45 dk", "60 dk", "75+ dk")),
     ProfileQuestion("Hangi antrenmanları seversin?", "Birden fazla seçebilirsin.", listOf("Ağırlık", "HIIT", "Koşu", "Bisiklet", "Vücut ağırlığı"), multiSelect = true),
     ProfileQuestion("Nerede çalışacaksın?", "Egzersizler ortama göre seçilir.", listOf("Evde", "Spor salonunda", "Açık havada", "Karışık")),
-    ProfileQuestion("Hangi ekipmanların var?", "Birden fazla seçebilirsin.", listOf("Ekipman yok", "Dambıl", "Direnç bandı", "Tam salon", "Kardiyo aleti"), multiSelect = true),
+    ProfileQuestion("Hangi ekipmanların var?", "Birden fazla seçebilirsin. “Ekipman yok” tek başına seçilir.", listOf("Ekipman yok", "Dambıl", "Direnç bandı", "Tam salon", "Kardiyo aleti"), multiSelect = true, exclusiveChoice = "Ekipman yok"),
     ProfileQuestion("Ağrı veya sakatlık var mı?", "Birden fazla bölge seçebilirsin. “Yok” tek başına seçilir.", listOf("Yok", "Bel", "Diz", "Omuz", "Boyun", "Diğer"), multiSelect = true, exclusiveChoice = "Yok"),
     ProfileQuestion("Gün içinde ne kadar hareketlisin?", "Günlük enerji hesabı", listOf("Çoğunlukla oturuyorum", "Ara sıra hareket", "Aktif", "Çok aktif")),
     ProfileQuestion("Uyku düzenin nasıl?", "Toparlanma kapasiten", listOf("5 saatten az", "5–6 saat", "7–8 saat", "9+ saat")),
@@ -63,7 +64,7 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
     val target = targetText.toDoubleOrNull()
     val weeks = estimatedGoalWeeks(profile.weightKg, target)
 
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background).statusBarsPadding().navigationBarsPadding()) {
+    ScreenContainer { Column(Modifier.fillMaxSize()) {
         UtilityHeader(if (quickStart) "Hızlı başlangıç" else "Profil testi", onClose)
         LinearProgressIndicator(progress = { (step + 1).toFloat() / questionOrder.size }, modifier = Modifier.fillMaxWidth(), color = HedefitColors.Lime, trackColor = HedefitColors.Divider)
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -128,7 +129,7 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
                 colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
             ) { Text(if (saving) "Plan hazırlanıyor…" else if (step == questionOrder.lastIndex) if (quickStart) "Planımı oluştur" else "Kaydet ve planı yenile" else "Devam") }
         }
-    }
+    } }
 }
 
 @Composable

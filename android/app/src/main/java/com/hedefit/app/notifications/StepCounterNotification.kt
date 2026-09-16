@@ -25,6 +25,8 @@ object StepCounterNotification {
     private var lastPublishedAt = 0L
 
     private const val STATE_FILE = "hedefit-step-notification"
+    private const val KEY_DAY = "day"
+    private const val ACTION_MIDNIGHT_RESET = "com.hedefit.app.action.STEP_MIDNIGHT_RESET"
 
     fun show(context: Context, steps: Int, goal: Int, activeCalories: Int = steps / 25) {
         if (android.os.Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
@@ -65,7 +67,10 @@ object StepCounterNotification {
             .build()
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).edit()
-            .putInt("goal", safeGoal).putBoolean("enabled", true).apply()
+            .putInt("goal", safeGoal)
+            .putString(KEY_DAY, LocalDate.now(ZoneId.systemDefault()).toString())
+            .putBoolean("enabled", true)
+            .apply()
         scheduleMidnightReset(context)
         lastSteps = safeSteps
         lastGoal = safeGoal
@@ -75,13 +80,24 @@ object StepCounterNotification {
     fun scheduleMidnightReset(context: Context) {
         val zone = ZoneId.systemDefault()
         val triggerAt = LocalDate.now(zone).plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() + 1_000L
-        val intent = PendingIntent.getBroadcast(context, 1212, Intent(context, StepMidnightResetReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val intent = PendingIntent.getBroadcast(
+            context,
+            1212,
+            Intent(context, StepMidnightResetReceiver::class.java).setAction(ACTION_MIDNIGHT_RESET),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         context.getSystemService(AlarmManager::class.java).setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, intent)
     }
 
-    fun resetForNewDay(context: Context) {
+    fun ensureCurrentDay(context: Context) {
         val state = context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE)
         if (!state.getBoolean("enabled", false)) return
+        val today = LocalDate.now(ZoneId.systemDefault()).toString()
+        if (state.getString(KEY_DAY, null) == today) {
+            // Saat veya saat dilimi değiştiyse bir sonraki gece alarmını yeniden kur.
+            scheduleMidnightReset(context)
+            return
+        }
         val goal = state.getInt("goal", 10_000)
         HedefitWidgetData.resetDaily(context)
         lastSteps = -1
@@ -91,12 +107,17 @@ object StepCounterNotification {
     fun cancel(context: Context) {
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
         context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).edit().putBoolean("enabled", false).apply()
-        val intent = PendingIntent.getBroadcast(context, 1212, Intent(context, StepMidnightResetReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val intent = PendingIntent.getBroadcast(
+            context,
+            1212,
+            Intent(context, StepMidnightResetReceiver::class.java).setAction(ACTION_MIDNIGHT_RESET),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         context.getSystemService(AlarmManager::class.java).cancel(intent)
         lastSteps = -1
     }
 }
 
 class StepMidnightResetReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) = StepCounterNotification.resetForNewDay(context)
+    override fun onReceive(context: Context, intent: Intent?) = StepCounterNotification.ensureCurrentDay(context)
 }

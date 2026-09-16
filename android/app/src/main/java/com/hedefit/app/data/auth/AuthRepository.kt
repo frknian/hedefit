@@ -125,16 +125,27 @@ class AuthRepository(
                 .put("nonce", nonce)
                 .toString(),
         ).requireSuccess("Google ile giriş yapılamadı.")
-        val session = parseSession(response.jsonObject()).also(::save)
+        val json = response.jsonObject()
+        val userJson = json.optJSONObject("user")
+        val metadata = userJson?.optJSONObject("user_metadata")
+        val isRegistered = metadata?.optString("kvkk_notice_version")?.isNotBlank() == true ||
+            metadata?.optString("legal_accepted_at")?.isNotBlank() == true
+
         if (legalAcceptance != null) {
+            val session = parseSession(json).also(::save)
             try {
                 saveRegistrationLegalAcceptance()
             } catch (error: Throwable) {
                 clearLocalSession()
                 throw error
             }
+            return session
+        } else {
+            if (!isRegistered) {
+                throw IllegalStateException("Bu Google hesabına ait kayıtlı üyelik bulunamadı. Lütfen 'Kayıt Ol' sekmesinden KVKK ve sözleşmeleri onaylayarak kayıt olun.")
+            }
+            return parseSession(json).also(::save)
         }
-        return session
     }
 
     private suspend fun saveRegistrationLegalAcceptance() {

@@ -19,6 +19,7 @@ import com.hedefit.app.data.model.FavoriteMealData
 import com.hedefit.app.data.model.ExerciseCatalogData
 import com.hedefit.app.data.model.PreviousSetData
 import com.hedefit.app.data.model.WorkoutProgramData
+import com.hedefit.app.data.model.CustomProgramDraft
 import com.hedefit.app.data.model.RouteActivityData
 import com.hedefit.app.data.model.WorkoutExercisePerformanceData
 import com.hedefit.app.data.model.WorkoutSetPerformanceData
@@ -52,8 +53,21 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
 import java.net.URL
+import java.net.HttpURLConnection
+import com.hedefit.app.data.model.CoachActionData
+import com.hedefit.app.data.model.DailyReadinessInput
+import com.hedefit.app.data.model.ReadinessAdaptationData
+import com.hedefit.app.data.model.ExerciseReplacementCandidate
+import com.hedefit.app.data.model.WorkoutAdaptationResultData
+import com.hedefit.app.data.model.WorkoutCoachContext
+import com.hedefit.app.data.model.WorkoutExerciseData
 
-data class ChatMessageState(val text: String, val user: Boolean, val pending: Boolean = false)
+data class ChatMessageState(
+    val text: String,
+    val user: Boolean,
+    val pending: Boolean = false,
+    val actions: List<CoachActionData> = emptyList(),
+)
 
 data class MainUiState(
     val auth: AuthState = AuthState.Loading,
@@ -92,6 +106,13 @@ data class MainUiState(
     val exerciseLibrary: List<ExerciseCatalogData> = emptyList(),
     val offlinePendingCount: Int = 0,
     val previousPerformance: Map<String, List<PreviousSetData>> = emptyMap(),
+    val readinessCheckinBusy: Boolean = false,
+    val readinessAdaptation: ReadinessAdaptationData? = null,
+    val replacementBusy: Boolean = false,
+    val replacementCandidate: ExerciseReplacementCandidate? = null,
+    val planAdaptationBusy: Boolean = false,
+    val planAdaptationResult: WorkoutAdaptationResultData? = null,
+    val activeCoachContext: WorkoutCoachContext? = null,
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -399,6 +420,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearPhotoNutritionResults() = _state.update { it.copy(photoNutritionResults = emptyList()) }
 
+    suspend fun recognizeEquipment(jpegBytes: ByteArray) = repository.recognizeEquipment(jpegBytes)
+
     fun savePhotoNutrition(items: List<com.hedefit.app.data.model.NutritionEstimateData>, meal: String) {
         if (_state.value.nutritionBusy || items.isEmpty()) return
         viewModelScope.launch {
@@ -551,32 +574,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun saveSleep(minutes: Int, quality: String = "iyi") {
+        val safeMinutes = minutes.coerceIn(0, 1_440)
+        _state.update { current -> current.copy(dashboard = current.dashboard?.copy(sleepMinutes = safeMinutes)) }
+        viewModelScope.launch {
+            runCatching {
+                repository.saveSleepLog(safeMinutes, quality)
+            }.onSuccess {
+                _state.update { it.copy(transientMessage = "Uyku süresi kaydedildi.") }
+            }.onFailure { error ->
+                _state.update { it.copy(transientMessage = friendlyError(error)) }
+            }
+        }
+    }
+
     fun saveRoute(snapshot: RouteSnapshot, activityType: String, title: String) = viewModelScope.launch {
+        val route = RouteActivityData(
+            id = snapshot.id,
+            activityType = activityType,
+            title = title,
+            startedAt = Instant.ofEpochMilli(snapshot.startedAt).toString(),
+            endedAt = Instant.ofEpochMilli(snapshot.stoppedAt).toString(),
+            durationSeconds = snapshot.elapsedDurationSeconds,
+            movingDurationSeconds = snapshot.durationSeconds,
+            distanceMeters = snapshot.distanceMeters,
+            averagePaceSecondsPerKm = snapshot.paceSecondsPerKm,
+            averageSpeedKmh = snapshot.averageSpeedKmh,
+            calories = ((snapshot.distanceMeters / 1_000.0) * if (activityType == "Bisiklet") 28 else if (activityType.contains("Koş")) 62 else 45).toInt(),
+            routePoints = snapshot.points.map { com.hedefit.app.data.model.ActivityRoutePointData(it.latitude, it.longitude, it.recordedAt, it.accuracyMeters, it.altitude) },
+        )
+        fun showInHistory(message: String) = _state.update { current -> current.copy(
+            dashboard = current.dashboard?.copy(routeActivities = listOf(route) + current.dashboard.routeActivities.filterNot { it.id == route.id }),
+            transientMessage = message,
+        ) }
+        showInHistory("Rota Yapılanlar'a ekleniyor…")
         runCatching { repository.saveRoute(snapshot, activityType, title) }
             .onSuccess {
-                val route = RouteActivityData(
-                    id = snapshot.id,
-                    activityType = activityType,
-                    title = title,
-                    startedAt = Instant.ofEpochMilli(snapshot.startedAt).toString(),
-                    endedAt = Instant.ofEpochMilli(snapshot.stoppedAt).toString(),
-                    durationSeconds = snapshot.elapsedDurationSeconds,
-                    movingDurationSeconds = snapshot.durationSeconds,
-                    distanceMeters = snapshot.distanceMeters,
-                    averagePaceSecondsPerKm = snapshot.paceSecondsPerKm,
-                    averageSpeedKmh = snapshot.averageSpeedKmh,
-                    calories = ((snapshot.distanceMeters / 1_000.0) * if (activityType == "Bisiklet") 28 else if (activityType.contains("Koş")) 62 else 45).toInt(),
-                    routePoints = snapshot.points.map { com.hedefit.app.data.model.ActivityRoutePointData(it.latitude, it.longitude, it.recordedAt, it.accuracyMeters, it.altitude) },
-                )
-                _state.update { current -> current.copy(
-                    dashboard = current.dashboard?.copy(routeActivities = listOf(route) + current.dashboard.routeActivities.filterNot { it.id == route.id }),
-                    transientMessage = "Hedefit Rota kaydedildi; yeşil paylaşım kartın hazır.",
-                ) }
+                showInHistory("Hedefit Rota kaydedildi; Yapılanlar'da görüntüleyebilirsin.")
             }
             .onFailure { error ->
                 offlineQueue.enqueue("route", repository.routePayload(snapshot, activityType, title))
                 OfflineSyncScheduler.enqueue(getApplication())
-                _state.update { it.copy(offlinePendingCount = offlineQueue.count(), transientMessage = "Rota cihazda saklandı; bağlantı gelince otomatik eşitlenecek. (${friendlyError(error)})") }
+                showInHistory("Rota cihazda saklandı ve Yapılanlar'a eklendi; bağlantı gelince otomatik eşitlenecek. (${friendlyError(error)})")
+                _state.update { it.copy(offlinePendingCount = offlineQueue.count()) }
             }
     }
 
@@ -605,8 +645,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun scheduleWorkout(date: java.time.LocalDate, time: String, originalDate: String? = null) = viewModelScope.launch {
-        runCatching { repository.scheduleWorkout(date, time, originalDate = originalDate) }
+    fun scheduleWorkout(date: java.time.LocalDate, time: String, originalDate: String? = null, programId: String? = null, programName: String? = null) = viewModelScope.launch {
+        runCatching { repository.scheduleWorkout(date, time, originalDate = originalDate, programId = programId, programName = programName) }
             .onSuccess { entry -> _state.update { current -> current.copy(dashboard = current.dashboard?.copy(schedule = current.dashboard.schedule.filterNot { it.date == entry.date } + entry), transientMessage = "Antrenman takvime kaydedildi.") } }
             .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
     }
@@ -634,7 +674,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val active = dashboard.workoutPrograms.firstOrNull { it.isActive }
             runCatching {
-                if (active != null) repository.saveProgram(active.name, active.source, active.focusArea, current, active.id, active.showOnHome)
+                if (active != null) repository.saveProgram(active.name, active.source, active.focusArea, current, active.id, active.showOnHome, active.trainingDays)
                 else repository.saveProgram("Kendi Programım", "custom", replacement.area, current)
             }.onSuccess { program -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workouts = current, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) }, transientMessage = "Hareket programa eklendi.") } }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
@@ -663,16 +703,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(dashboard = dashboard.copy(workouts = next)) }
         viewModelScope.launch {
             val active = dashboard.workoutPrograms.firstOrNull { it.isActive }
-            runCatching { if (active != null) repository.saveProgram(active.name, active.source, active.focusArea, next, active.id, active.showOnHome) else { repository.saveWorkoutPlan(next); null } }
+            runCatching { if (active != null) repository.saveProgram(active.name, active.source, active.focusArea, next, active.id, active.showOnHome, active.trainingDays) else { repository.saveWorkoutPlan(next); null } }
                 .onSuccess { saved -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workoutPrograms = saved?.let { withActiveProgram(data.workoutPrograms, it) } ?: data.workoutPrograms) }, transientMessage = message) } }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
 
-    fun createCustomProgram(name: String, locale: String = "tr", onComplete: () -> Unit = {}) {
+    fun createCustomProgram(draft: CustomProgramDraft, locale: String = "tr", onComplete: () -> Unit = {}) {
         viewModelScope.launch {
-            runCatching { repository.saveProgram(name.ifBlank { if (locale == "en") "My Program" else "Kendi Programım" }, "custom", "", emptyList()) }
+            runCatching { repository.saveProgram(draft.name.ifBlank { if (locale == "en") "My Program" else "Programım" }, "custom", "", emptyList(), trainingDays = draft.trainingDays) }
                 .onSuccess { program -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workouts = emptyList(), workoutPrograms = withActiveProgram(data.workoutPrograms, program)) }, transientMessage = if (locale == "en") "Custom program created." else "Kendi programın oluşturuldu.") }; onComplete() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun copyProgram(program: WorkoutProgramData) {
+        viewModelScope.launch {
+            runCatching { repository.saveProgram("${program.name} Kopyası", "custom", program.focusArea, program.exercises, trainingDays = program.trainingDays) }
+                .onSuccess { copy -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workouts = copy.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, copy)) }, transientMessage = "Program kopyalandı ve aktif edildi.") } }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
@@ -680,10 +728,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun addPushPullTemplate(key: String, locale: String = "tr") {
         if (_state.value.planGenerating) return
         val en = locale == "en"
-        val definitions = pushPullTemplate(key, en) ?: return
         viewModelScope.launch {
             _state.update { it.copy(planGenerating = true) }
-            runCatching { repository.saveProgram(definitions.first, "push_pull_template", definitions.first, definitions.second) }
+            // Şablonlardaki hareket adları RepDB kataloğundan, o anki `locale` ile
+            // canlı çekilir — sabit Türkçe/İngilizce metin kopyalamak (eski hâl)
+            // yanlış/eksik çeviri riski taşır; katalog `lib/exercise-translations.ts`
+            // ile tek, tutarlı çeviri kaynağıdır.
+            val nameLookup = runCatching { repository.loadExerciseCatalog(locale = locale) }
+                .getOrDefault(emptyList())
+                .associate { it.id to it.name }
+            val definitions = pushPullTemplate(key, en, nameLookup) ?: run { _state.update { it.copy(planGenerating = false) }; return@launch }
+            // Push / Pull şablonları kullanıcının kütüphanesine eklenen programlardır.
+            // "custom" kaynak türü mevcut canlı şemada desteklenir; ayrı bir kaynak
+            // etiketi kullanmak eski istemcilerdeki check constraint'i ihlal eder.
+            runCatching { repository.saveProgram(definitions.first, "custom", definitions.first, definitions.second) }
                 .onSuccess { program -> _state.update { current -> current.copy(
                     planGenerating = false,
                     dashboard = current.dashboard?.let { data -> data.copy(workouts = program.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) },
@@ -693,37 +751,82 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun pushPullTemplate(key: String, en: Boolean): Pair<String, List<com.hedefit.app.data.model.WorkoutExerciseData>>? {
-        fun exercise(id: String, tr: String, english: String, area: String, sets: Int, reps: String, rest: Int) = com.hedefit.app.data.model.WorkoutExerciseData(id, if (en) english else tr, area, sets, reps, rest)
+    // Hareket id'leri RepDB kataloğuna (bkz. fit-ai/scripts/import-repdb.mjs) karşılık
+    // gelir: görsellerin doğru yüklenmesi (ExerciseMedia/workoutExerciseImagePaths)
+    // ve "Değiştir" ile katalogdan alternatif bulunabilmesi buna bağlıdır.
+    private fun pushPullTemplate(key: String, en: Boolean, nameLookup: Map<String, String>): Pair<String, List<com.hedefit.app.data.model.WorkoutExerciseData>>? {
+        // İsimler her zaman katalogdan (bkz. addPushPullTemplate) gelir — burada
+        // yalnızca id id'ye eşlik eden fallback (katalog yüklenemezse) ve
+        // set/tekrar/dinlenme reçetesi tanımlanır.
+        fun exercise(id: String, fallback: String, area: String, sets: Int, reps: String, rest: Int) =
+            com.hedefit.app.data.model.WorkoutExerciseData(id, nameLookup[id] ?: fallback, area, sets, reps, rest)
         val pushA = listOf(
-            exercise("barbell-bench-press", "Barbell Bench Press", "Barbell Bench Press", if (en) "Chest" else "Göğüs", 4, "6–8", 120),
-            exercise("incline-dumbbell-press", "Incline Dumbbell Press", "Incline Dumbbell Press", if (en) "Upper chest" else "Üst göğüs", 3, "8–12", 90),
-            exercise("seated-dumbbell-press", "Seated Dumbbell Press", "Seated Dumbbell Press", if (en) "Shoulders" else "Omuz", 3, "8–12", 90),
-            exercise("dumbbell-lateral-raise", "Dumbbell Lateral Raise", "Dumbbell Lateral Raise", if (en) "Shoulders" else "Omuz", 3, "12–15", 60),
-            exercise("cable-rope-triceps-pushdown", "Cable Rope Triceps Pushdown", "Cable Rope Triceps Pushdown", if (en) "Triceps" else "Arka kol", 3, "10–15", 60),
+            exercise("bench-press", "Barbell Bench Press", if (en) "Chest" else "Göğüs", 4, "6–8", 120),
+            exercise("incline-db-press", "Incline Dumbbell Press", if (en) "Upper chest" else "Üst göğüs", 3, "8–12", 90),
+            exercise("dumbbell-shoulder-press", "Dumbbell Shoulder Press", if (en) "Shoulders" else "Omuz", 3, "8–12", 90),
+            exercise("seated-dumbbell-lateral-raise", "Dumbbell Lateral Raise", if (en) "Shoulders" else "Omuz", 3, "12–15", 60),
+            exercise("tricep-pushdown", "Cable Triceps Pushdown", if (en) "Triceps" else "Arka kol", 3, "10–15", 60),
         )
         val pushB = listOf(
-            exercise("barbell-shoulder-press", "Barbell Shoulder Press", "Barbell Shoulder Press", if (en) "Shoulders" else "Omuz", 4, "6–8", 120),
-            exercise("dumbbell-bench-press", "Dumbbell Bench Press", "Dumbbell Bench Press", if (en) "Chest" else "Göğüs", 3, "8–12", 90),
-            exercise("cable-crossover", "Cable Crossover", "Cable Crossover", if (en) "Chest" else "Göğüs", 3, "12–15", 60),
-            exercise("dumbbell-lateral-raise-b", "Dumbbell Lateral Raise", "Dumbbell Lateral Raise", if (en) "Shoulders" else "Omuz", 4, "12–20", 60),
-            exercise("overhead-cable-triceps-extension", "Overhead Cable Triceps Extension", "Overhead Cable Triceps Extension", if (en) "Triceps" else "Arka kol", 3, "10–15", 60),
+            exercise("seated-barbell-overhead-press", "Barbell Overhead Press", if (en) "Shoulders" else "Omuz", 4, "6–8", 120),
+            exercise("db-bench-press", "Dumbbell Bench Press", if (en) "Chest" else "Göğüs", 3, "8–12", 90),
+            exercise("cable-fly", "Cable Fly", if (en) "Chest" else "Göğüs", 3, "12–15", 60),
+            exercise("seated-dumbbell-lateral-raise", "Dumbbell Lateral Raise", if (en) "Shoulders" else "Omuz", 4, "12–20", 60),
+            exercise("overhead-tricep-extension", "Overhead Triceps Extension", if (en) "Triceps" else "Arka kol", 3, "10–15", 60),
         )
         val pullA = listOf(
-            exercise("pullups", "Pull-up", "Pull-up", if (en) "Back" else "Sırt", 4, "6–10", 120),
-            exercise("wide-grip-lat-pulldown", "Wide-Grip Lat Pulldown", "Wide-Grip Lat Pulldown", if (en) "Back" else "Sırt", 3, "8–12", 90),
-            exercise("seated-cable-row", "Seated Cable Row", "Seated Cable Row", if (en) "Back" else "Sırt", 3, "8–12", 90),
-            exercise("face-pull", "Face Pull", "Face Pull", if (en) "Rear delts" else "Arka omuz", 3, "12–15", 60),
-            exercise("incline-dumbbell-curl", "Incline Dumbbell Curl", "Incline Dumbbell Curl", if (en) "Biceps" else "Ön kol", 3, "10–15", 60),
+            exercise("pull-up", "Pull-up", if (en) "Back" else "Sırt", 4, "6–10", 120),
+            exercise("v-bar-lat-pulldown", "Lat Pulldown", if (en) "Back" else "Sırt", 3, "8–12", 90),
+            exercise("seated-cable-row", "Seated Cable Row", if (en) "Back" else "Sırt", 3, "8–12", 90),
+            exercise("face-pull", "Face Pull", if (en) "Rear delts" else "Arka omuz", 3, "12–15", 60),
+            exercise("seated-dumbbell-curl", "Seated Dumbbell Curl", if (en) "Biceps" else "Ön kol", 3, "10–15", 60),
         )
         val pullB = listOf(
-            exercise("barbell-row", "Barbell Row", "Barbell Row", if (en) "Back" else "Sırt", 4, "6–8", 120),
-            exercise("close-grip-lat-pulldown", "Close-Grip Lat Pulldown", "Close-Grip Lat Pulldown", if (en) "Back" else "Sırt", 3, "8–12", 90),
-            exercise("chest-supported-dumbbell-row", "Chest-Supported Dumbbell Row", "Chest-Supported Dumbbell Row", if (en) "Back" else "Sırt", 3, "8–12", 90),
-            exercise("reverse-pec-deck", "Reverse Pec Deck", "Reverse Pec Deck", if (en) "Rear delts" else "Arka omuz", 3, "12–15", 60),
-            exercise("hammer-curl", "Hammer Curl", "Hammer Curl", if (en) "Biceps" else "Ön kol", 3, "10–15", 60),
+            exercise("barbell-row", "Barbell Row", if (en) "Back" else "Sırt", 4, "6–8", 120),
+            exercise("close-grip-lat-pulldown", "Close-Grip Lat Pulldown", if (en) "Back" else "Sırt", 3, "8–12", 90),
+            exercise("chest-supported-db-row", "Chest-Supported Dumbbell Row", if (en) "Back" else "Sırt", 3, "8–12", 90),
+            exercise("rear-delt-fly", "Rear Delt Fly", if (en) "Rear delts" else "Arka omuz", 3, "12–15", 60),
+            exercise("hammer-curl", "Hammer Curl", if (en) "Biceps" else "Ön kol", 3, "10–15", 60),
         )
-        return when (key) { "push_a" -> (if (en) "Push A" else "İtiş A") to pushA; "push_b" -> (if (en) "Push B" else "İtiş B") to pushB; "pull_a" -> (if (en) "Pull A" else "Çekiş A") to pullA; "pull_b" -> (if (en) "Pull B" else "Çekiş B") to pullB; else -> null }
+        val legA = listOf(
+            exercise("squat", "Barbell Back Squat", if (en) "Quads" else "Ön bacak", 4, "6–8", 150),
+            exercise("bulgarian-split-squat", "Bulgarian Split Squat", if (en) "Quads & glutes" else "Ön bacak & kalça", 3, "8–12", 90),
+            exercise("close-stance-leg-press", "Leg Press", if (en) "Quads" else "Ön bacak", 3, "10–15", 90),
+            exercise("leg-extension", "Leg Extension", if (en) "Quads" else "Ön bacak", 3, "12–15", 60),
+            exercise("standing-calf-raise", "Standing Calf Raise", if (en) "Calves" else "Baldır", 4, "12–15", 45),
+        )
+        val legB = listOf(
+            exercise("romanian-deadlift", "Romanian Deadlift", if (en) "Hamstrings & glutes" else "Arka bacak & kalça", 4, "8–10", 120),
+            exercise("hip-thrust", "Barbell Hip Thrust", if (en) "Glutes" else "Kalça", 4, "8–12", 90),
+            exercise("seated-leg-curl", "Seated Leg Curl", if (en) "Hamstrings" else "Arka bacak", 3, "10–15", 60),
+            exercise("goblet-squat", "Goblet Squat", if (en) "Quads & glutes" else "Ön bacak & kalça", 3, "10–12", 90),
+            exercise("seated-calf-raise", "Seated Calf Raise", if (en) "Calves" else "Baldır", 4, "12–15", 45),
+        )
+        val fullA = listOf(
+            exercise("squat", "Barbell Back Squat", if (en) "Legs" else "Bacak", 3, "8–10", 120),
+            exercise("bench-press", "Barbell Bench Press", if (en) "Chest" else "Göğüs", 3, "8–10", 120),
+            exercise("barbell-row", "Barbell Row", if (en) "Back" else "Sırt", 3, "8–10", 90),
+            exercise("dumbbell-shoulder-press", "Dumbbell Shoulder Press", if (en) "Shoulders" else "Omuz", 3, "10–12", 90),
+            exercise("plank", "Plank", if (en) "Core" else "Karın", 3, "30–45 sn", 45),
+        )
+        val fullB = listOf(
+            exercise("deadlift", "Barbell Deadlift", if (en) "Full body" else "Tüm vücut", 3, "6–8", 150),
+            exercise("db-bench-press", "Dumbbell Bench Press", if (en) "Chest" else "Göğüs", 3, "10–12", 90),
+            exercise("pull-up", "Pull-up", if (en) "Back" else "Sırt", 3, "6–10", 120),
+            exercise("goblet-squat", "Goblet Squat", if (en) "Quads & glutes" else "Ön bacak & kalça", 3, "10–12", 90),
+            exercise("hanging-leg-raise", "Hanging Leg Raise", if (en) "Core" else "Karın", 3, "10–15", 60),
+        )
+        return when (key) {
+            "push_a" -> (if (en) "Push A" else "İtiş A") to pushA
+            "push_b" -> (if (en) "Push B" else "İtiş B") to pushB
+            "pull_a" -> (if (en) "Pull A" else "Çekiş A") to pullA
+            "pull_b" -> (if (en) "Pull B" else "Çekiş B") to pullB
+            "leg_a" -> (if (en) "Legs A" else "Bacak A") to legA
+            "leg_b" -> (if (en) "Legs B" else "Bacak B") to legB
+            "full_a" -> (if (en) "Full Body A" else "Tüm Vücut A") to fullA
+            "full_b" -> (if (en) "Full Body B" else "Tüm Vücut B") to fullB
+            else -> null
+        }
     }
 
     fun activateProgram(program: WorkoutProgramData) {
@@ -814,7 +917,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun sendChat(text: String, locale: String = "tr") {
+    fun sendChat(text: String, locale: String = "tr", workoutContext: WorkoutCoachContext? = null) {
         val clean = text.trim()
         if (clean.isEmpty() || _state.value.chatBusy) return
         val userMessage = ChatMessageState(clean, true)
@@ -822,17 +925,246 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val history = _state.value.chatMessages.map { it.text to it.user }
             runCatching {
-                repository.sendChat(history, _state.value.dashboard, locale)
+                repository.sendChat(history, _state.value.dashboard, locale, workoutContext ?: _state.value.activeCoachContext)
             }
                 .onSuccess { reply ->
                     _state.update {
-                        it.copy(chatBusy = false, chatMessages = it.chatMessages + ChatMessageState(reply.text, false), chatUsageUsed = reply.used ?: it.chatUsageUsed, chatUsageLimit = reply.limit ?: it.chatUsageLimit)
+                        it.copy(
+                            chatBusy = false,
+                            chatMessages = it.chatMessages + ChatMessageState(reply.text, false, actions = reply.actions),
+                            chatUsageUsed = reply.used ?: it.chatUsageUsed,
+                            chatUsageLimit = reply.limit ?: it.chatUsageLimit,
+                        )
                     }
                 }
                 .onFailure { error ->
                     val message = friendlyError(error)
                     _state.update { it.copy(chatBusy = false, chatMessages = it.chatMessages + ChatMessageState("Fit Koç şu anda yanıtı tamamlayamadı: $message", false), transientMessage = message) }
                 }
+        }
+    }
+
+    fun setActiveCoachContext(context: WorkoutCoachContext?) {
+        _state.update { it.copy(activeCoachContext = context) }
+    }
+
+    fun submitReadinessCheckin(
+        input: DailyReadinessInput,
+        exercises: List<WorkoutExerciseData>? = null,
+        locale: String = "tr",
+        onComplete: (ReadinessAdaptationData) -> Unit = {},
+    ) {
+        val currentExercises = exercises ?: _state.value.dashboard?.workouts.orEmpty()
+        if (currentExercises.isEmpty()) return
+        _state.update { it.copy(readinessCheckinBusy = true) }
+        viewModelScope.launch {
+            runCatching {
+                repository.adaptWorkoutForReadiness(input, currentExercises, _state.value.dashboard?.profile, locale)
+            }.onSuccess { adaptation ->
+                _state.update { it.copy(readinessCheckinBusy = false, readinessAdaptation = adaptation) }
+                onComplete(adaptation)
+            }.onFailure { error ->
+                _state.update { it.copy(readinessCheckinBusy = false, transientMessage = friendlyError(error)) }
+            }
+        }
+    }
+
+    fun applyReadinessAdaptation(adaptation: ReadinessAdaptationData) {
+        val adapted = adaptation.adaptedExercises
+        if (adapted.isNotEmpty()) {
+            _state.update { current ->
+                current.copy(
+                    dashboard = current.dashboard?.copy(workouts = adapted),
+                    readinessAdaptation = null,
+                    transientMessage = "Antrenman günlük toparlanma durumuna göre uyarlandı.",
+                )
+            }
+        } else {
+            _state.update { it.copy(readinessAdaptation = null) }
+        }
+    }
+
+    fun dismissReadinessAdaptation() {
+        _state.update { it.copy(readinessAdaptation = null) }
+    }
+
+    fun requestExerciseReplacement(
+        currentExerciseId: String,
+        reason: String,
+        exercises: List<WorkoutExerciseData>? = null,
+        discomfortArea: String? = null,
+        locale: String = "tr",
+        onComplete: (ExerciseReplacementCandidate?) -> Unit = {},
+    ) {
+        val currentExercises = exercises ?: _state.value.dashboard?.workouts.orEmpty()
+        _state.update { it.copy(replacementBusy = true) }
+        viewModelScope.launch {
+            runCatching {
+                repository.replaceWorkoutExercise(currentExerciseId, reason, currentExercises, _state.value.dashboard?.profile, discomfortArea, locale)
+            }.onSuccess { candidate ->
+                _state.update { it.copy(replacementBusy = false, replacementCandidate = candidate) }
+                onComplete(candidate)
+            }.onFailure { error ->
+                _state.update { it.copy(replacementBusy = false, transientMessage = friendlyError(error)) }
+            }
+        }
+    }
+
+    fun applyExerciseReplacement(replacement: ExerciseReplacementCandidate) {
+        val msg = "'${replacement.originalExerciseName}' hareketi '${replacement.replacementExerciseName}' ile değiştirildi."
+        mutateWorkoutPlan(msg) { current ->
+            current.map { item ->
+                if (item.id == replacement.originalExerciseId) {
+                    item.copy(
+                        id = replacement.replacementExerciseId,
+                        name = replacement.replacementExerciseName,
+                        sets = replacement.sets,
+                        reps = replacement.reps,
+                        restSeconds = replacement.restSeconds,
+                    )
+                } else item
+            }
+        }
+        _state.update { it.copy(replacementCandidate = null) }
+    }
+
+    fun dismissExerciseReplacement() {
+        _state.update { it.copy(replacementCandidate = null) }
+    }
+
+    fun requestPlanAdaptation(
+        trigger: String,
+        targetMinutes: Int?,
+        exercises: List<WorkoutExerciseData>? = null,
+        locale: String = "tr",
+        onComplete: (WorkoutAdaptationResultData) -> Unit = {},
+    ) {
+        val currentExercises = exercises ?: _state.value.dashboard?.workouts.orEmpty()
+        _state.update { it.copy(planAdaptationBusy = true) }
+        viewModelScope.launch {
+            runCatching {
+                repository.adaptWorkoutPlan(trigger, targetMinutes, currentExercises, _state.value.dashboard?.profile, locale)
+            }.onSuccess { result ->
+                _state.update { it.copy(planAdaptationBusy = false, planAdaptationResult = result) }
+                onComplete(result)
+            }.onFailure { error ->
+                _state.update { it.copy(planAdaptationBusy = false, transientMessage = friendlyError(error)) }
+            }
+        }
+    }
+
+    fun applyPlanAdaptation(result: WorkoutAdaptationResultData) {
+        val adapted = result.adaptedExercises
+        if (adapted.isNotEmpty()) {
+            _state.update { current ->
+                current.copy(
+                    dashboard = current.dashboard?.copy(workouts = adapted),
+                    planAdaptationResult = null,
+                    transientMessage = result.explanationTr.ifBlank { "Antrenman başarıyla uyarlandı." },
+                )
+            }
+        } else {
+            _state.update { it.copy(planAdaptationResult = null) }
+        }
+    }
+
+    fun dismissPlanAdaptation() {
+        _state.update { it.copy(planAdaptationResult = null) }
+    }
+
+    fun executeCoachAction(action: CoachActionData, onActionHandled: (String) -> Unit = {}) {
+        when (action.type) {
+            "replace_exercise" -> {
+                val origId = action.exerciseId.orEmpty().trim()
+                val repId = action.replacementId.orEmpty().trim()
+                val repName = (action.replacementName ?: repId).trim()
+                if (repId.isNotBlank()) {
+                    mutateWorkoutPlan("Hareket '$repName' ile güncellendi.") { current ->
+                        var replaced = false
+                        val updated = current.map { item ->
+                            val matches = !replaced && (
+                                (origId.isNotBlank() && (item.id.equals(origId, ignoreCase = true) || item.name.contains(origId, ignoreCase = true))) ||
+                                (origId.isBlank() && action.reason != null && item.name.contains(action.reason, ignoreCase = true))
+                            )
+                            if (matches) {
+                                replaced = true
+                                item.copy(
+                                    id = repId,
+                                    name = repName,
+                                    sets = action.sets ?: item.sets,
+                                    reps = action.reps ?: item.reps,
+                                    restSeconds = action.restSeconds ?: item.restSeconds,
+                                )
+                            } else item
+                        }
+                        if (!replaced && updated.isNotEmpty()) {
+                            updated.toMutableList().apply {
+                                val first = this[0]
+                                this[0] = first.copy(
+                                    id = repId,
+                                    name = repName,
+                                    sets = action.sets ?: first.sets,
+                                    reps = action.reps ?: first.reps,
+                                    restSeconds = action.restSeconds ?: first.restSeconds,
+                                )
+                            }
+                        } else updated
+                    }
+                    onActionHandled("Hareket değiştirildi: $repName")
+                }
+            }
+            "reduce_intensity" -> {
+                val percent = action.percent ?: 25
+                val current = _state.value.dashboard?.workouts.orEmpty()
+                val next = current.map { item ->
+                    item.copy(
+                        sets = (item.sets * (100 - percent) / 100).coerceAtLeast(1),
+                        restSeconds = item.restSeconds + 20,
+                    )
+                }
+                _state.update { state ->
+                    state.copy(
+                        dashboard = state.dashboard?.copy(workouts = next),
+                        transientMessage = "Yoğunluk %$percent düşürüldü ve dinlenme uzatıldı.",
+                    )
+                }
+                onActionHandled("Yoğunluk düşürüldü")
+            }
+            "shorten_workout" -> {
+                val targetMinutes = action.targetMinutes ?: 20
+                requestPlanAdaptation("time_shortage", targetMinutes) { res ->
+                    applyPlanAdaptation(res)
+                    onActionHandled("Antrenman $targetMinutes dakikaya uyarlandı")
+                }
+            }
+            "start_recovery_check" -> {
+                onActionHandled("start_recovery_check")
+            }
+            "modify_sets" -> {
+                val exId = action.exerciseId ?: ""
+                val sets = action.sets ?: 3
+                val current = _state.value.dashboard?.workouts.orEmpty()
+                val next = current.map { if (it.id == exId) it.copy(sets = sets) else it }
+                _state.update { it.copy(dashboard = it.dashboard?.copy(workouts = next), transientMessage = "Set sayısı $sets olarak güncellendi.") }
+                onActionHandled("Set sayısı güncellendi")
+            }
+            "modify_reps" -> {
+                val exId = action.exerciseId ?: ""
+                val reps = action.reps ?: "10"
+                val current = _state.value.dashboard?.workouts.orEmpty()
+                val next = current.map { if (it.id == exId) it.copy(reps = reps) else it }
+                _state.update { it.copy(dashboard = it.dashboard?.copy(workouts = next), transientMessage = "Tekrar sayısı $reps olarak güncellendi.") }
+                onActionHandled("Tekrar sayısı güncellendi")
+            }
+            "modify_rest_time" -> {
+                val exId = action.exerciseId ?: ""
+                val rest = action.restSeconds ?: 60
+                val current = _state.value.dashboard?.workouts.orEmpty()
+                val next = current.map { if (it.id == exId) it.copy(restSeconds = rest) else it }
+                _state.update { it.copy(dashboard = it.dashboard?.copy(workouts = next), transientMessage = "Dinlenme süresi ${rest}s olarak güncellendi.") }
+                onActionHandled("Dinlenme süresi güncellendi")
+            }
+            else -> onActionHandled(action.type)
         }
     }
 

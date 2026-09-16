@@ -10,7 +10,7 @@ import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
-import androidx.compose.material3.AlertDialog
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hedefit.app.data.model.DashboardData
 import com.hedefit.app.ui.components.HedefitCard
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.components.Sparkline
 import com.hedefit.app.ui.settings.MeasurementUnits
 import com.hedefit.app.ui.settings.estimatedGoalWeeks
@@ -55,7 +56,8 @@ fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeigh
     }
     val difference = if (current != null && target != null) abs(target - current) else null
     val weeklyRate = if (difference != null && weeks != null && weeks > 0) difference / weeks else null
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background).statusBarsPadding()) {
+    ScreenContainer {
+    Column(Modifier.fillMaxSize()) {
         UtilityHeader(if (en) "My goal journey" else "Hedef yolculuğum", onBack)
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp, 8.dp, 18.dp, 40.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { HedefitCard(Modifier.fillMaxWidth()) { Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -83,6 +85,7 @@ fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeigh
                 Text(if (en) "• Complete your planned workouts\n• Track your daily steps and water\n• Measure once a week under the same conditions" else "• Planlanan antrenmanlarını tamamla\n• Günlük adım ve su hedefini takip et\n• Haftada bir, aynı koşullarda ölçüm gir", color = HedefitColors.TextSecondary)
             } } }
         }
+    }
     }
     if (showCurrentEditor) WeightEditDialog(
         currentValue = current,

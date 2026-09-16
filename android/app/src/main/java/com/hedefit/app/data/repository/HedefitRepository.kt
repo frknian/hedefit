@@ -17,6 +17,7 @@ import com.hedefit.app.data.model.WorkoutSetInput
 import com.hedefit.app.data.model.WorkoutFeedbackData
 import com.hedefit.app.data.model.WorkoutScheduleData
 import com.hedefit.app.data.model.WorkoutProgramData
+import com.hedefit.app.data.model.WorkoutProgramDayData
 import com.hedefit.app.data.model.FavoriteMealData
 import com.hedefit.app.data.model.MealPlanItemData
 import com.hedefit.app.data.model.asRepeatFood
@@ -28,6 +29,12 @@ import com.hedefit.app.data.model.WorkoutExercisePerformanceData
 import com.hedefit.app.data.model.WorkoutSetPerformanceData
 import com.hedefit.app.data.model.ManualActivityInput
 import com.hedefit.app.data.model.manualActivityTypes
+import com.hedefit.app.data.model.DailyReadinessInput
+import com.hedefit.app.data.model.ReadinessAdaptationData
+import com.hedefit.app.data.model.ExerciseReplacementCandidate
+import com.hedefit.app.data.model.WorkoutAdaptationResultData
+import com.hedefit.app.data.model.CoachActionData
+import com.hedefit.app.data.model.WorkoutCoachContext
 import com.hedefit.app.health.HealthSnapshot
 import com.hedefit.app.data.network.HedefitApiClient
 import com.hedefit.app.data.network.SupabaseRestClient
@@ -46,6 +53,15 @@ import com.hedefit.app.route.RouteSnapshot
 import java.util.UUID
 import android.util.Base64
 import kotlin.math.roundToInt
+import com.hedefit.app.gym.analyzeTraining
+import com.hedefit.app.gym.estimatedOneRepMax
+import com.hedefit.app.equipment.EquipmentCatalog
+import com.hedefit.app.equipment.EquipmentRecognitionError
+import com.hedefit.app.equipment.EquipmentRecognitionException
+import com.hedefit.app.equipment.RecognitionAlternative
+import com.hedefit.app.equipment.RecognitionResult
+import java.io.IOException
+import java.net.SocketTimeoutException
 
 class HedefitRepository(
     private val auth: AuthRepository,
@@ -95,8 +111,9 @@ class HedefitRepository(
         val mealPlansCall = async { optionalSelect("meal_plan_items", "select=*&user_id=eq.$userId&planned_date=gte.${date.minusDays(35)}&planned_date=lte.${date.plusDays(35)}&order=planned_date.asc,created_at.asc&limit=500") }
         val programsCall = async { optionalSelect("workout_program_collections", "select=*&user_id=eq.$userId&order=updated_at.desc&limit=50") }
         val routesCall = async { optionalSelect("route_activities", "select=*&user_id=eq.$userId&order=started_at.desc&limit=100") }
-        val exerciseLogsCall = async { optionalSelect("workout_exercise_logs", "select=id,session_id,exercise_id,exercise_name,completed_at&user_id=eq.$userId&completed_at=gte.${date.minusDays(14)}T00:00:00Z&order=completed_at.desc&limit=200") }
-        val setLogsCall = async { optionalSelect("workout_set_logs", "select=exercise_log_id,set_number,weight_kg,reps,duration_seconds,rpe,created_at&user_id=eq.$userId&created_at=gte.${date.minusDays(14)}T00:00:00Z&order=created_at.desc&limit=1000") }
+        val exerciseLogsCall = async { optionalSelect("workout_exercise_logs", "select=id,session_id,exercise_id,exercise_name,completed_at&user_id=eq.$userId&completed_at=gte.${date.minusDays(89)}T00:00:00Z&order=completed_at.desc&limit=1000") }
+        val setLogsCall = async { optionalSelect("workout_set_logs", "select=exercise_log_id,set_number,weight_kg,reps,duration_seconds,rpe,created_at&user_id=eq.$userId&created_at=gte.${date.minusDays(89)}T00:00:00Z&order=created_at.desc&limit=5000") }
+        val exerciseCatalogCall = async { runCatching { loadExerciseCatalog(locale = "tr") }.getOrDefault(emptyList()) }
         val xpEventsCall = async { optionalSelect("xp_events", "select=amount,occurred_at&user_id=eq.$userId&order=occurred_at.desc&limit=5000") }
         val achievementsCall = async { optionalSelect("user_achievements", "select=achievement_id,unlocked_at&user_id=eq.$userId") }
 
@@ -150,6 +167,7 @@ class HedefitRepository(
             workoutPrograms = parseWorkoutPrograms(programsCall.await()),
             routeActivities = parseRouteActivities(routesCall.await()),
             exercisePerformance = parseExercisePerformance(exerciseLogsCall.await(), setLogsCall.await()),
+            exerciseCatalog = exerciseCatalogCall.await(),
             stepHistory = parseStepHistory(stepHistoryCall.await()),
             gamificationTotalXp = totalXp.takeIf { xpRows.length() > 0 },
             gamificationWeeklyXp = weeklyXp.takeIf { xpRows.length() > 0 },
@@ -355,6 +373,19 @@ class HedefitRepository(
         snapshot.weightKg?.let { weight -> rest.upsert("body_measurements", JSONObject().put("id", UUID.randomUUID().toString()).put("user_id", userId).put("measured_at", snapshot.date.toString()).put("weight_kg", weight), "user_id,measured_at") }
     }
 
+    suspend fun saveSleepLog(minutes: Int, quality: String = "iyi", date: LocalDate = LocalDate.now()) {
+        val userId = requireNotNull(auth.userId())
+        optionalHealthUpsert(
+            "sleep_logs",
+            JSONObject()
+                .put("user_id", userId)
+                .put("local_date", date.toString())
+                .put("minutes", minutes)
+                .put("quality", quality),
+            "user_id,local_date",
+        )
+    }
+
     private suspend fun optionalHealthUpsert(table: String, row: JSONObject, onConflict: String) {
         runCatching { rest.upsert(table, row, onConflict) }.onFailure { error ->
             val message = error.message.orEmpty()
@@ -387,6 +418,9 @@ class HedefitRepository(
         val response = api.get("/api/nutrition/foods?q=${java.net.URLEncoder.encode(query.trim(), Charsets.UTF_8.name())}&locale=${if (locale == "en") "en" else "tr"}").requireSuccess("Besin kataloğu aranamadı.").jsonObject()
         val array = response.optJSONArray("items") ?: JSONArray()
         return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item -> add(parseFoodSearch(item)) } }
+            // Sunucunun eski bir sürümü önbellekten dönse bile Türkçe arayüzde
+            // İngilizce USDA besin adlarının yeniden görünmesini engelle.
+            .filterNot { locale != "en" && it.source.equals("usda", ignoreCase = true) }
     }
 
     suspend fun analyzeNutritionPhoto(jpegBytes: ByteArray): List<NutritionEstimateData> {
@@ -406,6 +440,57 @@ class HedefitRepository(
                 ))
             }
         }.also { require(it.isNotEmpty()) { "Fotoğrafta öğün bulunamadı." } }
+    }
+
+    suspend fun recognizeEquipment(jpegBytes: ByteArray): RecognitionResult {
+        if (jpegBytes.isEmpty() || jpegBytes.size > 5 * 1024 * 1024) {
+            throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, "Fotoğraf hazırlanamadı.")
+        }
+        return try {
+            val encoded = Base64.encodeToString(jpegBytes, Base64.NO_WRAP)
+            val response = api.post("/api/equipment/recognize", JSONObject().put("imageDataUrl", "data:image/jpeg;base64,$encoded"))
+            if (!response.isSuccessful) {
+                val errorBody = runCatching { response.jsonObject() }.getOrDefault(JSONObject())
+                val kind = when (response.status) {
+                    400, 413, 422 -> EquipmentRecognitionError.INVALID_IMAGE
+                    404 -> EquipmentRecognitionError.CONFIGURATION
+                    429 -> EquipmentRecognitionError.RATE_LIMIT
+                    502 -> EquipmentRecognitionError.INVALID_RESPONSE
+                    503 -> if (errorBody.optString("code") == "VISION_NOT_CONFIGURED") EquipmentRecognitionError.CONFIGURATION else EquipmentRecognitionError.SERVICE_UNAVAILABLE
+                    504 -> EquipmentRecognitionError.SERVICE_UNAVAILABLE
+                    else -> EquipmentRecognitionError.UNKNOWN
+                }
+                val message = errorBody.optString("error").ifBlank { "Ekipman tanınamadı." }
+                throw EquipmentRecognitionException(kind, message)
+            }
+            val json = response.jsonObject()
+            val confidence = json.optDouble("confidence", 0.0).takeIf { it.isFinite() }?.coerceIn(0.0, 1.0)?.toFloat() ?: 0f
+            val featuresArray = json.optJSONArray("visibleFeatures") ?: JSONArray()
+            val features = List(featuresArray.length()) { featuresArray.optString(it) }.filter(String::isNotBlank).take(8)
+            val equipment = json.stringOrNull("equipmentName")?.let(EquipmentCatalog::findByLabel)
+            if (!json.optBoolean("recognized") || confidence < .55f || equipment == null) {
+                RecognitionResult.Unknown(confidence, features)
+            } else {
+                val alternatives = json.optJSONArray("alternatives")?.let { array ->
+                    buildList {
+                        for (index in 0 until array.length()) {
+                            val item = array.optJSONObject(index) ?: continue
+                            val match = item.stringOrNull("equipmentName")?.let(EquipmentCatalog::findByLabel) ?: continue
+                            if (match.id != equipment.id) add(RecognitionAlternative(match, item.optDouble("confidence", 0.0).coerceIn(0.0, 1.0).toFloat()))
+                        }
+                    }
+                }.orEmpty()
+                RecognitionResult.Recognized(equipment, confidence, alternatives, features)
+            }
+        } catch (error: EquipmentRecognitionException) {
+            throw error
+        } catch (error: SocketTimeoutException) {
+            throw EquipmentRecognitionException(EquipmentRecognitionError.TIMEOUT, "Tanıma isteği zaman aşımına uğradı.")
+        } catch (error: IOException) {
+            throw EquipmentRecognitionException(EquipmentRecognitionError.OFFLINE, "İnternet bağlantısı kurulamadı.")
+        } catch (error: Exception) {
+            throw EquipmentRecognitionException(EquipmentRecognitionError.UNKNOWN, error.message ?: "Ekipman tanınamadı.")
+        }
     }
 
     suspend fun savePhotoNutrition(items: List<NutritionEstimateData>, meal: String): List<NutritionLogData> = items.map { item ->
@@ -488,9 +573,11 @@ class HedefitRepository(
 
     suspend fun removeMealPlanItem(id: String) = rest.delete("meal_plan_items", "id=eq.$id&user_id=eq.${requireNotNull(auth.userId())}")
 
-    suspend fun scheduleWorkout(date: LocalDate, time: String, status: String = "planned", originalDate: String? = null): WorkoutScheduleData {
+    suspend fun scheduleWorkout(date: LocalDate, time: String, status: String = "planned", originalDate: String? = null, programId: String? = null, programName: String? = null): WorkoutScheduleData {
         val row = JSONObject().put("id", UUID.randomUUID().toString()).put("user_id", requireNotNull(auth.userId())).put("scheduled_date", date.toString())
-            .put("scheduled_time", time).put("status", status).put("original_date", originalDate ?: JSONObject.NULL).put("updated_at", Instant.now().toString())
+            .put("scheduled_time", time).put("status", status).put("original_date", originalDate ?: JSONObject.NULL)
+            .put("program_id", programId ?: JSONObject.NULL).put("program_name", programName?.trim()?.take(120) ?: JSONObject.NULL)
+            .put("updated_at", Instant.now().toString())
         return parseScheduleItem(rest.upsert("workout_schedule", row, "user_id,scheduled_date"))
     }
 
@@ -542,12 +629,12 @@ class HedefitRepository(
         rest.upsert("workout_plans", JSONObject().put("user_id", requireNotNull(auth.userId())).put("workouts", raw).put("updated_at", Instant.now().toString()), "user_id")
     }
 
-    suspend fun saveProgram(name: String, source: String, focusArea: String, workouts: List<WorkoutExerciseData>, id: String = UUID.randomUUID().toString(), showOnHome: Boolean = false): WorkoutProgramData {
+    suspend fun saveProgram(name: String, source: String, focusArea: String, workouts: List<WorkoutExerciseData>, id: String = UUID.randomUUID().toString(), showOnHome: Boolean = false, trainingDays: List<WorkoutProgramDayData> = emptyList()): WorkoutProgramData {
         val userId = requireNotNull(auth.userId())
         rest.update("workout_program_collections", "user_id=eq.$userId&is_active=eq.true", JSONObject().put("is_active", false).put("updated_at", Instant.now().toString()))
         val row = rest.upsert("workout_program_collections", JSONObject()
             .put("id", id).put("user_id", userId).put("name", name.trim().take(80)).put("source", source)
-            .put("focus_area", focusArea).put("exercises", workoutsJson(workouts)).put("is_active", true).put("show_on_home", showOnHome).put("updated_at", Instant.now().toString()), "id")
+            .put("focus_area", focusArea).put("exercises", workoutsJson(workouts)).put("training_days", JSONArray(trainingDays.map { JSONObject().put("weekday", it.weekday).put("title", it.title.take(60)) })).put("is_active", true).put("show_on_home", showOnHome).put("updated_at", Instant.now().toString()), "id")
         saveWorkoutPlan(workouts)
         return parseWorkoutProgram(row)
     }
@@ -579,7 +666,7 @@ class HedefitRepository(
         return active
     }
 
-    private fun workoutsJson(workouts: List<WorkoutExerciseData>) = JSONArray(workouts.map { JSONObject().put("id", it.id).put("name", it.name).put("area", it.area).put("sets", it.sets).put("reps", it.reps).put("restSeconds", it.restSeconds) })
+    private fun workoutsJson(workouts: List<WorkoutExerciseData>) = JSONArray(workouts.map { JSONObject().put("id", it.id).put("name", it.name).put("area", it.area).put("sets", it.sets).put("reps", it.reps).put("restSeconds", it.restSeconds).put("targetWeightKg", it.targetWeightKg ?: JSONObject.NULL) })
 
     suspend fun estimateNutrition(food: String, grams: Double): NutritionEstimateData {
         val response = api.post("/api/nutrition/parse-text", JSONObject().put("query", food).put("grams", grams))
@@ -625,7 +712,12 @@ class HedefitRepository(
         return parseNutritionLog(log)
     }
 
-    suspend fun sendChat(messages: List<Pair<String, Boolean>>, data: DashboardData?, locale: String = "tr"): ChatReplyData {
+    suspend fun sendChat(
+        messages: List<Pair<String, Boolean>>,
+        data: DashboardData?,
+        locale: String = "tr",
+        workoutContext: WorkoutCoachContext? = null,
+    ): ChatReplyData {
         localNutritionEvaluation(messages.lastOrNull { it.second }?.first.orEmpty(), data, locale)?.let { answer ->
             return ChatReplyData(answer, "local", null, null)
         }
@@ -670,9 +762,18 @@ class HedefitRepository(
             signals.put("activity", JSONObject()
                 .put("workoutsThisWeek", it.sessions.count { session -> localDate(session.completedAt) >= LocalDate.now().minusDays(7) })
                 .put("streakDays", it.streakDays))
+            val trainingAnalysis = analyzeTraining(it.exercisePerformance)
+            val personalBests = it.exercisePerformance.groupBy { performance -> performance.exerciseId ?: performance.exerciseName }
+                .mapNotNull { (_, performances) ->
+                    val best = performances.flatMap { performance -> performance.sets }
+                        .maxByOrNull { set -> estimatedOneRepMax(set.weightKg, set.reps) } ?: return@mapNotNull null
+                    val estimate = estimatedOneRepMax(best.weightKg, best.reps)
+                    if (estimate <= 0.0) null else JSONObject().put("exerciseName", performances.first().exerciseName)
+                        .put("weightKg", best.weightKg).put("reps", best.reps).put("estimatedOneRepMaxKg", estimate)
+                }.take(12)
             signals.put("training", JSONObject()
                 .put("activeExercises", JSONArray(it.workouts.take(20).map { exercise ->
-                    JSONObject().put("name", exercise.name).put("area", exercise.area).put("sets", exercise.sets).put("reps", exercise.reps)
+                    JSONObject().put("id", exercise.id).put("name", exercise.name).put("area", exercise.area).put("sets", exercise.sets).put("reps", exercise.reps)
                 }))
                 .put("recentSessions", JSONArray(it.sessions.take(4).map { session ->
                     JSONObject().put("completedAt", session.completedAt).put("exerciseNames", JSONArray(session.exerciseNames.take(12)))
@@ -681,13 +782,243 @@ class HedefitRepository(
                 .put("recentPerformance", JSONArray(it.exercisePerformance.take(20).map { performance ->
                     JSONObject().put("exerciseId", performance.exerciseId ?: JSONObject.NULL).put("exerciseName", performance.exerciseName)
                         .put("sets", JSONArray(performance.sets.map { set -> JSONObject().put("weightKg", set.weightKg ?: JSONObject.NULL).put("reps", set.reps ?: JSONObject.NULL).put("rpe", set.rpe ?: JSONObject.NULL) }))
-                })))
+                }))
+                .put("weeklyVolumeKg", trainingAnalysis.totalVolumeKg)
+                .put("muscleDistribution", JSONArray(trainingAnalysis.muscleLoads.take(16).map { load -> JSONObject()
+                    .put("muscle", load.muscle).put("setEquivalent", load.setEquivalent).put("status", load.level.name.lowercase()) }))
+                .put("personalRecords", JSONArray(personalBests)))
         }
-        val response = api.post("/api/chat", JSONObject().put("messages", bodyMessages).put("signals", signals).put("locale", if (locale == "en") "en" else "tr"))
+
+        val requestPayload = JSONObject()
+            .put("messages", bodyMessages)
+            .put("signals", signals)
+            .put("locale", if (locale == "en") "en" else "tr")
+
+        workoutContext?.let { ctx ->
+            val wCtx = JSONObject()
+            ctx.exerciseId?.let { wCtx.put("exerciseId", it) }
+            ctx.exerciseName?.let { wCtx.put("exerciseName", it) }
+            ctx.muscleGroup?.let { wCtx.put("muscleGroup", it) }
+            ctx.targetSets?.let { wCtx.put("targetSets", it) }
+            ctx.currentSet?.let { wCtx.put("currentSet", it) }
+            ctx.reps?.let { wCtx.put("reps", it) }
+            ctx.workoutDurationMinutes?.let { wCtx.put("workoutDurationMinutes", it) }
+            ctx.elapsedSeconds?.let { wCtx.put("elapsedSeconds", it) }
+            wCtx.put("isBeginner", ctx.isBeginner)
+            requestPayload.put("workoutContext", wCtx)
+        }
+
+        val response = api.post("/api/chat", requestPayload)
             .requireSuccess("Fit Koç yanıt veremedi.").jsonObject()
         if (response.optString("source") == "unavailable") error(response.optString("notice", "Çevrimiçi Fit Koç geçici olarak kullanılamıyor."))
         val usage = response.optJSONObject("usage")
-        return ChatReplyData(response.optString("text").replace("**", "").replace("__", ""), response.optString("source"), usage?.intOrNull("used"), usage?.intOrNull("limit"))
+
+        val actionsArray = response.optJSONArray("actions")
+        val actionsList = buildList {
+            if (actionsArray != null) {
+                for (i in 0 until actionsArray.length()) {
+                    val actObj = actionsArray.optJSONObject(i) ?: continue
+                    add(
+                        CoachActionData(
+                            type = actObj.optString("type"),
+                            exerciseId = actObj.optString("exerciseId").takeIf { it.isNotBlank() },
+                            replacementId = actObj.optString("replacementId").takeIf { it.isNotBlank() },
+                            replacementName = actObj.optString("replacementName").takeIf { it.isNotBlank() },
+                            sets = actObj.optInt("sets").takeIf { it > 0 },
+                            reps = actObj.optString("reps").takeIf { it.isNotBlank() },
+                            restSeconds = actObj.optInt("restSeconds").takeIf { it > 0 },
+                            reason = actObj.optString("reason").takeIf { it.isNotBlank() },
+                            targetMinutes = actObj.optInt("targetMinutes").takeIf { it > 0 },
+                            percent = actObj.optInt("percent").takeIf { it > 0 },
+                            region = actObj.optString("region").takeIf { it.isNotBlank() },
+                        )
+                    )
+                }
+            }
+        }
+
+        return ChatReplyData(
+            text = response.optString("text").replace("**", "").replace("__", ""),
+            source = response.optString("source"),
+            used = usage?.intOrNull("used"),
+            limit = usage?.intOrNull("limit"),
+            actions = actionsList,
+        )
+    }
+
+    suspend fun adaptWorkoutForReadiness(
+        input: DailyReadinessInput,
+        exercises: List<WorkoutExerciseData>,
+        profile: ProfileData?,
+        locale: String = "tr",
+    ): ReadinessAdaptationData {
+        val checkinObj = JSONObject()
+            .put("energy", input.energy)
+            .put("sleepQuality", input.sleepQuality)
+            .put("fatigue", input.fatigue)
+            .put("hasSoreness", input.hasSoreness)
+            .put("sorenessAreas", JSONArray(input.sorenessAreas))
+            .put("discomfortLevel", input.discomfortLevel)
+            .put("notes", input.notes ?: JSONObject.NULL)
+
+        val exArray = JSONArray(exercises.map { e ->
+            JSONObject()
+                .put("id", e.id)
+                .put("name", e.name)
+                .put("area", e.area)
+                .put("sets", e.sets)
+                .put("reps", e.reps)
+                .put("restSeconds", e.restSeconds)
+        })
+
+        val profileObj = JSONObject()
+            .put("goal", profile?.goal ?: "Kas geliştirmek")
+            .put("environment", profile?.environment ?: "Salon")
+            .put("equipment", profile?.equipment ?: "Tam salon")
+            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+
+        val payload = JSONObject()
+            .put("action", "readiness_checkin")
+            .put("checkin", checkinObj)
+            .put("exercises", exArray)
+            .put("profile", profileObj)
+            .put("locale", locale)
+
+        val res = api.post("/api/workout/adapt", payload)
+            .requireSuccess("Hazırlık adaptasyonu yapılamadı.").jsonObject()
+
+        val adaptedArray = res.optJSONArray("adaptedExercises") ?: JSONArray()
+        val adaptedList = (0 until adaptedArray.length()).mapNotNull { i ->
+            val obj = adaptedArray.optJSONObject(i) ?: return@mapNotNull null
+            WorkoutExerciseData(
+                id = obj.optString("id"),
+                name = obj.optString("name"),
+                area = obj.optString("area"),
+                sets = obj.optInt("sets", 3),
+                reps = obj.optString("reps", "8-12"),
+                restSeconds = obj.optInt("restSeconds", 60),
+            )
+        }
+
+        val delodedArray = res.optJSONArray("deloadedMuscles") ?: JSONArray()
+        val delodedList = (0 until delodedArray.length()).map { delodedArray.optString(it) }
+
+        return ReadinessAdaptationData(
+            needsAdaptation = res.optBoolean("needsAdaptation", false),
+            recommendedIntensity = res.optString("recommendedIntensity", "normal"),
+            explanationTr = res.optString("explanationTr", ""),
+            explanationEn = res.optString("explanationEn", ""),
+            volumeReductionPercent = res.optInt("volumeReductionPercent", 0),
+            delodedMuscles = delodedList,
+            adaptedExercises = adaptedList,
+            originalExercises = exercises,
+        )
+    }
+
+    suspend fun replaceWorkoutExercise(
+        currentExerciseId: String,
+        reason: String,
+        exercises: List<WorkoutExerciseData>,
+        profile: ProfileData?,
+        discomfortArea: String? = null,
+        locale: String = "tr",
+    ): ExerciseReplacementCandidate? {
+        val profileObj = JSONObject()
+            .put("goal", profile?.goal ?: "Kas geliştirmek")
+            .put("environment", profile?.environment ?: "Salon")
+            .put("equipment", profile?.equipment ?: "Tam salon")
+            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+
+        val payload = JSONObject()
+            .put("action", "replace_exercise")
+            .put("exerciseId", currentExerciseId)
+            .put("reason", reason)
+            .put("sessionExerciseIds", JSONArray(exercises.map { it.id }))
+            .put("discomfortArea", discomfortArea ?: JSONObject.NULL)
+            .put("profile", profileObj)
+            .put("locale", locale)
+
+        val res = api.post("/api/workout/adapt", payload)
+            .requireSuccess("Hareket değiştirilemedi.").jsonObject()
+
+        val origObj = res.optJSONObject("originalExercise") ?: return null
+        val repObj = res.optJSONObject("replacementExercise") ?: return null
+
+        return ExerciseReplacementCandidate(
+            originalExerciseId = origObj.optString("id"),
+            originalExerciseName = origObj.optString("name"),
+            replacementExerciseId = repObj.optString("id"),
+            replacementExerciseName = repObj.optString("name"),
+            reason = res.optString("reason"),
+            explanationTr = res.optString("explanationTr"),
+            sets = res.optInt("sets", 3),
+            reps = res.optString("reps", "8-12"),
+            restSeconds = res.optInt("restSeconds", 60),
+            progressionType = res.optString("progressionType", "lateral"),
+        )
+    }
+
+    suspend fun adaptWorkoutPlan(
+        trigger: String,
+        targetMinutes: Int?,
+        exercises: List<WorkoutExerciseData>,
+        profile: ProfileData?,
+        locale: String = "tr",
+    ): WorkoutAdaptationResultData {
+        val exArray = JSONArray(exercises.map { e ->
+            JSONObject()
+                .put("id", e.id)
+                .put("name", e.name)
+                .put("area", e.area)
+                .put("sets", e.sets)
+                .put("reps", e.reps)
+                .put("restSeconds", e.restSeconds)
+        })
+
+        val profileObj = JSONObject()
+            .put("goal", profile?.goal ?: "Kas geliştirmek")
+            .put("environment", profile?.environment ?: "Salon")
+            .put("equipment", profile?.equipment ?: "Tam salon")
+            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+
+        val paramsObj = JSONObject()
+            .put("trigger", trigger)
+            .put("targetMinutes", targetMinutes ?: JSONObject.NULL)
+
+        val payload = JSONObject()
+            .put("action", "adapt_plan")
+            .put("exercises", exArray)
+            .put("params", paramsObj)
+            .put("profile", profileObj)
+            .put("locale", locale)
+
+        val res = api.post("/api/workout/adapt", payload)
+            .requireSuccess("Plan uyarlanamadı.").jsonObject()
+
+        val adaptedArray = res.optJSONArray("adaptedExercises") ?: JSONArray()
+        val adaptedList = (0 until adaptedArray.length()).mapNotNull { i ->
+            val obj = adaptedArray.optJSONObject(i) ?: return@mapNotNull null
+            WorkoutExerciseData(
+                id = obj.optString("id"),
+                name = obj.optString("name"),
+                area = obj.optString("area"),
+                sets = obj.optInt("sets", 3),
+                reps = obj.optString("reps", "8-12"),
+                restSeconds = obj.optInt("restSeconds", 60),
+            )
+        }
+
+        val changesArray = res.optJSONArray("changes") ?: JSONArray()
+        val changesList = (0 until changesArray.length()).map { changesArray.optString(it) }
+
+        return WorkoutAdaptationResultData(
+            trigger = res.optString("trigger", trigger),
+            originalDurationMinutes = res.optInt("originalDurationMinutes", 45),
+            adaptedDurationMinutes = res.optInt("adaptedDurationMinutes", 20),
+            explanationTr = res.optString("explanationTr", ""),
+            changes = changesList,
+            adaptedExercises = adaptedList,
+        )
     }
 
     private fun localNutritionEvaluation(question: String, data: DashboardData?, locale: String): String? {
@@ -808,6 +1139,7 @@ class HedefitRepository(
                 sets = sets.coerceIn(1, 20),
                 reps = item.stringOrNull("reps") ?: "8–12",
                 restSeconds = item.intOrNull("restSeconds") ?: 60,
+                targetWeightKg = item.doubleOrNull("targetWeightKg"),
             ))
         }
     }
@@ -824,6 +1156,9 @@ class HedefitRepository(
         exercises = parseWorkouts(item.optJSONArray("exercises") ?: JSONArray()),
         isActive = item.optBoolean("is_active"),
         showOnHome = item.optBoolean("show_on_home"),
+        trainingDays = item.optJSONArray("training_days")?.let { days -> buildList {
+            for (index in 0 until days.length()) days.optJSONObject(index)?.let { day -> add(WorkoutProgramDayData(day.optInt("weekday").coerceIn(1, 7), day.optString("title").take(60))) }
+        } }.orEmpty(),
     )
 
     private fun parseSessions(array: JSONArray): List<WorkoutSessionData> = buildList {
@@ -950,7 +1285,7 @@ class HedefitRepository(
         for (index in 0 until array.length()) array.optJSONObject(index)?.let { add(parseScheduleItem(it)) }
     }
 
-    private fun parseScheduleItem(item: JSONObject) = WorkoutScheduleData(item.optString("id"), item.optString("scheduled_date"), item.optString("scheduled_time").take(5), item.optString("status"), item.stringOrNull("original_date"))
+    private fun parseScheduleItem(item: JSONObject) = WorkoutScheduleData(item.optString("id"), item.optString("scheduled_date"), item.optString("scheduled_time").take(5), item.optString("status"), item.stringOrNull("original_date"), item.stringOrNull("program_id"), item.stringOrNull("program_name"))
 
     private fun parseNutritionGoal(item: JSONObject?, profile: ProfileData): NutritionGoalData {
         val calories = item?.optInt("calorie_target")?.takeIf { it > 0 } ?: 2250

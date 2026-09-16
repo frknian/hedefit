@@ -61,12 +61,16 @@ function outputTokens(request: AiRequest) {
   return Math.max(request.maxOutputTokens ?? 0, request.minimumOutputTokens ?? MIN_OUTPUT_TOKENS);
 }
 
-function providerOptionsForModel(request: { providerOptions?: AiRequest["providerOptions"] }, model: string) {
-  if (!/^(gpt-5|o\d)/i.test(model)) return request.providerOptions;
-  return {
+function providerOptionsForModel(request: { providerOptions?: AiRequest["providerOptions"]; image?: ImageInput }, model: string) {
+  const options = request.image ? {
     ...request.providerOptions,
+    openai: { ...(request.providerOptions?.openai as Record<string, unknown> | undefined), store: false },
+  } : request.providerOptions;
+  if (!/^(gpt-5|o\d)/i.test(model)) return options;
+  return {
+    ...options,
     openai: {
-      ...(request.providerOptions?.openai as Record<string, unknown> | undefined),
+      ...(options?.openai as Record<string, unknown> | undefined),
       reasoningEffort: "low",
       textVerbosity: "low",
     },

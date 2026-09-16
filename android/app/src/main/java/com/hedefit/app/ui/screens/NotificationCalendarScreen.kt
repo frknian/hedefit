@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hedefit.app.ui.components.HedefitCard
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.settings.AppPreferences
 import com.hedefit.app.ui.theme.HedefitColors
 import com.hedefit.app.ui.i18n.uiText
@@ -28,7 +29,7 @@ fun NotificationCalendarScreen(preferences: AppPreferences, onBack: () -> Unit, 
     val en = preferences.language == "en"
     val days = if (en) listOf(Calendar.MONDAY to "Mon", Calendar.TUESDAY to "Tue", Calendar.WEDNESDAY to "Wed", Calendar.THURSDAY to "Thu", Calendar.FRIDAY to "Fri", Calendar.SATURDAY to "Sat", Calendar.SUNDAY to "Sun")
         else listOf(Calendar.MONDAY to "Pzt", Calendar.TUESDAY to "Sal", Calendar.WEDNESDAY to "Çar", Calendar.THURSDAY to "Per", Calendar.FRIDAY to "Cum", Calendar.SATURDAY to "Cmt", Calendar.SUNDAY to "Paz")
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background).statusBarsPadding()) {
+    ScreenContainer { Column(Modifier.fillMaxSize()) {
         UtilityHeader(uiText(preferences.language, "Bildirim Takvimi", "Notification Calendar"), onBack)
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
@@ -70,5 +71,5 @@ fun NotificationCalendarScreen(preferences: AppPreferences, onBack: () -> Unit, 
             }
             item { Text(if (en) "Reminders are scheduled locally on your device and work without an internet connection." else "Bildirimler cihazında yerel olarak planlanır. İnternet bağlantısı olmasa da çalışır.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
         }
-    }
+    } }
 }

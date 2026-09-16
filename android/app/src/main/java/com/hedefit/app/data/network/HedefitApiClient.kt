@@ -24,6 +24,7 @@ class HedefitApiClient(
                 path.contains("generate-plan") -> 75_000
                 path.contains("/api/nutrition/parse-text") -> 50_000
                 path.contains("/api/nutrition/analyze-photo") -> 70_000
+                path.contains("/api/equipment/recognize") -> 70_000
                 path.contains("/api/chat") -> 30_000
                 else -> 40_000
             },

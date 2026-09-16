@@ -18,7 +18,7 @@ export function progressionSuggestion(sets: PerformanceSet[], prescribedReps?: s
   return { action: "hold", suggestedWeightKg: latest.weightKg, targetReps: `${low}–${high}`, reason: "Yükü sabitle; aynı form ve eforla tekrar et." };
 }
 
-export function recoveryScore(input: { sleepMinutes?: number; steps?: number; sessions?: RecentSession[]; todayVolumeSets?: number; fatigue?: number }) {
+export function recoveryScore(input: { sleepMinutes?: number; steps?: number; sessions?: RecentSession[]; todayVolumeSets?: number; fatigue?: number }): { score: number; decision: "heavy" | "moderate" | "rest"; reason: string } {
   let score = 72;
   if (input.sleepMinutes !== undefined) score += input.sleepMinutes >= 420 ? 12 : input.sleepMinutes >= 360 ? 3 : input.sleepMinutes >= 300 ? -8 : -18;
   const fatigue = input.fatigue ?? input.sessions?.[0]?.fatigue;

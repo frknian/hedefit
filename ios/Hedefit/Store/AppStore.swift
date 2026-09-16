@@ -43,7 +43,29 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     func deleteFood(_ log: NutritionLog) async { do { try await repository.deleteFood(log.id); dashboard.nutritionLogs.removeAll { $0.id == log.id } } catch { self.error = error.localizedDescription } }
     func sendChat(_ text: String) async { guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }; chat.append(.init(text: text, fromUser: true)); loading = true; do { let reply = try await repository.chat(chat, dashboard: dashboard); chat.append(.init(text: reply, fromUser: false)) } catch { self.error = error.localizedDescription }; loading = false }
     func searchExercises(_ query: String) async { loading = true; do { exercises = try await repository.searchExercises(query) } catch { self.error = error.localizedDescription }; loading = false }
-    func saveRoute(type: String, title: String) async { guard let value = route.stop(), let session else { return }; do { try await repository.saveRoute(value, type: type, title: title, userID: session.userID); message = "Rota kaydedildi."; await refresh() } catch { self.error = error.localizedDescription } }
+    func recognizeEquipment(_ jpegData: Data) async throws -> EquipmentRecognitionResult { try await repository.recognizeEquipment(jpegData) }
+    func activateProgram(_ program: WorkoutProgram) async {
+        guard let session else { return }
+        let previous = dashboard
+        dashboard.workouts = program.exercises
+        dashboard.workoutPrograms = dashboard.workoutPrograms.map { value in
+            var copy = value; copy.isActive = value.id == program.id; return copy
+        }
+        do { try await repository.activateProgram(program, userID: session.userID) }
+        catch { dashboard = previous; self.error = error.localizedDescription }
+    }
+    @discardableResult func saveRoute(type: String, title: String) async -> Bool {
+        guard let value = route.stop(), let session else { return false }
+        do {
+            try await repository.saveRoute(value, type: type, title: title, userID: session.userID)
+            message = "Rota kaydedildi; Yapılanlar'da görüntüleyebilirsin."
+            await refresh()
+            return true
+        } catch {
+            self.error = error.localizedDescription
+            return false
+        }
+    }
     func handleDeepLink(_ url: URL) { switch url.host { case "workout": selectedTab = .workout; case "nutrition": selectedTab = .nutrition; default: selectedTab = .home } }
     private func saveSettings() { if let data = try? JSONEncoder().encode(settings) { UserDefaults.standard.set(data, forKey: "settings") } }
 }

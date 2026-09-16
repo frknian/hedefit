@@ -94,7 +94,25 @@ function training(value: unknown) {
     }).slice(0, 12) : [];
     return exerciseName && sets.length ? [{ exerciseId: text(performance?.exerciseId, 100), exerciseName, sets }] : [];
   }).slice(0, 20) : undefined;
-  return activeExercises?.length || recentSessions?.length || recentPerformance?.length ? { activeExercises, recentSessions, recentPerformance } : undefined;
+  const muscleDistribution = Array.isArray(source.muscleDistribution) ? source.muscleDistribution.flatMap((item) => {
+    const entry = record(item);
+    const muscle = text(entry?.muscle, 60);
+    const setEquivalent = bounded(entry?.setEquivalent, 0, 200);
+    const status: "low" | "balanced" | "high" | undefined = entry?.status === "low" || entry?.status === "balanced" || entry?.status === "high" ? entry.status : undefined;
+    return muscle && setEquivalent !== undefined && status ? [{ muscle, setEquivalent, status }] : [];
+  }).slice(0, 20) : undefined;
+  const personalRecords = Array.isArray(source.personalRecords) ? source.personalRecords.flatMap((item) => {
+    const entry = record(item);
+    const exerciseName = text(entry?.exerciseName);
+    const weightKg = bounded(entry?.weightKg, 0, 1_000);
+    const reps = bounded(entry?.reps, 1, 200);
+    const estimatedOneRepMaxKg = bounded(entry?.estimatedOneRepMaxKg, 0, 2_000);
+    return exerciseName && weightKg !== undefined && reps !== undefined && estimatedOneRepMaxKg !== undefined ? [{ exerciseName, weightKg, reps, estimatedOneRepMaxKg }] : [];
+  }).slice(0, 12) : undefined;
+  const weeklyVolumeKg = bounded(source.weeklyVolumeKg, 0, 10_000_000);
+  return activeExercises?.length || recentSessions?.length || recentPerformance?.length || muscleDistribution?.length || personalRecords?.length || weeklyVolumeKg !== undefined
+    ? { activeExercises, recentSessions, recentPerformance, weeklyVolumeKg, muscleDistribution, personalRecords }
+    : undefined;
 }
 
 function totals(value: unknown) {

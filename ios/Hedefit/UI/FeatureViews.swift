@@ -29,8 +29,127 @@ struct ExerciseDetailView: View { let item: ExerciseCatalogItem; var body: some 
 }
 
 struct RouteView: View {
-    @Environment(AppStore.self) private var store; @State private var type = "Yürüyüş"; @State private var title = "Sabah rotası"; @State private var camera: MapCameraPosition = .automatic
-    var body: some View { VStack(spacing: 12) { Map(position: $camera) { if let points = store.route.snapshot?.points, !points.isEmpty { MapPolyline(coordinates: points.map(\.coordinate)).stroke(Color.hedefitGreen, lineWidth: 6); UserAnnotation() } }.mapControls { MapCompass(); MapUserLocationButton() }.frame(maxHeight: .infinity).clipShape(RoundedRectangle(cornerRadius: 20)); if let value = store.route.snapshot { HStack { MetricCard(title: "Mesafe", value: String(format: "%.2f km", value.distance / 1000), icon: "point.topleft.down.to.point.bottomright.curvepath"); MetricCard(title: "Süre", value: "\(value.duration / 60):\(String(format: "%02d", value.duration % 60))", icon: "timer"); MetricCard(title: "Hız", value: String(format: "%.1f", value.speedKmh), icon: "speedometer") } }; Picker("Tür", selection: $type) { ForEach(["Yürüyüş", "Koşu", "Bisiklet", "Trail Koşusu"], id: \.self) { Text($0) } }.pickerStyle(.segmented); TextField("Rota adı", text: $title).hedefitField(); if store.route.isTracking { Button("Rotayı bitir ve kaydet") { Task { await store.saveRoute(type: type, title: title) } }.buttonStyle(HedefitButtonStyle(color: .red)) } else { Button("Rotayı başlat") { store.route.start() }.buttonStyle(HedefitButtonStyle()) } }.padding().navigationTitle("Canlı Rota") }
+    @Environment(AppStore.self) private var store
+    @State private var type = "Yürüyüş"
+    @State private var title = "Sabah rotası"
+    @State private var camera: MapCameraPosition = .automatic
+    @State private var section = "new"
+    @State private var selectedRoute: RouteActivity?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if !store.route.isTracking {
+                Picker("Rota", selection: $section) {
+                    Text("Yeni aktivite").tag("new")
+                    Text("Yapılanlar").tag("history")
+                }.pickerStyle(.segmented)
+            }
+            if section == "history" && !store.route.isTracking { history }
+            else { recorder }
+        }
+        .padding()
+        .navigationTitle("Hedefit Rota")
+        .sheet(item: $selectedRoute) { route in RouteHistoryDetail(route: route) }
+    }
+
+    private var recorder: some View {
+        Group {
+            Map(position: $camera) {
+                if let points = store.route.snapshot?.points, !points.isEmpty {
+                    MapPolyline(coordinates: points.map(\.coordinate)).stroke(Color.hedefitGreen, lineWidth: 6)
+                    UserAnnotation()
+                }
+            }
+            .mapControls { MapCompass(); MapUserLocationButton() }
+            .frame(maxHeight: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            if let value = store.route.snapshot {
+                HStack {
+                    MetricCard(title: "Mesafe", value: String(format: "%.2f km", value.distance / 1000), icon: "point.topleft.down.to.point.bottomright.curvepath")
+                    MetricCard(title: "Süre", value: routeDuration(value.duration), icon: "timer")
+                    MetricCard(title: "Hız", value: String(format: "%.1f", value.speedKmh), icon: "speedometer")
+                }
+            }
+            Picker("Tür", selection: $type) {
+                ForEach(["Yürüyüş", "Koşu", "Doğa Yürüyüşü", "Trail Koşusu", "Bisiklet"], id: \.self) { Text($0) }
+            }.pickerStyle(.menu)
+            TextField("Rota adı", text: $title).hedefitField()
+            if store.route.isTracking {
+                Button("Rotayı bitir ve kaydet") {
+                    Task { if await store.saveRoute(type: type, title: title) { section = "history" } }
+                }.buttonStyle(HedefitButtonStyle(color: .red))
+            } else {
+                Button("Rotayı başlat") { store.route.start() }.buttonStyle(HedefitButtonStyle())
+            }
+        }
+    }
+
+    private var history: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                if store.dashboard.routeActivities.isEmpty {
+                    ContentUnavailableView("Henüz tamamlanan rota yok", systemImage: "map", description: Text("Kaydettiğin tüm GPS aktiviteleri burada görünecek."))
+                        .padding(.top, 80)
+                }
+                ForEach(store.dashboard.routeActivities) { route in
+                    Button { selectedRoute = route } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: routeActivityIcon(route.activityType)).font(.title2).foregroundStyle(Color.hedefitGreen).frame(width: 44, height: 44).background(Color.hedefitGreen.opacity(0.12), in: Circle())
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(route.title.isEmpty ? route.activityType : route.title).fontWeight(.semibold).foregroundStyle(.primary)
+                                Text("\(route.activityType) • \(routeDate(route.startedAt))").font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 3) {
+                                Text(String(format: "%.2f km", route.distanceMeters / 1000)).fontWeight(.bold).foregroundStyle(Color.hedefitGreen)
+                                Text(routeDuration(route.movingDurationSeconds)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }.padding().background(Color.panel, in: RoundedRectangle(cornerRadius: 18))
+                    }.buttonStyle(.plain)
+                }
+            }
+        }
+    }
+}
+
+private struct RouteHistoryDetail: View {
+    let route: RouteActivity
+    @Environment(\.dismiss) private var dismiss
+    @State private var camera: MapCameraPosition = .automatic
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                Map(position: $camera) {
+                    if route.routePoints.count > 1 {
+                        MapPolyline(coordinates: route.routePoints.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
+                            .stroke(Color.hedefitGreen, lineWidth: 6)
+                    }
+                }.frame(height: 320).clipShape(RoundedRectangle(cornerRadius: 20))
+                HStack {
+                    MetricCard(title: "Mesafe", value: String(format: "%.2f km", route.distanceMeters / 1000), icon: "map")
+                    MetricCard(title: "Süre", value: routeDuration(route.movingDurationSeconds), icon: "timer")
+                    MetricCard(title: "Kalori", value: "\(route.calories) kcal", icon: "flame.fill")
+                }
+                HStack { Text(route.activityType); Spacer(); Text(routeDate(route.startedAt)) }.foregroundStyle(.secondary)
+                Spacer()
+            }.padding().navigationTitle(route.title.isEmpty ? route.activityType : route.title).toolbar { Button("Tamam") { dismiss() } }
+        }
+    }
+}
+
+private func routeDuration(_ seconds: Int) -> String { "\(seconds / 60):\(String(format: "%02d", seconds % 60))" }
+private func routeDate(_ value: String) -> String {
+    guard let date = ISO8601DateFormatter().date(from: value) else { return String(value.prefix(16)).replacingOccurrences(of: "T", with: " ") }
+    return date.formatted(.dateTime.day().month(.abbreviated).year().hour().minute().locale(Locale(identifier: "tr_TR")))
+}
+private func routeActivityIcon(_ type: String) -> String {
+    switch type.lowercased() {
+    case "koşu", "run", "running": "figure.run"
+    case "trail koşusu": "mountain.2.fill"
+    case "doğa yürüyüşü", "hike", "hiking": "figure.hiking"
+    case "bisiklet", "ride", "cycling": "bicycle"
+    default: "figure.walk"
+    }
 }
 
 struct ManualActivityView: View {

@@ -66,7 +66,10 @@ export async function GET(request: Request) {
   const token = bearerToken(request);
   const local: FoodResult[] = [];
   let localFailed = false;
-  if (url && anonKey && token) {
+  // Türkçe deneyimde yalnızca denetlenmiş Türkçe Hedefit kataloğu kullanılır.
+  // Eski USDA aktarımındaki İngilizce adlar display_name_tr alanına yazıldığı
+  // için veritabanı araması yalnız İngilizce arayüzde etkin tutulur.
+  if (locale === "en" && url && anonKey && token) {
     const client = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: `Bearer ${token}` } } });
     const responses = await Promise.all(searchQueries.map((searchQuery) => client.rpc("search_foods", { p_query: searchQuery, p_limit: 10 })));
     localFailed = responses.every(({ error }) => Boolean(error));
@@ -89,7 +92,7 @@ export async function GET(request: Request) {
   }
 
   const seen = new Set<string>();
-  const items = [...local, ...defaults, ...provider].filter((item) => {
+  const items = [...defaults, ...local, ...provider].filter((item) => {
     const key = `${item.name.toLocaleLowerCase("tr-TR")}|${item.brand || ""}`;
     if (seen.has(key)) return false;
     seen.add(key); return true;

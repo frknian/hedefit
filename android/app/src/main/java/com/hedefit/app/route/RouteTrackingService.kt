@@ -42,6 +42,7 @@ data class RoutePoint(
     val accuracyMeters: Double = 0.0,
     val speedMetersPerSecond: Double? = null,
     val bearingDegrees: Double? = null,
+    val displayName: String = "",
 )
 private fun safeDistanceMeters(value: Double): Double = value.takeIf { it.isFinite() && it >= 0.0 } ?: 0.0
 
@@ -98,10 +99,14 @@ fun isValidRoutePoint(point: RoutePoint): Boolean =
         point.recordedAt > 0
 
 const val MAX_ROUTE_ACCURACY_METERS = 20f
+const val MAX_ROUTE_LOCATION_AGE_MS = 15_000L
 
 /** Prevents cached/network fixes from pulling a GPS route into nearby streets. */
 fun isPreciseRouteLocation(accuracyMeters: Float, hasAccuracy: Boolean = true): Boolean =
     hasAccuracy && accuracyMeters.isFinite() && accuracyMeters in 0f..MAX_ROUTE_ACCURACY_METERS
+
+fun isFreshRouteLocation(timestamp: Long, now: Long = System.currentTimeMillis()): Boolean =
+    timestamp > 0 && timestamp <= now + 2_000L && now - timestamp <= MAX_ROUTE_LOCATION_AGE_MS
 
 fun acceptedRouteSegmentMeters(last: RoutePoint, next: RoutePoint, activityType: String): Double? {
     if (!isValidRoutePoint(last) || !isValidRoutePoint(next)) return null
@@ -158,6 +163,7 @@ class RouteTrackingStore(context: Context) {
                 point.getDouble("lat"), point.getDouble("lng"), point.optDouble("alt", 0.0), point.getLong("time"), normalizeAccuracyMeters(point.optDouble("accuracy", 0.0)),
                 point.optDouble("speed").takeIf { point.has("speed") && !point.isNull("speed") && it.isFinite() && it >= 0 },
                 point.optDouble("bearing").takeIf { point.has("bearing") && !point.isNull("bearing") && it.isFinite() && it in 0.0..360.0 },
+                point.optString("displayName"),
             ) } },
             activityType = root.optString("activityType", "Koşu").ifBlank { "Koşu" },
             paused = root.optBoolean("paused"),
@@ -266,7 +272,8 @@ class RouteTrackingStore(context: Context) {
                     .put("time", it.recordedAt)
                     .put("accuracy", normalizeAccuracyMeters(it.accuracyMeters))
                     .put("speed", it.speedMetersPerSecond ?: JSONObject.NULL)
-                    .put("bearing", it.bearingDegrees ?: JSONObject.NULL))
+                    .put("bearing", it.bearingDegrees ?: JSONObject.NULL)
+                    .put("displayName", it.displayName))
             }
         }
         return JSONObject()
@@ -350,6 +357,10 @@ class RouteTrackingService : Service() {
     }
 
     private fun onLocation(location: Location) {
+        if (!isFreshRouteLocation(location.time)) {
+            Log.d(TAG, "Ignoring stale location fix")
+            return
+        }
         if (!isPreciseRouteLocation(location.accuracy, location.hasAccuracy())) {
             Log.d(TAG, "Ignoring imprecise location: ${location.accuracy}m")
             return

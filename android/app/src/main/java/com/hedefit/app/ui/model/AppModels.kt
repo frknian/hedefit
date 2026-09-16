@@ -11,22 +11,35 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.hedefit.app.R
 
+import androidx.compose.material.icons.filled.EmojiEvents
+
 enum class AppDestination(val label: String, val icon: ImageVector) {
-    Home("Ana Sayfa", Icons.Default.Home),
+    Home("Bugün", Icons.Default.Home),
     Workout("Antrenman", Icons.Default.FitnessCenter),
     Nutrition("Beslenme", Icons.Default.Restaurant),
+    Game("Ödüller", Icons.Default.EmojiEvents),
     Progress("İlerleme", Icons.Default.BarChart),
-    Game("Görevler", Icons.AutoMirrored.Filled.FactCheck),
     Coach("Fit Koç", Icons.AutoMirrored.Filled.Chat),
     ;
 
-    fun localizedLabel(language: String) = if (language != "en") label else when (this) {
-        Home -> "Home"
+    fun localizedLabel(language: String) = if (language != "en") when (this) {
+        Home -> "Bugün"
+        Workout -> "Antrenman"
+        Nutrition -> "Beslenme"
+        Game -> "Ödüller"
+        Progress -> "İlerleme"
+        Coach -> "Fit Koç"
+    } else when (this) {
+        Home -> "Today"
         Workout -> "Workout"
-        Coach -> "Fit Coach"
         Nutrition -> "Nutrition"
-        Game -> "Tasks"
+        Game -> "Rewards"
         Progress -> "Progress"
+        Coach -> "Fit Coach"
+    }
+
+    companion object {
+        val primaryTabs = listOf(Home, Workout, Nutrition, Game, Progress, Coach)
     }
 }
 

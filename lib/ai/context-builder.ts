@@ -37,6 +37,7 @@ export type UserCoachContext = {
   atlas: string[];
   recentMessages: AiMessage[];
   conversationSummary?: string;
+  workoutContextJson?: string;
 };
 
 /**
@@ -89,6 +90,7 @@ export async function buildCoachContext(input: {
   messages: AiMessage[];
   retriever?: KnowledgeRetriever;
   locale?: "tr" | "en";
+  workoutContextJson?: string;
 }): Promise<UserCoachContext> {
   const question = input.messages.at(-1)?.text || "";
   const retriever = input.retriever ?? staticKnowledgeRetriever;
@@ -103,6 +105,7 @@ export async function buildCoachContext(input: {
     atlas: atlasLines(question, input.facts.profile, input.locale === "en" ? "en" : "tr"),
     recentMessages: input.messages.slice(-RECENT_MESSAGE_BUDGET),
     conversationSummary: summarizeOlderMessages(input.messages),
+    workoutContextJson: input.workoutContextJson,
   };
 }
 
@@ -145,6 +148,7 @@ export function contextToSystemPrompt(context: UserCoachContext, options: { loca
     atlasLines: context.atlas,
     conversationSummary: context.conversationSummary,
     safetyInstruction: options.safetyInstruction,
+    workoutContextJson: context.workoutContextJson,
     compact: options.compact,
   };
   return buildCoachSystemPrompt(promptInput);

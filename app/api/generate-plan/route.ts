@@ -148,113 +148,43 @@ export function profileSignals(payload: Record<string, unknown>) {
     goalPlan,
     motivation: history[QUESTION.motivation] || "Belirtilmedi",
     pastBarrier: history[QUESTION.barrier] || "Belirtilmedi",
-    trainingPlace: history[QUESTION.location] || "Belirtilmedi",
-    equipmentAccess: history[QUESTION.equipment] || "Belirtilmedi",
+    environment: text(payload.environment) || history[QUESTION.location] || "Belirtilmedi",
+    equipment: text(payload.equipment) || history[QUESTION.equipment] || "Belirtilmedi",
+    trainingPlace: text(payload.environment) || history[QUESTION.location] || "Belirtilmedi",
+    equipmentAccess: text(payload.equipment) || history[QUESTION.equipment] || "Belirtilmedi",
     painAreas: history[QUESTION.injuries] || "Yok",
     movementLevel: history[QUESTION.dailyMovement] || "Belirtilmedi",
     sleepQuality: history[QUESTION.sleep] || "Belirtilmedi",
     preferredStyle: history[QUESTION.trainingStyles] || "Karışık",
     note: history[QUESTION.freeNote] || "Yok",
+    age: payload.age,
+    gender: payload.gender,
+    height: payload.height,
+    weight: payload.weight,
+    goal: payload.goal,
+    requestedExercises: payload.requestedExercises,
     fingerprint,
   };
 }
 
+import { generateWorkoutPlan } from "../../../lib/training/plan-orchestrator.ts";
+
 export function buildLocalPlan(signals: ReturnType<typeof profileSignals>, catalog: unknown[], locale: "tr" | "en"): GeneratedPlan {
-  // Prompt kataloğu token maliyetini düşürmek için category/mechanic gibi
-  // alanları taşımaz. Yerel planlayıcı bunları varsayılan değerlerle uydurursa
-  // stretching hareketleri "strength" sanılır ve alfabetik ilk kayıtlar plana
-  // dolar. Bilinen kimlikleri tam, doğrulanmış katalog kaydıyla zenginleştir.
-  const normalized = catalog.map((value) => {
-    const compact = normalizeExercise(value);
-    return compact ? getExerciseById(compact.id) ?? compact : null;
-  }).filter((item) => item !== null);
-  const pain = signals.painAreas.toLocaleLowerCase("tr-TR");
-  const unsafeForPain = (name: string) => {
-    const folded = name.toLocaleLowerCase("en-US");
-    if (/diz|knee/.test(pain) && /jump|squat|lunge|leg press|pistol|step-up/.test(folded)) return true;
-    if (/omuz|shoulder/.test(pain) && /overhead|shoulder press|military press|dip|upright row/.test(folded)) return true;
-    if (/bel|sırt|back/.test(pain) && /deadlift|good morning|hyperextension|heavy/.test(folded)) return true;
-    return false;
-  };
-  const painFiltered = normalized.filter((exercise) => !unsafeForPain(exercise.name));
-  const conditioning = signals.primaryGoal === "Kondisyon";
-  const goalFiltered = painFiltered.filter((exercise) => conditioning
-    ? exercise.category !== "stretching"
-    : ["strength", "powerlifting", "olympic weightlifting"].includes(exercise.category));
-  const candidatePool = goalFiltered.length >= signals.exerciseCount ? goalFiltered : painFiltered;
-  const preferredStyle = signals.preferredStyle.toLocaleLowerCase("tr-TR");
-  const musclePriority = new Set(["quadriceps", "hamstrings", "glutes", "chest", "lats", "middle back", "shoulders"]);
-  const foundationPattern = /squat|leg press|bench press|push-up|barbell row|dumbbell row|lat pulldown|pull-up|deadlift|hip thrust|glute bridge|shoulder press/i;
-  const score = (exercise: (typeof candidatePool)[number]) => {
-    const categoryScore = conditioning
-      ? ({ cardio: 70, plyometrics: 55, strength: 45, powerlifting: 25, "olympic weightlifting": 25, strongman: 20 }[exercise.category] ?? 0)
-      : ({ strength: 70, powerlifting: 55, "olympic weightlifting": 40, strongman: 25, plyometrics: 15, cardio: 10 }[exercise.category] ?? 0);
-    const equipment = exercise.equipment?.toLocaleLowerCase("en-US") ?? "";
-    const styleScore = /ağırlık|kuvvet|weight|strength/.test(preferredStyle)
-      ? (equipment && equipment !== "body only" ? 8 : 0)
-      : /koşu|hiit|cardio/.test(preferredStyle) && ["cardio", "plyometrics"].includes(exercise.category) ? 8 : 0;
-    return categoryScore
-      + (exercise.mechanic === "compound" ? 20 : 0)
-      + (foundationPattern.test(exercise.name) ? 18 : 0)
-      + (musclePriority.has(exercise.primaryMuscles[0] || "") ? 10 : 0)
-      + styleScore;
-  };
-  const pool = [...candidatePool].sort((left, right) => score(right) - score(left) || left.name.localeCompare(right.name));
-  const selected: typeof pool = [];
-  const usedMuscles = new Set<string>();
-  for (const exercise of pool) {
-    const muscle = exercise.primaryMuscles[0] || "other";
-    if (!usedMuscles.has(muscle)) {
-      selected.push(exercise);
-      usedMuscles.add(muscle);
-    }
-    if (selected.length >= signals.exerciseCount) break;
-  }
-  for (const exercise of pool) {
-    if (selected.length >= signals.exerciseCount) break;
-    if (!selected.some((item) => item.id === exercise.id)) selected.push(exercise);
-  }
-
-  const beginner = signals.detrained || /yeni|başlangıç/i.test(signals.experience);
-  const sets = beginner ? 2 : signals.sessionMinutes >= 45 ? 4 : 3;
-  const reps = signals.primaryGoal === "Kondisyon" || signals.primaryGoal === "Kilo verme" ? "12–15" : "8–12";
-  const restSeconds = signals.primaryGoal === "Kondisyon" || signals.primaryGoal === "Kilo verme" ? 45 : beginner ? 75 : 90;
-  const daysTr = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
-  const daysEn = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const scheduleDays = (locale === "en" ? daysEn : daysTr).slice(0, signals.weeklyDays);
-
+  const plan = generateWorkoutPlan(signals, catalog, locale);
   return {
-    title: locale === "en" ? "Your personal starter plan" : "Kişisel başlangıç programın",
-    profileSummary: locale === "en" ? `A ${signals.sessionMinutes}-minute plan for ${signals.primaryGoal.toLocaleLowerCase("en-US")}.` : `${signals.primaryGoal} hedefin için ${signals.sessionMinutes} dakikalık program.`,
-    rationale: locale === "en" ? "Movements were selected from the verified catalog for your environment, equipment, experience, and reported pain areas." : "Hareketler doğrulanmış katalogdan; ortamına, ekipmanına, deneyimine ve belirttiğin ağrı bölgelerine göre seçildi.",
-    safetyNote: locale === "en" ? "Stop if you feel sharp pain and use controlled form." : "Keskin ağrı hissedersen dur ve hareketleri kontrollü uygula.",
-    analysis: {
-      experienceLevel: signals.experience,
-      weeklyFrequency: `${signals.weeklyDays} ${locale === "en" ? "days" : "gün"}`,
-      sessionMinutes: signals.sessionMinutes,
-      primaryGoal: signals.primaryGoal,
-      intensity: signals.intensity,
-      equipmentMode: signals.equipmentAccess,
-      focusAreas: selected.map((exercise) => translateExerciseLabel(exercise.primaryMuscles[0], locale)).filter(Boolean),
-      adaptations: locale === "en"
-        ? ["Matched to the available session time.", "Limited to available equipment.", "Reported pain areas were excluded from risky patterns."]
-        : ["Ayırabildiğin süreye uyarlandı.", "Erişebildiğin ekipmanlarla sınırlandı.", "Belirttiğin ağrı bölgeleri için riskli hareket kalıpları elendi."],
-    },
-    weeklySchedule: scheduleDays.map((day) => ({ day, focus: locale === "en" ? "Full body" : "Tüm vücut", durationMinutes: signals.sessionMinutes })),
-    progression: locale === "en"
-      ? ["Week 1: learn the movement paths.", "Week 2: complete every planned set.", "Week 3: add repetitions with good form.", "Week 4: increase load only if technique stays stable."]
-      : ["1. hafta: hareket yollarını öğren.", "2. hafta: planlanan tüm setleri tamamla.", "3. hafta: formu koruyarak tekrar ekle.", "4. hafta: teknik bozulmuyorsa yükü artır."],
-    workouts: selected.map((exercise) => ({
-      id: exercise.id,
-      name: translateExerciseName(exercise.name, locale),
-      english: exercise.name,
-      area: translateExerciseLabel(exercise.primaryMuscles[0], locale),
-      sets,
-      reps,
-      restSeconds,
-      instructions: turkishExerciseInstructions(exercise, locale).join(" "),
-    })),
-  };
+    title: plan.title,
+    profileSummary: plan.profileSummary,
+    rationale: plan.rationale,
+    safetyNote: plan.safetyNote,
+    analysis: plan.analysis,
+    weeklySchedule: plan.weeklySchedule,
+    progression: plan.progression,
+    workouts: plan.workouts,
+    sessions: plan.sessions,
+    volumeTargets: plan.volumeTargets,
+    validation: plan.validation,
+    repaired: plan.repaired,
+  } as unknown as GeneratedPlan;
 }
 
 export async function POST(request: Request) {

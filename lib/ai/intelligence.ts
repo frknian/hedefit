@@ -61,6 +61,9 @@ export type IntelligenceInput = {
     activeExercises?: Array<{ name: string; area?: string; sets?: number; reps?: string }>;
     recentSessions?: Array<{ completedAt: string; exerciseNames: string[]; durationMinutes?: number; fatigue?: number }>;
     recentPerformance?: Array<{ exerciseId?: string; exerciseName: string; sets: Array<{ weightKg?: number; reps?: number; rpe?: number }> }>;
+    weeklyVolumeKg?: number;
+    muscleDistribution?: Array<{ muscle: string; setEquivalent: number; status: "low" | "balanced" | "high" }>;
+    personalRecords?: Array<{ exerciseName: string; weightKg: number; reps: number; estimatedOneRepMaxKg: number }>;
   };
 };
 
@@ -117,6 +120,9 @@ export type CoachFacts = {
     recovery?: { score: number; decision: "heavy" | "moderate" | "rest"; reason: string };
     progression?: Array<{ exerciseName: string; action: string; suggestedWeightKg?: number; targetReps: string }>;
     weeklyVolume?: Array<{ area: string; sets: number; status: string }>;
+    weeklyVolumeKg?: number;
+    muscleDistribution?: Array<{ muscle: string; setEquivalent: number; status: "low" | "balanced" | "high" }>;
+    personalRecords?: Array<{ exerciseName: string; weightKg: number; reps: number; estimatedOneRepMaxKg: number }>;
   };
   /** Hesaplanamayan alanların NEDENİ. Model "veri yok" diyebilsin diye. */
   missing: string[];
@@ -271,6 +277,9 @@ export function analyze(input: IntelligenceInput): CoachFacts {
       recovery,
       ...(progression.length && { progression: progression.map((item) => ({ exerciseName: item.exerciseName, action: item.action, suggestedWeightKg: item.suggestedWeightKg, targetReps: item.targetReps })) }),
       ...(input.training?.activeExercises?.length && { weeklyVolume: weeklyVolume(input.training.activeExercises) }),
+      ...(input.training?.weeklyVolumeKg !== undefined && { weeklyVolumeKg: round(input.training.weeklyVolumeKg) }),
+      ...(input.training?.muscleDistribution?.length && { muscleDistribution: input.training.muscleDistribution }),
+      ...(input.training?.personalRecords?.length && { personalRecords: input.training.personalRecords }),
     },
     missing,
   };

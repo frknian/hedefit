@@ -27,7 +27,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.AlertDialog
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +37,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +60,7 @@ import com.hedefit.app.data.auth.AuthState
 import com.hedefit.app.data.auth.RegistrationLegalAcceptance
 import com.hedefit.app.ui.components.HedefitCard
 import com.hedefit.app.ui.components.PrimaryButton
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.theme.HedefitColors
 import com.hedefit.app.ui.validation.validateAuthForm
 
@@ -107,6 +109,12 @@ private fun AuthForm(
         else -> null
     }
     val localError = validateAuthForm(email, password, passwordAgain, login, submitted) ?: legalError(requireSubmission = true)
+    LaunchedEffect(message) {
+        if (message?.contains("Kayıt Ol", ignoreCase = true) == true) {
+            login = false
+        }
+    }
+
     fun edited(change: () -> Unit) {
         change()
         if (message != null) onClearMessage()
@@ -308,22 +316,26 @@ private fun AuthTextField(
 
 @Composable
 fun FullScreenLoader(message: String) {
-    Box(Modifier.fillMaxSize().background(HedefitColors.Background), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            CircularProgressIndicator(color = HedefitColors.Lime)
-            Text(message, color = HedefitColors.TextSecondary)
+    ScreenContainer {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                CircularProgressIndicator(color = HedefitColors.Lime)
+                Text(message, color = HedefitColors.TextSecondary)
+            }
         }
     }
 }
 
 @Composable
 private fun ConfigurationErrorScreen(message: String) {
-    Box(Modifier.fillMaxSize().background(HedefitColors.Background).padding(24.dp), contentAlignment = Alignment.Center) {
-        HedefitCard(Modifier.widthIn(max = 520.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Android yapılandırması eksik", style = MaterialTheme.typography.headlineSmall, color = HedefitColors.Coral)
-                Text(message)
-                Text("Kök .env dosyasında NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY değerlerini tanımlayıp uygulamayı yeniden derle.", color = HedefitColors.TextSecondary)
+    ScreenContainer {
+        Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            HedefitCard(Modifier.widthIn(max = 520.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Android yapılandırması eksik", style = MaterialTheme.typography.headlineSmall, color = HedefitColors.Coral)
+                    Text(message)
+                    Text("Kök .env dosyasında NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY değerlerini tanımlayıp uygulamayı yeniden derle.", color = HedefitColors.TextSecondary)
+                }
             }
         }
     }

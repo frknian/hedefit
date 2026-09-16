@@ -50,12 +50,12 @@ test("USDA kataloğunda kcal alanına yazılmış kilojoule değerleri makrolarl
   assert.equal(normalizeCaloriesPer100g(900, 0, 0, 100), 900);
 });
 
-test("Türkçe katalog araması sağlayıcı için İngilizce karşılığıyla genişletilir", () => {
-  assert.deepEqual(foodSearchQueries("  tavuk   göğsü "), ["tavuk göğsü", "chicken breast"]);
-  assert.deepEqual(foodSearchQueries("yoğurt"), ["yoğurt", "yogurt"]);
-  assert.deepEqual(foodSearchQueries("pirinç pilavı"), ["pirinç pilavı", "cooked rice"]);
-  assert.deepEqual(foodSearchQueries("tavuklu pilav"), ["tavuklu pilav", "chicken and rice"]);
-  assert.deepEqual(foodSearchQueries("mercimek çorbası"), ["mercimek çorbası", "lentil soup"]);
+test("Türkçe katalog araması hiçbir besini İngilizce sağlayıcı terimine çevirmez", () => {
+  assert.deepEqual(foodSearchQueries("  tavuk   göğsü "), ["tavuk göğsü"]);
+  assert.deepEqual(foodSearchQueries("yoğurt"), ["yoğurt"]);
+  assert.deepEqual(foodSearchQueries("pirinç pilavı"), ["pirinç pilavı"]);
+  assert.deepEqual(foodSearchQueries("tavuklu pilav"), ["tavuklu pilav"]);
+  assert.deepEqual(foodSearchQueries("mercimek çorbası"), ["mercimek çorbası"]);
   assert.deepEqual(foodSearchQueries("Whey Protein"), ["Whey Protein"]);
   assert.deepEqual(foodSearchQueries("a"), []);
 });
@@ -79,10 +79,11 @@ test("bilinen birleşik öğünler uzak AI beklenmeden temel katalogda eşleşir
   assert.equal(matchDefaultFood("2 sade kahve")?.id, "sade-kahve");
 });
 
-test("besin API'si temel Türkçe katalogu yerel ve sağlayıcı sonuçlarıyla birleştirir", async () => {
+test("besin API'si Türkçe modda yalnız Türkçe katalogu öne alır", async () => {
   const route = await readFile(new URL("../app/api/nutrition/foods/route.ts", import.meta.url), "utf8");
   assert.match(route, /searchDefaultFoods\(query, 12, locale\)/);
-  assert.match(route, /\[\.\.\.local, \.\.\.defaults, \.\.\.provider\]/);
+  assert.match(route, /locale === "en" && url && anonKey && token/);
+  assert.match(route, /\[\.\.\.defaults, \.\.\.local, \.\.\.provider\]/);
 });
 
 test("negatif, sıfır, NaN, Infinity ve aşırı porsiyonlar reddedilir", () => {

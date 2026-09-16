@@ -272,6 +272,13 @@ export function translateExerciseList(values: string[], locale: Locale = "tr") {
 }
 
 const exerciseNameTerms: Array<[RegExp, string]> = [
+  // Bu üç kural metni SİLİYOR (boş string), diğerleri gibi Türkçeye çevirmiyor.
+  // Bu yüzden EN BAŞTA, yalnız ham İngilizce isim üzerinde çalışmalılar: JS'nin
+  // \b sınırı ASCII-dışı harfleri (ğ, ş, ç, ı, ö, ü) "kelime dışı" sayıyor, bu
+  // yüzden zincirin ilerleyen bir adımı "bodyweight"i "Vücut ağırlığı"ya
+  // çevirdikten SONRA bu kurallar çalışsaydı, "ağırlığı"nın baştaki "a"sı
+  // \ban?\b ile bağımsız bir "a" sanılıp silinir, "ğırlığı" kalırdı.
+  [/\bthe\b/gi, ""], [/\ban?\b/gi, ""], [/\bof\b/gi, ""],
   [/\ball fours\b/gi, "Dört ayak"], [/\bworld'?s greatest stretch\b/gi, "Tüm vücut esnetme"],
   [/\bab crunch machine\b/gi, "Karın sıkıştırma makinesi"], [/\bparallel bar dips?\b/gi, "Paralel bar itişi"],
   [/\bpushups?\b/gi, "Şınav"], [/\bpullups?\b/gi, "Barfiks"], [/\bwindmills?\b/gi, "Yel değirmeni"],
@@ -325,7 +332,7 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   [/\bcrunch(?:es)?\b/gi, "Karın sıkıştırma"], [/\bplank\b/gi, "Düz duruş"],
   [/\bsquats?\b/gi, "Çömelme"], [/\blunges?\b/gi, "Hamle"], [/\bdeadlifts?\b/gi, "Yerden kaldırış"],
   [/\brows?\b/gi, "Kürek çekiş"], [/\bcurls?\b/gi, "Büküş"], [/\bextensions?\b/gi, "Uzatış"],
-  [/\braises?\b/gi, "Kaldırış"], [/\bpress(?:es)?\b/gi, "İtiş"], [/\bflyes?\b/gi, "Yana açış"],
+  [/\braises?\b/gi, "Kaldırış"], [/\bpress(?:es)?\b/gi, "İtiş"], [/\bfl(?:y|ys|yes)\b/gi, "Yana açış"],
   [/\bpullovers?\b/gi, "Baş üstü çekiş"], [/\bshrugs?\b/gi, "Omuz silkme"],
   [/\bstretch(?:es)?\b/gi, "Esnetme"], [/\bclean\b/gi, "Omuza alış"], [/\bsnatch\b/gi, "Koparma"], [/\bjerk\b/gi, "Silkme"],
   [/\bhip thrust\b/gi, "Kalça itişi"], [/\bhip\b/gi, "Kalça"], [/\bglutes?\b/gi, "Kalça"],
@@ -364,13 +371,49 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   [/\bmultiple\b/gi, "Çoklu"], [/\bresponse\b/gi, "Tepki"], [/\brelease\b/gi, "Bırakma"],
   [/\brun\b/gi, "Koşu"], [/\bfigure\b/gi, "Şekil"], [/\bhang\b/gi, "Asılı"],
   [/\bpass\b/gi, "Geçiriş"], [/\bpistol\b/gi, "Tabanca"], [/\bseesaw\b/gi, "Tahterevalli"],
-  [/\bthruster\b/gi, "İtişli çömelme"], [/\bturkish get[- ]up\b/gi, "Türk kalkışı"], [/\bstyle\b/gi, "biçimi"],
+  [/\bthruster\b/gi, "İtişli çömelme"], [/\bturkish get[- ]ups?\b/gi, "Türk kalkışı"], [/\bstyle\b/gi, "biçimi"],
   [/\bdead\b/gi, "Yerden"], [/\bflat\b/gi, "Düz"], [/\biron crosses?\b/gi, "Haç açışı"],
   [/\bone\b/gi, "Tek"], [/\btwo\b/gi, "Çift"], [/\bfull\b/gi, "Tam"], [/\bpartial\b/gi, "Kısmi"],
   [/\band\b/gi, "ve"], [/\bwith\b/gi, "ile"], [/\bwithout\b/gi, "olmadan"], [/\bfrom\b/gi, "başlangıçlı"],
   [/\bon\b/gi, "üzerinde"], [/\bin\b/gi, "içinde"], [/\bover\b/gi, "üzerinden"], [/\bup\b/gi, "yukarı"], [/\bdown\b/gi, "aşağı"],
   [/\bagainst\b/gi, "karşı"], [/\bthrough\b/gi, "içinden"], [/\bto\b/gi, "doğru"],
-  [/\bthe\b/gi, ""], [/\ban?\b/gi, ""], [/\bof\b/gi, ""],
+
+  // Yoga/mobilite duruşları ve eksik kalan İngilizce hareket terimleri
+  // (taramada tespit edilen 106 çevrilmemiş kelime — bkz. konuşma geçmişi).
+  [/\bpose\b/gi, "Duruşu"], [/\bbanded\b/gi, "Bantlı"], [/\bhold\b/gi, "Bekletme"],
+  [/\bdownward\b/gi, "Aşağı"], [/\bupward\b/gi, "Yukarı"], [/\bfacing\b/gi, "Bakan"], [/\bdog\b/gi, "Köpek"],
+  [/\bsumo\b/gi, "Sumo"], [/\bcarry\b/gi, "Taşıma"], [/\bswing\b/gi, "Savurma"], [/\bloaded\b/gi, "Yüklü"],
+  [/\bbulgarian\b/gi, "Bulgar"], [/\bhalf\b/gi, "Yarım"], [/\bfold\b/gi, "Katlanış"], [/\bpause\b/gi, "Duraklama"],
+  [/\bwarrior\b/gi, "Savaşçı"], [/\barcher\b/gi, "Okçu"], [/\blever\b/gi, "Kaldıraç"], [/\bcow\b/gi, "İnek"],
+  [/\bclamshells?\b/gi, "Midye"], [/\bcrescent\b/gi, "Hilal"], [/\bbug\b/gi, "Böcek"], [/\bdrive\b/gi, "Sürme"],
+  [/\bflag\b/gi, "Bayrak"], [/\bgoblet\b/gi, "Kadeh"], [/\bheel\b/gi, "Topuk"], [/\broll\b/gi, "Yuvarlanma"],
+  [/\bspinal\b/gi, "Omurga"], [/\bspine\b/gi, "Omurga"], [/\brunning\b/gi, "Koşu"], [/\bflow\b/gi, "Akış"],
+  [/\bthread\b/gi, "İplik"], [/\bneedle\b/gi, "İğne"], [/\blegged\b/gi, "Bacaklı"], [/\bspider\b/gi, "Örümcek"],
+  [/\bnordic\b/gi, "Nordic"], [/\barnold\b/gi, "Arnold"], [/\bropes\b/gi, "Halatlar"], [/\bbattle\b/gi, "Savaş"],
+  [/\bcouch\b/gi, "Kanepe"], [/\bbicycle\b/gi, "Bisiklet"], [/\bboat\b/gi, "Kayık"], [/\bbow\b/gi, "Yay"],
+  [/\bcamel\b/gi, "Deve"], [/\bclap\b/gi, "Alkış"], [/\bcorpse\b/gi, "Ceset"], [/\bcossack\b/gi, "Kazak"],
+  [/\bcrab\b/gi, "Yengeç"], [/\bcrow\b/gi, "Karga"], [/\bdancer\b/gi, "Dansçı"], [/\bdolphin\b/gi, "Yunus"],
+  [/\bpedal\b/gi, "Pedal"], [/\bdragon\b/gi, "Ejderha"], [/\bsomersault\b/gi, "Takla"], [/\beagle\b/gi, "Kartal"],
+  [/\beasy\b/gi, "Kolay"], [/\bangle\b/gi, "Açı"], [/\bfish\b/gi, "Balık"], [/\bgarland\b/gi, "Çelenk"],
+  [/\bmoon\b/gi, "Ay"], [/\brock\b/gi, "Sallanma"], [/\bhappy\b/gi, "Mutlu"], [/\bbaby\b/gi, "Bebek"],
+  [/\btoes?\b/gi, "Ayak ucu"], [/\bhex\b/gi, "Altıgen"], [/\bfoot\b/gi, "Ayak"], [/\bhollow\b/gi, "Çukur"],
+  [/\bhorizontal\b/gi, "Yatay"], [/\bhuman\b/gi, "İnsan"], [/\boffset\b/gi, "Kaydırmalı"], [/\brotational\b/gi, "Dönüşlü"],
+  [/\blizard\b/gi, "Kertenkele"], [/\blocust\b/gi, "Çekirge"], [/\bmountain\b/gi, "Dağ"], [/\bnegative\b/gi, "Negatif"],
+  [/\bpigeon\b/gi, "Güvercin"], [/\bsaw\b/gi, "Testere"], [/\bplow\b/gi, "Saban"], [/\bpseudo\b/gi, "Yalancı"],
+  [/\bpuppy\b/gi, "Yavru köpek"], [/\bpyramid\b/gi, "Piramit"], [/\brack\b/gi, "Raf"], [/\bclimb\b/gi, "Tırmanma"],
+  [/\bscapular\b/gi, "Kürek kemiği"], [/\bscissors?\b/gi, "Makas"], [/\bstraddle\b/gi, "Ayrık bacak"],
+  [/\bsuitcase\b/gi, "Bavul"], [/\bwindshield wipers?\b/gi, "Cam sileceği"], [/\bthoracic\b/gi, "Torasik"],
+  [/\bthree\b/gi, "Üç"], [/\btree\b/gi, "Ağaç"], [/\btriangle\b/gi, "Üçgen"], [/\bapart\b/gi, "Ayırma"],
+  [/\bfire\b/gi, "Ateş"], [/\bhydrant\b/gi, "Yangın musluğu"], [/\bterminal\b/gi, "Son açı"],
+  [/\bbilateral\b/gi, "Çift taraflı"], [/\bbutterfly\b/gi, "Kelebek"], [/\bcheat\b/gi, "Hileli"],
+  [/\bcobra\b/gi, "Kobra"], [/\bdoorway\b/gi, "Kapı çerçevesi"], [/\bhero\b/gi, "Kahraman"],
+  [/\bhalo\b/gi, "Çember çevirme"], [/\bpinch\b/gi, "Sıkıştırma"], [/\bsphinx\b/gi, "Sfenks"],
+  [/\bstrict\b/gi, "Sıkı"], [/\bsupported\b/gi, "Destekli"], [/\bkickstand\b/gi, "Destek ayaklı"],
+  [/\bcaptain'?s\b/gi, "Kaptan"], [/\bchild'?s\b/gi, "Çocuk"], [/\bplanche\b/gi, "Planş"],
+  [/\btabletop\b/gi, "Masa"], [/\brevolved\b/gi, "Döndürülmüş"], [/\bjumping jacks?\b/gi, "Zıplayarak kol-bacak açma"],
+  [/\bbottoms\b/gi, "Alt"], [/\bpulses?\b/gi, "Vuruş"], [/\bpaused\b/gi, "Duraklamalı"],
+  [/\bshoulderstand\b/gi, "Omuz duruşu"], [/\bups\b/gi, "yukarı"],
+  [/\babduction\b/gi, "Açma"], [/\badduction\b/gi, "Kapama"],
 ];
 
 const exactExerciseNamesTr: Record<string, string> = {

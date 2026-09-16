@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.runtime.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -100,7 +101,7 @@ fun ProfileSettingsScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background).statusBarsPadding()) {
+    ScreenContainer { Column(Modifier.fillMaxSize()) {
         UtilityHeader(if (en) "Profile and Settings" else "Profil ve Ayarlar", onBack)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -204,7 +205,7 @@ fun ProfileSettingsScreen(
                 }
             }
         }
-    }
+    } }
 
     if (showReset) ConfirmDialog(if (en) "Delete progress data" else "İlerleme verilerini sil", if (en) "Your workouts, measurements, calories and streak records will be permanently deleted." else "Antrenman, ölçüm, kalori ve seri kayıtların kalıcı olarak silinecek.", if (en) "Reset" else "Sıfırla", accountBusy, en, { showReset = false }) { showReset = false; onResetProgress() }
     if (showFreeze) ConfirmDialog(if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data will remain. App access will pause until you reactivate." else "Verilerin korunacak. Yeniden etkinleştirene kadar uygulama erişimin duracak.", if (en) "Freeze" else "Dondur", accountBusy, en, { showFreeze = false }) { showFreeze = false; onFreeze() }

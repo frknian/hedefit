@@ -1,4 +1,6 @@
 import { generateCoachResponse } from "../../../../lib/ai/coach.ts";
+import { recognizeGymEquipment } from "../../../../lib/ai-equipment-recognizer.ts";
+import { parseImageDataUrl } from "../../../../lib/ai/providers/openai-compatible.ts";
 import { clientKey, rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 
 export const runtime = "edge";
@@ -33,6 +35,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (new URL(request.url).searchParams.get("mode") === "equipment") {
+      const body = await request.json().catch(() => ({})) as { imageDataUrl?: unknown };
+      const image = typeof body.imageDataUrl === "string" ? parseImageDataUrl(body.imageDataUrl) : null;
+      if (!image || image.mimeType !== "image/jpeg") {
+        return Response.json({ ok: false, reason: "invalid_jpeg" }, { status: 400 });
+      }
+      const recognition = await recognizeGymEquipment(image, 700);
+      return Response.json({ ok: true, kind: "equipment", recognition });
+    }
     // Use the real Fit Coach prompt path, output budget and timeout. A tiny
     // "OK" prompt can pass while the production coach context times out.
     const result = await generateCoachResponse({

@@ -52,6 +52,8 @@ class RouteTrackingStateTest {
         assertFalse(isPreciseRouteLocation(20.1f))
         assertFalse(isPreciseRouteLocation(Float.NaN))
         assertFalse(isPreciseRouteLocation(5f, hasAccuracy = false))
+        assertTrue(isFreshRouteLocation(95_000L, now = 100_000L))
+        assertFalse(isFreshRouteLocation(80_000L, now = 100_000L))
     }
 
     @Test fun movingDurationExcludesPausedTime() {

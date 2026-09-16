@@ -18,5 +18,9 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Spor salonu ekipmanını tanımak için kameraya erişim gerekir.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ekipman fotoğrafını analiz etmek için fotoğraf arşivine erişim gerekir.</string>
 </dict>
 </plist>

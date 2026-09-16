@@ -13,13 +13,39 @@ struct MainShell: View {
     var body: some View {
         @Bindable var store = store
         TabView(selection: $store.selectedTab) {
-            NavigationStack { HomeView() }.tabItem { Label(AppTab.home.title, systemImage: AppTab.home.icon) }.tag(AppTab.home)
-            NavigationStack { WorkoutView() }.tabItem { Label(AppTab.workout.title, systemImage: AppTab.workout.icon) }.tag(AppTab.workout)
-            NavigationStack { NutritionView() }.tabItem { Label(AppTab.nutrition.title, systemImage: AppTab.nutrition.icon) }.tag(AppTab.nutrition)
-            NavigationStack { CoachView() }.tabItem { Label(AppTab.coach.title, systemImage: AppTab.coach.icon) }.tag(AppTab.coach)
-            NavigationStack { ProgressDashboardView() }.tabItem { Label(AppTab.progress.title, systemImage: AppTab.progress.icon) }.tag(AppTab.progress)
+            NavigationStack { HomeView() }.tag(AppTab.home)
+            NavigationStack { WorkoutView() }.tag(AppTab.workout)
+            NavigationStack { NutritionView() }.tag(AppTab.nutrition)
+            NavigationStack { ProgressDashboardView() }.tag(AppTab.progress)
+            NavigationStack { GameView() }.tag(AppTab.tasks)
+            NavigationStack { CoachView() }.tag(AppTab.coach)
         }
+        .background(Color.hedefitBackground.ignoresSafeArea())
+        .fontDesign(.default)
+        .toolbar(.hidden, for: .tabBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) { HedefitTabBar(selection: $store.selectedTab) }
         .overlay(alignment: .top) { if store.loading { ProgressView().padding(9).background(.ultraThinMaterial, in: Capsule()).padding(.top, 6) } }
+    }
+}
+
+struct HedefitTabBar: View {
+    @Binding var selection: AppTab
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(AppTab.allCases) { tab in
+                Button { selection = tab } label: {
+                    VStack(spacing: 6) {
+                        Circle().fill(selection == tab ? Color.hedefitGreen : Color.hedefitMuted).frame(width: 6, height: 6)
+                        Text(tab.title).font(.system(size: 10, weight: selection == tab ? .heavy : .semibold)).lineLimit(1).minimumScaleFactor(0.75)
+                    }
+                    .foregroundStyle(selection == tab ? Color.hedefitGreen : Color.hedefitMuted)
+                    .frame(maxWidth: .infinity).padding(.vertical, 9)
+                    .background(selection == tab ? Color.hedefitGreen.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: 16))
+                }.buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(Color.hedefitBackground.opacity(0.97))
     }
 }
 

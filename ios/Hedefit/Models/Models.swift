@@ -2,10 +2,10 @@ import Foundation
 import CoreLocation
 
 enum AppTab: String, CaseIterable, Identifiable {
-    case home, workout, nutrition, coach, progress
+    case home, workout, nutrition, progress, tasks, coach
     var id: Self { self }
-    var title: String { switch self { case .home: "Ana Sayfa"; case .workout: "Antrenman"; case .nutrition: "Beslenme"; case .coach: "Koç"; case .progress: "İlerleme" } }
-    var icon: String { switch self { case .home: "house.fill"; case .workout: "dumbbell.fill"; case .nutrition: "fork.knife"; case .coach: "bubble.left.and.bubble.right.fill"; case .progress: "chart.line.uptrend.xyaxis" } }
+    var title: String { switch self { case .home: "Ana"; case .workout: "Antrenman"; case .nutrition: "Beslenme"; case .progress: "İlerleme"; case .tasks: "Görevler"; case .coach: "Koç" } }
+    var icon: String { switch self { case .home: "house.fill"; case .workout: "dumbbell.fill"; case .nutrition: "fork.knife"; case .progress: "chart.line.uptrend.xyaxis"; case .tasks: "checklist"; case .coach: "bubble.left.and.bubble.right.fill" } }
 }
 
 struct AppSettings: Codable {
@@ -42,11 +42,42 @@ struct Food: Codable, Identifiable {
 }
 struct BodyMeasurement: Codable, Identifiable { var id: String { date }; var date: String; var weightKg, waistCm, hipsCm, chestCm, armCm, thighCm: Double? }
 struct ScheduleItem: Codable, Identifiable { var id, date, time, status: String; var originalDate: String? }
-struct RoutePoint: Codable, Identifiable { var id = UUID(); var latitude, longitude: Double; var recordedAt: Int64; var accuracyMeters: Double; var altitudeMeters: Double?; enum CodingKeys: String, CodingKey { case latitude, longitude, recordedAt, accuracyMeters, altitudeMeters } }
+struct RoutePoint: Codable, Identifiable {
+    var id = UUID(); var latitude, longitude: Double; var recordedAt: Int64; var accuracyMeters: Double; var altitudeMeters: Double?
+    enum CodingKeys: String, CodingKey { case latitude, longitude, lat, lng, recordedAt, time, accuracyMeters, accuracy, altitudeMeters, alt }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        latitude = try values.decodeIfPresent(Double.self, forKey: .latitude) ?? values.decode(Double.self, forKey: .lat)
+        longitude = try values.decodeIfPresent(Double.self, forKey: .longitude) ?? values.decode(Double.self, forKey: .lng)
+        recordedAt = try values.decodeIfPresent(Int64.self, forKey: .recordedAt) ?? values.decodeIfPresent(Int64.self, forKey: .time) ?? 0
+        accuracyMeters = try values.decodeIfPresent(Double.self, forKey: .accuracyMeters) ?? values.decodeIfPresent(Double.self, forKey: .accuracy) ?? 0
+        altitudeMeters = try values.decodeIfPresent(Double.self, forKey: .altitudeMeters) ?? values.decodeIfPresent(Double.self, forKey: .alt)
+    }
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(latitude, forKey: .latitude); try values.encode(longitude, forKey: .longitude)
+        try values.encode(recordedAt, forKey: .recordedAt); try values.encode(accuracyMeters, forKey: .accuracyMeters)
+        try values.encodeIfPresent(altitudeMeters, forKey: .altitudeMeters)
+    }
+}
 struct RouteActivity: Codable, Identifiable { var id, activityType, title, startedAt, endedAt: String; var durationSeconds, movingDurationSeconds: Int; var distanceMeters: Double; var averagePaceSecondsPerKm: Int?; var averageSpeedKmh: Double; var calories: Int; var status: String; var routePoints: [RoutePoint] }
 struct DailyStep: Codable, Identifiable { var id: String { date }; var date: String; var steps: Int }
 struct Achievement: Identifiable { let id, title, detail, icon: String; let target, progress, xp: Int }
 struct ExerciseCatalogItem: Codable, Identifiable { var id, name, level, equipment: String; var primaryMuscles, instructions: [String]; var category: String; var imageUrls: [String]; var secondaryMuscles: [String] = []; var force = ""; var mechanic = "" }
+
+struct EquipmentRecognitionAlternative: Codable, Identifiable {
+    var id: String { equipmentName }
+    let equipmentName, localizedName: String
+    let confidence: Double
+}
+
+struct EquipmentRecognitionResult: Codable {
+    let recognized: Bool
+    let equipmentName, localizedName, category: String?
+    let confidence: Double
+    let alternatives: [EquipmentRecognitionAlternative]
+    let visibleFeatures: [String]
+}
 
 struct Dashboard: Codable {
     var profile = Profile(); var workouts: [WorkoutExercise] = []; var sessions: [WorkoutSession] = []

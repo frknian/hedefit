@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   const rateLimitResult = rateLimit(`chat:${auth.user.id}`, 5, 60_000);
   if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
 
-  let payload: { messages?: unknown; context?: unknown; signals?: unknown; locale?: unknown };
+  let payload: { messages?: unknown; context?: unknown; signals?: unknown; locale?: unknown; workoutContext?: unknown };
   let providerFailure: unknown = undefined;
   try {
     payload = await request.json() as typeof payload;
@@ -70,7 +70,11 @@ export async function POST(request: Request) {
   const messages = safeMessages(payload.messages);
   if (!messages.length) return Response.json({ error: "Mesaj bulunamadı" }, { status: 400 });
   const question = messages.at(-1)?.text || "";
-  console.info("[api/chat] request started", { requestId, messageCount: messages.length, locale });
+  const workoutContext =
+    payload.workoutContext && typeof payload.workoutContext === "object"
+      ? (payload.workoutContext as Record<string, unknown>)
+      : undefined;
+  console.info("[api/chat] request started", { requestId, messageCount: messages.length, locale, hasWorkoutContext: Boolean(workoutContext) });
 
   // GÜVENLİK KATMANI, KULLANIM HAKKINDAN ÖNCE. Acil bir belirtide (göğüs
   // ağrısı, kendine zarar) yanıt deterministiktir: hiçbir modele gidilmez.
@@ -102,6 +106,7 @@ export async function POST(request: Request) {
       locale,
       signals,
       memories,
+      workoutContext,
       category: "conversation",
       policy: { mode: "auto" },
       // GPT-5'in düşünme ve görünür yanıt bütçesi aynıdır. Minimal düşünme

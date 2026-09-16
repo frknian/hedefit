@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import com.hedefit.app.data.model.ExerciseCatalogData
 import com.hedefit.app.ui.components.HedefitCard
 import com.hedefit.app.ui.components.ExerciseMedia
 import com.hedefit.app.ui.components.ExerciseMotionPlayer
+import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.theme.HedefitColors
 import java.util.UUID
 
@@ -47,7 +49,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
         muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""
         onSearch(query, "", "", "", "", "", "", "", "")
     }
-    Column(Modifier.fillMaxSize().background(HedefitColors.Background).statusBarsPadding().navigationBarsPadding()) {
+    ScreenContainer { Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp, top = 8.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -109,7 +111,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                 }
             }
         }
-    }
+    } }
     if (showFilters) ModalBottomSheet(onDismissRequest = { showFilters = false }, containerColor = HedefitColors.Surface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp).padding(bottom = 18.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

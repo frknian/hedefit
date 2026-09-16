@@ -6,15 +6,78 @@ import { matchDefaultFood } from "../../../../lib/default-food-catalog.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
 import { checkAndConsumeUsage, outputTokenLimit, refundUsage, usageLimitExceeded } from "../../../../lib/usage-limits.ts";
 
+import { parseNaturalMealText } from "../../../../lib/natural-meal-parser.ts";
+
 export const runtime = "edge";
 
 export async function POST(request: Request) {
   const auth = await authenticateRequest(request);
   if ("error" in auth) return auth.error;
-  const limited = rateLimit(`nutrition-estimate:${auth.user.id}`, 15, 60_000);
+  const limited = rateLimit(`nutrition-estimate:${auth.user.id}`, 25, 60_000);
   if (!limited.ok) return tooManyRequests(limited.retryAfterSeconds);
 
-  const body = await request.json().catch(() => ({})) as { query?: unknown; grams?: unknown };
+  const body = await request.json().catch(() => ({})) as {
+    query?: unknown;
+    grams?: unknown;
+    text?: unknown;
+    mode?: unknown;
+  };
+
+  const naturalText = typeof body.text === "string" ? body.text.trim() : (body.mode === "natural" && typeof body.query === "string" ? body.query.trim() : "");
+
+  // 1. DOĞAL DİL İLE ÖĞÜN AYRIŞTIRMA MODU (Multi-item meal text)
+  if (naturalText.length >= 2) {
+    if (naturalText.length > 1_000) {
+      return Response.json({ error: "Öğün açıklaması 1000 karakterden kısa olmalı." }, { status: 400 });
+    }
+
+    try {
+      const parsedResult = await parseNaturalMealText(naturalText, hasRemoteProvider());
+      if (!parsedResult.items.length) {
+        return Response.json({ error: "Yemek metninde anlaşılır bir yiyecek bulunamadı." }, { status: 422 });
+      }
+
+      const items = parsedResult.items.map((item) => ({
+        query: item.name,
+        name: item.name,
+        variantName: item.variantName,
+        quantity: item.quantity,
+        unit: item.unit,
+        estimatedGrams: item.grams,
+        confidence: item.confidence,
+        needsConfirmation: item.needsConfirmation,
+        source: item.source,
+        verified: item.verified,
+        nutrition: {
+          calories: item.calories,
+          protein: item.protein,
+          carbohydrates: item.carbohydrates,
+          fat: item.fat,
+          fiber: item.fiber,
+          sugar: item.sugar,
+          sodiumMg: item.sodiumMg,
+          potassiumMg: item.potassiumMg,
+          calciumMg: item.calciumMg,
+          ironMg: item.ironMg,
+          vitaminCMg: item.vitaminCMg,
+        },
+      }));
+
+      return Response.json({
+        items,
+        totals: parsedResult.totals,
+        parsedText: parsedResult.parsedText,
+        warnings: parsedResult.warnings,
+        confidence: items.reduce((acc, i) => Math.min(acc, i.confidence), 1.0),
+        isEstimated: true,
+      });
+    } catch (error) {
+      console.error("[nutrition-estimate] natural parsing failed", error);
+      return Response.json({ error: "Öğün metni çözümlenemedi; tekrar deneyebilirsin." }, { status: 500 });
+    }
+  }
+
+  // 2. KLASİK TEKİL YEMEK MODU ({ query, grams }) - Geriye dönük uyumluluk
   const query = typeof body.query === "string" ? body.query.trim() : "";
   const grams = Number(body.grams);
   if (query.length < 2 || query.length > 1_000) {
