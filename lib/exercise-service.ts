@@ -8,6 +8,32 @@ const safeList = (value: unknown, limit = 20, maxLength = 300) => Array.isArray(
 const safeImage = (value: unknown) => typeof value === "string" && /^\/exercise-images\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_.-]+$/.test(value) ? value : null;
 const fold = (value: string) => value.toLocaleLowerCase("en-US").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
+/**
+ * The equipment filter is a small set of canonical groups the client offers (see
+ * ExerciseLibraryScreen.kt's equipmentOptions), mapped to RepDB's ~55 raw equipment
+ * slugs (scripts/import-repdb.mjs). "machine" covers every `*_machine` slug plus a
+ * few machine-pattern exercises that don't end in that suffix.
+ */
+const EQUIPMENT_GROUPS: Record<string, string[]> = {
+  bodyweight: ["none"],
+  dumbbell: ["dumbbell"],
+  barbell: ["barbell", "ez_bar", "trap_bar"],
+  kettlebell: ["kettlebell"],
+  cable: ["cable"],
+  band: ["loop_band", "resistance_band"],
+  pull_up_bar: ["pull_up_bar", "dip_station", "rings", "suspension_trainer"],
+  machine: ["leg_press", "leg_curl", "leg_extension", "hack_squat", "pec_deck", "glute_ham_developer"],
+};
+const MACHINE_SUFFIX = "_machine";
+
+function matchesEquipment(exerciseEquipment: string | null, group: string): boolean {
+  const slug = exerciseEquipment || "none";
+  const members = EQUIPMENT_GROUPS[group];
+  if (members) return members.includes(slug) || (group === "machine" && slug.endsWith(MACHINE_SUFFIX));
+  // Unknown group (e.g. an internal caller passing a raw RepDB slug directly): fall back to exact match.
+  return fold(slug) === fold(group);
+}
+
 export function normalizeExercise(value: unknown): Exercise | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
@@ -109,13 +135,13 @@ export function searchExercises(query: string) {
 export function filterExercises(filters: ExerciseFilters = {}) {
   const search = fold(filters.search || "").slice(0, 100);
   const muscleTargets = expandMuscleFilter(filters.muscle || "");
-  const equipment = fold(filters.equipment || "");
+  const equipment = filters.equipment?.trim() || "";
   const level = fold(filters.level || "");
   const category = fold(filters.category || "");
   return exercises.filter((exercise, index) => {
     return (!search || searchHaystacks[index].includes(search))
       && (!muscleTargets.length || [...exercise.primaryMuscles, ...exercise.secondaryMuscles].some((item) => muscleTargets.includes(fold(item))))
-      && (!equipment || fold(exercise.equipment || "none") === equipment)
+      && (!equipment || matchesEquipment(exercise.equipment, equipment))
       && (!level || fold(exercise.level) === level)
       && (!category || fold(exercise.category) === category);
   });

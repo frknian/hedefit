@@ -74,8 +74,20 @@ export function normalizeMuscleGroup(rawMuscle: string): MuscleGroup {
   return "core";
 }
 
-export function detectMovementPattern(name: string, primaryMuscles: MuscleGroup[], category: string): MovementPattern {
+export function detectMovementPattern(name: string, primaryMuscles: MuscleGroup[], category: string, force: string | null = null): MovementPattern {
   const lower = name.toLowerCase();
+
+  // 0. Static holds / mobility poses. A handful of RepDB rows (Locust Pose,
+  // Superman, Bow Pose, ...) are static-force yoga-style holds but mistagged
+  // category:"strength" upstream, so the `category === "stretching"` guard in
+  // exercise-selector.ts never catches them. Left unguarded here, the "back"
+  // muscle fallback below (rule 6) labelled them "horizontal_pull" — a real
+  // rowing pattern — which won them the +40 pattern-match score bonus over an
+  // actual banded row for e.g. a home+bands "back" budget slot. They still
+  // pass the muscle-eligibility filter (this only strips the false bonus).
+  if (category === "stretching" || force === "static" || /\bpose\b/i.test(lower)) {
+    return "core";
+  }
 
   // 1. Core
   if (primaryMuscles.includes("core") || /plank|crunch|sit-up|leg raise|rollout|twist|pallof|hollow|ab |dead bug/i.test(lower)) {
@@ -288,7 +300,7 @@ const standardizedExercises: StandardizedExercise[] = (exerciseData as Array<Rec
   const equipment = normalizeEquipmentList(item.equipment ? String(item.equipment) : null);
   const difficulty = normalizeDifficulty(String(item.level || "beginner"));
 
-  const movementPattern = detectMovementPattern(name, primaryMuscles, category);
+  const movementPattern = detectMovementPattern(name, primaryMuscles, category, force);
   const compoundOrIsolation = detectCompoundOrIsolation(name, mechanic, movementPattern);
   const contraindications = detectContraindications(name, movementPattern, primaryMuscles, tags);
   const estimatedDurationSeconds = compoundOrIsolation === "compound" ? 120 : 90;

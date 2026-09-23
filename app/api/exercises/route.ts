@@ -23,11 +23,9 @@ export function GET(request: Request) {
   const byMuscle = muscleTargets.length
     ? filtered.filter((item) => [...item.primaryMuscles, ...item.secondaryMuscles].some((value) => muscleTargets.includes(value)))
     : filtered;
-  const byEnvironment = environment === "gym"
-    ? byMuscle.filter((item) => !["body only", "none", "bands"].includes(item.equipment || "none"))
-    : environment === "home"
-      ? byMuscle.filter((item) => ["body only", "none", "bands", "dumbbell", "kettlebells", "exercise ball"].includes(item.equipment || "none"))
-      : byMuscle;
+  const byEnvironment = environment === "gym" || environment === "home"
+    ? byMuscle.filter((item) => (item.environment ?? []).includes(environment))
+    : byMuscle;
   const byRole = muscleRole === "primary" && muscle
     ? byEnvironment.filter((item) => item.primaryMuscles.some((value) => muscleTargets.includes(value)))
     : muscleRole === "secondary" && muscle

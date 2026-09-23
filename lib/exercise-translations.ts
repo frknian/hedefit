@@ -278,7 +278,11 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   // yüzden zincirin ilerleyen bir adımı "bodyweight"i "Vücut ağırlığı"ya
   // çevirdikten SONRA bu kurallar çalışsaydı, "ağırlığı"nın baştaki "a"sı
   // \ban?\b ile bağımsız bir "a" sanılıp silinir, "ğırlığı" kalırdı.
-  [/\bthe\b/gi, ""], [/\ban?\b/gi, ""], [/\bof\b/gi, ""],
+  // "Push-off" bileşik terim: sonraki satırdaki genel "off" temizliği bunu
+  // "Push-" halinde bozardı, o yüzden burada kendi başına önce çevrilir.
+  [/\bpush-off\b/gi, "itiş sıçraması"],
+  [/\bthe\b/gi, ""], [/\ban?\b/gi, ""], [/\bof\b/gi, ""], [/\boff\b/gi, ""],
+  [/\bon your side\b/gi, "Yan yatarak"],
   [/\ball fours\b/gi, "Dört ayak"], [/\bworld'?s greatest stretch\b/gi, "Tüm vücut esnetme"],
   [/\bab crunch machine\b/gi, "Karın sıkıştırma makinesi"], [/\bparallel bar dips?\b/gi, "Paralel bar itişi"],
   [/\bpushups?\b/gi, "Şınav"], [/\bpullups?\b/gi, "Barfiks"], [/\bwindmills?\b/gi, "Yel değirmeni"],
@@ -295,7 +299,10 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   [/\bbalance\b/gi, "Denge"], [/\blifts?\b/gi, "Kaldırış"], [/\bhyperextensions?\b/gi, "Hiperekstansiyon"],
   [/\bmuscle\b/gi, "Kas"], [/\bdrill\b/gi, "Çalışması"], [/\blinear\b/gi, "Doğrusal"],
   [/\bresistance\b/gi, "Direnç"], [/\bspeed\b/gi, "Hız"], [/\bbackward\b/gi, "Geriye"],
-  [/\bmid\b/gi, "Orta"], [/\bposition\b/gi, "Pozisyon"], [/\binternal\b/gi, "İç"],
+  [/\bmid\b/gi, "Orta"], [/\bpositions?\b/gi, "Pozisyon"], [/\binternal\b/gi, "İç"],
+  [/\babove\b/gi, "Üstünde"], [/\bacross\b/gi, "Çapraz"], [/\bparallel\b/gi, "Paralel"],
+  [/\bstraps?\b/gi, "Kayış"], [/\bsqueezes?\b/gi, "Sıkma"], [/\btouch(?:es|ers)?\b/gi, "Dokunuş"],
+  [/\bprogressions?\b/gi, "İlerleme"], [/\bpins?\b/gi, "Pim"],
   [/\brussian\b/gi, "Rus"], [/\bhandle\b/gi, "Tutacak"], [/\bdeficit\b/gi, "Yükselti"],
   [/\bversion\b/gi, "Sürümü"], [/\bbutt\b/gi, "Kalça"], [/\bkicks?\b/gi, "Tekme"],
   [/\bpronated\b/gi, "Pronasyon tutuşlu"], [/\bsupinated\b/gi, "Supinasyon tutuşlu"],
@@ -308,7 +315,7 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   [/\bfarmer'?s?\b/gi, "Çiftçi"], [/\bhandstand\b/gi, "El duruşu"], [/\bpike\b/gi, "Çakı"],
   [/\bflexion\b/gi, "Bükme"], [/\bextension\b/gi, "Uzatma"], [/\bposterior\b/gi, "Arka"],
   [/\bdiagonal\b/gi, "Çapraz"], [/\bbear\b/gi, "Ayı"], [/\bcrawl\b/gi, "Yürüyüş"],
-  [/\bgood morning\b/gi, "Günaydın"], [/\bmountain climbers?\b/gi, "Dağ tırmanışı"],
+  [/\bgood morning\b/gi, "Good Morning"], [/\bmountain climbers?\b/gi, "Dağ tırmanışı"],
   [/\bskull crushers?\b/gi, "Alına indiriş"], [/\bbench press\b/gi, "Sehpa itişi"],
   [/\bchest press\b/gi, "Göğüs itişi"], [/\bshoulder press\b/gi, "Omuz itişi"],
   [/\bleg press\b/gi, "Bacak itişi"], [/\bmilitary press\b/gi, "Askeri itiş"],
@@ -352,12 +359,12 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   [/\bstraight\b/gi, "Düz"], [/\bbent\b/gi, "Bükülü"], [/\bweighted\b/gi, "Ağırlıklı"],
   [/\bassisted\b/gi, "Destekli"], [/\bisometric\b/gi, "İzometrik"], [/\bpower\b/gi, "Güç"],
   [/\bjump(?:s)?\b/gi, "Sıçrama"], [/\bhops?\b/gi, "Sıçrayış"], [/\bbounds?\b/gi, "Atlamalı ilerleme"],
-  [/\bsprints?\b/gi, "Sürat koşusu"], [/\bthrows?\b/gi, "Atış"], [/\brotation\b/gi, "Dönüş"],
+  [/\bsprints?\b/gi, "Sürat koşusu"], [/\bthrows?\b/gi, "Atış"], [/\brotations?\b/gi, "Dönüş"],
   [/\bcircles?\b/gi, "Daire"], [/\btwists?\b/gi, "Burgu"], [/\bwalk\b/gi, "Yürüyüş"],
   [/\bfloor\b/gi, "Yerde"], [/\bwall\b/gi, "Duvar"], [/\bchair\b/gi, "Sandalye"],
   [/\bbox\b/gi, "Kutu"], [/\brope\b/gi, "Halat"], [/\bplate\b/gi, "Ağırlık plakası"],
   [/\bsled\b/gi, "Kızak"], [/\bball\b/gi, "Top"], [/\bband(?:s)?\b/gi, "Bant"],
-  [/\bpalms?\b/gi, "Avuçlar"], [/\bhead\b/gi, "Baş"], [/\bside\b/gi, "Yan"],
+  [/\bpalms?\b/gi, "Avuçlar"], [/\bhead\b/gi, "Baş"], [/\bsides?\b/gi, "Yan"],
   [/\bsplit\b/gi, "Ayrık"], [/\bsingle\b/gi, "Tek"], [/\bdouble\b/gi, "Çift"],
   [/\bpull\b/gi, "Çekiş"], [/\bpush\b/gi, "İtiş"], [/\bskip\b/gi, "Atlama"],
   [/\badvanced\b/gi, "İleri"], [/\bintermediate\b/gi, "Orta"], [/\bbeginner\b/gi, "Başlangıç"],

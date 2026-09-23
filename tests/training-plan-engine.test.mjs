@@ -122,6 +122,18 @@ test("Senaryo B: Başlangıç, 3 gün, Evde Direnç Lastiği, Kilo Verme, 40 dk 
       // In bands + bodyweight, no barbells or gym machines
       const isAllowed = !ex.english.toLowerCase().includes("barbell") && !ex.english.toLowerCase().includes("machine");
       assert.ok(isAllowed, `Ekipman kısıtına uymayan hareket bulundu: ${ex.english}`);
+
+      // Regresyon: RepDB'de bir grup statik yoga duruşu (Locust Pose, Superman,
+      // Bow Pose...) yanlışlıkla category:"strength" ile etiketlenmiş ve eskiden
+      // "back" kasına düşen her bütçede gerçek bir çekiş hareketinin önüne
+      // geçiyordu (detectMovementPattern'daki genel "primaryMuscles back ise
+      // horizontal_pull" varsayılanı bunları da kapsıyordu). Ekipman kısıtı az
+      // seçenek bıraktığı evde+bant senaryosunda en görünür haliyle ortaya
+      // çıkıyordu; bu yüzden statik/poz hareketler asla seçilmemeli.
+      const atlas = getStandardizedExerciseById(ex.id);
+      assert.ok(atlas, `Programdaki hareket katalogda bulunamadı: ${ex.id}`);
+      assert.notEqual(atlas.category, "stretching", `Esnetme hareketi programa seçilmiş: ${ex.english}`);
+      assert.ok(!/\bpose\b/i.test(atlas.name), `Statik bir yoga duruşu programa seçilmiş: ${atlas.name}`);
     }
   }
 
