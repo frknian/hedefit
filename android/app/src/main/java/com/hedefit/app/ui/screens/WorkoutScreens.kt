@@ -110,6 +110,22 @@ import com.hedefit.app.ui.model.ExerciseUi
 import com.hedefit.app.ui.model.WorkoutDayUi
 import com.hedefit.app.ui.model.weeklyWorkouts
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import com.hedefit.app.data.model.ProfileData
+import com.hedefit.app.data.model.WorkoutExercisePerformanceData
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Place
 import com.hedefit.app.ui.state.prescribedStartingReps
 import com.hedefit.app.ui.state.canFinishWorkout
 import com.hedefit.app.ui.state.savedWorkoutSet
@@ -193,12 +209,15 @@ fun WorkoutPlanScreen(
     chatBusy: Boolean = false,
     onSendChatMessage: (String, WorkoutCoachContext?) -> Unit = { _, _ -> },
     onExecuteCoachAction: (CoachActionData) -> Unit = {},
+    onOpenCalendar: () -> Unit = {},
+    onOpenQuestionnaire: () -> Unit = {},
+    profile: ProfileData? = null,
+    performances: List<WorkoutExercisePerformanceData> = emptyList(),
+    catalog: List<ExerciseCatalogData> = emptyList(),
 ) {
     val en = language == "en"
     var showRegional by remember { mutableStateOf(false) }
     var selectedRegional by remember { mutableStateOf<Pair<String, String>?>(null) }
-    var showCustomName by remember { mutableStateOf(false) }
-    var showPushPullTemplates by remember { mutableStateOf(false) }
     var removingProgram by remember { mutableStateOf<WorkoutProgramData?>(null) }
     var editingExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
     var previewExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
@@ -210,7 +229,9 @@ fun WorkoutPlanScreen(
     val listState = rememberLazyListState()
     val scrollScope = rememberCoroutineScope()
     val activeProgram = programs.firstOrNull { it.isActive }
-    val programDetailIndex = 6 + (if (hasActiveWorkout) 1 else 0) + (if (programs.isNotEmpty()) 2 else 0) + (if (workouts.isEmpty()) 1 else 0)
+    val programDetailIndex = if (hasActiveWorkout) 2 else 1
+    var page by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAllExercises by remember { mutableStateOf(false) }
     LaunchedEffect(activeProgram?.id, pendingScrollProgramId) {
         val requested = pendingScrollProgramId ?: return@LaunchedEffect
         if (activeProgram?.id == requested) {
@@ -230,8 +251,25 @@ fun WorkoutPlanScreen(
             loading = regionalLoading,
             onBack = { if (selectedRegional != null) selectedRegional = null else showRegional = false },
             onSelectRegion = { region -> selectedRegional = region; onLoadRegional(region.first) },
-            onCreateProgram = { muscle, label -> onGenerateRegional(muscle, label); showRegional = false; selectedRegional = null },
+            onCreateProgram = { muscle, label -> onGenerateRegional(muscle, label); showRegional = false; selectedRegional = null; page = null },
         )
+        return
+    }
+    page?.let { current ->
+        val back = { page = if (current in listOf("ai", "ready", "custom")) "hub" else null }
+        BackHandler(onBack = back)
+        when (current) {
+            "hub" -> ProgramCreateHub(padding, en, onBack = back, onOpen = { page = it }, onOpenRegional = { showRegional = true })
+            "ai" -> AiProgramPage(padding, en, profile, generating, onBack = back, onEditPreferences = onOpenQuestionnaire) { onGeneratePlan(); page = null }
+            "ready" -> ReadyProgramsPage(padding, en, generating, onBack = back) { key -> onAddPushPullTemplate(key); page = null }
+            "custom" -> CustomProgramPage(padding, en, onBack = back) { draft -> onCreateOwnPlan(draft); page = null }
+            "muscles" -> ScreenContainer(padding) {
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    item { HfScreenHeader(if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Your muscle development map" else "Kas gelişim haritan", onBack = back) }
+                    item { TrainingAnalysisSection(performances, catalog, language) }
+                }
+            }
+        }
         return
     }
     ScreenContainer(padding) {
@@ -241,121 +279,106 @@ fun WorkoutPlanScreen(
             contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { Text(if (en) "My Workout" else "Antrenmanım", style = MaterialTheme.typography.headlineMedium) }
             item {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    WorkoutFeatureTile(Icons.Default.MenuBook, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary, Modifier.weight(1f))
-                    WorkoutFeatureTile(Icons.Default.CameraAlt, if (en) "Scan equipment" else "Ekipman Tara", if (en) "Camera and safe setup" else "Kamera ve güvenli kurulum", onOpenScanner, Modifier.weight(1f))
-                }
-            }
-            item {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    WorkoutFeatureTile(Icons.Default.Add, if (en) "Log activity" else "Antrenman Ekle", if (en) "Sport, distance and pace" else "Spor, mesafe ve tempo", onOpenActivityLog, Modifier.weight(1f))
-                    WorkoutFeatureTile(Icons.Default.Route, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "Run & walk GPS" else "GPS ile rota", onOpenRoute, Modifier.weight(1f))
-                }
+                HfScreenHeader(
+                    if (en) "My Workout" else "Antrenmanım",
+                    activeProgram?.let { programDisplayName(it, en) } ?: if (en) "No active program" else "Aktif program yok",
+                ) { HfCircleButton(Icons.Default.CalendarMonth, if (en) "Workout calendar" else "Antrenman takvimi", onOpenCalendar) }
             }
             if (hasActiveWorkout) item {
-                HedefitCard(Modifier.fillMaxWidth(), onClick = onResumeWorkout) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(Modifier.size(44.dp).background(HedefitColors.Lime.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.PlayArrow, null, tint = HedefitColors.Lime) }
-                        Column(Modifier.weight(1f)) { Text(if (en) "Workout in progress" else "Antrenman devam ediyor", style = MaterialTheme.typography.titleMedium); Text(if (en) "Tap to resume without losing your sets" else "Setlerini kaybetmeden devam et", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
-                        Icon(Icons.Default.KeyboardArrowRight, null, tint = HedefitColors.Lime)
+                HfNavRow(Icons.Default.PlayArrow, HedefitColors.Lime, if (en) "Workout in progress" else "Antrenman devam ediyor", if (en) "Tap to resume without losing your sets" else "Setlerini kaybetmeden devam et", onResumeWorkout)
+            }
+            item(key = "active-program-detail") {
+                if (loading && workouts.isEmpty()) {
+                    HedefitCard(Modifier.fillMaxWidth()) { Text(if (en) "Loading your program…" else "Programın yükleniyor…", color = HedefitColors.TextSecondary) }
+                } else if (workouts.isEmpty()) {
+                    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            HfIconBadge(Icons.Default.FitnessCenter, HedefitColors.Lime, 44.dp, 22.dp, 14.dp)
+                            Text(if (en) "No program yet" else "Henüz programın yok", style = MaterialTheme.typography.titleLarge)
+                            Text(if (en) "Create one with Hedefit AI, pick a ready template or build your own." else "Hedefit AI ile oluştur, hazır bir şablon seç ya da kendin yap.", color = HedefitColors.TextSecondary)
+                            HfPrimaryButton(if (en) "Create a program" else "Program oluştur", { page = "hub" }, Modifier.fillMaxWidth(), Icons.Default.Add)
+                        }
+                    }
+                } else {
+                    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(if (en) "ACTIVE PROGRAM" else "AKTİF PROGRAM", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold)
+                                    Text(activeProgram?.let { programDisplayName(it, en) } ?: workouts.first().area, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    Text(if (en) "${workouts.size} exercises • ~${workouts.size * 7} min" else "${workouts.size} hareket • ~${workouts.size * 7} dk", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                                }
+                                if (activeProgram?.source == "regional") TextButton(onClick = { showRegional = true }) { Text(if (en) "Change area" else "Bölgeyi değiştir", color = HedefitColors.Lime) }
+                            }
+                            HfDivider()
+                            val visible = if (showAllExercises) workouts else workouts.take(4)
+                            visible.forEach { exercise ->
+                                EditableProgramRow(
+                                    exercise = exercise,
+                                    en = en,
+                                    onPreview = { previewExercise = exercise },
+                                    onEdit = { editingExercise = exercise },
+                                    onSetCountChange = { count -> onUpdateExercise(exercise.copy(sets = count)) },
+                                    onReplace = { replacingWithEngineExercise = exercise },
+                                )
+                            }
+                            if (workouts.size > 4) TextButton(onClick = { showAllExercises = !showAllExercises }) {
+                                Text(if (showAllExercises) (if (en) "Show less" else "Daha az göster") else if (en) "Show ${workouts.size - 4} more" else "+${workouts.size - 4} hareket daha göster", color = HedefitColors.TextSecondary, fontWeight = FontWeight.Bold)
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                HfPrimaryButton(if (en) "Start workout" else "Antrenmanı başlat", onStartWorkout, Modifier.weight(1f), Icons.Default.PlayArrow)
+                                IconButton(onClick = { showReadinessCheckin = true }, modifier = Modifier.size(52.dp).background(HedefitColors.SurfaceHigh, RoundedCornerShape(16.dp))) {
+                                    Icon(Icons.Default.Bolt, if (en) "Readiness check" else "Hazırlık kontrolü", tint = HedefitColors.Warning)
+                                }
+                                IconButton(onClick = { showTimeAdaptation = true }, modifier = Modifier.size(52.dp).background(HedefitColors.SurfaceHigh, RoundedCornerShape(16.dp))) {
+                                    Icon(Icons.Default.Timer, if (en) "Adapt plan" else "Planı uyarla", tint = HedefitColors.TextPrimary)
+                                }
+                            }
+                        }
                     }
                 }
             }
-            item { SectionTitle(if (en) "Create a program" else "Program oluştur") }
-            item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ProgramTypeTile(Icons.Default.AutoAwesome, if (en) "Create with Hedefit AI" else "Hedefit AI ile Oluştur", HedefitColors.Warning, Modifier.weight(1f), if (generating) ({}) else onGeneratePlan)
-                ProgramTypeTile(Icons.Default.MenuBook, if (en) "Ready programs" else "Hazır Programlar", HedefitColors.Coral, Modifier.weight(1f)) { showPushPullTemplates = true }
-                ProgramTypeTile(Icons.Default.Person, if (en) "Build a program" else "Program Yap", HedefitColors.Sleep, Modifier.weight(1f)) { showCustomName = true }
-            } }
+            item { HfSectionHeader(if (en) "Tools" else "Araçlar") }
             item {
-                HedefitCard(Modifier.fillMaxWidth(), onClick = { showRegional = true }) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(Modifier.size(44.dp).background(HedefitColors.Coral.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.FitnessCenter, null, tint = HedefitColors.Coral) }
-                        Column(Modifier.weight(1f)) {
-                            Text(if (en) "Body-part programs" else "Bölgesel programlar", style = MaterialTheme.typography.titleMedium)
-                            Text(if (en) "Create a plan focused on a muscle group" else "Bir kas grubuna odaklanan program oluştur", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                        }
-                        Icon(Icons.Default.Add, null, tint = HedefitColors.Lime)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        HfActionTile(Icons.Default.MenuBook, HedefitColors.Lime, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Coral, if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Muscles you trained" else "Çalışan kasların", { page = "muscles" }, Modifier.weight(1f).fillMaxHeight())
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        HfActionTile(Icons.Default.CameraAlt, HedefitColors.Water, if (en) "Scan equipment" else "Ekipman tara", if (en) "Recognise with camera" else "Kamerayla tanı", onOpenScanner, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.Add, HedefitColors.Warning, if (en) "Log activity" else "Antrenman ekle", if (en) "Sport, distance, pace" else "Spor, mesafe, tempo", onOpenActivityLog, Modifier.weight(1f).fillMaxHeight())
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        HfActionTile(Icons.Default.Route, HedefitColors.Sleep, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.AutoAwesome, HedefitColors.Lime, if (en) "New program" else "Program oluştur", if (en) "AI, templates or custom" else "AI, şablon veya kendin", { page = "hub" }, Modifier.weight(1f).fillMaxHeight())
                     }
                 }
             }
             if (programs.isNotEmpty()) {
-                item { SectionTitle(if (en) "My programs" else "Programlarım") }
-                item { LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 18.dp)) {
-                    items(programs, key = { it.id }) { program -> ProgramCollectionCard(program, en, {
-                        pendingScrollProgramId = program.id
-                        onSelectProgram(program)
-                        scrollScope.launch {
-                            // Aktif program sunucuda değişirken kullanıcıyı kartların
-                            // üstünde bırakma; ayrıntı bölümü mevcut/yenilenen içerikle açılır.
-                            delay(180)
-                            listState.animateScrollToItem(programDetailIndex)
-                        }
-                    }, { onCopyProgram(program) }) { removingProgram = program } }
-                } }
-            }
-            if (loading && workouts.isEmpty()) item { Text(if (en) "Loading your program…" else "Programın yükleniyor…", color = HedefitColors.TextSecondary) }
-            else if (workouts.isEmpty()) item {
-                HedefitCard(Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(if (en) "No saved program yet" else "Henüz kayıtlı program yok", style = MaterialTheme.typography.titleLarge)
-                        Text(if (en) "Start with a body-part, custom, or Fit Coach program above." else "Yukarıdan bölgesel, kendi programın veya Fit Koç seçeneğiyle başlayabilirsin.", color = HedefitColors.TextSecondary)
-                    }
-                }
-            }
-            if (workouts.isNotEmpty()) {
-                item(key = "active-program-detail") {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(activeProgram?.let { programDisplayName(it, en) } ?: workouts.first().area, color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge)
-                            Text(if (en) "${workouts.size} movement program" else "${workouts.size} hareketlik program", style = MaterialTheme.typography.titleLarge)
-                        }
-                        if (activeProgram?.source == "regional") {
-                            TextButton(onClick = { showRegional = true }) { Text(if (en) "Change area" else "Bölgeyi değiştir") }
-                        }
-                    }
-                }
-                item(key = "adaptive-coaching-strip") {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                item { HfSectionHeader(if (en) "My programs" else "Programlarım", if (en) "${programs.size} programs" else "${programs.size} program") }
+                items(programs, key = { it.id }) { program ->
+                    val (icon, tint) = programStyle(program.source)
+                    HfNavRow(
+                        icon, tint, programDisplayName(program, en),
+                        "${programSourceLabel(program.source, en)} • " + if (en) "${program.exercises.size} exercises" else "${program.exercises.size} hareket",
+                        onClick = {
+                            pendingScrollProgramId = program.id
+                            onSelectProgram(program)
+                            scrollScope.launch { delay(180); listState.animateScrollToItem(programDetailIndex) }
+                        },
+                        chevron = false,
                     ) {
-                        item {
-                            FilterChip(
-                                selected = false,
-                                onClick = { showReadinessCheckin = true },
-                                label = { Text(if (en) "Readiness Check" else "Hazırlık Kontrolü", style = MaterialTheme.typography.labelSmall) },
-                                leadingIcon = { Icon(Icons.Default.FitnessCenter, contentDescription = null, Modifier.size(16.dp), tint = HedefitColors.Lime) },
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = false,
-                                onClick = { showTimeAdaptation = true },
-                                label = { Text(if (en) "Adapt Plan" else "Planı Uyarla", style = MaterialTheme.typography.labelSmall) },
-                                leadingIcon = { Icon(Icons.Default.Timer, contentDescription = null, Modifier.size(16.dp), tint = HedefitColors.Lime) },
-                            )
-                        }
+                        if (program.isActive) HfPill(if (en) "ACTIVE" else "AKTİF")
+                        IconButton(onClick = { onCopyProgram(program) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, if (en) "Copy program" else "Programı kopyala", tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp)) }
+                        IconButton(onClick = { removingProgram = program }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.DeleteOutline, if (en) "Remove program" else "Programı kaldır", tint = HedefitColors.TextMuted, modifier = Modifier.size(19.dp)) }
                     }
                 }
-                items(workouts, key = { it.id }) { exercise ->
-                    EditableProgramRow(
-                        exercise = exercise,
-                        en = en,
-                        onPreview = { previewExercise = exercise },
-                        onEdit = { editingExercise = exercise },
-                        onSetCountChange = { count -> onUpdateExercise(exercise.copy(sets = count)) },
-                        onReplace = { replacingWithEngineExercise = exercise },
-                    )
-                }
-                item { PrimaryButton(if (en) "Start workout" else "Antrenmanı başlat", onStartWorkout, icon = Icons.Default.PlayArrow) }
             }
+            item { HfNavRow(Icons.Default.Add, HedefitColors.TextSecondary, if (en) "Create a new program" else "Yeni program oluştur", if (en) "With AI, from a template or your own" else "AI ile, hazır şablondan veya kendin", { page = "hub" }) }
         }
     }
-    if (showCustomName) CustomProgramBuilderDialog(en, { showCustomName = false }) { draft -> showCustomName = false; onCreateOwnPlan(draft) }
-    if (showPushPullTemplates) PushPullTemplateDialog(en, { showPushPullTemplates = false }) { key -> showPushPullTemplates = false; onAddPushPullTemplate(key) }
     removingProgram?.let { program ->
         AlertDialog(
             onDismissRequest = { removingProgram = null },
@@ -455,94 +478,8 @@ fun WorkoutPlanScreen(
     }
 }
 
-@Composable
-private fun WorkoutFeatureTile(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit, modifier: Modifier) {
-    HedefitCard(modifier.height(132.dp), onClick = onClick, contentPadding = PaddingValues(12.dp)) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            Box(Modifier.size(40.dp).background(HedefitColors.Lime, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) { Icon(icon, null, tint = HedefitColors.OnLime, modifier = Modifier.size(22.dp)) }
-            Column {
-                Text(title, maxLines = 2, style = MaterialTheme.typography.titleMedium)
-                Text(subtitle, maxLines = 2, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProgramTypeTile(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, tint: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    HedefitCard(modifier.height(116.dp), onClick = onClick, contentPadding = PaddingValues(11.dp)) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            Box(Modifier.size(42.dp).background(tint.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) { Icon(icon, null, tint = tint) }
-            Text(title, maxLines = 3, style = MaterialTheme.typography.labelLarge)
-        }
-    }
-}
-
-@Composable
-private fun ProgramCollectionCard(program: WorkoutProgramData, en: Boolean, onClick: () -> Unit, onCopy: () -> Unit, onRemove: () -> Unit) {
-    val tint = when (program.source) { "regional" -> HedefitColors.Lime; "assessment" -> HedefitColors.Warning; "push_pull_template" -> HedefitColors.Coral; else -> HedefitColors.Sleep }
-    HedefitCard(Modifier.width(232.dp).height(142.dp), onClick = onClick) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            Row(verticalAlignment = Alignment.CenterVertically) { Text(when (program.source) { "regional" -> if (en) "BODY PART" else "BÖLGESEL"; "assessment" -> if (en) "FIT COACH" else "FİT KOÇ"; else -> if (en) "CUSTOM" else "PROGRAM YAP" }, color = tint, style = MaterialTheme.typography.labelMedium); Spacer(Modifier.weight(1f)); if (program.isActive) Box(Modifier.size(9.dp).background(HedefitColors.Lime, CircleShape)); IconButton(onClick = onCopy, modifier = Modifier.size(34.dp)) { Icon(Icons.Default.ContentCopy, if (en) "Copy program" else "Programı kopyala", tint = HedefitColors.TextSecondary, modifier = Modifier.size(18.dp)) }; IconButton(onClick = onRemove, modifier = Modifier.size(34.dp)) { Icon(Icons.Default.DeleteOutline, if (en) "Remove program" else "Programı kaldır", tint = HedefitColors.TextSecondary, modifier = Modifier.size(19.dp)) } }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(programDisplayName(program, en), maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
-                Text(if (en) "${program.exercises.size} movements" else "${program.exercises.size} hareket", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-    }
-}
-
-@Composable
-private fun PushPullTemplateDialog(en: Boolean, onDismiss: () -> Unit, onAdd: (String) -> Unit) {
-    val templates = listOf(
-        "push_a" to (if (en) "Push A • Chest focus" else "İtiş A • Göğüs odaklı"),
-        "push_b" to (if (en) "Push B • Shoulder focus" else "İtiş B • Omuz odaklı"),
-        "pull_a" to (if (en) "Pull A • Back width" else "Çekiş A • Sırt genişliği"),
-        "pull_b" to (if (en) "Pull B • Back thickness" else "Çekiş B • Sırt kalınlığı"),
-        "leg_a" to (if (en) "Legs A • Quad focus" else "Bacak A • Ön bacak odaklı"),
-        "leg_b" to (if (en) "Legs B • Hamstring & glute focus" else "Bacak B • Arka bacak & kalça odaklı"),
-        "full_a" to (if (en) "Full Body A • Strength basics" else "Tüm Vücut A • Temel kuvvet"),
-        "full_b" to (if (en) "Full Body B • Deadlift focus" else "Tüm Vücut B • Yerden kaldırış odaklı"),
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (en) "Choose a program" else "Program seç") },
-        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(if (en) "Only the program you choose is added. You can edit every movement afterwards." else "Yalnızca seçtiğin program eklenir. Sonrasında tüm hareketleri düzenleyebilirsin.", color = HedefitColors.TextSecondary)
-            templates.forEach { (key, title) -> HedefitCard(Modifier.fillMaxWidth(), onClick = { onAdd(key) }) { Row(verticalAlignment = Alignment.CenterVertically) { Text(title, Modifier.weight(1f), fontWeight = FontWeight.SemiBold); Icon(Icons.Default.Add, null, tint = HedefitColors.Lime) } } }
-        } },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
-    )
-}
-
 private fun programDisplayName(program: WorkoutProgramData, en: Boolean) =
     if (program.source == "assessment") (if (en) "Fit Coach Program" else "Fit Koç Programı") else program.name
-
-@Composable
-private fun CustomProgramBuilderDialog(en: Boolean, onDismiss: () -> Unit, onCreate: (CustomProgramDraft) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    val titles = remember { mutableStateListOf("Push", "Pull", "Legs") }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (en) "Build a program" else "Program Yap") }, text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        OutlinedTextField(name, { name = it.take(80) }, modifier = Modifier.fillMaxWidth(), label = { Text(if (en) "Program name" else "Program adı") }, placeholder = { Text("Push Pull Legs") }, singleLine = true)
-        Text(if (en) "Workout order" else "Antrenman sırası", style = MaterialTheme.typography.titleSmall)
-        Text(if (en) "Name and arrange sessions freely; they do not have to be tied to weekdays." else "Antrenmanları özgürce adlandırıp sırala; haftanın belirli günlerine bağlamak zorunda değilsin.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-        LazyColumn(Modifier.height(220.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            items(titles.size) { index ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedTextField(titles[index], { value -> titles[index] = value.take(40) }, modifier = Modifier.weight(1f), label = { Text(if (en) "Session ${index + 1}" else "Antrenman ${index + 1}") }, placeholder = { Text(if (en) "Workout name" else "Antrenman adı") }, singleLine = true)
-                    Column {
-                        IconButton(enabled = index > 0, onClick = { val value = titles.removeAt(index); titles.add(index - 1, value) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.KeyboardArrowUp, null, modifier = Modifier.size(18.dp)) }
-                        IconButton(enabled = index < titles.lastIndex, onClick = { val value = titles.removeAt(index); titles.add(index + 1, value) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.KeyboardArrowDown, null, modifier = Modifier.size(18.dp)) }
-                    }
-                    IconButton(enabled = titles.size > 1, onClick = { titles.removeAt(index) }, modifier = Modifier.size(34.dp)) { Icon(Icons.Default.DeleteOutline, if (en) "Remove" else "Kaldır", tint = HedefitColors.Coral) }
-                }
-            }
-            if (titles.size < 7) item { TextButton(onClick = { titles.add("") }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Add, null); Text(if (en) " Add session" else " Antrenman ekle") } }
-        }
-        Text(if (en) "After saving, choose exercises from the Movement Atlas; sets, reps, target weight and rest can be edited in the program." else "Kaydettikten sonra Hareket Atlası'ndan hareket seç; set, tekrar, hedef ağırlık ve dinlenmeyi programdan düzenle.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-    } }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } }, confirmButton = { Button(enabled = name.trim().length >= 2 && titles.isNotEmpty() && titles.all(String::isNotBlank), onClick = { onCreate(CustomProgramDraft(name.trim(), titles.mapIndexed { index, title -> WorkoutProgramDayData(index + 1, title.trim()) })) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (en) "Save program" else "Programı Kaydet") } })
-}
 
 @Composable
 private fun EditableProgramRow(
@@ -654,49 +591,47 @@ private fun RegionalProgramBrowser(
     ScreenContainer(padding) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 28.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { UtilityHeader(selectedRegion?.second ?: if (en) "Body-part atlas" else "Bölgesel hareketler", onBack) }
+            item {
+                HfScreenHeader(
+                    selectedRegion?.second ?: if (en) "Body-part programs" else "Bölgesel programlar",
+                    if (selectedRegion == null) (if (en) "Focus on a muscle group" else "Bir kas grubuna odaklan") else if (loading) (if (en) "Loading movements…" else "Hareketler yükleniyor…") else if (en) "${exercises.size} movements" else "${exercises.size} hareket",
+                    onBack = onBack,
+                )
+            }
             if (selectedRegion == null) {
-                item { Text(if (en) "Choose a region." else "Bir bölge seç.", color = HedefitColors.TextSecondary) }
-                items(regions.chunked(2)) { row ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(regions.chunked(3)) { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { region ->
-                            HedefitCard(Modifier.weight(1f).height(104.dp), onClick = { onSelectRegion(region.key to region.label) }) {
-                                Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-                                    Box(Modifier.size(36.dp).background(HedefitColors.Lime.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) { Text(region.emoji, style = MaterialTheme.typography.titleMedium) }
-                                    Text(region.label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                }
+                            HedefitCard(Modifier.weight(1f).heightIn(min = 64.dp), onClick = { onSelectRegion(region.key to region.label) }, contentPadding = PaddingValues(12.dp)) {
+                                Text(region.label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             }
                         }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             } else {
-                item {
-                    HedefitCard(Modifier.fillMaxWidth()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Column(Modifier.weight(1f)) {
-                                Text(if (loading) (if (en) "Loading movements…" else "Hareketler yükleniyor…") else if (en) "${exercises.size} movements" else "${exercises.size} hareket", style = MaterialTheme.typography.titleLarge)
-                            }
-                            if (loading) androidx.compose.material3.CircularProgressIndicator(Modifier.size(28.dp), color = HedefitColors.Lime, strokeWidth = 3.dp)
-                        }
-                    }
-                }
-                if (!loading && exercises.isNotEmpty()) item { PrimaryButton(if (en) "Create ${selectedRegion.second} program" else "${selectedRegion.second} programı oluştur", { onCreateProgram(selectedRegion.first, selectedRegion.second) }, icon = Icons.Default.Add) }
+                if (loading) item { androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth(), color = HedefitColors.Lime) }
                 if (!loading && exercises.isEmpty()) item { Text(if (en) "No movement was found for this region." else "Bu bölge için hareket bulunamadı.", color = HedefitColors.TextSecondary) }
-                items(exercises, key = { it.id }) { exercise ->
-                    HedefitCard(Modifier.fillMaxWidth(), onClick = { selectedExercise = exercise }) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            ExerciseMedia(exercise.imageUrls.firstOrNull(), exercise.name, Modifier.size(68.dp).clip(RoundedCornerShape(16.dp)))
-                            Column(Modifier.weight(1f)) {
-                                Text(exercise.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
-                                Text(exercise.equipment, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                if (exercises.isNotEmpty()) item {
+                    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+                        Column {
+                            exercises.forEachIndexed { index, exercise ->
+                                if (index > 0) HfDivider()
+                                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { selectedExercise = exercise }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    ExerciseMedia(exercise.imageUrls.firstOrNull(), exercise.name, Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(exercise.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                        Text(listOf(exercise.primaryMuscles.joinToString(), exercise.equipment).filter(String::isNotBlank).joinToString(" • "), color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                                    }
+                                }
                             }
                         }
                     }
                 }
+                if (!loading && exercises.isNotEmpty()) item { HfPrimaryButton(if (en) "Create ${selectedRegion.second} program" else "${selectedRegion.second} programı oluştur", { onCreateProgram(selectedRegion.first, selectedRegion.second) }, Modifier.fillMaxWidth(), Icons.Default.Add) }
             }
         }
     }
@@ -1352,4 +1287,153 @@ private fun RoundControl(icon: androidx.compose.ui.graphics.vector.ImageVector, 
         Modifier.size(38.dp).clip(CircleShape).background(HedefitColors.SurfaceHigh).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label, tint = HedefitColors.Lime, modifier = Modifier.size(20.dp)) }
+}
+
+private fun programStyle(source: String): Pair<androidx.compose.ui.graphics.vector.ImageVector, Color> = when (source) {
+    "regional" -> Icons.Default.AccessibilityNew to HedefitColors.Coral
+    "assessment" -> Icons.Default.AutoAwesome to HedefitColors.Lime
+    "push_pull_template" -> Icons.Default.GridView to HedefitColors.Water
+    else -> Icons.Default.Edit to HedefitColors.Warning
+}
+
+private fun programSourceLabel(source: String, en: Boolean) = when (source) {
+    "regional" -> if (en) "Body part" else "Bölgesel"
+    "assessment" -> "Hedefit AI"
+    "push_pull_template" -> if (en) "Template" else "Hazır program"
+    else -> if (en) "Custom" else "Kendi programın"
+}
+
+@Composable
+private fun ModuleCard(icon: androidx.compose.ui.graphics.vector.ImageVector, tint: Color, title: String, description: String, bullets: List<String>, tag: String? = null, enabled: Boolean = true, onClick: () -> Unit) {
+    HedefitCard(Modifier.fillMaxWidth(), onClick = if (enabled) onClick else null, contentPadding = PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                HfIconBadge(icon, tint, 44.dp, 22.dp, 14.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                    Text(description, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                }
+                Icon(Icons.Default.KeyboardArrowRight, null, tint = HedefitColors.TextMuted)
+            }
+            if (tag != null) HfPill(tag, tint)
+            bullets.forEach { bullet ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Check, null, tint = tint, modifier = Modifier.size(15.dp))
+                    Text(bullet, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProgramCreateHub(padding: PaddingValues, en: Boolean, onBack: () -> Unit, onOpen: (String) -> Unit, onOpenRegional: () -> Unit) {
+    ScreenContainer(padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            item { HfScreenHeader(if (en) "Create a program" else "Program oluştur", if (en) "Choose the way that suits you" else "Sana uygun yolu seç", onBack = onBack) }
+            item { ModuleCard(Icons.Default.AutoAwesome, HedefitColors.Lime, if (en) "Create with Hedefit AI" else "Hedefit AI ile oluştur", if (en) "A personal plan from your profile" else "Profiline göre kişisel program", listOf(if (en) "Uses your goal, level and equipment" else "Hedef, seviye ve ekipmanını dikkate alır", if (en) "Adapts as you progress" else "İlerlemene göre uyarlanır"), if (en) "RECOMMENDED" else "ÖNERİLEN") { onOpen("ai") } }
+            item { ModuleCard(Icons.Default.GridView, HedefitColors.Water, if (en) "Ready programs" else "Hazır programlar", if (en) "Pick a proven template" else "Kanıtlanmış bir şablon seç", listOf(if (en) "Push / Pull / Legs and Full Body" else "İtiş / Çekiş / Bacak ve Tüm Vücut", if (en) "Every movement stays editable" else "Tüm hareketler sonradan düzenlenebilir")) { onOpen("ready") } }
+            item { ModuleCard(Icons.Default.Edit, HedefitColors.Warning, if (en) "Build a program" else "Program yap", if (en) "Name and order your own sessions" else "Antrenmanlarını kendin adlandır ve sırala", listOf(if (en) "Pick exercises from the Movement Atlas" else "Hareket Atlası'ndan hareket seç", if (en) "Set sets, reps and rest yourself" else "Set, tekrar ve dinlenmeyi sen belirle")) { onOpen("custom") } }
+            item { HfDivider() }
+            item { HfNavRow(Icons.Default.AccessibilityNew, HedefitColors.Coral, if (en) "Body-part programs" else "Bölgesel programlar", if (en) "Focus on a single muscle group" else "Tek bir kas grubuna odaklan", onOpenRegional) }
+        }
+    }
+}
+
+@Composable
+private fun AiProgramPage(padding: PaddingValues, en: Boolean, profile: ProfileData?, generating: Boolean, onBack: () -> Unit, onEditPreferences: () -> Unit, onGenerate: () -> Unit) {
+    ScreenContainer(padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            item { HfScreenHeader("Hedefit AI", if (en) "Personal program from your profile" else "Profiline göre kişisel program", onBack = onBack) }
+            item {
+                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+                    Column {
+                        Text(if (en) "WHAT THE AI USES" else "AI'IN KULLANACAĞI BİLGİLER", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 4.dp))
+                        HfListRow(Icons.Default.Flag, HedefitColors.Lime, if (en) "Goal" else "Hedef", profile?.goal?.substringBefore(" | ")?.ifBlank { null } ?: "—", null)
+                        HfDivider()
+                        HfListRow(Icons.Default.Place, HedefitColors.Water, if (en) "Where you train" else "Antrenman ortamı", profile?.environment?.ifBlank { null } ?: "—", null)
+                        HfDivider()
+                        HfListRow(Icons.Default.FitnessCenter, HedefitColors.Warning, if (en) "Equipment" else "Ekipman", profile?.equipment?.ifBlank { null } ?: if (en) "Bodyweight" else "Vücut ağırlığı", null)
+                        HfDivider()
+                        HfListRow(Icons.Default.MonitorWeight, HedefitColors.Sleep, if (en) "Body" else "Vücut", listOfNotNull(profile?.age?.let { if (en) "$it y" else "$it yaş" }, profile?.heightCm?.let { "${it.toInt()} cm" }, profile?.weightKg?.let { "%.1f kg".format(it) }).joinToString(" • ").ifBlank { "—" }, null)
+                    }
+                }
+            }
+            item {
+                Row(Modifier.fillMaxWidth().background(HedefitColors.Lime.copy(alpha = .08f), RoundedCornerShape(18.dp)).padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    HfIconBadge(Icons.Default.AutoAwesome, HedefitColors.Lime, 34.dp, 17.dp, 11.dp)
+                    Text(if (en) "Your injury notes and past workouts are considered too. You can change every movement after the program is created." else "Sakatlık notların ve geçmiş antrenmanların da hesaba katılır. Program oluştuktan sonra her hareketi değiştirebilirsin.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            item { HfPrimaryButton(if (generating) (if (en) "Creating…" else "Oluşturuluyor…") else if (en) "Create my program" else "Programımı oluştur", onGenerate, Modifier.fillMaxWidth(), Icons.Default.AutoAwesome, enabled = !generating) }
+            item { HfPrimaryButton(if (en) "Update my preferences" else "Tercihlerimi güncelle", onEditPreferences, Modifier.fillMaxWidth(), Icons.Default.Edit, secondary = true) }
+        }
+    }
+}
+
+private fun readyTemplates(en: Boolean) = listOf(
+    Triple("push_a", if (en) "Push A • Chest focus" else "İtiş A • Göğüs odaklı", "push"),
+    Triple("push_b", if (en) "Push B • Shoulder focus" else "İtiş B • Omuz odaklı", "push"),
+    Triple("pull_a", if (en) "Pull A • Back width" else "Çekiş A • Sırt genişliği", "pull"),
+    Triple("pull_b", if (en) "Pull B • Back thickness" else "Çekiş B • Sırt kalınlığı", "pull"),
+    Triple("leg_a", if (en) "Legs A • Quad focus" else "Bacak A • Ön bacak odaklı", "legs"),
+    Triple("leg_b", if (en) "Legs B • Hamstring & glute focus" else "Bacak B • Arka bacak & kalça odaklı", "legs"),
+    Triple("full_a", if (en) "Full Body A • Strength basics" else "Tüm Vücut A • Temel kuvvet", "full"),
+    Triple("full_b", if (en) "Full Body B • Deadlift focus" else "Tüm Vücut B • Yerden kaldırış odaklı", "full"),
+)
+
+@Composable
+private fun ReadyProgramsPage(padding: PaddingValues, en: Boolean, busy: Boolean, onBack: () -> Unit, onAdd: (String) -> Unit) {
+    var filter by rememberSaveable { mutableStateOf("all") }
+    val filters = listOf("all" to (if (en) "All" else "Tümü"), "push" to (if (en) "Push" else "İtiş"), "pull" to (if (en) "Pull" else "Çekiş"), "legs" to (if (en) "Legs" else "Bacak"), "full" to (if (en) "Full body" else "Tüm vücut"))
+    val templates = readyTemplates(en).filter { filter == "all" || it.third == filter }
+    ScreenContainer(padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item { HfScreenHeader(if (en) "Ready programs" else "Hazır programlar", if (en) "${readyTemplates(en).size} templates" else "${readyTemplates(en).size} şablon", onBack = onBack) }
+            item { HfChipRow { filters.forEach { (key, label) -> HfChip(label, filter == key, { filter = key }) } } }
+            item { Text(if (en) "Only the program you choose is added. You can edit every movement afterwards." else "Yalnızca seçtiğin program eklenir. Sonrasında tüm hareketleri düzenleyebilirsin.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall) }
+            items(templates, key = { it.first }) { (key, title, group) ->
+                val tint = when (group) { "push" -> HedefitColors.Lime; "pull" -> HedefitColors.Water; "legs" -> HedefitColors.Warning; else -> HedefitColors.Sleep }
+                HfNavRow(Icons.Default.FitnessCenter, tint, title, filters.first { it.first == group }.second, onClick = if (busy) null else ({ onAdd(key) }), chevron = false) {
+                    Box(Modifier.size(36.dp).background(HedefitColors.SurfaceHigh, CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.Add, if (en) "Add $title" else "$title ekle", tint = HedefitColors.TextPrimary, modifier = Modifier.size(18.dp)) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CustomProgramPage(padding: PaddingValues, en: Boolean, onBack: () -> Unit, onCreate: (CustomProgramDraft) -> Unit) {
+    var name by rememberSaveable { mutableStateOf("") }
+    val titles = remember { mutableStateListOf("Push", "Pull", "Legs") }
+    val valid = name.trim().length >= 2 && titles.isNotEmpty() && titles.all(String::isNotBlank)
+    ScreenContainer(padding) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item { HfScreenHeader(if (en) "Build a program" else "Program yap", if (en) "Name and order your sessions" else "Antrenmanlarını adlandır ve sırala", onBack = onBack) }
+            item {
+                HedefitCard(Modifier.fillMaxWidth()) {
+                    OutlinedTextField(name, { name = it.take(80) }, modifier = Modifier.fillMaxWidth(), label = { Text(if (en) "Program name" else "Program adı") }, placeholder = { Text("Push Pull Legs") }, singleLine = true)
+                }
+            }
+            item { HfSectionHeader(if (en) "Sessions" else "Antrenmanlar", if (en) "${titles.size} / 7" else "${titles.size} / 7") }
+            item {
+                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(start = 14.dp, end = 6.dp, top = 8.dp, bottom = 8.dp)) {
+                    Column {
+                        titles.forEachIndexed { index, title ->
+                            Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(Modifier.size(28.dp).background(HedefitColors.SurfaceHigh, CircleShape), contentAlignment = Alignment.Center) { Text("${index + 1}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold) }
+                                OutlinedTextField(title, { value -> titles[index] = value.take(40) }, modifier = Modifier.weight(1f).padding(start = 6.dp), placeholder = { Text(if (en) "Workout name" else "Antrenman adı") }, singleLine = true)
+                                IconButton(enabled = index > 0, onClick = { val value = titles.removeAt(index); titles.add(index - 1, value) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.KeyboardArrowUp, if (en) "Move up" else "Yukarı taşı") }
+                                IconButton(enabled = index < titles.lastIndex, onClick = { val value = titles.removeAt(index); titles.add(index + 1, value) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.KeyboardArrowDown, if (en) "Move down" else "Aşağı taşı") }
+                                IconButton(enabled = titles.size > 1, onClick = { titles.removeAt(index) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.DeleteOutline, if (en) "Remove" else "Kaldır", tint = HedefitColors.Coral) }
+                            }
+                        }
+                        if (titles.size < 7) TextButton(onClick = { titles.add("") }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Default.Add, null, tint = HedefitColors.Lime); Spacer(Modifier.width(6.dp)); Text(if (en) "Add session" else "Antrenman ekle", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) }
+                    }
+                }
+            }
+            item { Text(if (en) "After saving, choose exercises from the Movement Atlas; sets, reps, target weight and rest can be edited in the program." else "Kaydettikten sonra Hareket Atlası'ndan hareket seç; set, tekrar, hedef ağırlık ve dinlenmeyi programdan düzenle.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall) }
+            item { HfPrimaryButton(if (en) "Save program" else "Programı kaydet", { onCreate(CustomProgramDraft(name.trim(), titles.mapIndexed { index, title -> WorkoutProgramDayData(index + 1, title.trim()) })) }, Modifier.fillMaxWidth(), Icons.Default.Check, enabled = valid) }
+        }
+    }
 }

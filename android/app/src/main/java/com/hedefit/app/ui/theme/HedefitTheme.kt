@@ -40,25 +40,32 @@ object HedefitColors {
     // #64748B, koyu temada Surface/SurfaceHigh zemininde ~3.5:1'e düşüyordu.
     var TextMuted = Color(0xFF79899F)
     var Divider = Color(0x18FFFFFF)
-    val Coral = Color(0xFFFF6B6B)
-    val Water = Color(0xFF38BDF8)
-    val Sleep = Color(0xFFA78BFA)
-    val Warning = Color(0xFFFBBF24)
+    var Coral = Color(0xFFFF6B6B)
+    var Water = Color(0xFF38BDF8)
+    var Sleep = Color(0xFFA78BFA)
+    var Warning = Color(0xFFFBBF24)
+    var isLight = false
 
     fun applyTheme(dark: Boolean, accentHue: Float) {
         val hue = ((accentHue % 360f) + 360f) % 360f
         Lime = Color.hsl(hue, .68f, if (dark) .58f else .46f)
         LimeDark = Color.hsl(hue, .72f, if (dark) .42f else .36f)
         OnLime = if (Lime.luminance() > .45f) Color(0xFF051B0B) else Color.White
-        Background = if (dark) Color(0xFF090A0C) else Color(0xFFF8FAFC)
+        Background = if (dark) Color(0xFF090A0C) else Color(0xFFF4F6F8)
         Surface = if (dark) Color(0xFF12151B) else Color.White
-        SurfaceHigh = if (dark) Color(0xFF1A1F27) else Color(0xFFF1F5F9)
+        SurfaceHigh = if (dark) Color(0xFF1A1F27) else Color(0xFFEEF2F6)
         SurfaceSoft = if (dark) Color(0xFF222934) else Color(0xFFE2E8F0)
         TextPrimary = if (dark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
         TextSecondary = if (dark) Color(0xFF94A3B8) else Color(0xFF64748B)
         // Her iki ton da WCAG AA (4.5:1) için ölçülüp ayarlandı.
         TextMuted = if (dark) Color(0xFF79899F) else Color(0xFF607490)
-        Divider = if (dark) Color(0x18FFFFFF) else Color(0x14000000)
+        Divider = if (dark) Color(0x18FFFFFF) else Color(0x1A0F172A)
+        // Accents are darkened on light surfaces so text and icons keep WCAG AA contrast.
+        Coral = if (dark) Color(0xFFFF6B6B) else Color(0xFFDC2626)
+        Water = if (dark) Color(0xFF38BDF8) else Color(0xFF0369A1)
+        Sleep = if (dark) Color(0xFFA78BFA) else Color(0xFF6D28D9)
+        Warning = if (dark) Color(0xFFFBBF24) else Color(0xFFB45309)
+        isLight = !dark
     }
 }
 

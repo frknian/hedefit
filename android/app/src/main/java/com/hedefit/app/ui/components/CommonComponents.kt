@@ -75,7 +75,7 @@ import com.hedefit.app.ui.layout.LayoutPolicy
 import com.hedefit.app.ui.theme.HedefitColors
 
 val ScreenHorizontalPadding = 16.dp
-val CardRadius = 18.dp
+val CardRadius = 22.dp
 
 @Composable
 fun FitCoachRobotAvatar(modifier: Modifier = Modifier) {
@@ -117,78 +117,30 @@ fun HedefitAppFrame(
 
 @Composable
 private fun HedefitBottomBar(selected: AppDestination, onSelect: (AppDestination) -> Unit, language: String, coachName: String) {
-    Box(
-        Modifier
-            .navigationBarsPadding()
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center,
-    ) {
+    Column(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh).navigationBarsPadding()) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(HedefitColors.Divider))
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .background(
-                    color = Color(0xEB131711),
-                    shape = RoundedCornerShape(29.dp),
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            Color.White.copy(alpha = 0.16f),
-                            Color.White.copy(alpha = 0.03f),
-                        )
-                    ),
-                    shape = RoundedCornerShape(29.dp),
-                )
-                .padding(horizontal = 4.dp, vertical = 3.dp),
+            modifier = Modifier.fillMaxWidth().height(66.dp).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             AppDestination.primaryTabs.forEach { destination ->
                 val label = if (destination == AppDestination.Coach) coachName else destination.localizedLabel(language)
                 val active = destination == selected
-                val interactionSource = remember { MutableInteractionSource() }
-
-                Box(
+                val color = if (active) HedefitColors.Lime else HedefitColors.TextMuted
+                Column(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            if (active) HedefitColors.Lime.copy(alpha = 0.15f) else Color.Transparent
-                        )
-                        .selectable(
-                            selected = active,
-                            interactionSource = interactionSource,
-                            indication = null,
-                            role = Role.Tab,
-                        ) {
-                            if (!active) onSelect(destination)
-                        },
-                    contentAlignment = Alignment.Center,
+                        .selectable(selected = active, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Tab) { if (!active) onSelect(destination) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Icon(
-                            destination.icon,
-                            contentDescription = label,
-                            modifier = Modifier.size(20.dp),
-                            tint = if (active) HedefitColors.Lime else HedefitColors.TextSecondary.copy(alpha = 0.65f),
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = label,
-                            color = if (active) HedefitColors.Lime else HedefitColors.TextSecondary.copy(alpha = 0.65f),
-                            fontSize = 9.5.sp,
-                            fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                    Box(
+                        Modifier.size(width = 52.dp, height = 28.dp).background(if (active) HedefitColors.Lime.copy(alpha = .15f) else Color.Transparent, RoundedCornerShape(14.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(destination.icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = color) }
+                    Spacer(Modifier.height(3.dp))
+                    Text(label, color = color, fontSize = 10.5.sp, fontWeight = if (active) FontWeight.ExtraBold else FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -279,8 +231,8 @@ fun HedefitCard(
     Card(
         modifier = modifier.then(clickModifier),
         shape = RoundedCornerShape(CardRadius),
-        colors = CardDefaults.cardColors(containerColor = HedefitColors.Surface),
-        border = BorderStroke(.6.dp, HedefitColors.Divider),
+        colors = CardDefaults.cardColors(containerColor = HedefitColors.Surface, contentColor = HedefitColors.TextPrimary),
+        border = if (HedefitColors.isLight) BorderStroke(.6.dp, HedefitColors.Divider) else null,
     ) {
         Box(Modifier.padding(contentPadding)) { content() }
     }
@@ -425,12 +377,14 @@ fun ProgressRing(
     progress: Float,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 12.dp,
+    color: Color = HedefitColors.Lime,
     center: @Composable BoxScope.() -> Unit,
 ) {
     Box(modifier, contentAlignment = Alignment.Center) {
+        val track = HedefitColors.SurfaceSoft
         Canvas(Modifier.fillMaxSize()) {
-            drawArc(HedefitColors.Divider, -90f, 360f, false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
-            drawArc(HedefitColors.Lime, -90f, 360f * progress.coerceIn(0f, 1f), false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
+            drawArc(track, -90f, 360f, false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
+            drawArc(color, -90f, 360f * progress.coerceIn(0f, 1f), false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
         }
         center()
     }

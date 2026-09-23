@@ -194,8 +194,8 @@ class HedefitRepository(
     suspend fun loadNutritionLogs(date: LocalDate): List<NutritionLogData> =
         parseNutritionLogs(api.get("/api/nutrition/logs?date=$date").requireSuccess("Beslenme günlüğü yüklenemedi.").jsonObject().optJSONArray("logs") ?: JSONArray())
 
-    suspend fun loadNutritionHistory(): List<NutritionLogData> =
-        parseNutritionLogs(api.get("/api/nutrition/logs").requireSuccess("Beslenme geçmişi yüklenemedi.").jsonObject().optJSONArray("logs") ?: JSONArray())
+    suspend fun loadNutritionHistory(from: LocalDate, to: LocalDate): List<NutritionLogData> =
+        parseNutritionLogs(api.get("/api/nutrition/logs?from=$from&to=$to").requireSuccess("Beslenme geçmişi yüklenemedi.").jsonObject().optJSONArray("logs") ?: JSONArray())
 
     private fun parseStepHistory(rows: JSONArray): List<DailyStepData> = buildList {
         for (index in 0 until rows.length()) {

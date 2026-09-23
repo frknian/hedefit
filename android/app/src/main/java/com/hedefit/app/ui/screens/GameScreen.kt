@@ -61,6 +61,9 @@ import com.hedefit.app.gamification.HabitDay
 import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.components.HedefitCard
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.clickable
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
@@ -69,7 +72,6 @@ import java.util.Locale
 // the Tasks screen keep the old dark/green colors after a theme or accent
 // change while the rest of the app updated.
 private val GameSurfaceHigh get() = HedefitColors.SurfaceHigh
-private val GameSurfaceHighest get() = HedefitColors.SurfaceHigh
 private val GameLime get() = HedefitColors.Lime
 private val GameLimeDim get() = HedefitColors.Lime.copy(alpha = .75f)
 private val GameInk get() = HedefitColors.TextSecondary
@@ -85,6 +87,7 @@ fun GameScreen(
     waterGoalMl: Int,
     weeklyActivityGoal: Int,
     language: String = "tr",
+    onBack: (() -> Unit)? = null,
 ) {
     val en = language == "en"
     val snapshot = remember(data, stepGoal, waterGoalMl, weeklyActivityGoal) {
@@ -115,42 +118,69 @@ fun GameScreen(
         if (snapshot == null || data == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = GameLime) }
         } else {
-            GameContent(snapshot, data.profile.displayName, en)
+            GameContent(snapshot, data.profile.displayName, en, onBack)
         }
     }
 }
 
 @Composable
-private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en: Boolean) {
+private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en: Boolean, onBack: (() -> Unit)?) {
+    var selectedAchievement by remember { mutableStateOf<Achievement?>(null) }
     var showAllAchievements by remember { mutableStateOf(false) }
+    val quests = snapshot.dailyQuests
+    val unlocked = snapshot.achievements.count { it.unlockedAt != null }
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
-            Column {
-                Text(if (en) "Tasks" else "Görevler", color = GameText, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
-                Text(if (en) "Build strength through daily actions." else "Günlük adımlarla gücünü inşa et.", color = GameTextMuted, style = MaterialTheme.typography.labelLarge)
-            }
-        }
-        item { HeroCard(snapshot) }
-        item { HabitCard(snapshot.habitStrength, snapshot.habitWeek) }
-        item { QuestCard(snapshot, en) }
-        item { AiRewardCard(snapshot, en) }
+        item { HfScreenHeader(if (en) "Rewards" else "Ödüller", "${if (en) "Level" else "Seviye"} ${snapshot.level.level} • ${leagueFor(snapshot.totalXp)}", onBack = onBack, backLabel = if (en) "Back" else "Geri") }
+        item { HeroCard(snapshot, en) }
+        item { HfSectionHeader(if (en) "Today's quests" else "Bugünün görevleri", "${quests.count { it.completed }} / ${quests.size}") }
+        item { QuestCard(snapshot) }
+        item { HfSectionHeader(if (en) "Habit strength" else "Alışkanlık gücü", "%${snapshot.habitStrength}") }
+        item { HabitCard(snapshot.habitWeek) }
+        item { HfSectionHeader(if (en) "Weekly challenge" else "Haftalık meydan okuma", "250 XP") }
         item { ChallengeCard(snapshot) }
-        item { LeagueCard(displayName.ifBlank { if (en) "You" else "Sen" }, snapshot.weeklyXp, snapshot.totalXp, en) }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (en) "Achievements" else "Başarımlar", color = GameText, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-                if (snapshot.achievements.size > 3) TextButton(onClick = { showAllAchievements = !showAllAchievements }) {
-                    Text(if (showAllAchievements) (if (en) "Show less" else "Daha az") else (if (en) "See all" else "Tümünü Gör"), color = GameLime)
+            HfSectionHeader(
+                if (en) "Achievements" else "Başarımlar",
+                "$unlocked / ${snapshot.achievements.size}",
+            )
+        }
+        item {
+            val shown = if (showAllAchievements) snapshot.achievements else snapshot.achievements.take(8)
+            HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    shown.chunked(4).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { AchievementBadge(it, Modifier.weight(1f)) { selectedAchievement = it } }
+                            repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                    if (snapshot.achievements.size > 8) TextButton(onClick = { showAllAchievements = !showAllAchievements }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                        Text(if (showAllAchievements) (if (en) "Show less" else "Daha az") else (if (en) "See all" else "Tümünü gör"), color = GameLime, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
-        val achievements = if (showAllAchievements) snapshot.achievements else snapshot.achievements.take(3)
-        items(achievements, key = { it.id }) { AchievementCard(it) }
+        item { HfSectionHeader(if (en) "League" else "Lig durumu", leagueFor(snapshot.totalXp)) }
+        item { LeagueCard(displayName.ifBlank { if (en) "You" else "Sen" }, snapshot.weeklyXp, en) }
         item { MotivationCard(snapshot.motivation) }
+    }
+    selectedAchievement?.let { item ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { selectedAchievement = null },
+            title = { Text(item.title) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(item.description, color = GameTextMuted)
+                    HfProgressBar((item.progress / item.target).toFloat())
+                    Text("${item.progress.toInt()}/${if (item.target % 1.0 == 0.0) item.target.toInt() else item.target} • +${item.rewardXp} XP", color = GameLime, fontWeight = FontWeight.Bold)
+                }
+            },
+            confirmButton = { TextButton(onClick = { selectedAchievement = null }) { Text(if (en) "Close" else "Kapat") } },
+        )
     }
 }
 
@@ -161,44 +191,45 @@ private fun GameCard(border: Color = GameInk.copy(alpha = .45f), content: @Compo
 ) { Column(content = content) }
 
 @Composable
-private fun HeroCard(snapshot: GamificationSnapshot) = GameCard {
-    Row(verticalAlignment = Alignment.Top) {
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.LocalFireDepartment, null, tint = GameHeat, modifier = Modifier.size(34.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("${snapshot.streakDays} Gün", color = GameText, fontSize = 40.sp, lineHeight = 44.sp, fontWeight = FontWeight.Black)
+private fun HeroCard(snapshot: GamificationSnapshot, en: Boolean) = GameCard {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        ProgressRing(snapshot.level.progress, Modifier.size(88.dp), 9.dp, color = GameHeat) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("${snapshot.level.level}", color = GameText, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                Text(if (en) "level" else "seviye", color = GameTextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
             }
-            Text("SERİ", color = GameTextMuted, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         }
-        Box(Modifier.clip(CircleShape).background(GameSurfaceHighest).padding(horizontal = 18.dp, vertical = 12.dp)) {
-            Text("LV. ${snapshot.level.level}", color = GameLime, fontWeight = FontWeight.Black)
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("${snapshot.level.currentXp} XP", color = GameText, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+            Text(if (en) "${(snapshot.level.nextLevelXp - snapshot.level.currentXp).coerceAtLeast(0)} XP to level ${snapshot.level.level + 1}" else "Seviye ${snapshot.level.level + 1} için ${(snapshot.level.nextLevelXp - snapshot.level.currentXp).coerceAtLeast(0)} XP kaldı", color = GameTextMuted, style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.background(HedefitColors.Coral.copy(alpha = .15f), CircleShape).padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Icon(Icons.Default.LocalFireDepartment, null, tint = HedefitColors.Coral, modifier = Modifier.size(14.dp))
+                Text(if (en) "${snapshot.streakDays} day streak" else "${snapshot.streakDays} günlük seri", color = HedefitColors.Coral, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+            }
         }
     }
-    Spacer(Modifier.height(30.dp))
-    Row(verticalAlignment = Alignment.Bottom) {
-        Text("DENEYİM", color = GameTextMuted, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        Text("${snapshot.level.currentXp}", color = GameText, fontSize = 28.sp, fontWeight = FontWeight.Black)
-        Text("/${snapshot.level.nextLevelXp} XP", color = GameTextMuted, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 3.dp))
+    Spacer(Modifier.height(16.dp))
+    HfDivider()
+    Spacer(Modifier.height(14.dp))
+    val reward = snapshot.aiReward
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        HfIconBadge(Icons.Default.Psychology, GameLime, 34.dp, 17.dp, 11.dp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                reward.nextThreshold?.let { if (en) "Next reward at $it XP" else "Sonraki ödül: $it XP" }
+                    ?: if (reward.extraQuestions > 0) (if (en) "+${reward.extraQuestions} daily AI questions" else "+${reward.extraQuestions} günlük FitKoç sorusu") else if (en) "Fit Coach reward" else "FitKoç ödülü",
+                color = GameText, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+            )
+            reward.nextThreshold?.let { target -> HfProgressBar(snapshot.totalXp / target.toFloat()) }
+            if (reward.extraQuestions > 0) Text(if (en) "You earned +${reward.extraQuestions} daily questions" else "+${reward.extraQuestions} günlük soru hakkı kazandın", color = GameLime, style = MaterialTheme.typography.bodySmall)
+        }
     }
-    Spacer(Modifier.height(10.dp))
-    LinearProgressIndicator(
-        progress = { snapshot.level.progress },
-        modifier = Modifier.fillMaxWidth().height(16.dp).clip(CircleShape),
-        color = GameLime,
-        trackColor = Color(0xFF0E0F0B),
-    )
 }
 
 @Composable
-private fun HabitCard(strength: Int, days: List<HabitDay>) = GameCard {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Alışkanlık Gücü", color = GameText, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-        Box(Modifier.size(58.dp).clip(CircleShape).background(GameSurfaceHighest), contentAlignment = Alignment.Center) {
-            Text("%$strength", color = GameLime, fontSize = 20.sp, fontWeight = FontWeight.Black)
-        }
-    }
-    Spacer(Modifier.height(22.dp))
+private fun HabitCard(days: List<HabitDay>) = GameCard {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         days.forEach { HabitDayColumn(it, Modifier.weight(1f)) }
     }
@@ -226,114 +257,58 @@ private fun HabitDayColumn(day: HabitDay, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun QuestCard(snapshot: GamificationSnapshot, en: Boolean) = GameCard {
-    val quests = snapshot.dailyQuests
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(if (en) "Today's Quests" else "Bugünün Görevleri", color = GameText, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-        Pill("${quests.filter { it.completed }.sumOf { it.xp }}/${snapshot.dailyXpCap} XP", GameLime)
-    }
-    Spacer(Modifier.height(16.dp))
-    quests.forEach { quest ->
-        Row(
-            Modifier.fillMaxWidth().padding(vertical = 6.dp).background(GameSurfaceHigh, RoundedCornerShape(14.dp)).padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(if (quest.completed) Icons.Default.CheckCircle else Icons.Outlined.RadioButtonUnchecked, null, tint = if (quest.completed) GameLimeDim else GameTextMuted)
+private fun QuestCard(snapshot: GamificationSnapshot) = GameCard {
+    snapshot.dailyQuests.forEachIndexed { index, quest ->
+        if (index > 0) HfDivider()
+        Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(28.dp).background(if (quest.completed) GameLime else GameSurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(if (quest.completed) Icons.Default.Check else Icons.Outlined.RadioButtonUnchecked, null, tint = if (quest.completed) HedefitColors.OnLime else GameTextMuted, modifier = Modifier.size(16.dp))
+            }
             Spacer(Modifier.width(12.dp))
-            Text(quest.title, color = if (quest.completed) GameTextMuted else GameText, modifier = Modifier.weight(1f).alpha(if (quest.completed) .55f else 1f), textDecoration = if (quest.completed) TextDecoration.LineThrough else null, maxLines = 2)
-            Text("+${quest.xp} XP", color = GameLime, fontWeight = FontWeight.Black, fontSize = 12.sp)
+            Text(quest.title, color = if (quest.completed) GameTextMuted else GameText, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textDecoration = if (quest.completed) TextDecoration.LineThrough else null, maxLines = 2)
+            Text("+${quest.xp} XP", color = GameHeat, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
         }
-    }
-}
-
-@Composable
-private fun AiRewardCard(snapshot: GamificationSnapshot, en: Boolean) = GameCard(HedefitColors.Lime.copy(alpha = .5f)) {
-    val reward = snapshot.aiReward
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.Psychology, null, tint = GameLime)
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(if (en) "Fit Coach reward" else "Fit Koç ödülü", color = GameText, style = MaterialTheme.typography.titleLarge)
-            Text(
-                if (reward.extraQuestions > 0) {
-                    if (en) "+${reward.extraQuestions} daily AI question${if (reward.extraQuestions == 1) "" else "s"}" else "+${reward.extraQuestions} günlük AI soru hakkı"
-                } else {
-                    if (en) "Reach 300 XP for your first extra question" else "İlk ek soru hakkın için 300 XP'ye ulaş"
-                },
-                color = GameTextMuted,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-    reward.nextThreshold?.let { target ->
-        Spacer(Modifier.height(12.dp))
-        Text(if (en) "Next reward at $target XP" else "Sonraki ödül: $target XP", color = GameLime, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 private fun ChallengeCard(snapshot: GamificationSnapshot) = GameCard(GameHeat.copy(alpha = .45f)) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.EmojiEvents, null, tint = GameHeat)
-        Spacer(Modifier.width(10.dp))
-        Text("Haftalık Meydan Okuma", color = GameText, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-        Pill("250 XP", GameHeat)
-    }
-    Spacer(Modifier.height(18.dp))
-    Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(snapshot.challenge.title, color = GameText, fontSize = 30.sp, lineHeight = 34.sp, fontWeight = FontWeight.Black)
+            Text(snapshot.challenge.title, color = GameText, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold)
             Text("${"%.1f".format(snapshot.challenge.progress)} / ${snapshot.challenge.target.toInt()} km", color = GameTextMuted, fontWeight = FontWeight.Bold)
         }
         Box(Modifier.size(70.dp), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(progress = { (snapshot.challenge.progress / snapshot.challenge.target).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxSize(), color = GameHeat, trackColor = Color(0xFF0E0F0B), strokeWidth = 7.dp)
+            CircularProgressIndicator(progress = { (snapshot.challenge.progress / snapshot.challenge.target).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxSize(), color = GameHeat, trackColor = HedefitColors.SurfaceSoft, strokeWidth = 7.dp)
             Text("${"%.1f".format(snapshot.challenge.progress)}", color = GameHeat, fontWeight = FontWeight.Black, fontSize = 12.sp)
         }
     }
 }
 
 @Composable
-private fun LeagueCard(displayName: String, weeklyXp: Int, totalXp: Int, en: Boolean) = GameCard {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.MilitaryTech, null, tint = GameLime)
-        Spacer(Modifier.width(10.dp))
-        Text(if (en) "League Standing" else "Lig Durumu", color = GameText, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-        Text(leagueFor(totalXp), color = GameTextMuted, fontWeight = FontWeight.Bold)
-    }
-    Spacer(Modifier.height(12.dp))
-    Row(Modifier.fillMaxWidth().background(GameSurfaceHighest, RoundedCornerShape(14.dp)).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("—", color = GameLime, fontSize = 22.sp, fontWeight = FontWeight.Black)
+private fun LeagueCard(displayName: String, weeklyXp: Int, en: Boolean) = GameCard {
+    Row(Modifier.fillMaxWidth().background(GameLime.copy(alpha = .12f), RoundedCornerShape(14.dp)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(36.dp).background(GameLime, CircleShape), contentAlignment = Alignment.Center) { Text(displayName.take(1).uppercase(), color = HedefitColors.OnLime, fontWeight = FontWeight.ExtraBold) }
         Spacer(Modifier.width(12.dp))
-        Box(Modifier.size(42.dp).background(GameLime, CircleShape), contentAlignment = Alignment.Center) { Text(displayName.take(1).uppercase(), color = Color(0xFF1C1C1A), fontWeight = FontWeight.Black) }
-        Spacer(Modifier.width(12.dp))
-        Text(displayName, color = GameText, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text("$weeklyXp XP", color = GameLime, fontWeight = FontWeight.Black)
+        Text(if (en) "$displayName (you)" else "$displayName (sen)", color = GameText, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text("$weeklyXp XP", color = GameText, fontWeight = FontWeight.Bold)
     }
     Spacer(Modifier.height(10.dp))
     Text(if (en) "Only verified real users will appear here when the shared leaderboard is enabled." else "Ortak liderlik tablosu açıldığında burada yalnızca doğrulanmış gerçek kullanıcılar görünecek.", color = GameTextMuted, style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable
-private fun AchievementCard(item: Achievement) {
+private fun AchievementBadge(item: Achievement, modifier: Modifier, onClick: () -> Unit) {
     val unlocked = item.unlockedAt != null
-    GameCard(if (unlocked) GameLime.copy(alpha = .35f) else GameInk.copy(alpha = .25f)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(56.dp).background(if (unlocked) GameLime.copy(alpha = .12f) else GameSurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(if (unlocked) Icons.Default.FitnessCenter else Icons.Default.Lock, null, tint = if (unlocked) GameLime else GameTextMuted)
-            }
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(item.title, color = if (unlocked) GameText else GameTextMuted, fontWeight = FontWeight.Black, fontSize = 17.sp)
-                Text(item.description, color = GameTextMuted, style = MaterialTheme.typography.bodySmall)
-                Spacer(Modifier.height(7.dp))
-                LinearProgressIndicator(progress = { (item.progress / item.target).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(5.dp).clip(CircleShape), color = if (unlocked) GameLime else GameInk, trackColor = GameSurfaceHighest)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                Text("+${item.rewardXp} XP", color = if (unlocked) GameLime else GameTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Black)
-                Text("${item.progress.toInt()}/${if (item.target % 1.0 == 0.0) item.target.toInt() else item.target}", color = if (unlocked) GameLime else GameTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-            }
+    Column(
+        modifier.clip(RoundedCornerShape(14.dp)).clickable(onClickLabel = item.title, onClick = onClick).padding(vertical = 4.dp).alpha(if (unlocked) 1f else .5f),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(Modifier.size(52.dp).background(if (unlocked) GameLime.copy(alpha = .15f) else GameSurfaceHigh, RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+            Icon(if (unlocked) Icons.Default.EmojiEvents else Icons.Default.Lock, null, tint = if (unlocked) GameLime else GameTextMuted, modifier = Modifier.size(24.dp))
         }
+        Text(item.title, color = GameTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -344,11 +319,6 @@ private fun MotivationCard(message: String) = GameCard(GameLime.copy(alpha = .55
         Spacer(Modifier.width(12.dp))
         Text(message, color = GameText, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
     }
-}
-
-@Composable
-private fun Pill(text: String, color: Color) {
-    Box(Modifier.background(GameSurfaceHighest, CircleShape).padding(horizontal = 11.dp, vertical = 6.dp)) { Text(text, color = color, fontSize = 11.sp, fontWeight = FontWeight.Black) }
 }
 
 private fun leagueFor(totalXp: Int) = when {

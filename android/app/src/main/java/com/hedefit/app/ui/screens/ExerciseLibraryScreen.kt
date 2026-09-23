@@ -26,6 +26,11 @@ import com.hedefit.app.ui.components.ExerciseMedia
 import com.hedefit.app.ui.components.ExerciseMotionPlayer
 import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.sp
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,64 +54,69 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
         muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""
         onSearch(query, "", "", "", "", "", "", "", "")
     }
+    val search = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category) }
     ScreenContainer { Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 6.dp, end = 12.dp, top = 8.dp, bottom = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri", tint = HedefitColors.TextPrimary) }
-            OutlinedTextField(
-                query,
-                { query = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text(if (en) "Search movements" else "Hareket ara") },
-                leadingIcon = { Icon(Icons.Default.Search, null) },
-                trailingIcon = { IconButton(onClick = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category) }) { Icon(Icons.Default.Search, if (en) "Search" else "Ara") } },
-                singleLine = true,
-                shape = RoundedCornerShape(18.dp),
-            )
-            IconButton(onClick = { showCustom = true }) { Icon(Icons.Default.Add, if (en) "Custom movement" else "Özel hareket", tint = HedefitColors.Lime) }
-        }
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Button(
-                onClick = { showFilters = true },
-                colors = ButtonDefaults.buttonColors(containerColor = if (activeFilterCount > 0) HedefitColors.Lime else HedefitColors.Surface, contentColor = if (activeFilterCount > 0) HedefitColors.OnLime else HedefitColors.TextPrimary),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 9.dp),
-            ) {
-                Icon(Icons.Default.FilterList, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(if (activeFilterCount > 0) (if (en) "Filter · $activeFilterCount" else "Filtre · $activeFilterCount") else if (en) "Filter" else "Filtre")
+        Column(Modifier.padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            HfScreenHeader(
+                if (en) "Movement Atlas" else "Hareket Atlası",
+                if (loading) (if (en) "Loading…" else "Yükleniyor…") else if (en) "${items.size} movements" else "${items.size} hareket",
+                onBack = onBack,
+                backLabel = if (en) "Back" else "Geri",
+            ) { HfCircleButton(Icons.Default.Add, if (en) "Custom movement" else "Özel hareket", { showCustom = true }) }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    query,
+                    { query = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text(if (en) "Search movement or muscle" else "Hareket veya kas ara") },
+                    leadingIcon = { Icon(Icons.Default.Search, null, tint = HedefitColors.TextMuted) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { search() }),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = HedefitColors.Surface, unfocusedContainerColor = HedefitColors.Surface,
+                        focusedBorderColor = HedefitColors.Lime, unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                    ),
+                )
+                Box {
+                    IconButton(onClick = { showFilters = true }, modifier = Modifier.size(56.dp).background(if (activeFilterCount > 0) HedefitColors.Lime else HedefitColors.Surface, RoundedCornerShape(16.dp))) {
+                        Icon(Icons.Default.FilterList, if (en) "Filters, $activeFilterCount active" else "Filtreler, $activeFilterCount aktif", tint = if (activeFilterCount > 0) HedefitColors.OnLime else HedefitColors.TextPrimary)
+                    }
+                    if (activeFilterCount > 0) Text("$activeFilterCount", color = HedefitColors.Lime, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.align(Alignment.TopEnd).offset(4.dp, (-4).dp).background(HedefitColors.Surface, CircleShape).padding(horizontal = 5.dp, vertical = 1.dp))
+                }
             }
-            Text(if (loading) (if (en) "Loading…" else "Yükleniyor…") else if (en) "${items.size} results" else "${items.size} sonuç", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge)
-            Spacer(Modifier.weight(1f))
-            if (activeFilterCount > 0) TextButton(onClick = clearFilters) { Text(if (en) "Clear" else "Temizle") }
+            HfChipRow {
+                muscleOptions(en).take(9).forEach { (value, label) ->
+                    HfChip(label, muscle == value, {
+                        muscle = value
+                        muscleRole = if (value.isBlank()) "" else "primary"
+                        onSearch(query, value, equipment, level, environment, if (value.isBlank()) "" else "primary", force, mechanic, category)
+                    })
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (en) "${items.size} results" else "${items.size} sonuç", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                if (activeFilterCount > 0) TextButton(onClick = clearFilters) { Text(if (en) "Clear" else "Temizle", color = HedefitColors.Lime, fontWeight = FontWeight.ExtraBold) }
+            }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = HedefitColors.Lime)
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(items, key = { it.id }) { item ->
-                HedefitCard(Modifier.fillMaxWidth(), onClick = { selected = item }) {
+                HedefitCard(Modifier.fillMaxWidth(), onClick = { selected = item }, contentPadding = PaddingValues(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         ExerciseMedia(item.imageUrls.firstOrNull(), item.name, Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)))
-                        Column(Modifier.weight(1f)) {
-                            Text(item.name, style = MaterialTheme.typography.titleMedium)
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(item.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2)
                             Text(
-                                (if (en) "Main: " else "Ana: ") + item.primaryMuscles.joinToString(),
-                                color = HedefitColors.TextSecondary,
-                                style = MaterialTheme.typography.bodySmall,
+                                listOfNotNull(item.primaryMuscles.joinToString().ifBlank { null }, item.secondaryMuscles.take(2).joinToString().ifBlank { null }).joinToString(" • "),
+                                color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 1,
                             )
-                            if (item.secondaryMuscles.isNotEmpty()) Text(
-                                (if (en) "Supporting: " else "Yardımcı: ") + item.secondaryMuscles.joinToString(),
-                                color = HedefitColors.TextSecondary.copy(alpha = .78f),
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1,
-                            )
+                            Text(listOf(item.level, item.equipment.ifBlank { if (en) "No equipment" else "Ekipmansız" }).filter(String::isNotBlank).joinToString(" • "), color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium, maxLines = 1)
                         }
-                        Text(item.level, color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium)
+                        IconButton(onClick = { onUse(item) }, modifier = Modifier.size(40.dp).background(HedefitColors.SurfaceHigh, CircleShape)) {
+                            Icon(Icons.Default.Add, if (en) "Add ${item.name} to program" else "${item.name} programa ekle", tint = HedefitColors.TextPrimary, modifier = Modifier.size(18.dp))
+                        }
                     }
                 }
             }
@@ -236,7 +246,7 @@ private fun MuscleConnections(exercise: ExerciseCatalogData, en: Boolean) {
 private fun FilterSection(title: String, options: List<Pair<String, String>>, selected: String, onSelect: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(title, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { items(options) { (value, label) -> FilterChip(selected == value, { onSelect(value) }, label = { Text(label) }) } }
+        HfChipRow { options.forEach { (value, label) -> HfChip(label, selected == value, { onSelect(value) }) } }
     }
 }
 

@@ -9,6 +9,24 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -113,6 +131,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NutritionScreen(
     padding: PaddingValues,
@@ -141,7 +160,7 @@ fun NutritionScreen(
     historyLogs: List<NutritionLogData> = emptyList(),
     dateLoading: Boolean = false,
     onSelectDate: (LocalDate) -> Unit = {},
-    onLoadHistory: () -> Unit = {},
+    onLoadMonth: (YearMonth) -> Unit = {},
     onAddMealPlanItem: (FoodSearchData, Double, LocalDate, String) -> Unit = { _, _, _, _ -> },
     onToggleMealPlanItem: (MealPlanItemData, Boolean) -> Unit = { _, _ -> },
     onRemoveMealPlanItem: (MealPlanItemData) -> Unit = {},
@@ -155,6 +174,10 @@ fun NutritionScreen(
     var showFoodSearch by remember { mutableStateOf(false) }
     var showCalendar by remember { mutableStateOf(false) }
     var showPhotoSource by remember { mutableStateOf(false) }
+    var quickAddMeal by remember { mutableStateOf<String?>(null) }
+    var showPlanner by rememberSaveable { mutableStateOf(false) }
+    var showMicros by rememberSaveable { mutableStateOf(false) }
+    var tipDismissed by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var cameraPhotoUri by remember { mutableStateOf<Uri?>(null) }
@@ -168,53 +191,115 @@ fun NutritionScreen(
     }
     LaunchedEffect(openMealComposer) {
         if (openMealComposer) {
-            showFoodSearch = true
+            quickAddMeal = smartMealForCurrentTime()
             onMealComposerOpened()
         }
     }
+    val today = LocalDate.now()
     val logs = selectedLogs
-    val canLog = selectedDate == LocalDate.now()
-    LaunchedEffect(Unit) { onLoadHistory() }
+    val canLog = selectedDate == today
+    val history = remember(historyLogs, logs) { (historyLogs + logs).distinctBy { it.id } }
+    val dailyCalories = remember(history) { history.groupBy { it.date.take(10) }.mapValues { (_, dayLogs) -> dayLogs.sumOf { it.calories } } }
+    val favorites = data?.favoriteMeals.orEmpty()
+    LaunchedEffect(selectedDate) { onLoadMonth(YearMonth.from(selectedDate)) }
 
     ScreenContainer(padding) {
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(15.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = if (canLog) 100.dp else 28.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { NutritionHeader(en) { showCalendar = true } }
-            item { DateSelector(selectedDate, en, onSelectDate) }
-            if (!canLog) item { HistoricalDayNotice(selectedDate, en) }
-            item { CalorieCard(logs, data?.nutritionGoal ?: NutritionGoalData(), if (canLog) data?.activeCalories ?: 0 else 0, en) }
-            item { MicroNutrientCard(logs, data?.profile, en) }
-            item { WeeklyMealPlanner(data?.mealPlanItems.orEmpty(), foodResults, foodSearchBusy, foodSearchQuery, busy, en, onSearchFoods, onAddMealPlanItem, onToggleMealPlanItem, onRemoveMealPlanItem) }
+            item { NutritionHeader(selectedDate, en) { showCalendar = true } }
+            item { WeekStrip(selectedDate, dailyCalories, dateLoading, en, onSelectDate) }
+            if (!canLog) item { PastDayBanner(selectedDate, en) { onSelectDate(today) } }
             item {
+                DailySummaryCard(
+                    logs = logs,
+                    goal = data?.nutritionGoal ?: NutritionGoalData(),
+                    activeCalories = if (canLog) data?.activeCalories ?: 0 else 0,
+                    waterMl = if (canLog) data?.waterMl else null,
+                    waterGoalMl = waterGoalMl,
+                    onAddWater = onAddWater,
+                    onWaterGoalChange = onWaterGoalChange,
+                    en = en,
+                )
+            }
+            item {
+                val weekStart = today.with(DayOfWeek.MONDAY)
+                val plannedDays = data?.mealPlanItems.orEmpty().mapNotNull { runCatching { LocalDate.parse(it.plannedDate.take(10)) }.getOrNull() }.filter { it >= weekStart && it < weekStart.plusDays(7) }.distinct().size
+                ExpandableRow(
+                    icon = Icons.Default.CalendarMonth,
+                    tint = HedefitColors.Sleep,
+                    title = if (en) "This week's meal plan" else "Bu haftaki öğün planı",
+                    subtitle = if (plannedDays == 0) (if (en) "Nothing planned yet" else "Henüz plan yok") else if (en) "$plannedDays days planned" else "$plannedDays gün planlandı",
+                    expanded = showPlanner,
+                    onToggle = { showPlanner = !showPlanner },
+                ) { WeeklyMealPlanner(data?.mealPlanItems.orEmpty(), foodResults, foodSearchBusy, foodSearchQuery, busy, en, onSearchFoods, onAddMealPlanItem, onToggleMealPlanItem, onRemoveMealPlanItem) }
+            }
+            item {
+                ExpandableRow(
+                    icon = Icons.Default.Eco,
+                    tint = HedefitColors.Lime,
+                    title = if (en) "Fibre and micronutrients" else "Lif ve mikro besinler",
+                    subtitle = if (en) "Fibre ${logs.sumOf { it.fiber }.toInt()} g • Sodium ${logs.sumOf { it.sodiumMg }.toInt()} mg" else "Lif ${logs.sumOf { it.fiber }.toInt()} g • Sodyum ${logs.sumOf { it.sodiumMg }.toInt()} mg",
+                    expanded = showMicros,
+                    onToggle = { showMicros = !showMicros },
+                ) { MicroNutrientCard(logs, data?.profile, en) }
+            }
+            item {
+                val mealCount = logs.map { it.meal }.distinct().size
+                Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.Bottom) {
+                    Text(if (en) "Meals" else "Öğünler", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    Text(if (en) "$mealCount meals • ${logs.sumOf { it.calories }} kcal" else "$mealCount öğün • ${logs.sumOf { it.calories }} kcal", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            items(MEAL_TYPES) { type ->
+                val entries = logs.filter { if (type == "Atıştırmalık") it.meal == type || it.meal !in MEAL_TYPES else it.meal == type }
+                MealSection(type, entries, canLog, busy, en, onAdd = { quickAddMeal = type }, onFavorite = onAddFavorite, onRemove = onRemoveNutritionLog, onUpdate = onUpdateNutritionLog)
+            }
+            if (canLog && favorites.isNotEmpty()) item { FavoriteChips(favorites, busy, en, onRepeatFavorite, onRemoveFavorite) }
+            if (canLog && !tipDismissed) item { NutritionTip(en) { tipDismissed = true } }
+        }
+        if (canLog) {
+            FloatingActionButton(
+                onClick = { quickAddMeal = smartMealForCurrentTime() },
+                containerColor = HedefitColors.Lime,
+                contentColor = HedefitColors.OnLime,
+                shape = CircleShape,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 20.dp).size(60.dp),
+            ) { Icon(Icons.Default.Add, if (en) "Add food" else "Yiyecek ekle", Modifier.size(28.dp)) }
+        }
+    }
+
+    quickAddMeal?.let { meal ->
+        ModalBottomSheet(
+            onDismissRequest = { quickAddMeal = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = HedefitColors.Surface,
+        ) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(if (en) "What did you eat?" else "Ne yedin?", style = MaterialTheme.typography.headlineSmall)
                 MealEntryCard(
                     en = en,
                     busy = busy,
                     enabled = canLog,
+                    initialMeal = meal,
                     results = foodResults,
                     searching = foodSearchBusy,
                     searchedQuery = foodSearchQuery,
                     onSearch = onSearchFoods,
-                    onOpenCatalog = { showFoodSearch = true },
-                    onOpenPhoto = { showPhotoSource = true },
-                    onAddWithAi = onAddWithAi,
-                    onAddCatalog = onAddCatalogFood,
-                    recentLogs = logs,
-                    favorites = data?.favoriteMeals.orEmpty(),
+                    onOpenCatalog = { quickAddMeal = null; showFoodSearch = true },
+                    onOpenPhoto = { quickAddMeal = null; showPhotoSource = true },
+                    onAddWithAi = { food, grams, type -> onAddWithAi(food, grams, type); quickAddMeal = null },
+                    onAddCatalog = { food, grams, type -> onAddCatalogFood(food, grams, type); quickAddMeal = null },
+                    recentLogs = history,
+                    favorites = favorites,
                 )
             }
-            item { SectionTitle(if (en) "Meals" else "Öğünler") }
-            item { MealList(logs, onAddFavorite, onRemoveNutritionLog, onUpdateNutritionLog, busy, en) }
-            if (!data?.favoriteMeals.isNullOrEmpty()) item { FavoriteMeals(data?.favoriteMeals.orEmpty(), onRepeatFavorite, onRemoveFavorite, en) }
-            item { NutritionTip(en) }
-            item { WaterQuickAdd(data?.waterMl ?: 0, waterGoalMl, onAddWater, onWaterGoalChange, en, canLog) }
         }
     }
-
     if (showFoodSearch) FoodSearchDialog(foodResults, foodSearchBusy, foodSearchQuery, busy, en, onDismiss = { showFoodSearch = false }, onSearch = onSearchFoods, onAdd = { item, amount, type -> onAddCatalogFood(item, amount, type); showFoodSearch = false })
-    if (showCalendar) NutritionCalendarDialog(selectedDate, (historyLogs + logs).distinctBy { it.id }, en, dateLoading, onDismiss = { showCalendar = false }, onSelect = { onSelectDate(it); showCalendar = false })
+    if (showCalendar) NutritionCalendarDialog(selectedDate, history, en, dateLoading, onMonthShown = onLoadMonth, onDismiss = { showCalendar = false }, onSelect = { onSelectDate(it); showCalendar = false })
     if (showPhotoSource) AlertDialog(
         onDismissRequest = { showPhotoSource = false },
         title = { Text(if (en) "Analyze meal photo" else "Öğün fotoğrafını analiz et") },
@@ -234,11 +319,367 @@ fun NutritionScreen(
     if (photoResults.isNotEmpty()) PhotoNutritionReviewDialog(photoResults, busy, en, onClearPhotoResults, onSavePhotoResults)
 }
 
+private val MEAL_TYPES = listOf("Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık")
+
+@Composable
+private fun NutritionHeader(date: LocalDate, en: Boolean, onOpenCalendar: () -> Unit) {
+    val locale = Locale(if (en) "en" else "tr")
+    val formatted = date.format(DateTimeFormatter.ofPattern("d MMMM EEEE", locale))
+    val prefix = when (date) {
+        LocalDate.now() -> if (en) "Today" else "Bugün"
+        LocalDate.now().minusDays(1) -> if (en) "Yesterday" else "Dün"
+        else -> null
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(if (en) "Nutrition" else "Beslenme", style = MaterialTheme.typography.headlineMedium)
+            Text(if (prefix != null) "$prefix • $formatted" else formatted, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+        }
+        IconButton(onClick = onOpenCalendar, modifier = Modifier.background(HedefitColors.SurfaceHigh, CircleShape)) {
+            Icon(Icons.Default.CalendarMonth, if (en) "Open calorie calendar" else "Kalori takvimini aç", tint = HedefitColors.TextPrimary)
+        }
+    }
+}
+
+@Composable
+private fun WeekStrip(selectedDate: LocalDate, dailyCalories: Map<String, Int>, loading: Boolean, en: Boolean, onSelect: (LocalDate) -> Unit) {
+    val today = LocalDate.now()
+    val weekStart = selectedDate.with(DayOfWeek.MONDAY)
+    val locale = Locale(if (en) "en" else "tr")
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { onSelect(selectedDate.minusWeeks(1)) }, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, if (en) "Previous week" else "Önceki hafta", tint = HedefitColors.TextSecondary)
+            }
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                (0L..6L).forEach { offset ->
+                    val day = weekStart.plusDays(offset)
+                    val selected = day == selectedDate
+                    val future = day > today
+                    val kcal = dailyCalories[day.toString()]
+                    Column(
+                        Modifier.weight(1f)
+                            .background(if (selected) HedefitColors.Lime else Color.Transparent, RoundedCornerShape(14.dp))
+                            .clickable(enabled = !future) { onSelect(day) }
+                            .padding(vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        val color = when {
+                            selected -> HedefitColors.OnLime
+                            future -> HedefitColors.TextMuted.copy(alpha = .5f)
+                            day == today -> HedefitColors.Lime
+                            else -> HedefitColors.TextSecondary
+                        }
+                        Text(day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale).take(3), color = color, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        Text(day.dayOfMonth.toString(), color = color, style = MaterialTheme.typography.titleMedium, fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold)
+                        Box(Modifier.size(5.dp).background(if (kcal != null && kcal > 0) (if (selected) HedefitColors.OnLime else HedefitColors.Lime) else Color.Transparent, CircleShape))
+                    }
+                }
+            }
+            IconButton(enabled = weekStart.plusWeeks(1) <= today, onClick = { onSelect(minOf(selectedDate.plusWeeks(1), today)) }, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, if (en) "Next week" else "Sonraki hafta", tint = HedefitColors.TextSecondary)
+            }
+        }
+        if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp), color = HedefitColors.Lime, trackColor = HedefitColors.Divider)
+    }
+}
+
+@Composable
+private fun PastDayBanner(date: LocalDate, en: Boolean, onBackToToday: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(HedefitColors.Water.copy(alpha = .12f), RoundedCornerShape(16.dp)).padding(start = 14.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            if (en) "Viewing ${date.format(DateTimeFormatter.ofPattern("d MMMM", Locale.ENGLISH))} • read-only" else "${date.format(DateTimeFormatter.ofPattern("d MMMM", Locale("tr")))} kaydı • sadece görüntüleme",
+            color = HedefitColors.TextSecondary,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onBackToToday) { Text(if (en) "Back to today" else "Bugüne dön", color = HedefitColors.Water, fontWeight = FontWeight.Bold) }
+    }
+}
+
+@Composable
+private fun DailySummaryCard(
+    logs: List<NutritionLogData>,
+    goal: NutritionGoalData,
+    activeCalories: Int,
+    waterMl: Int?,
+    waterGoalMl: Int,
+    onAddWater: (Int) -> Unit,
+    onWaterGoalChange: (Int) -> Unit,
+    en: Boolean,
+) {
+    val consumed = logs.sumOf { it.calories }
+    val protein = logs.sumOf { it.protein }
+    val carbs = logs.sumOf { it.carbs }
+    val fat = logs.sumOf { it.fat }
+    val activityBonus = activeCalories.coerceIn(0, 600)
+    val target = (goal.calories + activityBonus).coerceAtLeast(1)
+    val over = consumed > target
+    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                ProgressRing(consumed / target.toFloat(), Modifier.size(104.dp), 10.dp) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$consumed", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+                        Text("/ $target", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(if (en) "DAILY CALORIES" else "GÜNLÜK KALORİ", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
+                    val accent = if (over) HedefitColors.Coral else HedefitColors.Lime
+                    Text(
+                        if (!over) (if (en) "${target - consumed} kcal left" else "${target - consumed} kcal kaldı") else (if (en) "${consumed - target} kcal over" else "${consumed - target} kcal aştın"),
+                        color = accent,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.background(accent.copy(alpha = .15f), CircleShape).padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                    if (activityBonus > 0) Text(if (en) "Includes +$activityBonus kcal activity" else "+$activityBonus kcal aktivite dahil", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(HedefitColors.Divider))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                MacroColumn("Protein", protein, goal.protein, HedefitColors.Lime, Modifier.weight(1f))
+                MacroColumn(if (en) "Carbs" else "Karb.", carbs, goal.carbs, HedefitColors.Water, Modifier.weight(1f))
+                MacroColumn(if (en) "Fat" else "Yağ", fat, goal.fat, HedefitColors.Warning, Modifier.weight(1f))
+            }
+            if (waterMl != null) {
+                Box(Modifier.fillMaxWidth().height(1.dp).background(HedefitColors.Divider))
+                WaterRow(waterMl, waterGoalMl, onAddWater, onWaterGoalChange, en)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MacroColumn(label: String, value: Double, goal: Int, color: Color, modifier: Modifier) {
+    val progress = (value / goal.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.size(8.dp).background(color, CircleShape))
+            Text(label, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
+        }
+        Text("${value.toInt()} / ${goal}g", style = MaterialTheme.typography.labelLarge)
+        Box(Modifier.fillMaxWidth().height(6.dp).background(HedefitColors.SurfaceSoft, CircleShape)) {
+            Box(Modifier.fillMaxWidth(progress).height(6.dp).background(color, CircleShape))
+        }
+    }
+}
+
+@Composable
+private fun WaterRow(currentMl: Int, goalMl: Int, onAdd: (Int) -> Unit, onGoalChange: (Int) -> Unit, en: Boolean) {
+    var showGoal by remember { mutableStateOf(false) }
+    val glasses = (goalMl / 250).coerceIn(1, 12)
+    val filled = (currentMl / 250).coerceIn(0, glasses)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(Icons.Default.WaterDrop, null, tint = HedefitColors.Water, modifier = Modifier.size(18.dp))
+        Row(Modifier.weight(1f).clickable { showGoal = true }, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(glasses) { index -> Box(Modifier.weight(1f).height(16.dp).background(if (index < filled) HedefitColors.Water else HedefitColors.SurfaceSoft, RoundedCornerShape(4.dp))) }
+        }
+        Text("${currentMl}/${goalMl} ml", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium)
+        IconButton(onClick = { onAdd(250) }, modifier = Modifier.size(36.dp).background(HedefitColors.Water.copy(alpha = .16f), CircleShape)) {
+            Icon(Icons.Default.Add, if (en) "Add 250 ml water" else "250 ml su ekle", tint = HedefitColors.Water, modifier = Modifier.size(18.dp))
+        }
+    }
+    if (showGoal) AlertDialog(
+        onDismissRequest = { showGoal = false },
+        title = { Text(if (en) "Water" else "Su") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(if (en) "Quick add" else "Hızlı ekle", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(200, 330, 500).forEach { amount -> FilterChip(false, { onAdd(amount) }, label = { Text("+$amount ml") }) }
+                }
+                Text(if (en) "Daily goal: $goalMl ml" else "Günlük hedef: $goalMl ml", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FilterChip(false, { onGoalChange((goalMl - 250).coerceAtLeast(500)) }, label = { Text("−250") })
+                    FilterChip(false, { onGoalChange((goalMl + 250).coerceAtMost(10_000)) }, label = { Text("+250") })
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { showGoal = false }) { Text(if (en) "Done" else "Tamam") } },
+    )
+}
+
+@Composable
+private fun ExpandableRow(icon: ImageVector, tint: Color, title: String, subtitle: String, expanded: Boolean, onToggle: () -> Unit, content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        HedefitCard(Modifier.fillMaxWidth(), onClick = onToggle, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(38.dp).background(tint.copy(alpha = .15f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) { Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp)) }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium)
+                    Text(subtitle, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                }
+                Icon(if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, if (expanded) "Daralt" else "Genişlet", tint = HedefitColors.TextMuted)
+            }
+        }
+        if (expanded) content()
+    }
+}
+
+@Composable
+private fun MealSection(
+    type: String,
+    entries: List<NutritionLogData>,
+    canLog: Boolean,
+    busy: Boolean,
+    en: Boolean,
+    onAdd: () -> Unit,
+    onFavorite: (NutritionLogData) -> Unit,
+    onRemove: (NutritionLogData) -> Unit,
+    onUpdate: (NutritionLogData, Double, String) -> Unit,
+) {
+    var pendingRemoval by remember { mutableStateOf<NutritionLogData?>(null) }
+    var editing by remember { mutableStateOf<NutritionLogData?>(null) }
+    val (icon, tint) = mealStyle(type)
+    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(start = 14.dp, end = 6.dp, top = 12.dp, bottom = 8.dp)) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(38.dp).background(tint.copy(alpha = .15f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) { Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp)) }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(mealLabel(type, en), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(if (entries.isEmpty()) (if (en) "No food yet" else "Henüz eklenmedi") else if (en) "${entries.size} foods" else "${entries.size} besin", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                }
+                Text("${entries.sumOf { it.calories }} kcal", color = if (entries.isEmpty()) HedefitColors.TextMuted else HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                if (canLog) {
+                    IconButton(enabled = !busy, onClick = onAdd) {
+                        Box(Modifier.size(32.dp).background(HedefitColors.SurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Add, if (en) "Add to ${mealLabel(type, true)}" else "${mealLabel(type, false)} öğününe ekle", tint = HedefitColors.TextPrimary, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                } else Spacer(Modifier.width(10.dp))
+            }
+            if (entries.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Box(Modifier.fillMaxWidth().padding(end = 8.dp).height(1.dp).background(HedefitColors.Divider))
+                entries.forEach { log ->
+                    Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(log.name, fontWeight = FontWeight.SemiBold)
+                            Text("${log.grams?.cleanNumber() ?: "—"} g • P ${log.protein.toInt()} • K ${log.carbs.toInt()} • Y ${log.fat.toInt()}", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text("${log.calories} kcal", color = HedefitColors.TextSecondary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                        LogMenu(log, canLog, busy, en, onEdit = { editing = log }, onFavorite = { onFavorite(log) }, onRemove = { pendingRemoval = log })
+                    }
+                }
+                if (entries.size > 1) {
+                    TextButton(enabled = !busy, onClick = { onFavorite(entries.asSavedMeal(type)) }) {
+                        Icon(Icons.Default.Favorite, null, tint = HedefitColors.Coral, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(5.dp))
+                        Text(if (en) "Save as a meal" else "Öğün olarak kaydet", color = HedefitColors.Coral, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            } else if (canLog) {
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(end = 8.dp, bottom = 4.dp)
+                        .border(1.dp, HedefitColors.Divider, RoundedCornerShape(14.dp))
+                        .clickable(enabled = !busy, onClick = onAdd)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Default.Add, null, tint = HedefitColors.TextSecondary, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (en) "Tap to add" else "Eklemek için dokun", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+    pendingRemoval?.let { log ->
+        AlertDialog(
+            onDismissRequest = { if (!busy) pendingRemoval = null },
+            title = { Text(if (en) "Remove food?" else "Besin kaldırılsın mı?") },
+            text = { Text(if (en) "${log.name} will be removed from ${mealLabel(log.meal, true).lowercase()}." else "${log.name}, ${mealLabel(log.meal, false).lowercase()} öğününden kaldırılacak.") },
+            confirmButton = { TextButton(enabled = !busy, onClick = { pendingRemoval = null; onRemove(log) }) { Text(if (en) "Remove" else "Kaldır", color = HedefitColors.Coral, fontWeight = FontWeight.Bold) } },
+            dismissButton = { TextButton(enabled = !busy, onClick = { pendingRemoval = null }) { Text(if (en) "Cancel" else "Vazgeç") } },
+        )
+    }
+    editing?.let { log -> EditMealLogDialog(log, busy, en, onDismiss = { editing = null }, onSave = { grams, meal -> editing = null; onUpdate(log, grams, meal) }) }
+}
+
+@Composable
+private fun LogMenu(log: NutritionLogData, canEdit: Boolean, busy: Boolean, en: Boolean, onEdit: () -> Unit, onFavorite: () -> Unit, onRemove: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) { Icon(Icons.Default.MoreVert, if (en) "Options for ${log.name}" else "${log.name} seçenekleri", tint = HedefitColors.TextMuted, modifier = Modifier.size(20.dp)) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            if (canEdit) DropdownMenuItem(enabled = !busy, text = { Text(if (en) "Edit or move" else "Düzenle / taşı") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { open = false; onEdit() })
+            DropdownMenuItem(text = { Text(if (en) "Add to favourites" else "Favorilere ekle") }, leadingIcon = { Icon(Icons.Default.Favorite, null, tint = HedefitColors.Coral) }, onClick = { open = false; onFavorite() })
+            if (canEdit) DropdownMenuItem(enabled = !busy, text = { Text(if (en) "Remove" else "Kaldır", color = HedefitColors.Coral) }, leadingIcon = { Icon(Icons.Default.DeleteOutline, null, tint = HedefitColors.Coral) }, onClick = { open = false; onRemove() })
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FavoriteChips(favorites: List<FavoriteMealData>, busy: Boolean, en: Boolean, onRepeat: (FavoriteMealData) -> Unit, onRemove: (String) -> Unit) {
+    var pendingRemoval by remember { mutableStateOf<FavoriteMealData?>(null) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(if (en) "Favourites" else "Sık kullanılanlar", style = MaterialTheme.typography.titleMedium)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(favorites, key = { it.id }) { favorite ->
+                Row(
+                    Modifier.background(HedefitColors.Surface, CircleShape).border(.6.dp, HedefitColors.Divider, CircleShape)
+                        .combinedClickable(onClick = {}, onLongClick = { pendingRemoval = favorite })
+                        .padding(start = 14.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column {
+                        Text(favorite.name, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                        Text("${favorite.calories} kcal", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall)
+                    }
+                    IconButton(enabled = !busy, onClick = { onRepeat(favorite) }) {
+                        Box(Modifier.size(28.dp).background(HedefitColors.Lime.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Add, if (en) "Add ${favorite.name}" else "${favorite.name} ekle", tint = HedefitColors.Lime, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+    pendingRemoval?.let { favorite ->
+        AlertDialog(
+            onDismissRequest = { pendingRemoval = null },
+            title = { Text(if (en) "Remove favourite?" else "Favoriden kaldırılsın mı?") },
+            text = { Text(favorite.name) },
+            confirmButton = { TextButton(onClick = { pendingRemoval = null; onRemove(favorite.id) }) { Text(if (en) "Remove" else "Kaldır", color = HedefitColors.Coral) } },
+            dismissButton = { TextButton(onClick = { pendingRemoval = null }) { Text(if (en) "Cancel" else "Vazgeç") } },
+        )
+    }
+}
+
+@Composable
+private fun NutritionTip(en: Boolean, onDismiss: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(HedefitColors.Lime.copy(alpha = .10f), RoundedCornerShape(16.dp)).padding(start = 14.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Default.AutoAwesome, null, tint = HedefitColors.Lime, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(
+            if (en) "To reach your protein target, choose yoghurt, eggs, or lean meat in your next meal." else "Protein hedefin için sonraki öğününde yoğurt, yumurta veya yağsız et tercih edebilirsin.",
+            color = HedefitColors.TextSecondary,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+        )
+        IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, if (en) "Dismiss tip" else "Öneriyi kapat", tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp)) }
+    }
+}
+
 @Composable
 private fun MealEntryCard(
     en: Boolean,
     busy: Boolean,
     enabled: Boolean,
+    initialMeal: String,
     results: List<FoodSearchData>,
     searching: Boolean,
     searchedQuery: String?,
@@ -254,7 +695,7 @@ private fun MealEntryCard(
     var amount by remember { mutableStateOf("100") }
     var unit by remember { mutableStateOf("g") }
     var selectedFood by remember { mutableStateOf<FoodSearchData?>(null) }
-    var meal by remember { mutableStateOf(smartMealForCurrentTime()) }
+    var meal by remember(initialMeal) { mutableStateOf(initialMeal) }
     var showRecipe by remember { mutableStateOf(false) }
     val numericAmount = amount.replace(',', '.').toDoubleOrNull()
     val unitGrams = if (unit == "adet") selectedFood?.servingGrams?.coerceAtLeast(1.0) ?: 100.0 else 1.0
@@ -506,152 +947,6 @@ private fun RecipeComposerDialog(en: Boolean, busy: Boolean, meal: String, onDis
     )
 }
 
-@Composable
-private fun NutritionHeader(en: Boolean, onOpenCalendar: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(if (en) "Nutrition" else "Beslenme", style = MaterialTheme.typography.headlineMedium)
-            Text(if (en) "Calories and macro tracking" else "Kalori ve makro takibi", color = HedefitColors.TextSecondary)
-        }
-        IconButton(onClick = onOpenCalendar) { Icon(Icons.Default.CalendarMonth, if (en) "Open calorie calendar" else "Kalori takvimini aç", tint = HedefitColors.Lime) }
-    }
-}
-
-@Composable
-private fun DateSelector(selectedDate: LocalDate, en: Boolean, onSelect: (LocalDate) -> Unit) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { onSelect(selectedDate.minusDays(1)) }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Previous day" else "Önceki gün") }
-        Box(Modifier.background(HedefitColors.SurfaceHigh, RoundedCornerShape(22.dp)).padding(horizontal = 24.dp, vertical = 10.dp)) {
-            Text(if (selectedDate == LocalDate.now()) (if (en) "Today" else "Bugün") else selectedDate.format(DateTimeFormatter.ofPattern(if (en) "d MMM yyyy" else "d MMMM yyyy", Locale(if (en) "en" else "tr"))), fontWeight = FontWeight.SemiBold)
-        }
-        IconButton(enabled = selectedDate < LocalDate.now(), onClick = { onSelect(selectedDate.plusDays(1)) }) { Icon(Icons.AutoMirrored.Filled.ArrowForward, if (en) "Next day" else "Sonraki gün") }
-    }
-}
-
-@Composable
-private fun CalorieCard(logs: List<NutritionLogData>, goal: NutritionGoalData, activeCalories: Int, en: Boolean) {
-    val consumed = logs.sumOf { it.calories }
-    val protein = logs.sumOf { it.protein }
-    val carbs = logs.sumOf { it.carbs }
-    val fat = logs.sumOf { it.fat }
-    val activityBonus = activeCalories.coerceIn(0, 600)
-    val target = goal.calories + activityBonus
-    HedefitCard(Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        BoxWithConstraints {
-            val compact = maxWidth < 320.dp
-            val ringSize = if (maxWidth < 500.dp) 132.dp else 160.dp
-            val ring: @Composable () -> Unit = {
-                ProgressRing(consumed / target.toFloat(), Modifier.size(ringSize), 12.dp) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.LocalFireDepartment, null, tint = HedefitColors.Lime)
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text("$consumed", style = MaterialTheme.typography.headlineMedium)
-                            Text(" / $target", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
-                        }
-                        Text(if (target >= consumed) (if (en) "${target - consumed} kcal left" else "${target - consumed} kcal kaldı") else (if (en) "${consumed - target} kcal over" else "${consumed - target} kcal aştın"), color = if (target >= consumed) HedefitColors.Lime else HedefitColors.Coral, style = MaterialTheme.typography.labelLarge)
-                        if (activityBonus > 0) Text(if (en) "+$activityBonus activity" else "+$activityBonus aktivite", color = HedefitColors.Water, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-            val macros: @Composable () -> Unit = {
-                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    MacroBar("Protein", "${protein.toInt()} / ${goal.protein} g", (protein / goal.protein).toFloat())
-                    MacroBar("Karbonhidrat", "${carbs.toInt()} / ${goal.carbs} g", (carbs / goal.carbs).toFloat())
-                    MacroBar("Yağ", "${fat.toInt()} / ${goal.fat} g", (fat / goal.fat).toFloat())
-                }
-            }
-            if (compact) {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                    ring()
-                    macros()
-                }
-            } else {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    ring()
-                    Box(Modifier.weight(1f)) { macros() }
-                }
-            }
-        }
-        val kcalSummary = if (target >= consumed) (if (en) "${target - consumed} kcal remaining" else "Kalan ${target - consumed} kcal") else (if (en) "${consumed - target} kcal above target" else "Hedefin ${consumed - target} kcal üzerindesin")
-        val proteinGap = (goal.protein - protein).coerceAtLeast(0.0)
-        Text("$kcalSummary • ${if (proteinGap > 0) (if (en) "protein missing ${proteinGap.toInt()} g" else "protein eksik ${proteinGap.toInt()} g") else (if (en) "protein target reached" else "protein hedefi tamam")}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@Composable
-private fun MealList(
-    logs: List<NutritionLogData>,
-    onFavorite: (NutritionLogData) -> Unit,
-    onRemove: (NutritionLogData) -> Unit,
-    onUpdate: (NutritionLogData, Double, String) -> Unit,
-    busy: Boolean,
-    en: Boolean,
-) {
-    var pendingRemoval by remember { mutableStateOf<NutritionLogData?>(null) }
-    var editing by remember { mutableStateOf<NutritionLogData?>(null) }
-    val mealTypes = listOf("Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık")
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        mealTypes.forEach { type ->
-            val entries = logs.filter { if (type == "Atıştırmalık") it.meal == type || it.meal !in mealTypes else it.meal == type }
-            val (icon, tint) = mealStyle(type)
-            HedefitCard(Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(42.dp).background(tint.copy(alpha = .14f), RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) { Icon(icon, null, tint = tint) }
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(mealLabel(type, en), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(if (entries.isEmpty()) (if (en) "No food added" else "Henüz besin eklenmedi") else if (en) "${entries.size} foods" else "${entries.size} besin", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                        }
-                        Text("${entries.sumOf { it.calories }} kcal", color = tint, fontWeight = FontWeight.Black)
-                    }
-                    if (entries.isNotEmpty()) {
-                        TextButton(enabled = !busy, onClick = { onFavorite(entries.asSavedMeal(type)) }, modifier = Modifier.align(Alignment.End)) {
-                            Icon(Icons.Default.Favorite, null, tint = HedefitColors.Coral, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(5.dp))
-                            Text(if (en) "Save as a meal" else "Öğün olarak kaydet", color = HedefitColors.Coral)
-                        }
-                    }
-                    entries.forEachIndexed { index, log ->
-                        if (index == 0) Spacer(Modifier.height(4.dp))
-                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(7.dp).background(tint, CircleShape))
-                            Spacer(Modifier.width(10.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(log.name, fontWeight = FontWeight.SemiBold)
-                                Text("${log.grams?.cleanNumber() ?: "—"} g • P ${log.protein.toInt()} • K ${log.carbs.toInt()} • Y ${log.fat.toInt()}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                            }
-                            Text("${log.calories} kcal", color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-                            IconButton(enabled = !busy, onClick = { editing = log }) { Icon(Icons.Default.Edit, if (en) "Edit or move food" else "Besini düzenle veya taşı", tint = HedefitColors.Lime, modifier = Modifier.size(18.dp)) }
-                            IconButton(onClick = { onFavorite(log) }) { Icon(Icons.Default.Favorite, if (en) "Add to favourites" else "Favoriye ekle", tint = HedefitColors.Coral, modifier = Modifier.size(18.dp)) }
-                            IconButton(enabled = !busy, onClick = { pendingRemoval = log }) {
-                                Icon(Icons.Default.DeleteOutline, if (en) "Remove food" else "Besini kaldır", tint = HedefitColors.TextSecondary, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                        if (index < entries.lastIndex) Box(Modifier.fillMaxWidth().height(.6.dp).background(HedefitColors.Divider))
-                    }
-                }
-            }
-        }
-    }
-    pendingRemoval?.let { log ->
-        AlertDialog(
-            onDismissRequest = { if (!busy) pendingRemoval = null },
-            title = { Text(if (en) "Remove food?" else "Besin kaldırılsın mı?") },
-            text = { Text(if (en) "${log.name} will be removed from ${mealLabel(log.meal, true).lowercase()}." else "${log.name}, ${mealLabel(log.meal, false).lowercase()} öğününden kaldırılacak.") },
-            confirmButton = {
-                TextButton(enabled = !busy, onClick = { pendingRemoval = null; onRemove(log) }) {
-                    Text(if (en) "Remove" else "Kaldır", color = HedefitColors.Coral, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = { TextButton(enabled = !busy, onClick = { pendingRemoval = null }) { Text(if (en) "Cancel" else "Vazgeç") } },
-        )
-    }
-    editing?.let { log -> EditMealLogDialog(log, busy, en, onDismiss = { editing = null }, onSave = { grams, meal -> editing = null; onUpdate(log, grams, meal) }) }
-}
-
 /** A saved combination is kept as one reusable, fully calculated meal to make repeat logging one touch. */
 private fun List<NutritionLogData>.asSavedMeal(meal: String): NutritionLogData = NutritionLogData(
     id = "saved-$meal",
@@ -721,47 +1016,17 @@ private fun nutritionFieldColors() = OutlinedTextFieldDefaults.colors(
 )
 
 @Composable
-private fun WaterQuickAdd(currentMl: Int, goalMl: Int, onAdd: (Int) -> Unit, onGoalChange: (Int) -> Unit, en: Boolean, enabled: Boolean) {
-    HedefitCard(Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.WaterDrop, null, tint = HedefitColors.Water)
-                Spacer(Modifier.width(9.dp))
-                Column(Modifier.weight(1f)) { Text(if (en) "Water" else "Su", style = MaterialTheme.typography.titleMedium); Text("${currentMl} / $goalMl ml", color = HedefitColors.TextSecondary) }
-                Text("%${(currentMl * 100 / goalMl.coerceAtLeast(1)).coerceAtMost(100)}", color = HedefitColors.Water, fontWeight = FontWeight.Bold)
-            }
-            Box(Modifier.fillMaxWidth().height(7.dp).background(HedefitColors.Divider, CircleShape)) { Box(Modifier.fillMaxWidth((currentMl / goalMl.toFloat()).coerceIn(0f, 1f)).height(7.dp).background(HedefitColors.Water, CircleShape)) }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                Text(if (en) "Goal" else "Hedef", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
-                TextButton(onClick = { onGoalChange((goalMl - 250).coerceAtLeast(500)) }) { Text("−250") }
-                TextButton(onClick = { onGoalChange((goalMl + 250).coerceAtMost(10_000)) }) { Text("+250") }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf(200, 300, 500).forEach { amount -> TextButton(enabled = enabled, onClick = { onAdd(amount) }, modifier = Modifier.weight(1f)) { Text("+$amount ml", color = HedefitColors.Water) } }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoricalDayNotice(date: LocalDate, en: Boolean) = HedefitCard(Modifier.fillMaxWidth()) {
-    Text(
-        if (en) "Viewing ${date.format(DateTimeFormatter.ofPattern("d MMMM", Locale.ENGLISH))}. Past days are read-only."
-        else "${date.format(DateTimeFormatter.ofPattern("d MMMM", Locale("tr")))} kaydını görüntülüyorsun. Geçmiş günler sadece okunabilir.",
-        color = HedefitColors.TextSecondary,
-    )
-}
-
-@Composable
 private fun NutritionCalendarDialog(
     selectedDate: LocalDate,
     history: List<NutritionLogData>,
     en: Boolean,
     loading: Boolean,
+    onMonthShown: (YearMonth) -> Unit,
     onDismiss: () -> Unit,
     onSelect: (LocalDate) -> Unit,
 ) {
     var month by remember { mutableStateOf(YearMonth.from(selectedDate)) }
+    LaunchedEffect(month) { onMonthShown(month) }
     val calories = history.groupBy { runCatching { LocalDate.parse(it.date.take(10)) }.getOrNull() }
         .filterKeys { it != null }.mapKeys { it.key!! }.mapValues { (_, logs) -> logs.sumOf { it.calories } }
     val firstOffset = (month.atDay(1).dayOfWeek.value - DayOfWeek.MONDAY.value + 7) % 7
@@ -850,24 +1115,6 @@ private fun MicroNutrientCard(logs: List<NutritionLogData>, profile: ProfileData
 }
 
 @Composable
-private fun FavoriteMeals(favorites: List<FavoriteMealData>, onRepeat: (FavoriteMealData) -> Unit, onRemove: (String) -> Unit, en: Boolean) {
-    if (favorites.isEmpty()) return
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionTitle(if (en) "Favourite meals" else "Favori öğünler", if (en) "Add again" else "Tekrar ekle")
-        favorites.take(4).forEach { favorite ->
-            HedefitCard(Modifier.fillMaxWidth(), onClick = { onRepeat(favorite) }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Favorite, null, tint = HedefitColors.Coral)
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) { Text(favorite.name, style = MaterialTheme.typography.titleMedium); Text("${favorite.grams.toInt()} g • ${favorite.calories} kcal", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
-                    TextButton(onClick = { onRemove(favorite.id) }) { Text(if (en) "Remove" else "Kaldır", color = HedefitColors.TextSecondary) }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun FoodSearchDialog(results: List<FoodSearchData>, searching: Boolean, searchedQuery: String?, adding: Boolean, en: Boolean, onDismiss: () -> Unit, onSearch: (String) -> Unit, onAdd: (FoodSearchData, Double, String) -> Unit) {
     var query by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf<FoodSearchData?>(null) }
@@ -937,21 +1184,6 @@ private fun FoodSearchDialog(results: List<FoodSearchData>, searching: Boolean, 
         } },
         confirmButton = {}, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Close" else "Kapat") } },
     )
-}
-
-@Composable
-private fun NutritionTip(en: Boolean) {
-    HedefitCard(Modifier.fillMaxWidth()) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-            Box(Modifier.size(42.dp).background(HedefitColors.Lime.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.AutoAwesome, null, tint = HedefitColors.Lime)
-            }
-            Column(Modifier.weight(1f)) {
-                Text(if (en) "Fit Coach tip" else "Fit Koç önerisi", style = MaterialTheme.typography.titleMedium)
-                Text(if (en) "To reach your protein target, choose yoghurt, eggs, or lean meat in your next meal." else "Protein hedefini tamamlamak için sonraki öğününde yoğurt, yumurta veya yağsız et tercih edebilirsin.", color = HedefitColors.TextSecondary)
-            }
-        }
-    }
 }
 
 private data class EditablePhotoFood(val original: NutritionEstimateData, val name: String, val gramsText: String, val included: Boolean = true)

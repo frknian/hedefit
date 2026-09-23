@@ -39,7 +39,7 @@ enum class AppDestination(val label: String, val icon: ImageVector) {
     }
 
     companion object {
-        val primaryTabs = listOf(Home, Workout, Nutrition, Game, Progress, Coach)
+        val primaryTabs = listOf(Home, Workout, Nutrition, Progress, Coach)
     }
 }
 

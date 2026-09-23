@@ -152,6 +152,7 @@ class MainActivity : ComponentActivity() {
                 var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
                 var googleCredentialBusy by remember { mutableStateOf(false) }
                 var showWelcomeGuide by remember { mutableStateOf(!preferences.welcomeGuideSeen) }
+                var openMealComposer by remember { mutableStateOf(false) }
                 var healthAutoSynced by rememberSaveable { mutableStateOf(false) }
                 var activityRecognitionAsked by remember { mutableStateOf(this@MainActivity.getSharedPreferences("hedefit-step-permission", android.content.Context.MODE_PRIVATE).getBoolean("activity_recognition_asked", false)) }
                 val scope = rememberCoroutineScope()
@@ -284,7 +285,10 @@ class MainActivity : ComponentActivity() {
                         onExecuteCoachAction = mainViewModel::executeCoachAction,
                     )
                 } else if (workoutSummary != null) {
-                    WorkoutSummaryScreen(requireNotNull(workoutSummary), onDone = { workoutSummary = null }, language = preferences.language)
+                    WorkoutSummaryScreen(requireNotNull(workoutSummary), onDone = {
+                        workoutSummary = null
+                        com.hedefit.app.growth.AppGrowth.maybeRequestReview(this@MainActivity, uiState.dashboard?.sessions?.size ?: 0)
+                    }, language = preferences.language)
                 } else if (utilityPage != UtilityPage.Main && uiState.dashboard != null) {
                     BackHandler { utilityPage = if (utilityPage == UtilityPage.Notifications || utilityPage == UtilityPage.UserGuide) UtilityPage.Profile else UtilityPage.Main }
                     val dashboard = requireNotNull(uiState.dashboard)
@@ -323,6 +327,10 @@ class MainActivity : ComponentActivity() {
                                 utilityPage = UtilityPage.Main
                                 mainViewModel.signOut()
                             },
+                            onReplayGuide = { utilityPage = UtilityPage.Main; showWelcomeGuide = true },
+                            onRateApp = { com.hedefit.app.growth.AppGrowth.openStoreListing(this@MainActivity) },
+                            onShareApp = { message -> com.hedefit.app.growth.AppGrowth.shareApp(this@MainActivity, message, preferences.language == "en") },
+                            defaultShareMessage = com.hedefit.app.growth.AppGrowth.defaultShareMessage(this@MainActivity, preferences.language == "en"),
                         )
                         UtilityPage.Questionnaire -> ProfileQuestionnaireScreen(
                             profile = dashboard.profile,
@@ -499,6 +507,11 @@ class MainActivity : ComponentActivity() {
                                 chatBusy = uiState.chatBusy,
                                 onSendChatMessage = { msg, ctx -> mainViewModel.sendChat(msg, preferences.language, ctx) },
                                 onExecuteCoachAction = mainViewModel::executeCoachAction,
+                                onOpenCalendar = { utilityPage = UtilityPage.Calendar },
+                                onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
+                                profile = uiState.dashboard?.profile,
+                                performances = uiState.dashboard?.exercisePerformance.orEmpty(),
+                                catalog = uiState.dashboard?.exerciseCatalog.orEmpty(),
                             )
                             AppDestination.Nutrition -> NutritionScreen(
                                 padding, expanded, uiState.dashboard, uiState.nutritionBusy, uiState.foodSearchBusy, uiState.foodSearchResults, uiState.foodSearchQuery,
@@ -512,7 +525,7 @@ class MainActivity : ComponentActivity() {
                                 historyLogs = uiState.nutritionHistory,
                                 dateLoading = uiState.nutritionDateLoading,
                                 onSelectDate = mainViewModel::loadNutritionDate,
-                                onLoadHistory = mainViewModel::loadNutritionHistory,
+                                onLoadMonth = mainViewModel::loadNutritionHistory,
                                 onAddMealPlanItem = mainViewModel::addMealPlanItem,
                                 onToggleMealPlanItem = mainViewModel::toggleMealPlanItem,
                                 onRemoveMealPlanItem = mainViewModel::removeMealPlanItem,
@@ -521,6 +534,8 @@ class MainActivity : ComponentActivity() {
                                 onAnalyzePhoto = mainViewModel::analyzeNutritionPhoto,
                                 onClearPhotoResults = mainViewModel::clearPhotoNutritionResults,
                                 onSavePhotoResults = mainViewModel::savePhotoNutrition,
+                                openMealComposer = openMealComposer,
+                                onMealComposerOpened = { openMealComposer = false },
                             )
                             AppDestination.Game -> GameScreen(
                                 padding = padding,
@@ -529,6 +544,7 @@ class MainActivity : ComponentActivity() {
                                 waterGoalMl = preferences.waterGoalMl,
                                 weeklyActivityGoal = preferences.weeklyWorkoutGoal,
                                 language = preferences.language,
+                                onBack = { selected = AppDestination.Home },
                             )
                             AppDestination.Progress -> ProgressScreen(
                                 padding, expanded, uiState.dashboard, preferences.language,
@@ -557,9 +573,23 @@ class MainActivity : ComponentActivity() {
                 }
                 if (showWelcomeGuide && uiState.auth is AuthState.SignedIn && uiState.dashboard != null) WelcomeGuideDialog(
                     language = preferences.language,
-                    onConnectHealth = {
-                        if (uiState.healthConnected) mainViewModel.syncHealthConnect()
-                        else healthPermissionLauncher.launch(healthConnectManager.permissions)
+                    coachName = preferences.coachName.ifBlank { if (preferences.language == "en") "Fit Coach" else "FitKoç" },
+                    onAction = { action ->
+                        if (action == com.hedefit.app.ui.screens.GuideAction.HealthConnect) {
+                            if (uiState.healthConnected) mainViewModel.syncHealthConnect()
+                            else healthPermissionLauncher.launch(healthConnectManager.permissions)
+                        } else {
+                            showWelcomeGuide = false
+                            updatePreferences(preferences.copy(welcomeGuideSeen = true))
+                            utilityPage = UtilityPage.Main
+                            when (action) {
+                                com.hedefit.app.ui.screens.GuideAction.Workout -> selected = AppDestination.Workout
+                                com.hedefit.app.ui.screens.GuideAction.Nutrition -> { selected = AppDestination.Nutrition; openMealComposer = true }
+                                com.hedefit.app.ui.screens.GuideAction.Reminders -> utilityPage = UtilityPage.Notifications
+                                com.hedefit.app.ui.screens.GuideAction.Coach -> selected = AppDestination.Coach
+                                com.hedefit.app.ui.screens.GuideAction.HealthConnect -> Unit
+                            }
+                        }
                     },
                     onDismiss = {
                         showWelcomeGuide = false

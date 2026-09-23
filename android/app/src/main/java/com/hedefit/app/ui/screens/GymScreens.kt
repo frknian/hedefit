@@ -451,18 +451,14 @@ fun TrainingAnalysisSection(
     val analysis = remember(performances, catalog, rangeDays) { analyzeTraining(performances, catalog, rangeDays = rangeDays) }
     HedefitCard(Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            SectionTitle(if (en) "Muscle development map" else "Kas Gelişim Haritası")
             Text(
                 if (en) "Estimated training stimulus from completed sets; this is not a physical muscle-size measurement."
                 else "Tamamlanan setlerden tahmini antrenman yükünü gösterir; fiziksel kas büyüklüğü ölçümü değildir.",
                 color = HedefitColors.TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(7 to (if (en) "This week" else "Bu hafta"), 30 to (if (en) "30 days" else "Son 30 gün"), 90 to (if (en) "3 months" else "Son 3 ay")).forEach { (days, label) ->
-                    FilterChip(selected = rangeDays == days, onClick = { rangeDays = days }, label = { Text(label) }, modifier = Modifier.weight(1f))
-                }
-            }
+            val ranges = listOf(7 to (if (en) "This week" else "Bu hafta"), 30 to (if (en) "30 days" else "Son 30 gün"), 90 to (if (en) "3 months" else "Son 3 ay"))
+            com.hedefit.app.ui.components.HfSegmented(ranges.map { it.second }, ranges.indexOfFirst { it.first == rangeDays }, { rangeDays = ranges[it].first })
             if (analysis.muscleLoads.all { it.level == LoadLevel.NONE }) {
                 Text(if (en) "There is not enough workout data yet. Complete your first set to unlock the map." else "Henüz yeterli antrenman verin yok. Kas haritasını açmak için ilk setini tamamla.", color = HedefitColors.TextSecondary)
             }

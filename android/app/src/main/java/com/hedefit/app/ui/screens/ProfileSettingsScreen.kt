@@ -32,9 +32,16 @@ import androidx.compose.ui.unit.dp
 import com.hedefit.app.data.model.ProfileData
 import com.hedefit.app.data.model.ProfileUpdateData
 import com.hedefit.app.ui.components.*
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import com.hedefit.app.ui.settings.AppPreferences
 import com.hedefit.app.ui.settings.MeasurementUnits
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
 import com.hedefit.app.ui.validation.ProfileValidationError
 import com.hedefit.app.ui.validation.validateProfileFields
 import kotlinx.coroutines.Dispatchers
@@ -72,8 +79,13 @@ fun ProfileSettingsScreen(
     onFreeze: () -> Unit,
     onDelete: (String) -> Unit,
     onSignOut: () -> Unit,
+    onReplayGuide: () -> Unit = {},
+    onRateApp: () -> Unit = {},
+    onShareApp: (String) -> Unit = {},
+    defaultShareMessage: String = "",
 ) {
     val en = preferences.language == "en"
+    var showShare by remember { mutableStateOf(false) }
     var name by remember(profile) { mutableStateOf(profile.displayName) }
     var age by remember(profile) { mutableStateOf(profile.age?.toString().orEmpty()) }
     var height by remember(profile, preferences.unitSystem) { mutableStateOf(profile.heightCm?.let { "%.1f".format(MeasurementUnits.heightValue(it, preferences.unitSystem)).replace(',', '.') }.orEmpty()) }
@@ -102,24 +114,32 @@ fun ProfileSettingsScreen(
     }
 
     ScreenContainer { Column(Modifier.fillMaxSize()) {
-        UtilityHeader(if (en) "Profile and Settings" else "Profil ve Ayarlar", onBack)
+        UtilityHeader(if (en) "Profile and settings" else "Profil ve ayarlar", onBack, if (en) "Account verified" else "Hesap doğrulandı")
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(18.dp, 8.dp, 18.dp, 42.dp),
+            contentPadding = PaddingValues(16.dp, 4.dp, 16.dp, 42.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                        AvatarImage(profile.avatarUrl, avatarPreview, name, en, Modifier.size(64.dp))
-                        Column {
-                            Text(name.ifBlank { if (en) "Athlete" else "Sporcu" }, style = MaterialTheme.typography.headlineSmall)
-                            Text(email, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
-                            Text(if (en) "Account verified" else "Hesap doğrulandı", color = HedefitColors.LimeDark, style = MaterialTheme.typography.labelMedium)
-                            TextButton(enabled = !avatarUploading, onClick = { avatarPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }, contentPadding = PaddingValues(0.dp)) { Icon(Icons.Default.AddAPhoto, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(5.dp)); Text(if (avatarUploading) (if (en) "Uploading…" else "Yükleniyor…") else if (en) "Change profile photo" else "Profil fotoğrafını değiştir") }
+                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Box {
+                                AvatarImage(profile.avatarUrl, avatarPreview, name, en, Modifier.size(64.dp))
+                                IconButton(
+                                    enabled = !avatarUploading,
+                                    onClick = { avatarPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                                    modifier = Modifier.align(Alignment.BottomEnd).offset(6.dp, 6.dp).size(32.dp).background(HedefitColors.Lime, CircleShape).border(2.dp, HedefitColors.Surface, CircleShape),
+                                ) { Icon(Icons.Default.AddAPhoto, if (en) "Change profile photo" else "Profil fotoğrafını değiştir", tint = HedefitColors.OnLime, modifier = Modifier.size(15.dp)) }
+                            }
+                            Column(Modifier.weight(1f)) {
+                                Text(name.ifBlank { if (en) "Athlete" else "Sporcu" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                                Text(email, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                                if (avatarUploading) Text(if (en) "Uploading photo…" else "Fotoğraf yükleniyor…", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium)
+                            }
                         }
+                        avatarError?.let { Text(it, color = HedefitColors.Coral, style = MaterialTheme.typography.bodySmall) }
                     }
-                    avatarError?.let { Text(it, color = HedefitColors.Coral, style = MaterialTheme.typography.bodySmall) }
                 }
             }
             item { SettingsSectionTitle(if (en) "Body and profile" else "Vücut ve profil") }
@@ -152,15 +172,17 @@ fun ProfileSettingsScreen(
                 }
             }
             item {
-                SettingsRow(Icons.Default.Tune, if (en) "Answer the 15 questions again" else "15 soruyu yeniden cevapla", if (en) "Refresh goal, level, equipment and plan" else "Hedef, seviye, ekipman ve programını yenile", onOpenQuestionnaire)
+                SettingsRow(Icons.Default.Tune, if (en) "Refresh your goal and program" else "Hedef ve programını yenile", if (en) "Answer the 15 questions again" else "15 soruyu yeniden cevapla", onOpenQuestionnaire)
             }
             item { SettingsSectionTitle(if (en) "Application" else "Uygulama") }
             item {
-                HedefitCard {
+                HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsRowContent(Icons.Default.MenuBook, if (en) "User guide" else "Kullanım Kılavuzu", if (en) "Learn every part of Hedefit" else "Hedefit'in tüm özelliklerini öğren", onOpenUserGuide)
+                        SettingsRowContent(Icons.Default.MenuBook, if (en) "User guide" else "Kullanım Kılavuzu", if (en) "Learn every part of Hedefit" else "Hedefit'in tüm özelliklerini öğren", onOpenUserGuide, HedefitColors.TextSecondary)
                         CardDivider()
-                        SettingsSwitchRow(Icons.Default.LightMode, if (en) "Light theme" else "Beyaz tema", if (en) "Bright, high-contrast appearance" else "Açık ve yüksek kontrastlı görünüm", !preferences.darkTheme) {
+                        SettingsRowContent(Icons.Default.School, if (en) "Replay the welcome tour" else "Başlangıç rehberini tekrar izle", if (en) "Step-by-step tour of the main features" else "Temel özelliklerin adım adım turu", onReplayGuide, HedefitColors.Lime)
+                        CardDivider()
+                        SettingsSwitchRow(Icons.Default.LightMode, if (en) "Light theme" else "Beyaz tema", if (en) "Bright, high-contrast appearance" else "Açık ve yüksek kontrastlı görünüm", !preferences.darkTheme, HedefitColors.Sleep) {
                             onPreferencesChange(preferences.copy(darkTheme = !it))
                         }
                         CardDivider()
@@ -168,13 +190,13 @@ fun ProfileSettingsScreen(
                             onPreferencesChange(preferences.copy(accentHue = hue))
                         }
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Language, if (en) "Language" else "Dil", if (preferences.language == "tr") "Türkçe" else "English", onClick = {
+                        SettingsRowContent(Icons.Default.Language, if (en) "Language" else "Dil", if (preferences.language == "tr") "Türkçe" else "English", tint = HedefitColors.Water, onClick = {
                             onPreferencesChange(preferences.copy(language = if (preferences.language == "tr") "en" else "tr"))
                         })
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Straighten, if (en) "Measurement units" else "Ölçü birimleri", if (preferences.unitSystem == "imperial") "Imperial • lb, in, mi, fl oz" else "${if (en) "Metric" else "Metrik"} • kg, cm, km, ml", onClick = { showUnits = true })
+                        SettingsRowContent(Icons.Default.Straighten, if (en) "Measurement units" else "Ölçü birimleri", if (preferences.unitSystem == "imperial") "Imperial • lb, in, mi, fl oz" else "${if (en) "Metric" else "Metrik"} • kg, cm, km, ml", onClick = { showUnits = true }, tint = HedefitColors.Warning)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", if (en) "Edit days and times" else "Gün ve saatlerini düzenle", onOpenNotifications)
+                        SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", if (en) "Edit days and times" else "Gün ve saatlerini düzenle", onOpenNotifications, HedefitColors.Coral)
                         CardDivider()
                         SettingsSwitchRow(Icons.Default.DirectionsWalk, if (en) "Show steps in notification bar" else "Adımları bildirim çubuğunda göster", if (en) "Optional ongoing step counter" else "İsteğe bağlı sürekli adım sayar", preferences.stepCounterNotificationEnabled) {
                             onPreferencesChange(preferences.copy(stepCounterNotificationEnabled = it))
@@ -190,17 +212,27 @@ fun ProfileSettingsScreen(
                     }
                 }
             }
-            item { SettingsSectionTitle(if (en) "Data controls" else "Veri kontrolü") }
+            item { SettingsSectionTitle(if (en) "Support Hedefit" else "Hedefit'i destekle") }
             item {
-                HedefitCard {
+                HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsRowContent(Icons.Default.Refresh, if (en) "Reset progress" else "İlerlemeyi sıfırla", if (en) "Logs are deleted; profile and plan remain" else "Kayıtlar silinir, profil ve plan korunur", onClick = { showReset = true })
+                        SettingsRowContent(Icons.Default.Star, if (en) "Rate the app" else "Uygulamayı puanla", if (en) "Your review on Google Play helps a lot" else "Google Play'deki yorumun çok değerli", onRateApp, HedefitColors.Warning)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data remains while access pauses" else "Verilerin korunur, erişimin duraklar", onClick = { showFreeze = true })
+                        SettingsRowContent(Icons.Default.Share, if (en) "Share the app" else "Uygulamayı paylaş", if (en) "Invite a friend to train with you" else "Bir arkadaşını birlikte çalışmaya davet et", { showShare = true }, HedefitColors.Water)
+                    }
+                }
+            }
+            item { SettingsSectionTitle(if (en) "Account and data" else "Hesap ve veri") }
+            item {
+                HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
+                    Column {
+                        SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", if (en) "Close the session on this device" else "Bu cihazdaki oturumu kapat", onSignOut, HedefitColors.TextSecondary)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", if (en) "Close the session on this device" else "Bu cihazdaki oturumu kapat", onSignOut)
+                        SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data remains while access pauses" else "Verilerin korunur, erişimin duraklar", onClick = { showFreeze = true }, tint = HedefitColors.Water)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.DeleteForever, if (en) "Delete account permanently" else "Hesabı kalıcı sil", if (en) "All data will be deleted permanently" else "Tüm veriler geri alınamaz biçimde silinir", { showDelete = true }, HedefitColors.Coral)
+                        SettingsRowContent(Icons.Default.Refresh, if (en) "Reset progress" else "İlerlemeyi sıfırla", if (en) "Logs are deleted; profile and plan remain" else "Kayıtlar silinir, profil ve plan korunur", onClick = { showReset = true }, tint = HedefitColors.Coral, danger = true)
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.DeleteForever, if (en) "Delete account permanently" else "Hesabı kalıcı sil", if (en) "All data will be deleted permanently" else "Tüm veriler geri alınamaz biçimde silinir", { showDelete = true }, HedefitColors.Coral, danger = true)
                     }
                 }
             }
@@ -210,6 +242,7 @@ fun ProfileSettingsScreen(
     if (showReset) ConfirmDialog(if (en) "Delete progress data" else "İlerleme verilerini sil", if (en) "Your workouts, measurements, calories and streak records will be permanently deleted." else "Antrenman, ölçüm, kalori ve seri kayıtların kalıcı olarak silinecek.", if (en) "Reset" else "Sıfırla", accountBusy, en, { showReset = false }) { showReset = false; onResetProgress() }
     if (showFreeze) ConfirmDialog(if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data will remain. App access will pause until you reactivate." else "Verilerin korunacak. Yeniden etkinleştirene kadar uygulama erişimin duracak.", if (en) "Freeze" else "Dondur", accountBusy, en, { showFreeze = false }) { showFreeze = false; onFreeze() }
     if (showDelete) DeleteAccountDialog(email, accountBusy, en, { showDelete = false }) { confirmedEmail -> showDelete = false; onDelete(confirmedEmail) }
+    if (showShare) ShareAppDialog(defaultShareMessage, en, { showShare = false }) { message -> showShare = false; onShareApp(message) }
     if (showShortcut) ShortcutSettingsDialog(en, { showShortcut = false }) { onAddShortcut(it); showShortcut = false }
     if (showUnits) MeasurementUnitsDialog(preferences.unitSystem, en, { showUnits = false }) { system -> onPreferencesChange(preferences.copy(unitSystem = system)); showUnits = false }
 }
@@ -351,14 +384,13 @@ private fun ShortcutSettingsDialog(en: Boolean, onDismiss: () -> Unit, onSelect:
 }
 
 @Composable
-fun UtilityHeader(title: String, onBack: () -> Unit) {
-    Row(Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri", tint = HedefitColors.TextPrimary) }
-        Text(title, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge)
+fun UtilityHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        HfScreenHeader(title, subtitle, onBack = onBack)
     }
 }
 
-@Composable private fun SettingsSectionTitle(text: String) = Text(text.uppercase(), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
+@Composable private fun SettingsSectionTitle(text: String) = HfSectionHeader(text)
 
 @Composable private fun ProfileField(label: String, value: String, onChange: (String) -> Unit, keyboardType: KeyboardType) {
     OutlinedTextField(
@@ -368,24 +400,39 @@ fun UtilityHeader(title: String, onBack: () -> Unit) {
     )
 }
 
-@Composable private fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
-    HedefitCard(onClick = onClick) { SettingsRowContent(icon, title, subtitle, onClick) }
+@Composable private fun SettingsRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit, tint: Color = HedefitColors.Lime) {
+    HfNavRow(icon, tint, title, subtitle, onClick)
 }
 
-@Composable private fun SettingsRowContent(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit, tint: Color = HedefitColors.Lime) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, tint = tint)
-        Column(Modifier.weight(1f)) { Text(title, style = MaterialTheme.typography.titleMedium); Text(subtitle, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
-        Icon(Icons.Default.ChevronRight, null, tint = HedefitColors.TextSecondary)
-    }
+@Composable private fun SettingsRowContent(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit, tint: Color = HedefitColors.Lime, danger: Boolean = false) {
+    HfListRow(icon, tint, title, subtitle, onClick, titleColor = if (danger) HedefitColors.Coral else HedefitColors.TextPrimary)
 }
 
-@Composable private fun SettingsSwitchRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, tint = HedefitColors.Lime)
-        Column(Modifier.weight(1f)) { Text(title, style = MaterialTheme.typography.titleMedium); Text(subtitle, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
+@Composable private fun SettingsSwitchRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, checked: Boolean, tint: Color = HedefitColors.Lime, onChecked: (Boolean) -> Unit) {
+    HfListRow(icon, tint, title, subtitle, onClick = { onChecked(!checked) }, chevron = false) {
         Switch(checked, onChecked, colors = SwitchDefaults.colors(checkedThumbColor = HedefitColors.OnLime, checkedTrackColor = HedefitColors.Lime))
     }
+}
+
+@Composable private fun ShareAppDialog(defaultMessage: String, en: Boolean, onDismiss: () -> Unit, onShare: (String) -> Unit) {
+    var message by remember(defaultMessage) { mutableStateOf(defaultMessage) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (en) "Share Hedefit" else "Hedefit'i paylaş") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    if (en) "Your friends get a personal training plan, meal tracking and an AI coach for free. Edit the message as you like."
+                    else "Arkadaşların kişisel antrenman programı, beslenme takibi ve AI koçu ücretsiz deneyebilir. Mesajı dilediğin gibi düzenle.",
+                    color = HedefitColors.TextSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                OutlinedTextField(message, { message = it.take(500) }, modifier = Modifier.fillMaxWidth(), label = { Text(if (en) "Your message" else "Mesajın") }, minLines = 3, maxLines = 6)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
+        confirmButton = { TextButton(enabled = message.isNotBlank(), onClick = { onShare(message) }) { Text(if (en) "Share" else "Paylaş", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) } },
+    )
 }
 
 @Composable private fun ConfirmDialog(title: String, body: String, action: String, busy: Boolean, en: Boolean, onDismiss: () -> Unit, onConfirm: () -> Unit) {

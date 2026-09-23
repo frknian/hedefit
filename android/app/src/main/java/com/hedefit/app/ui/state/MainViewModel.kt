@@ -49,6 +49,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
+import kotlinx.coroutines.Job
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
@@ -83,6 +85,7 @@ data class MainUiState(
     val nutritionViewingDate: LocalDate = LocalDate.now(),
     val nutritionViewingLogs: List<com.hedefit.app.data.model.NutritionLogData> = emptyList(),
     val nutritionHistory: List<com.hedefit.app.data.model.NutritionLogData> = emptyList(),
+    val nutritionLoadedMonths: Set<YearMonth> = emptySet(),
     val chatBusy: Boolean = false,
     val chatMessages: List<ChatMessageState> = emptyList(),
     val chatUsageUsed: Int? = null,
@@ -246,19 +249,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loadNutritionDate(date: LocalDate) = viewModelScope.launch {
-        if (_state.value.nutritionDateLoading || _state.value.nutritionViewingDate == date && _state.value.nutritionViewingLogs.isNotEmpty()) return@launch
-        _state.update { it.copy(nutritionDateLoading = true, nutritionViewingDate = date) }
-        runCatching { repository.loadNutritionLogs(date) }
-            .onSuccess { logs -> _state.update { it.copy(nutritionDateLoading = false, nutritionViewingLogs = logs) } }
-            .onFailure { error -> _state.update { it.copy(nutritionDateLoading = false, transientMessage = friendlyError(error)) } }
+    private var nutritionDateJob: Job? = null
+    private val nutritionMonthsInFlight = mutableSetOf<YearMonth>()
+
+    fun loadNutritionDate(date: LocalDate) {
+        val today = LocalDate.now()
+        if (date > today) return
+        nutritionDateJob?.cancel()
+        val current = _state.value
+        // Days of already-loaded months are served from memory, so switching back and forth is instant.
+        val known = when {
+            date == today -> current.dashboard?.nutritionLogs
+            YearMonth.from(date) in current.nutritionLoadedMonths -> current.nutritionHistory.filter { it.date.take(10) == date.toString() }
+            else -> null
+        }
+        _state.update { it.copy(nutritionViewingDate = date, nutritionViewingLogs = known.orEmpty(), nutritionDateLoading = known == null) }
+        loadNutritionHistory(YearMonth.from(date))
+        if (known != null) return
+        nutritionDateJob = viewModelScope.launch {
+            val result = runCatching { repository.loadNutritionLogs(date) }
+            _state.update { state ->
+                if (state.nutritionViewingDate != date) return@update state
+                result.fold(
+                    onSuccess = { logs -> state.copy(nutritionDateLoading = false, nutritionViewingLogs = logs, nutritionHistory = (logs + state.nutritionHistory).distinctBy { it.id }) },
+                    onFailure = { error -> state.copy(nutritionDateLoading = false, transientMessage = friendlyError(error)) },
+                )
+            }
+        }
     }
 
-    fun loadNutritionHistory() = viewModelScope.launch {
-        if (_state.value.nutritionHistory.isNotEmpty()) return@launch
-        runCatching { repository.loadNutritionHistory() }
-            .onSuccess { history -> _state.update { it.copy(nutritionHistory = history) } }
-            .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+    fun loadNutritionHistory(month: YearMonth = YearMonth.now()) {
+        val today = LocalDate.now()
+        if (month > YearMonth.from(today) || month in _state.value.nutritionLoadedMonths || !nutritionMonthsInFlight.add(month)) return
+        viewModelScope.launch {
+            runCatching { repository.loadNutritionHistory(month.atDay(1), minOf(month.atEndOfMonth(), today)) }
+                .onSuccess { logs ->
+                    _state.update { state ->
+                        val viewing = state.nutritionViewingDate
+                        val refreshViewing = viewing != today && YearMonth.from(viewing) == month && !state.nutritionDateLoading
+                        state.copy(
+                            nutritionHistory = (logs + state.nutritionHistory).distinctBy { it.id },
+                            nutritionLoadedMonths = state.nutritionLoadedMonths + month,
+                            nutritionViewingLogs = if (refreshViewing) logs.filter { it.date.take(10) == viewing.toString() } else state.nutritionViewingLogs,
+                        )
+                    }
+                }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+            nutritionMonthsInFlight.remove(month)
+        }
     }
 
     fun completeDetailedWorkout(durationSeconds: Int, calories: Int, sets: List<WorkoutSetInput>, feedback: WorkoutFeedbackData, workoutExercises: List<com.hedefit.app.data.model.WorkoutExerciseData>? = null) {

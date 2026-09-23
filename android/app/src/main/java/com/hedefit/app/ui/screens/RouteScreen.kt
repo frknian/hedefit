@@ -88,6 +88,9 @@ import com.hedefit.app.ui.components.OutlineAction
 import com.hedefit.app.ui.components.PrimaryButton
 import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import com.hedefit.app.ui.settings.MeasurementUnits
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -114,6 +117,7 @@ import kotlin.math.tan
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RouteScreen(
     onBack: () -> Unit,
@@ -274,7 +278,7 @@ fun RouteScreen(
         )
         return
     }
-    Box(Modifier.fillMaxSize().background(Color(0xFF0B0D0C))) {
+    Box(Modifier.fillMaxSize().background(HedefitColors.Background)) {
         when {
             activityInProgress && plannedRoute != null -> RouteMap(requireNotNull(plannedRoute).points, Modifier.fillMaxSize(), en, snapshot.points.lastOrNull(), followCurrent = true)
             activityInProgress -> RouteMap(snapshot.points, Modifier.fillMaxSize(), en, snapshot.points.lastOrNull(), followCurrent = true)
@@ -282,9 +286,9 @@ fun RouteScreen(
             plannedRoute != null && section == "new" -> RouteMap(requireNotNull(plannedRoute).points, Modifier.fillMaxSize(), en, snapshot.points.lastOrNull())
         }
         Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().systemBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = if (snapshot.tracking) ({ showExitConfirmation = true }) else onBack, modifier = Modifier.background(Color.Black.copy(alpha = .68f), CircleShape)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri", tint = Color.White) }
-                Spacer(Modifier.width(10.dp)); Column { Text(if (en) "Activities" else "Aktiviteler", color = Color.White, style = MaterialTheme.typography.headlineSmall); Text(when { snapshot.tracking && snapshot.points.isEmpty() -> if (en) "Acquiring precise GPS signal…" else "Hassas GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PREPARING_GPS -> if (en) "Searching for GPS…" else "GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PAUSED -> if (en) "Paused" else "Duraklatıldı"; sessionStatus == ActivitySessionStatus.ACTIVE -> if (en) "Recording in background" else "Arka planda kaydediliyor"; sessionStatus == ActivitySessionStatus.COMPLETED -> if (en) "Ready to save" else "Kaydetmeye hazır"; else -> if (en) "GPS activity" else "GPS aktivitesi" }, color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall) }
+            Row(Modifier.fillMaxWidth().background(HedefitColors.Background.copy(alpha = .88f), RoundedCornerShape(22.dp)).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                HfCircleButton(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri", if (snapshot.tracking) ({ showExitConfirmation = true }) else onBack)
+                Spacer(Modifier.width(12.dp)); Column { Text("Hedefit Rota", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold); Text(when { snapshot.tracking && snapshot.points.isEmpty() -> if (en) "Acquiring precise GPS signal…" else "Hassas GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PREPARING_GPS -> if (en) "Searching for GPS…" else "GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PAUSED -> if (en) "Paused" else "Duraklatıldı"; sessionStatus == ActivitySessionStatus.ACTIVE -> if (en) "Recording in background" else "Arka planda kaydediliyor"; sessionStatus == ActivitySessionStatus.COMPLETED -> if (en) "Ready to save" else "Kaydetmeye hazır"; else -> if (en) "GPS activity" else "GPS aktivitesi" }, color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall) }
             }
             if (!activityInProgress && finished == null) RouteSections(section, en) { section = it }
             if (section == "new" || activityInProgress || finished != null) {
@@ -298,20 +302,17 @@ fun RouteScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(if (en) "Choose an activity" else "Aktiviteni seç", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge)
+                HfIconBadge(Icons.Default.Route, HedefitColors.Lime, 56.dp, 28.dp, 18.dp)
+                Text(if (en) "Choose an activity" else "Aktiviteni seç", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                 Text(if (en) "Precise GPS tracking starts when you are ready." else "Hazır olduğunda hassas GPS kaydı başlayacak.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(4.dp))
-                OutlineAction(if (en) "Plan Route" else "Rota Planla", onClick = { showPlanner = true }, icon = Icons.Default.Navigation)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Koşu" to (if (en) "Run" else "Koşu"), "Yürüyüş" to (if (en) "Walk" else "Yürüyüş"), "Trail Koşusu" to (if (en) "Trail run" else "Trail koşusu"), "Doğa Yürüyüşü" to (if (en) "Hike" else "Doğa yürüyüşü"), "Bisiklet" to (if (en) "Ride" else "Bisiklet")).forEach { (key, label) ->
+                        HfChip(label, activityType == key, { activityType = key })
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    RouteActivityChoice(if (en) "Run" else "Koşu", "🏃", activityType == "Koşu", { activityType = "Koşu" }, Modifier.weight(1f))
-                    RouteActivityChoice(if (en) "Walk" else "Yürüyüş", "🚶", activityType == "Yürüyüş", { activityType = "Yürüyüş" }, Modifier.weight(1f))
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    RouteActivityChoice(if (en) "Trail run" else "Trail Koşusu", "⛰️", activityType == "Trail Koşusu", { activityType = "Trail Koşusu" }, Modifier.weight(1f))
-                    RouteActivityChoice(if (en) "Hike" else "Doğa Yürüyüşü", "🥾", activityType == "Doğa Yürüyüşü", { activityType = "Doğa Yürüyüşü" }, Modifier.weight(1f))
-                }
-                RouteActivityChoice(if (en) "Ride" else "Bisiklet", "🚴", activityType == "Bisiklet", { activityType = "Bisiklet" }, Modifier.fillMaxWidth(.55f))
+                OutlineAction(if (en) "Plan a route" else "Rota planla", onClick = { showPlanner = true }, icon = Icons.Default.Navigation)
             }
         }
         if (planBusy) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .72f)), contentAlignment = Alignment.Center) {
@@ -320,7 +321,7 @@ fun RouteScreen(
                 Text(if (en) "Finding a suitable loop…" else "Uygun parkur bulunuyor…", color = Color.White, style = MaterialTheme.typography.titleMedium)
             }
         }
-        if (section == "new" || activityInProgress || finished != null) Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)).background(Color(0xF5111411)).navigationBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (section == "new" || activityInProgress || finished != null) Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)).background(HedefitColors.Surface).navigationBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.align(Alignment.CenterHorizontally).width(42.dp).height(4.dp).background(HedefitColors.Divider, RoundedCornerShape(4.dp)))
             if (activityInProgress) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -754,6 +755,8 @@ private fun LocationPickerDialog(
     }
 }
 
+private data class MapCoordinate(val x: Double, val y: Double)
+
 @Composable
 private fun LocationPickerMap(center: RoutePoint, selected: RoutePoint, modifier: Modifier, onPick: (RoutePoint) -> Unit) {
     BoxWithConstraints(modifier.background(Color(0xFF172018))) {
@@ -1040,31 +1043,6 @@ private fun RouteNavigationCard(route: PlannedRoute, position: RoutePoint?, en: 
 }
 
 @Composable private fun RouteMetric(label: String, value: String, modifier: Modifier) = HedefitCard(modifier) { Column { Text(label, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall); Text(value, color = HedefitColors.Lime, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium) } }
-
-@Composable
-private fun RouteActivityChoice(
-    label: String,
-    emoji: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.height(68.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = if (selected) HedefitColors.Lime else HedefitColors.Surface,
-        contentColor = if (selected) HedefitColors.OnLime else HedefitColors.TextPrimary,
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) HedefitColors.Lime else HedefitColors.Divider),
-    ) {
-        Row(Modifier.fillMaxSize().padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(emoji, style = MaterialTheme.typography.headlineMedium)
-            Text(label, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
-        }
-    }
-}
-
-private data class MapCoordinate(val x: Double, val y: Double)
 
 private fun mapCoordinate(point: RoutePoint, zoom: Int = 16): MapCoordinate {
     val tileCount = 1 shl zoom

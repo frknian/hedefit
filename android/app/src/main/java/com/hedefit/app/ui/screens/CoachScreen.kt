@@ -67,6 +67,9 @@ import androidx.compose.ui.text.input.ImeAction
 import com.hedefit.app.ui.components.ScreenContainer
 import com.hedefit.app.ui.components.FitCoachRobotAvatar
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.Check
 import com.hedefit.app.ui.state.ChatMessageState
 import com.hedefit.app.data.model.DashboardData
 
@@ -131,27 +134,13 @@ private fun CoachHeader(
     var renameOpen by remember { mutableStateOf(false) }
     var draftName by remember(coachName) { mutableStateOf(coachName) }
     var clearOpen by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
-        FitCoachRobotAvatar(Modifier.size(48.dp))
-        Spacer(Modifier.size(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(coachName, style = MaterialTheme.typography.titleLarge)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Box(Modifier.size(7.dp).background(Color(0xFF35D04F), CircleShape))
-                Text(
-                    if (en) "Cloud AI" else "Bulut AI",
-                    color = HedefitColors.TextSecondary,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                usageLimit?.let { limit ->
-                    val label = usageUsed?.let { used -> if (en) "${(limit - used).coerceAtLeast(0)} questions left today" else "Bugün ${(limit - used).coerceAtLeast(0)} soru hakkın kaldı" }
-                        ?: if (en) "$limit questions daily" else "Günlük $limit soru hakkı"
-                    Text(label, color = HedefitColors.Lime, style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
+    val usage = usageLimit?.let { limit ->
+        usageUsed?.let { used -> if (en) "${(limit - used).coerceAtLeast(0)} questions left today" else "Bugün ${(limit - used).coerceAtLeast(0)} soru hakkın kaldı" }
+            ?: if (en) "$limit questions daily" else "Günlük $limit soru hakkı"
+    } ?: if (en) "Cloud AI" else "Bulut AI"
+    HfScreenHeader(coachName, usage) {
         Box {
-            IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, if (en) "More" else "Diğer", tint = HedefitColors.TextPrimary) }
+            HfCircleButton(Icons.Default.MoreVert, if (en) "Coach options" else "Koç seçenekleri", { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(text = { Text(if (en) "Rename coach" else "Koçun adını değiştir") }, onClick = { menuOpen = false; draftName = coachName; renameOpen = true })
                 DropdownMenuItem(text = { Text(if (en) "Clear chat" else "Sohbeti temizle") }, onClick = { menuOpen = false; clearOpen = true })
@@ -206,6 +195,11 @@ private fun CoachConversation(
             items(messages) { message -> MessageBubble(message, coachName, onExecuteAction, en) }
             if (busy && messages.lastOrNull()?.user != false) item { ThinkingIndicator(coachName, en) }
         }
+        HfChipRow {
+            val prompts = if (en) listOf("What's my workout today?", "What should I eat tonight?", "Recovery check") else listOf("Bugünkü antrenmanım?", "Akşam ne yesem?", "Toparlanma kontrolü")
+            prompts.forEach { prompt -> HfChip(prompt, false, { onQuickSend(prompt) }, enabled = !busy) }
+        }
+        Spacer(Modifier.height(10.dp))
         Composer(input, onInput, onSend, busy, en)
     }
 }
@@ -222,27 +216,33 @@ private fun MessageBubble(
         horizontalArrangement = if (message.user) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Top,
     ) {
-        if (!message.user) {
-            FitCoachRobotAvatar(Modifier.size(38.dp))
-            Spacer(Modifier.size(10.dp))
-        }
         Column(
-            modifier = Modifier.fillMaxWidth(if (message.user) .82f else 1f),
+            modifier = Modifier.fillMaxWidth(if (message.user) .82f else .88f),
             horizontalAlignment = if (message.user) Alignment.End else Alignment.Start,
         ) {
             Box(
                 Modifier
-                    .then(if (message.user) Modifier.background(HedefitColors.SurfaceHigh, RoundedCornerShape(22.dp)) else Modifier)
-                    .padding(if (message.user) 14.dp else 2.dp),
+                    .background(
+                        if (message.user) HedefitColors.Lime else HedefitColors.Surface,
+                        if (message.user) RoundedCornerShape(18.dp, 18.dp, 6.dp, 18.dp) else RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp),
+                    )
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
-                Text(message.text, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodyLarge)
+                Text(message.text, color = if (message.user) HedefitColors.OnLime else HedefitColors.TextPrimary, style = MaterialTheme.typography.bodyMedium, fontWeight = if (message.user) FontWeight.SemiBold else FontWeight.Normal)
             }
 
             if (!message.user && message.actions.isNotEmpty()) {
                 Column(
-                    modifier = Modifier.padding(top = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
+                        .background(HedefitColors.Surface, RoundedCornerShape(18.dp))
+                        .border(1.dp, HedefitColors.Lime.copy(alpha = .35f), RoundedCornerShape(18.dp))
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        HfIconBadge(Icons.Default.FlashOn, HedefitColors.Lime, 32.dp, 16.dp, 10.dp)
+                        Text(if (en) "SUGGESTED ACTION" else "ÖNERİLEN EYLEM", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold)
+                    }
                     message.actions.forEach { action ->
                         val actionLabel = when (action.type) {
                             "replace_exercise" -> if (en) "Replace with: ${action.replacementName ?: "Alternative"}" else "Bu hareketle değiştir: ${action.replacementName ?: "Alternatif"}"
@@ -254,20 +254,8 @@ private fun MessageBubble(
                             else -> if (en) "Apply recommendation" else "Önerilen eylemi uygula"
                         }
 
-                        Button(
-                            onClick = { onExecuteAction(action) },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = HedefitColors.Lime.copy(alpha = 0.2f),
-                                contentColor = HedefitColors.Lime,
-                            ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            modifier = Modifier.height(36.dp),
-                        ) {
-                            Icon(Icons.Default.FlashOn, contentDescription = null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(actionLabel, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                        }
+                        Text(actionLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        HfPrimaryButton(if (en) "Apply" else "Uygula", { onExecuteAction(action) }, Modifier.fillMaxWidth(), Icons.Default.Check)
                     }
                 }
             }
@@ -290,10 +278,8 @@ private fun ThinkingIndicator(coachName: String, en: Boolean) {
         )
     }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        FitCoachRobotAvatar(Modifier.size(38.dp))
-        Spacer(Modifier.size(10.dp))
         Row(
-            Modifier.background(HedefitColors.SurfaceHigh, RoundedCornerShape(18.dp)).padding(horizontal = 14.dp, vertical = 11.dp),
+            Modifier.background(HedefitColors.Surface, RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp)).padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
@@ -317,7 +303,7 @@ private fun Composer(input: String, onInput: (String) -> Unit, onSend: () -> Uni
         maxLines = 5,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
         keyboardActions = KeyboardActions(onSend = { submit() }),
-        shape = RoundedCornerShape(26.dp),
+        shape = RoundedCornerShape(24.dp),
         trailingIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val enabled = input.isNotBlank() && !busy
@@ -331,7 +317,7 @@ private fun Composer(input: String, onInput: (String) -> Unit, onSend: () -> Uni
             focusedContainerColor = HedefitColors.Surface,
             unfocusedContainerColor = HedefitColors.Surface,
             focusedBorderColor = HedefitColors.Lime,
-            unfocusedBorderColor = HedefitColors.Divider,
+            unfocusedBorderColor = Color.Transparent,
         ),
     )
 }

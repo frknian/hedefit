@@ -85,6 +85,11 @@ import com.hedefit.app.ui.components.AdBanner
 import com.hedefit.app.ui.components.SectionTitle
 import com.hedefit.app.ui.components.Sparkline
 import com.hedefit.app.ui.theme.HedefitColors
+import com.hedefit.app.ui.components.*
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.EmojiEvents
 import com.hedefit.app.ui.settings.MeasurementUnits
 import com.hedefit.app.ui.settings.estimatedGoalWeeks
 import com.hedefit.app.data.model.DashboardData
@@ -143,7 +148,7 @@ fun HomeScreen(
     ScreenContainer(padding) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
@@ -154,7 +159,6 @@ fun HomeScreen(
                     streak = data?.streakDays ?: 0,
                     onOpenProfile = onOpenProfile,
                     onOpenNotifications = onOpenNotifications,
-                    onOpenCalendar = onOpenCalendar,
                     onOpenGame = onOpenGame,
                     en = en,
                 )
@@ -163,12 +167,15 @@ fun HomeScreen(
                 item { HomeDataState(loading, error, onRetry) }
                 return@LazyColumn
             }
-            item { TodayCard(data, en, onOpenProgram, onOpenCoach, onOpenNutrition) }
+            item { TodayCard(data, en, onOpenProgram) }
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SectionTitle(if (en) "Shortcuts" else "Kısayollar")
-                    QuickActionsRow(en, onOpenNutrition, onOpenRoute, onOpenGoal)
-                }
+                val done = listOf(
+                    data.nutritionLogs.sumOf { it.calories } >= data.nutritionGoal.calories * .9,
+                    data.steps >= stepGoal,
+                    data.waterMl >= waterGoalMl,
+                    data.sleepMinutes >= 420,
+                ).count { it }
+                HfSectionHeader(if (en) "Daily balance" else "Günlük denge", if (en) "$done of 4 goals met" else "4 hedefin $done'i tamam")
             }
             item {
                 DailyBalanceCard(
@@ -179,11 +186,21 @@ fun HomeScreen(
                     onSteps = { metricDialog = "steps" },
                     onCalories = { metricDialog = "calories" },
                     onWater = { metricDialog = "water" },
-                    onAddWater = onAddWater,
                     onSleep = { metricDialog = "sleep" },
-                    onSaveSleep = onSaveSleep,
                 )
             }
+            item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler") }
+            item {
+                QuickActionsGrid(
+                    en = en,
+                    sleepMinutes = data.sleepMinutes,
+                    onOpenNutrition = onOpenNutrition,
+                    onOpenRoute = onOpenRoute,
+                    onSleep = { metricDialog = "sleep" },
+                    onOpenCoach = onOpenCoach,
+                )
+            }
+            item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
             item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) }
             if (showAds) item { AdBanner(Modifier.fillMaxWidth()) }
             item { HomePrograms(data, en, onOpenProgram, onProgramHomeVisibilityChange) }
@@ -205,242 +222,71 @@ private fun HomeHeader(
     streak: Int,
     onOpenProfile: () -> Unit,
     onOpenNotifications: () -> Unit,
-    onOpenCalendar: () -> Unit,
     onOpenGame: () -> Unit,
     en: Boolean,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val days = if (en) listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") else listOf("Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar")
-            val months = if (en) listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec") else listOf("Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara")
-            val now = LocalDate.now()
-            val dayName = days[now.dayOfWeek.value - 1]
-            val monthName = months[now.monthValue - 1]
-            Text(
-                "${now.dayOfMonth} $monthName, $dayName",
-                color = HedefitColors.TextSecondary,
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.weight(1f),
+    val now = LocalDate.now()
+    val locale = java.util.Locale(if (en) "en" else "tr")
+    val date = now.format(java.time.format.DateTimeFormatter.ofPattern("d MMMM EEEE", locale))
+    HfScreenHeader(
+        title = if (en) "Hi, $name" else "Merhaba, $name",
+        subtitle = (if (en) "Today • " else "Bugün • ") + date,
+    ) {
+        Box {
+            HfCircleButton(Icons.Default.EmojiEvents, if (en) "Rewards, $streak day streak" else "Ödüller, $streak günlük seri", onOpenGame)
+            if (streak > 0) Text(
+                "$streak",
+                color = HedefitColors.OnLime,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.align(Alignment.TopEnd).background(HedefitColors.Lime, CircleShape).padding(horizontal = 5.dp, vertical = 1.dp),
             )
-            Row(
-                Modifier
-                    .background(HedefitColors.Lime.copy(alpha = 0.12f), CircleShape)
-                    .clickable(onClick = onOpenGame)
-                    .padding(horizontal = 9.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text("🔥", fontSize = 13.sp)
-                Text(
-                    streak.toString(),
-                    color = HedefitColors.Lime,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            // 44dp: Material erişilebilirlik yönergesinin önerdiği en küçük dokunma hedefi.
-            Box(Modifier.size(44.dp).background(HedefitColors.Surface, CircleShape), contentAlignment = Alignment.Center) {
-                IconButton(onClick = onOpenCalendar, modifier = Modifier.fillMaxSize()) {
-                    Icon(Icons.Default.CalendarMonth, if (en) "Calendar" else "Takvim", tint = HedefitColors.TextSecondary, modifier = Modifier.size(18.dp))
-                }
-            }
-            Spacer(Modifier.width(6.dp))
-            Box(Modifier.size(44.dp).background(HedefitColors.Surface, CircleShape), contentAlignment = Alignment.Center) {
-                IconButton(onClick = onOpenNotifications, modifier = Modifier.fillMaxSize()) {
-                    Icon(Icons.Default.NotificationsNone, if (en) "Notifications" else "Bildirimler", tint = HedefitColors.TextSecondary, modifier = Modifier.size(18.dp))
-                }
-            }
-            Spacer(Modifier.width(8.dp))
-            HomeAvatar(avatarUrl, avatarPreview, name, Modifier.size(44.dp).clickable(onClick = onOpenProfile))
         }
-        Text(
-            if (en) "Welcome, $name" else "Merhaba, $name",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-        )
+        HfCircleButton(Icons.Default.NotificationsNone, if (en) "Notifications" else "Bildirimler", onOpenNotifications)
+        HomeAvatar(avatarUrl, avatarPreview, name, Modifier.size(44.dp).clip(CircleShape).clickable(onClickLabel = if (en) "Profile and settings" else "Profil ve ayarlar", onClick = onOpenProfile))
     }
 }
 
-/**
- * Ana ekranın tek "bugün" bölümü.
- *
- * Önceden üç ayrı, örtüşen bölüm vardı: bir hero antrenman kartı, ayrı bir
- * "Bugünün Akışı" zaman çizelgesi kartı (aynı antrenmanı ikinci kez gösteren)
- * ve ayrı bir kısayol satırı. Kullanıcı taradığında aynı bilgiyi iki kez
- * görüyordu. Burada hepsi TEK karta, tek başlığa ve tek CTA'ya indirildi:
- * durum rozeti + başlık + kısa "bugün" kontrol listesi + "Başlat" butonu +
- * Hazırlık/FitKoç kısayolları.
- */
 @Composable
 private fun TodayCard(
     data: DashboardData,
     en: Boolean,
     onOpenProgram: (String?) -> Unit,
-    onOpenCoach: () -> Unit,
-    onOpenNutrition: () -> Unit,
 ) {
     val program = data.workoutPrograms.firstOrNull { it.isActive } ?: data.workoutPrograms.firstOrNull()
     val exerciseCount = data.workouts.size
     val today = LocalDate.now()
-
-    val nutritionLogged = data.nutritionLogs.isNotEmpty()
     val workoutDoneToday = data.sessions.any { session ->
         runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == today }.getOrDefault(false)
     }
-
-    HedefitCard(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(18.dp),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    val areas = data.workouts.map { it.area }.filter { it.isNotBlank() }.distinct().take(3)
+    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .background(HedefitColors.Lime.copy(alpha = 0.16f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    Text(
-                        if (en) "TODAY" else "BUGÜN",
-                        color = HedefitColors.Lime,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                if (exerciseCount > 0) {
-                    Text(
-                        if (en) "$exerciseCount exercises • ~40 min" else "$exerciseCount hareket • ~40 dk",
-                        color = HedefitColors.TextSecondary,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
+                Text(if (en) "TODAY'S WORKOUT" else "BUGÜNÜN ANTRENMANI", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                if (workoutDoneToday) HfPill(if (en) "Completed" else "Tamamlandı")
             }
-
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = data.workouts.firstOrNull()?.area ?: program?.name ?: if (en) "Create Your Workout Plan" else "Antrenman Planını Oluştur",
+                    program?.name ?: if (en) "Create your workout plan" else "Antrenman planını oluştur",
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = if (exerciseCount > 0) {
-                        data.workouts.take(3).joinToString(", ") { it.name } + if (exerciseCount > 3) "..." else ""
-                    } else {
-                        if (en) "Choose an AI or custom routine to start today" else "Bugüne başlamak için akıllı veya özel bir rutin seç"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = HedefitColors.TextSecondary,
-                    maxLines = 1,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                Text(
+                    if (exerciseCount > 0) (if (en) "$exerciseCount exercises • ~${exerciseCount * 7} min" else "$exerciseCount hareket • ~${exerciseCount * 7} dk")
+                    else if (en) "Choose an AI or custom routine to start today" else "Bugüne başlamak için akıllı veya özel bir rutin seç",
+                    color = HedefitColors.TextSecondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
-
-            PrimaryButton(
-                text = if (en) "Start Workout ▶" else "Antrenmanı Başlat ▶",
+            if (areas.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { areas.forEach { HfTag(it) } }
+            HfPrimaryButton(
+                text = if (exerciseCount > 0) (if (en) "Start workout" else "Antrenmanı başlat") else if (en) "Create a plan" else "Plan oluştur",
                 onClick = { onOpenProgram(program?.id) },
-                icon = Icons.Default.PlayArrow,
-            )
-
-            CardDivider()
-
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                TodayChecklistRow(
-                    icon = Icons.Default.Restaurant,
-                    title = if (en) "Breakfast & nutrition" else "Kahvaltı & Beslenme",
-                    done = nutritionLogged,
-                    doneLabel = if (en) "Logged" else "Kaydedildi",
-                    pendingLabel = if (en) "Log your morning intake" else "Sabah öğününü kaydet",
-                    onClick = onOpenNutrition,
-                )
-                TodayChecklistRow(
-                    icon = Icons.Default.FitnessCenter,
-                    title = if (en) "Today's workout" else "Bugünün antrenmanı",
-                    done = workoutDoneToday,
-                    doneLabel = if (en) "Completed" else "Tamamlandı",
-                    pendingLabel = if (exerciseCount > 0) (if (en) "$exerciseCount movements scheduled" else "$exerciseCount hareket planlandı") else (if (en) "Not planned yet" else "Henüz planlanmadı"),
-                    onClick = { onOpenProgram(program?.id) },
-                )
-            }
-
-            Row(
+                icon = if (exerciseCount > 0) Icons.Default.PlayArrow else Icons.Default.Add,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                TodaySecondaryChip(
-                    icon = Icons.Default.FitnessCenter,
-                    label = if (en) "Readiness" else "Hazırlık Kontrolü",
-                    onClick = { onOpenProgram(program?.id) },
-                    modifier = Modifier.weight(1f),
-                )
-                TodaySecondaryChip(
-                    icon = Icons.Default.AutoAwesome,
-                    label = if (en) "Ask Fit Coach" else "FitKoç'a Sor",
-                    onClick = onOpenCoach,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TodayChecklistRow(
-    icon: ImageVector,
-    title: String,
-    done: Boolean,
-    doneLabel: String,
-    pendingLabel: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .size(28.dp)
-                .background(if (done) HedefitColors.Lime.copy(alpha = .18f) else HedefitColors.SurfaceHigh, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                if (done) Icons.Default.CheckCircleOutline else icon,
-                contentDescription = null,
-                tint = if (done) HedefitColors.Lime else HedefitColors.TextSecondary,
-                modifier = Modifier.size(15.dp),
-            )
-        }
-        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-            Text(if (done) doneLabel else pendingLabel, color = if (done) HedefitColors.Lime else HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-        }
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = HedefitColors.TextMuted, modifier = Modifier.size(16.dp))
-    }
-}
-
-@Composable
-private fun TodaySecondaryChip(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = HedefitColors.SurfaceHigh,
-        modifier = modifier.heightIn(min = 44.dp).clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Icon(icon, contentDescription = null, tint = HedefitColors.Lime, modifier = Modifier.size(15.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = HedefitColors.TextPrimary,
-                fontWeight = FontWeight.SemiBold,
             )
         }
     }
@@ -455,205 +301,53 @@ private fun DailyBalanceCard(
     onSteps: () -> Unit,
     onCalories: () -> Unit,
     onWater: () -> Unit,
-    onAddWater: (Int) -> Unit,
     onSleep: () -> Unit,
-    onSaveSleep: (Int, String) -> Unit,
 ) {
     val consumed = data.nutritionLogs.sumOf { it.calories }
     val target = data.nutritionGoal.calories.coerceAtLeast(1)
-    val remaining = (target - consumed).coerceAtLeast(0)
-    val calorieProgress = (consumed / target.toFloat()).coerceIn(0f, 1f)
-    val stepProgress = (data.steps / stepGoal.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
-    val waterProgress = (data.waterMl / waterGoalMl.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
-    val sleepProgress = (data.sleepMinutes / 480f).coerceIn(0f, 1f)
-
-    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        if (en) "DAILY BALANCE" else "GÜNLÜK HEDEF VE DENGE",
-                        color = HedefitColors.TextSecondary,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        if (en) "$remaining kcal remaining" else "$remaining kcal kaldı",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Box(
-                    Modifier
-                        .background(HedefitColors.SurfaceHigh, RoundedCornerShape(12.dp))
-                        .clickable(onClick = onCalories)
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                ) {
-                    Text(
-                        if (en) "Details →" else "Detaylar →",
-                        color = HedefitColors.Lime,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-
-            // Row 1: Calories & Steps
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BalanceMetricItem(
-                    title = if (en) "Calories" else "Kalori",
-                    value = "$consumed",
-                    target = "/ $target kcal",
-                    progress = calorieProgress,
-                    color = HedefitColors.Lime,
-                    onClick = onCalories,
-                    modifier = Modifier.weight(1f),
-                )
-                BalanceMetricItem(
-                    title = if (en) "Steps" else "Adım",
-                    value = "%,d".format(data.steps).replace(',', '.'),
-                    target = "/ $stepGoal",
-                    progress = stepProgress,
-                    color = HedefitColors.Water,
-                    onClick = onSteps,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            // Row 2: Water & Sleep
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BalanceMetricItem(
-                    title = if (en) "Water" else "Su",
-                    value = "${data.waterMl} ml",
-                    target = "/ $waterGoalMl ml",
-                    progress = waterProgress,
-                    color = HedefitColors.Water,
-                    onClick = onWater,
-                    quickActionText = "+250",
-                    onQuickAction = { onAddWater(250) },
-                    modifier = Modifier.weight(1f),
-                )
-                val sleepText = if (data.sleepMinutes > 0) {
-                    "${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk"
-                } else {
-                    if (en) "Log sleep" else "Uyku gir"
-                }
-                BalanceMetricItem(
-                    title = if (en) "Sleep" else "Uyku",
-                    value = sleepText,
-                    target = if (en) "/ 8h target" else "/ 8s hedef",
-                    progress = sleepProgress,
-                    color = HedefitColors.Sleep,
-                    onClick = onSleep,
-                    quickActionText = if (data.sleepMinutes == 0) "+8s" else null,
-                    onQuickAction = if (data.sleepMinutes == 0) { { onSaveSleep(480, "iyi") } } else null,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+    fun fmt(n: Int) = "%,d".format(n).replace(',', '.')
+    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 16.dp)) {
+        Row(Modifier.fillMaxWidth()) {
+            BalanceRing(if (en) "Calories" else "Kalori", fmt(consumed), "/ ${fmt(target)}", consumed / target.toFloat(), HedefitColors.Lime, onCalories, Modifier.weight(1f))
+            BalanceRing(if (en) "Steps" else "Adım", fmt(data.steps), "/ ${fmt(stepGoal)}", data.steps / stepGoal.coerceAtLeast(1).toFloat(), HedefitColors.Water, onSteps, Modifier.weight(1f))
+            BalanceRing(if (en) "Water" else "Su", "%.1f".format(data.waterMl / 1000f), "/ %.1f L".format(waterGoalMl / 1000f), data.waterMl / waterGoalMl.coerceAtLeast(1).toFloat(), HedefitColors.Water, onWater, Modifier.weight(1f))
+            val sleep = if (data.sleepMinutes > 0) "${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk" else "—"
+            BalanceRing(if (en) "Sleep" else "Uyku", sleep, if (en) "/ 8h" else "/ 8s", data.sleepMinutes / 480f, HedefitColors.Sleep, onSleep, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun BalanceMetricItem(
-    title: String,
-    value: String,
-    target: String,
-    progress: Float,
-    color: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    quickActionText: String? = null,
-    onQuickAction: (() -> Unit)? = null,
-) {
+private fun BalanceRing(label: String, value: String, target: String, progress: Float, color: Color, onClick: () -> Unit, modifier: Modifier) {
     Column(
-        modifier = modifier
-            .background(HedefitColors.SurfaceHigh.copy(alpha = 0.55f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier.clip(RoundedCornerShape(16.dp)).clickable(onClickLabel = label, onClick = onClick).padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
-            if (quickActionText != null && onQuickAction != null) {
-                Text(
-                    quickActionText,
-                    color = color,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .background(color.copy(alpha = 0.15f), CircleShape)
-                        .clickable(onClick = onQuickAction)
-                        .padding(horizontal = 5.dp, vertical = 2.dp),
-                )
+        Box(contentAlignment = Alignment.Center) {
+            ProgressRing(progress.coerceIn(0f, 1f), Modifier.size(70.dp), 7.dp, color = color) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(value, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                    Text(target, fontSize = 9.sp, color = HedefitColors.TextMuted, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                }
             }
         }
-        Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1)
-        Text(target, style = MaterialTheme.typography.labelSmall, color = HedefitColors.TextMuted, maxLines = 1)
-        Box(Modifier.fillMaxWidth().height(4.dp).background(HedefitColors.Background, CircleShape)) {
-            Box(Modifier.fillMaxWidth(progress).height(4.dp).background(color, CircleShape))
-        }
+        Text(label, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun QuickActionsRow(
-    en: Boolean,
-    onOpenNutrition: () -> Unit,
-    onOpenRoute: () -> Unit,
-    onOpenGoal: () -> Unit,
-) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        QuickActionItem(
-            icon = Icons.Default.Restaurant,
-            label = if (en) "Log Meal" else "Öğün Ekle",
-            sublabel = if (en) "Text or photo" else "Yazı veya foto",
-            onClick = onOpenNutrition,
-            modifier = Modifier.weight(1f),
-        )
-        QuickActionItem(
-            icon = Icons.Default.Route,
-            label = if (en) "Hedefit Route" else "Hedefit Rota",
-            sublabel = if (en) "Run & walk GPS" else "GPS ile rota",
-            onClick = onOpenRoute,
-            modifier = Modifier.weight(1f),
-        )
-        QuickActionItem(
-            icon = Icons.Default.Flag,
-            label = if (en) "Goal Journey" else "Hedef Yolculuğu",
-            sublabel = if (en) "Weight pace" else "Kilo & tempo",
-            onClick = onOpenGoal,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun QuickActionItem(
-    icon: ImageVector,
-    label: String,
-    sublabel: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .heightIn(min = 48.dp)
-            .background(HedefitColors.Surface, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Box(
-            modifier = Modifier.size(40.dp).background(HedefitColors.Lime.copy(alpha = 0.12f), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            // Kısayolun adı zaten metin olarak yanında görünüyor; ikon dekoratif.
-            Icon(icon, contentDescription = null, tint = HedefitColors.Lime, modifier = Modifier.size(19.dp))
+private fun QuickActionsGrid(en: Boolean, sleepMinutes: Int, onOpenNutrition: () -> Unit, onOpenRoute: () -> Unit, onSleep: () -> Unit, onOpenCoach: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+            HfActionTile(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition, Modifier.weight(1f).fillMaxHeight())
+            HfActionTile(Icons.Default.Route, HedefitColors.Water, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
         }
-        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
-        Text(sublabel, style = MaterialTheme.typography.labelSmall, color = HedefitColors.TextMuted, maxLines = 1)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+            val sleepSub = if (sleepMinutes > 0) (if (en) "Last night: ${sleepMinutes / 60}h ${sleepMinutes % 60}m" else "Dün gece: ${sleepMinutes / 60}s ${sleepMinutes % 60}dk") else if (en) "Not logged yet" else "Henüz girilmedi"
+            HfActionTile(Icons.Default.Bedtime, HedefitColors.Sleep, if (en) "Log sleep" else "Uyku gir", sleepSub, onSleep, Modifier.weight(1f).fillMaxHeight())
+            HfActionTile(Icons.Default.AutoAwesome, HedefitColors.Warning, if (en) "Ask Fit Coach" else "FitKoç'a sor", if (en) "Training and nutrition" else "Antrenman ve beslenme", onOpenCoach, Modifier.weight(1f).fillMaxHeight())
+        }
     }
 }
 
@@ -679,40 +373,27 @@ private fun GoalProjectionCard(data: DashboardData, onOpen: () -> Unit, en: Bool
     val completedChange = if (initial != null && current != null) abs(current - initial) else 0.0
     val progress = if (totalChange > .05) (completedChange / totalChange).toFloat().coerceIn(0f, 1f) else 0f
     val remaining = if (current != null && target != null) abs(target - current) else null
-    HedefitCard(Modifier.fillMaxWidth(), onClick = onOpen) {
+    HedefitCard(Modifier.fillMaxWidth(), onClick = onOpen, contentPadding = PaddingValues(18.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 Column(Modifier.weight(1f)) {
-                    Text(if (en) "GOAL JOURNEY" else "HEDEF YOLCULUĞU", color = HedefitColors.Lime, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    Text(if (weeks != null) (if (en) "$weeks weeks to your target" else "Hedefine $weeks hafta kaldı") else if (en) "Set a weight goal" else "Kilo hedefini belirle", style = MaterialTheme.typography.titleLarge)
+                    Text(if (en) "NOW" else "ŞİMDİ", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text(current?.let { MeasurementUnits.formatWeight(it, unitSystem, 1) } ?: "—", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                 }
-                Box(Modifier.background(HedefitColors.Lime.copy(alpha = .14f), CircleShape).padding(horizontal = 11.dp, vertical = 7.dp)) { Text(if (weeks != null) (if (en) "$weeks wk" else "$weeks hf") else "→", color = HedefitColors.Lime, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelMedium) }
-            }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GoalWeightMarker(if (en) "NOW" else "ŞİMDİ", current?.let { MeasurementUnits.formatWeight(it, unitSystem, 0) } ?: "—", Modifier.weight(1f))
-                Text("→", color = HedefitColors.Lime, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                GoalWeightMarker(if (en) "TARGET" else "HEDEF", target?.let { MeasurementUnits.formatWeight(it, unitSystem, 0) } ?: "—", Modifier.weight(1f), target = true)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                Row(Modifier.fillMaxWidth()) {
-                    Text(if (en) "Progress to target" else "Hedefe ilerleme", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    Text(remaining?.let { if (en) "${MeasurementUnits.formatWeight(it, unitSystem, 1)} left" else "${MeasurementUnits.formatWeight(it, unitSystem, 1)} kaldı" } ?: "", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                }
-                Box(Modifier.fillMaxWidth().height(8.dp).background(HedefitColors.SurfaceHigh, CircleShape)) {
-                    Box(Modifier.fillMaxWidth(progress).height(8.dp).background(HedefitColors.Lime, CircleShape))
-                    Box(Modifier.align(Alignment.CenterEnd).size(8.dp).background(HedefitColors.Lime, CircleShape))
+                HfPill(if (weeks != null) (if (en) "$weeks weeks left" else "$weeks hafta kaldı") else if (en) "Set a goal" else "Hedef belirle", modifier = Modifier.padding(bottom = 4.dp))
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                    Text(if (en) "TARGET" else "HEDEF", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text(target?.let { MeasurementUnits.formatWeight(it, unitSystem, 1) } ?: "—", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = HedefitColors.TextSecondary)
                 }
             }
-            Text(if (en) "Tap for your weekly pace and detailed plan." else "Haftalık hızını ve ayrıntılı planını görmek için dokun.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            HfProgressBar(progress, height = 8.dp)
+            Text(
+                remaining?.let { if (en) "${MeasurementUnits.formatWeight(it, unitSystem, 1)} to go • tap for weekly pace" else "${MeasurementUnits.formatWeight(it, unitSystem, 1)} kaldı • haftalık tempo için dokun" }
+                    ?: if (en) "Set a target weight to see your pace." else "Temponu görmek için hedef kilonu belirle.",
+                color = HedefitColors.TextMuted,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
-    }
-}
-
-@Composable
-private fun GoalWeightMarker(label: String, value: String, modifier: Modifier, target: Boolean = false) {
-    Column(modifier.background(if (target) HedefitColors.Lime.copy(alpha = .12f) else HedefitColors.SurfaceHigh.copy(alpha = .55f), RoundedCornerShape(14.dp)).padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(label, color = if (target) HedefitColors.Lime else HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
     }
 }
 
@@ -726,10 +407,7 @@ private fun HomePrograms(
     var showPicker by remember { mutableStateOf(false) }
     val programs = data.workoutPrograms.filter(WorkoutProgramData::showOnHome)
     Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (en) "Programs" else "Programlar", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            IconButton(onClick = { showPicker = true }) { Icon(Icons.Default.Add, if (en) "Add program" else "Program ekle", tint = HedefitColors.Lime) }
-        }
+        HfSectionHeader(if (en) "Programs" else "Programlar", if (en) "Manage" else "Düzenle") { showPicker = true }
         if (programs.isEmpty()) {
             TextButton(onClick = { showPicker = true }) { Icon(Icons.Default.Add, null, tint = HedefitColors.Lime); Spacer(Modifier.width(6.dp)); Text(if (en) "Add a program" else "Program Ekle", color = HedefitColors.Lime) }
         } else LazyRow(horizontalArrangement = Arrangement.spacedBy(9.dp), contentPadding = PaddingValues(end = 18.dp)) {
