@@ -689,6 +689,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
     }
 
+    fun autoDistributeProgram(month: java.time.YearMonth, weekdays: Set<java.time.DayOfWeek>, time: String, programs: List<Pair<String, String>>, locale: String = "tr") = viewModelScope.launch {
+        val en = locale == "en"
+        if (programs.isEmpty()) return@launch
+        val today = java.time.LocalDate.now()
+        val start = if (month.atDay(1).isBefore(today)) today else month.atDay(1)
+        val dates = generateSequence(start) { it.plusDays(1) }
+            .takeWhile { java.time.YearMonth.from(it) == month }
+            .filter { it.dayOfWeek in weekdays }
+            .toList()
+        if (dates.isEmpty()) {
+            _state.update { it.copy(transientMessage = if (en) "No matching days left this month." else "Bu ay için uygun gün kalmadı.") }
+            return@launch
+        }
+        runCatching {
+            dates.mapIndexed { index, date ->
+                val (programId, programName) = programs[index % programs.size]
+                repository.scheduleWorkout(date, time, programId = programId, programName = programName)
+            }
+        }.onSuccess { entries -> _state.update { current -> current.copy(
+                dashboard = current.dashboard?.let { data -> data.copy(schedule = data.schedule.filterNot { s -> entries.any { it.date == s.date } } + entries) },
+                transientMessage = if (programs.size > 1) {
+                    if (en) "${programs.size} programs scheduled on ${entries.size} days." else "${programs.size} program ${entries.size} güne dağıtıldı."
+                } else {
+                    if (en) "${programs.first().second} scheduled on ${entries.size} days." else "${programs.first().second} ${entries.size} güne dağıtıldı."
+                },
+            ) } }
+            .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+    }
+
     fun loadExerciseLibrary(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr") {
         viewModelScope.launch {
             _state.update { it.copy(exerciseLibraryBusy = true) }
@@ -716,6 +745,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 else repository.saveProgram("Kendi Programım", "custom", replacement.area, current)
             }.onSuccess { program -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workouts = current, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) }, transientMessage = "Hareket programa eklendi.") } }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun createProgramFromExercises(name: String, exercises: List<ExerciseCatalogData>, locale: String = "tr") {
+        if (_state.value.planGenerating || exercises.isEmpty()) return
+        val en = locale == "en"
+        viewModelScope.launch {
+            _state.update { it.copy(planGenerating = true) }
+            val plan = exercises.map { item -> com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, item.primaryMuscles.firstOrNull() ?: "Tüm Vücut", 3, "8–12", 75) }
+            val focusArea = exercises.flatMap { it.primaryMuscles }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: ""
+            runCatching { repository.saveProgram(name.ifBlank { if (en) "My Program" else "Programım" }, "custom", focusArea, plan) }
+                .onSuccess { program -> _state.update { current -> current.copy(
+                    planGenerating = false,
+                    dashboard = current.dashboard?.let { data -> data.copy(workouts = program.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) },
+                    transientMessage = if (en) "${program.name} was created and activated." else "${program.name} oluşturuldu ve aktif edildi.",
+                ) } }
+                .onFailure { error -> _state.update { it.copy(planGenerating = false, transientMessage = friendlyError(error)) } }
         }
     }
 
@@ -897,19 +943,88 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun withActiveProgram(current: List<WorkoutProgramData>, active: WorkoutProgramData) = listOf(active.copy(isActive = true)) + current.filterNot { it.id == active.id }.map { it.copy(isActive = false) }
 
-    fun generateRegionalPlan(muscle: String, label: String, locale: String = "tr") {
+    private suspend fun buildRegionalProgram(muscle: String, label: String, locale: String): com.hedefit.app.data.model.WorkoutProgramData {
+        val plan = repository.loadExerciseCatalog(muscle = muscle, muscleRole = "primary", category = "strength", locale = locale)
+            .sortedWith(compareBy<ExerciseCatalogData> { if (it.mechanic == "compound") 0 else 1 }.thenBy { it.name })
+            .take(5).mapIndexed { index, item ->
+            com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, label, if (index < 2) 4 else 3, "8–12", 75)
+        }
+        require(plan.isNotEmpty()) { if (locale == "en") "No exercises found for this area." else "Bu bölge için hareket bulunamadı." }
+        return repository.saveProgram(if (locale == "en") "$label Program" else "$label Programı", "regional", label, plan)
+    }
+
+    /**
+     * `connected`, bir sinerjist bölgeyi (ör. Göğüs seçilince Arka Kol) AYRI bir
+     * program olarak ekler — tek programın içine karıştırmak yerine kullanıcı
+     * ikisini birbirinden bağımsız açıp kapatabilsin, farklı günlerde
+     * çalışabilsin diye. Bağlı bölge hareketi bulunamazsa (nadiren) sessizce
+     * atlanır; ana bölge programı yine de oluşturulur.
+     */
+    fun generateRegionalPlan(muscle: String, label: String, connected: Pair<String, String>? = null, locale: String = "tr") {
         if (_state.value.planGenerating) return
         viewModelScope.launch {
             _state.update { it.copy(planGenerating = true) }
+            runCatching { buildRegionalProgram(muscle, label, locale) to connected?.let { (cm, cl) -> runCatching { buildRegionalProgram(cm, cl, locale) }.getOrNull() } }
+                .onSuccess { (primary, secondary) -> _state.update { current -> current.copy(
+                    planGenerating = false,
+                    dashboard = current.dashboard?.let { data ->
+                        val withPrimary = withActiveProgram(data.workoutPrograms, primary)
+                        val withBoth = secondary?.let { withActiveProgram(withPrimary, it) } ?: withPrimary
+                        data.copy(workouts = (secondary ?: primary).exercises, workoutPrograms = withBoth)
+                    },
+                    transientMessage = when {
+                        secondary != null -> if (locale == "en") "${primary.name} and ${secondary.name} are ready." else "${primary.name} ve ${secondary.name} hazır."
+                        connected != null -> if (locale == "en") "${primary.name} is ready; the connected area had no matching exercises." else "${primary.name} hazır; bağlı bölge için uygun hareket bulunamadı."
+                        else -> if (locale == "en") "$label plan is ready." else "$label odaklı programın hazır."
+                    },
+                ) } }
+                .onFailure { error -> _state.update { it.copy(planGenerating = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    /**
+     * Kullanıcının o an eldeki süresi, yorgunluğu ve çalışmak istediği bölge(ler)ine
+     * göre tek seferlik, kaydetmeye değer bir program üretir — 15 sorulu teste
+     * girmeden "5 dakikam var, yorgunum, bacak çalışayım" gibi anlık ihtiyacı
+     * karşılar. Birden fazla bölge seçilirse hareket sayısı bölgeler arasında
+     * mümkün olduğunca eşit paylaştırılır.
+     */
+    fun generateQuickWorkout(regions: List<Pair<String, String>>, durationMinutes: Int, fatigue: String, environment: String = "", equipment: String = "", locale: String = "tr") {
+        if (_state.value.planGenerating || regions.isEmpty()) return
+        val en = locale == "en"
+        viewModelScope.launch {
+            _state.update { it.copy(planGenerating = true) }
             runCatching {
-                val plan = repository.loadExerciseCatalog(muscle = muscle, muscleRole = "primary", category = "strength", locale = locale)
-                    .sortedWith(compareBy<ExerciseCatalogData> { if (it.mechanic == "compound") 0 else 1 }.thenBy { it.name })
-                    .take(5).mapIndexed { index, item ->
-                    com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, label, if (index < 2) 4 else 3, "8–12", 75)
+                val totalExercises = when {
+                    durationMinutes <= 20 -> 3
+                    durationMinutes <= 30 -> 4
+                    durationMinutes <= 45 -> 6
+                    else -> 8
                 }
-                require(plan.isNotEmpty()) { if (locale == "en") "No exercises found for this area." else "Bu bölge için hareket bulunamadı." }
-                repository.saveProgram(if (locale == "en") "$label Program" else "$label Programı", "regional", label, plan)
-            }.onSuccess { program -> _state.update { current -> current.copy(planGenerating = false, dashboard = current.dashboard?.let { data -> data.copy(workouts = program.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) }, transientMessage = if (locale == "en") "$label plan is ready." else "$label odaklı programın hazır.") } }
+                val (sets, reps, rest) = when (fatigue) {
+                    "yorgun" -> Triple(2, if (en) "12–15" else "12–15", 45)
+                    "dinc" -> Triple(4, if (en) "6–10" else "6–10", 90)
+                    else -> Triple(3, if (en) "8–12" else "8–12", 60)
+                }
+                val perRegion = (totalExercises / regions.size).coerceAtLeast(1)
+                suspend fun catalogFor(muscle: String) = repository.loadExerciseCatalog(muscle = muscle, equipment = equipment, environment = environment, muscleRole = "primary", category = "strength", locale = locale)
+                    .ifEmpty { if (equipment.isNotBlank()) repository.loadExerciseCatalog(muscle = muscle, environment = environment, muscleRole = "primary", category = "strength", locale = locale) else emptyList() }
+                val plan = regions.flatMapIndexed { index, (muscle, label) ->
+                    val take = if (index == regions.lastIndex) totalExercises - perRegion * (regions.size - 1) else perRegion
+                    catalogFor(muscle)
+                        .sortedWith(compareBy<ExerciseCatalogData> { if (it.mechanic == "compound") 0 else 1 }.thenBy { it.name })
+                        .take(take.coerceAtLeast(1))
+                        .map { item -> com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, label, sets, reps, rest) }
+                }
+                require(plan.isNotEmpty()) { if (en) "No exercises found for the selected areas." else "Seçilen bölgeler için hareket bulunamadı." }
+                val regionNames = regions.joinToString(if (en) " & " else " & ") { it.second }
+                val name = if (en) "Quick Workout: $regionNames" else "Hızlı Antrenman: $regionNames"
+                repository.saveProgram(name, "custom", regionNames, plan)
+            }.onSuccess { program -> _state.update { current -> current.copy(
+                planGenerating = false,
+                dashboard = current.dashboard?.let { data -> data.copy(workouts = program.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) },
+                transientMessage = if (en) "${program.name} is ready." else "${program.name} hazır.",
+            ) } }
                 .onFailure { error -> _state.update { it.copy(planGenerating = false, transientMessage = friendlyError(error)) } }
         }
     }

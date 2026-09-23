@@ -356,6 +356,7 @@ class MainActivity : ComponentActivity() {
                             programs = dashboard.workoutPrograms,
                             onBack = { utilityPage = UtilityPage.Main },
                             onSchedule = mainViewModel::scheduleWorkout,
+                            onAutoDistribute = { month, days, time, chosenPrograms -> mainViewModel.autoDistributeProgram(month, days, time, chosenPrograms, preferences.language) },
                             language = preferences.language,
                         )
                         UtilityPage.ExerciseLibrary -> ExerciseLibraryScreen(
@@ -371,6 +372,7 @@ class MainActivity : ComponentActivity() {
                                 mainViewModel.loadPreviousPerformance(listOf(exercise))
                                 activeWorkout = true
                             },
+                            onCreateProgram = { name, exercises -> mainViewModel.createProgramFromExercises(name, exercises, preferences.language); utilityPage = UtilityPage.Main },
                         )
                         UtilityPage.EquipmentScanner -> EquipmentScannerScreen(
                             onBack = { utilityPage = UtilityPage.Main },
@@ -448,7 +450,7 @@ class MainActivity : ComponentActivity() {
                             AppDestination.Home -> HomeScreen(padding, expanded, uiState.dashboard, uiState.avatarPreview, uiState.dataLoading, uiState.dataError, onRetry = mainViewModel::refreshAll, onSignOut = {
                                 scope.launch { googleSignIn.clearCredentialState() }
                                 mainViewModel.signOut()
-                            }, onOpenProfile = { utilityPage = UtilityPage.Profile }, onOpenNotifications = { utilityPage = UtilityPage.Notifications }, onOpenCalendar = { utilityPage = UtilityPage.Calendar }, onOpenRoute = { utilityPage = UtilityPage.Route },
+                            }, onOpenProfile = { utilityPage = UtilityPage.Profile }, onOpenCalendar = { utilityPage = UtilityPage.Calendar }, onOpenRoute = { utilityPage = UtilityPage.Route },
                                 onOpenGoal = { utilityPage = UtilityPage.GoalJourney },
                                 onOpenNutrition = { selected = AppDestination.Nutrition },
                                 onOpenProgram = { programId ->
@@ -466,16 +468,20 @@ class MainActivity : ComponentActivity() {
                                 stepSource = uiState.stepSource,
                                 showAds = adsAllowed && uiState.dashboard?.profile?.isPremium != true,
                                 onOpenCoach = { selected = AppDestination.Coach },
+                                onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onSaveSleep = mainViewModel::saveSleep,
                                 onOpenGame = { selected = AppDestination.Game },
+                                quickActions = preferences.homeQuickActions,
+                                onQuickActionsChange = { updatePreferences(preferences.copy(homeQuickActions = it)) },
                             )
                             AppDestination.Workout -> WorkoutPlanScreen(padding, expanded, uiState.dashboard?.workouts.orEmpty(), uiState.dashboard?.workoutPrograms.orEmpty(), uiState.exerciseLibrary, uiState.exerciseLibraryBusy, uiState.dataLoading, uiState.planGenerating, mainViewModel::generatePlan, onStartWorkout = {
                                 if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
                             }, hasActiveWorkout = activeWorkoutStore.hasRecoverable(), onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenRoute = { utilityPage = UtilityPage.Route },
-                                onGenerateRegional = { muscle, label -> mainViewModel.generateRegionalPlan(muscle, label, preferences.language) },
+                                onGenerateRegional = { muscle, label, connected -> mainViewModel.generateRegionalPlan(muscle, label, connected, preferences.language) },
                                 onLoadRegional = { muscle -> mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", category = "strength", locale = preferences.language) },
+                                onGenerateQuickWorkout = { regions, duration, fatigue, environment, equipment -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, equipment, preferences.language) },
                                 onCreateOwnPlan = { draft -> mainViewModel.createCustomProgram(draft, preferences.language) { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary } },
                                 onAddPushPullTemplate = { key -> mainViewModel.addPushPullTemplate(key, preferences.language) },
                                 onSelectProgram = mainViewModel::activateProgram,

@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +37,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit) {
+fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }) {
     val en = language == "en"
     var query by remember { mutableStateOf("") }
     var muscle by remember { mutableStateOf("") }
@@ -49,6 +51,8 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
     var showFilters by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<ExerciseCatalogData?>(null) }
     var showCustom by remember { mutableStateOf(false) }
+    var selectedForProgram by remember { mutableStateOf<List<ExerciseCatalogData>>(emptyList()) }
+    var showNameDialog by remember { mutableStateOf(false) }
     val activeFilterCount = listOf(muscle, equipment, level, environment, force, mechanic, category).count(String::isNotBlank)
     val clearFilters = {
         muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""
@@ -101,8 +105,9 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
             }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = HedefitColors.Lime)
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(items, key = { it.id }) { item ->
+                val isPicked = selectedForProgram.any { it.id == item.id }
                 HedefitCard(Modifier.fillMaxWidth(), onClick = { selected = item }, contentPadding = PaddingValues(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         ExerciseMedia(item.imageUrls.firstOrNull(), item.name, Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)))
@@ -114,10 +119,36 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                             )
                             Text(listOf(item.level, item.equipment.ifBlank { if (en) "No equipment" else "Ekipmansız" }).filter(String::isNotBlank).joinToString(" • "), color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium, maxLines = 1)
                         }
-                        IconButton(onClick = { onUse(item) }, modifier = Modifier.size(40.dp).background(HedefitColors.SurfaceHigh, CircleShape)) {
-                            Icon(Icons.Default.Add, if (en) "Add ${item.name} to program" else "${item.name} programa ekle", tint = HedefitColors.TextPrimary, modifier = Modifier.size(18.dp))
+                        IconButton(
+                            onClick = { selectedForProgram = if (isPicked) selectedForProgram.filterNot { it.id == item.id } else selectedForProgram + item },
+                            modifier = Modifier.size(40.dp).background(if (isPicked) HedefitColors.Lime else HedefitColors.SurfaceHigh, CircleShape),
+                        ) {
+                            Icon(
+                                if (isPicked) Icons.Default.Check else Icons.Default.Add,
+                                if (isPicked) (if (en) "Remove ${item.name} from selection" else "${item.name} seçimden çıkar") else (if (en) "Select ${item.name} for a new program" else "${item.name} yeni program için seç"),
+                                tint = if (isPicked) HedefitColors.OnLime else HedefitColors.TextPrimary,
+                                modifier = Modifier.size(18.dp),
+                            )
                         }
                     }
+                }
+            }
+        }
+        if (selectedForProgram.isNotEmpty()) {
+            Row(
+                Modifier.fillMaxWidth().background(HedefitColors.Surface).padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                IconButton(onClick = { selectedForProgram = emptyList() }, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Default.Close, if (en) "Clear selection" else "Seçimi temizle", tint = HedefitColors.TextMuted)
+                }
+                Text(
+                    if (en) "${selectedForProgram.size} selected" else "${selectedForProgram.size} hareket seçildi",
+                    modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium,
+                )
+                Button(onClick = { showNameDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) {
+                    Text(if (en) "Create program" else "Program oluştur")
                 }
             }
         }
@@ -159,6 +190,32 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
         } }, dismissButton = { TextButton(onClick = { onUse(exercise); selected = null }) { Text(if (en) "Add to program" else "Programa ekle") } }, confirmButton = { Button(onClick = { onStart(exercise); selected = null }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (en) "Train now" else "Hemen çalış") } })
     }
     if (showCustom) CustomExerciseDialog(onDismiss = { showCustom = false }) { exercise -> onUse(exercise); showCustom = false }
+    if (showNameDialog) {
+        var programName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showNameDialog = false },
+            title = { Text(if (en) "Name your program" else "Programına isim ver") },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    if (en) "${selectedForProgram.size} movements: ${selectedForProgram.joinToString { it.name }}" else "${selectedForProgram.size} hareket: ${selectedForProgram.joinToString { it.name }}",
+                    color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 3,
+                )
+                OutlinedTextField(programName, { programName = it }, label = { Text(if (en) "Program name" else "Program adı") }, singleLine = true)
+            } },
+            dismissButton = { TextButton(onClick = { showNameDialog = false }) { Text(if (en) "Cancel" else "Vazgeç") } },
+            confirmButton = {
+                Button(
+                    enabled = programName.trim().length >= 2,
+                    onClick = {
+                        onCreateProgram(programName.trim(), selectedForProgram)
+                        showNameDialog = false
+                        selectedForProgram = emptyList()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
+                ) { Text(if (en) "Create" else "Oluştur") }
+            },
+        )
+    }
 }
 
 private fun environmentOptions(en: Boolean) = listOf(
@@ -188,15 +245,19 @@ private fun levelOptions(en: Boolean) = listOf(
     "expert" to if (en) "Advanced" else "İleri",
 )
 
+// Bu anahtarlar sunucudaki EQUIPMENT_GROUPS eşlemesiyle (lib/exercise-service.ts)
+// birebir uyuşmalı; RepDB'nin ~55 ham ekipman etiketi (scripts/import-repdb.mjs)
+// oradan bu küçük gruplara indirgeniyor.
 private fun equipmentOptions(en: Boolean) = listOf(
     "" to if (en) "All" else "Tümü",
-    "body only" to if (en) "Bodyweight" else "Vücut ağırlığı",
+    "bodyweight" to if (en) "Bodyweight" else "Vücut ağırlığı",
     "dumbbell" to if (en) "Dumbbell" else "Dambıl",
     "barbell" to if (en) "Barbell" else "Halter",
-    "machine" to if (en) "Machine" else "Makine",
+    "kettlebell" to "Kettlebell",
     "cable" to if (en) "Cable" else "Kablo",
-    "bands" to if (en) "Band" else "Direnç bandı",
-    "kettlebells" to "Kettlebell",
+    "band" to if (en) "Band" else "Direnç bandı",
+    "machine" to if (en) "Machine" else "Makine",
+    "pull_up_bar" to if (en) "Pull-up bar" else "Barfiks barı",
 )
 
 private fun forceOptions(en: Boolean) = listOf(

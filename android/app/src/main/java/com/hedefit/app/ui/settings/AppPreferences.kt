@@ -17,7 +17,12 @@ data class AppPreferences(
     val unitSystem: String = "metric",
     val accentHue: Float = 106f,
     val welcomeGuideSeen: Boolean = false,
-)
+    val homeQuickActions: List<String> = DEFAULT_QUICK_ACTIONS,
+) {
+    companion object {
+        val DEFAULT_QUICK_ACTIONS = listOf("nutrition", "route", "sleep", "coach", "atlas")
+    }
+}
 
 class AppPreferencesStore(context: Context) {
     private val preferences = context.getSharedPreferences("hedefit_preferences", Context.MODE_PRIVATE)
@@ -38,6 +43,8 @@ class AppPreferencesStore(context: Context) {
         unitSystem = preferences.getString("unit_system", "metric").let { if (it == "imperial") "imperial" else "metric" },
         accentHue = preferences.getFloat("accent_hue", 106f).coerceIn(0f, 360f),
         welcomeGuideSeen = preferences.getBoolean("welcome_guide_seen", false),
+        homeQuickActions = preferences.getString("home_quick_actions", null)
+            ?.split(',')?.filter(String::isNotBlank)?.takeIf { it.isNotEmpty() } ?: AppPreferences.DEFAULT_QUICK_ACTIONS,
     )
 
     fun write(value: AppPreferences) {
@@ -56,6 +63,7 @@ class AppPreferencesStore(context: Context) {
             .putString("unit_system", value.unitSystem)
             .putFloat("accent_hue", value.accentHue.coerceIn(0f, 360f))
             .putBoolean("welcome_guide_seen", value.welcomeGuideSeen)
+            .putString("home_quick_actions", value.homeQuickActions.joinToString(","))
             .apply()
     }
 }

@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.ChevronRight
@@ -42,6 +41,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.IconButton
@@ -54,6 +54,7 @@ import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -123,7 +124,6 @@ fun HomeScreen(
     onRetry: () -> Unit,
     onSignOut: () -> Unit,
     onOpenProfile: () -> Unit,
-    onOpenNotifications: () -> Unit,
     onOpenCalendar: () -> Unit,
     onOpenRoute: () -> Unit,
     onOpenGoal: () -> Unit,
@@ -140,11 +140,15 @@ fun HomeScreen(
     stepSource: StepSource = StepSource.UNAVAILABLE,
     showAds: Boolean = false,
     onOpenCoach: () -> Unit = {},
+    onOpenLibrary: () -> Unit = {},
     onSaveSleep: (Int, String) -> Unit = { _, _ -> },
     onOpenGame: () -> Unit = {},
+    quickActions: List<String> = com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS,
+    onQuickActionsChange: (List<String>) -> Unit = {},
 ) {
     val en = language == "en"
     var metricDialog by remember { mutableStateOf<String?>(null) }
+    var editingQuickActions by remember { mutableStateOf(false) }
     ScreenContainer(padding) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -158,7 +162,7 @@ fun HomeScreen(
                     avatarPreview = avatarPreview,
                     streak = data?.streakDays ?: 0,
                     onOpenProfile = onOpenProfile,
-                    onOpenNotifications = onOpenNotifications,
+                    onOpenCalendar = onOpenCalendar,
                     onOpenGame = onOpenGame,
                     en = en,
                 )
@@ -189,16 +193,18 @@ fun HomeScreen(
                     onSleep = { metricDialog = "sleep" },
                 )
             }
-            item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler") }
+            item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler", if (en) "Customize" else "Özelleştir") { editingQuickActions = true } }
             item {
-                QuickActionsGrid(
-                    en = en,
-                    sleepMinutes = data.sleepMinutes,
-                    onOpenNutrition = onOpenNutrition,
-                    onOpenRoute = onOpenRoute,
-                    onSleep = { metricDialog = "sleep" },
-                    onOpenCoach = onOpenCoach,
-                )
+                val catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary)
+                val active = quickActions.mapNotNull(catalog::get).ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS.mapNotNull(catalog::get) }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    active.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                            row.forEach { action -> HfActionTile(action.icon, action.tint, action.title, action.subtitle, action.onClick, Modifier.weight(1f).fillMaxHeight()) }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
             }
             item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
             item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) }
@@ -212,6 +218,68 @@ fun HomeScreen(
         "water" -> WaterAddDialog(data?.waterMl ?: 0, waterGoalMl, en, unitSystem, { metricDialog = null }, onWaterGoalChange) { onAddWater(it); metricDialog = null }
         "sleep" -> SleepDetailDialog(data?.sleepMinutes ?: 0, en, { metricDialog = null }) { mins, q -> onSaveSleep(mins, q); metricDialog = null }
     }
+    if (editingQuickActions && data != null) QuickActionPickerDialog(
+        en = en,
+        catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary),
+        selected = quickActions.ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS },
+        onDismiss = { editingQuickActions = false },
+        onSave = { editingQuickActions = false; onQuickActionsChange(it) },
+    )
+}
+
+private class QuickAction(val icon: androidx.compose.ui.graphics.vector.ImageVector, val tint: Color, val title: String, val subtitle: String, val onClick: () -> Unit)
+
+private fun quickActionCatalog(
+    en: Boolean,
+    data: DashboardData,
+    onOpenNutrition: () -> Unit,
+    onOpenRoute: () -> Unit,
+    onSleep: () -> Unit,
+    onOpenCoach: () -> Unit,
+    onOpenProgram: (String?) -> Unit,
+    onOpenGoal: () -> Unit,
+    onOpenLibrary: () -> Unit,
+): Map<String, QuickAction> = linkedMapOf(
+    "nutrition" to QuickAction(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition),
+    "route" to QuickAction(Icons.Default.Route, HedefitColors.Water, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
+    "sleep" to QuickAction(Icons.Default.Bedtime, HedefitColors.Sleep, if (en) "Log sleep" else "Uyku gir", if (data.sleepMinutes > 0) (if (en) "Last night: ${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m" else "Dün gece: ${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk") else if (en) "Not logged yet" else "Henüz girilmedi", onSleep),
+    "coach" to QuickAction(Icons.Default.AutoAwesome, HedefitColors.Warning, if (en) "Ask Fit Coach" else "FitKoç'a sor", if (en) "Training and nutrition" else "Antrenman ve beslenme", onOpenCoach),
+    "workout" to QuickAction(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Start workout" else "Antrenmanı başlat", if (en) "Jump into today's plan" else "Bugünün planına atla", { onOpenProgram(data.workoutPrograms.firstOrNull { it.isActive }?.id) }),
+    "goal" to QuickAction(Icons.Default.Flag, HedefitColors.Coral, if (en) "Goal journey" else "Hedef yolculuğu", if (en) "Weight pace" else "Kilo & tempo", onOpenGoal),
+    "atlas" to QuickAction(Icons.Default.MenuBook, HedefitColors.Sleep, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary),
+)
+
+@Composable
+private fun QuickActionPickerDialog(en: Boolean, catalog: Map<String, QuickAction>, selected: List<String>, onDismiss: () -> Unit, onSave: (List<String>) -> Unit) {
+    var picked by remember(selected) { mutableStateOf(selected.filter(catalog::containsKey)) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (en) "Customize quick actions" else "Hızlı işlemleri özelleştir") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(if (en) "Choose 2 to 6 shortcuts for your Today screen." else "Bugün ekranın için 2 ile 6 arası kısayol seç.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
+                catalog.forEach { (key, action) ->
+                    val on = key in picked
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                            .clickable { picked = if (on) picked - key else if (picked.size < 6) picked + key else picked }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        HfIconBadge(action.icon, action.tint, 36.dp, 18.dp)
+                        Column(Modifier.weight(1f)) {
+                            Text(action.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(action.subtitle, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        androidx.compose.material3.Checkbox(checked = on, onCheckedChange = null, colors = androidx.compose.material3.CheckboxDefaults.colors(checkedColor = HedefitColors.Lime))
+                    }
+                }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
+        confirmButton = { TextButton(enabled = picked.size in 2..6, onClick = { onSave(picked) }) { Text(if (en) "Save" else "Kaydet", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) } },
+    )
 }
 
 @Composable
@@ -221,7 +289,7 @@ private fun HomeHeader(
     avatarPreview: ByteArray?,
     streak: Int,
     onOpenProfile: () -> Unit,
-    onOpenNotifications: () -> Unit,
+    onOpenCalendar: () -> Unit,
     onOpenGame: () -> Unit,
     en: Boolean,
 ) {
@@ -232,17 +300,8 @@ private fun HomeHeader(
         title = if (en) "Hi, $name" else "Merhaba, $name",
         subtitle = (if (en) "Today • " else "Bugün • ") + date,
     ) {
-        Box {
-            HfCircleButton(Icons.Default.EmojiEvents, if (en) "Rewards, $streak day streak" else "Ödüller, $streak günlük seri", onOpenGame)
-            if (streak > 0) Text(
-                "$streak",
-                color = HedefitColors.OnLime,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.align(Alignment.TopEnd).background(HedefitColors.Lime, CircleShape).padding(horizontal = 5.dp, vertical = 1.dp),
-            )
-        }
-        HfCircleButton(Icons.Default.NotificationsNone, if (en) "Notifications" else "Bildirimler", onOpenNotifications)
+        HfCircleButton(Icons.Default.EmojiEvents, if (en) "Rewards, $streak day streak" else "Ödüller, $streak günlük seri", onOpenGame)
+        HfCircleButton(Icons.Default.CalendarMonth, if (en) "Workout calendar" else "Antrenman takvimi", onOpenCalendar)
         HomeAvatar(avatarUrl, avatarPreview, name, Modifier.size(44.dp).clip(CircleShape).clickable(onClickLabel = if (en) "Profile and settings" else "Profil ve ayarlar", onClick = onOpenProfile))
     }
 }
@@ -335,22 +394,6 @@ private fun BalanceRing(label: String, value: String, target: String, progress: 
         Text(label, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
     }
 }
-
-@Composable
-private fun QuickActionsGrid(en: Boolean, sleepMinutes: Int, onOpenNutrition: () -> Unit, onOpenRoute: () -> Unit, onSleep: () -> Unit, onOpenCoach: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
-            HfActionTile(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition, Modifier.weight(1f).fillMaxHeight())
-            HfActionTile(Icons.Default.Route, HedefitColors.Water, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
-            val sleepSub = if (sleepMinutes > 0) (if (en) "Last night: ${sleepMinutes / 60}h ${sleepMinutes % 60}m" else "Dün gece: ${sleepMinutes / 60}s ${sleepMinutes % 60}dk") else if (en) "Not logged yet" else "Henüz girilmedi"
-            HfActionTile(Icons.Default.Bedtime, HedefitColors.Sleep, if (en) "Log sleep" else "Uyku gir", sleepSub, onSleep, Modifier.weight(1f).fillMaxHeight())
-            HfActionTile(Icons.Default.AutoAwesome, HedefitColors.Warning, if (en) "Ask Fit Coach" else "FitKoç'a sor", if (en) "Training and nutrition" else "Antrenman ve beslenme", onOpenCoach, Modifier.weight(1f).fillMaxHeight())
-        }
-    }
-}
-
 
 @Composable
 private fun HomeAvatar(url: String?, previewBytes: ByteArray?, name: String, modifier: Modifier) {
@@ -532,15 +575,49 @@ private fun DailyMotivationCard(en: Boolean) {
 @Composable
 private fun StepDetailDialog(steps: Int, goal: Int, history: List<com.hedefit.app.data.model.DailyStepData>, en: Boolean, onDismiss: () -> Unit, onSave: (Int) -> Unit) {
     var target by remember(goal) { mutableStateOf(goal.toString()) }
-    var historyDays by remember { mutableStateOf(7) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (en) "Step details" else "Adım detayları") }, text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(if (en) "$steps steps today" else "Bugün $steps adım", color = HedefitColors.Lime, style = MaterialTheme.typography.headlineSmall)
-        Text(if (en) "You completed %${(steps * 100 / goal.coerceAtLeast(1)).coerceAtMost(999)} of your target." else "Hedefinin %${(steps * 100 / goal.coerceAtLeast(1)).coerceAtMost(999)} kadarını tamamladın.", color = HedefitColors.TextSecondary)
-        OutlinedTextField(target, { target = it.filter(Char::isDigit).take(5) }, label = { Text(if (en) "Daily step target" else "Günlük adım hedefi") }, singleLine = true)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(6000, 8000, 10000, 12000).forEach { value -> TextButton(onClick = { target = value.toString() }) { Text("${value / 1000}K") } } }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { TextButton(onClick = { historyDays = 7 }) { Text(if (en) "7 days" else "7 gün") }; TextButton(onClick = { historyDays = 30 }) { Text(if (en) "30 days" else "30 gün") } }
-        history.takeLast(historyDays).joinToString(" · ") { "${it.localDate.dayOfMonth}: ${it.steps / 1000}K" }.takeIf { it.isNotBlank() }?.let { Text(it, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
-    } }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Close" else "Kapat") } }, confirmButton = { Button(onClick = { onSave(target.toIntOrNull()?.coerceIn(1000, 50000) ?: goal) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (en) "Save target" else "Hedefi kaydet") } })
+    var historyDays by remember { mutableIntStateOf(0) }
+    val progress = (steps / goal.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
+    val recent = history.takeLast(if (historyDays == 0) 7 else 30)
+    val maxSteps = recent.maxOfOrNull { it.steps }?.coerceAtLeast(1) ?: 1
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (en) "Steps" else "Adım") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ProgressRing(progress, Modifier.size(76.dp), 8.dp, color = HedefitColors.Water) {
+                        Text("%${(progress * 100).toInt()}", fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+                    }
+                    Column {
+                        Text(if (en) "$steps steps" else "$steps adım", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+                        Text(if (en) "of $goal target" else "/ $goal hedef", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                HfDivider()
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(if (en) "Daily target" else "Günlük hedef", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    OutlinedTextField(target, { target = it.filter(Char::isDigit).take(5) }, singleLine = true, modifier = Modifier.fillMaxWidth(), colors = homeFieldColors())
+                    HfChipRow { listOf(6000, 8000, 10000, 12000).forEach { value -> HfChip("${value / 1000}K", target == value.toString(), { target = value.toString() }) } }
+                }
+                if (recent.isNotEmpty()) {
+                    HfDivider()
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HfSegmented(listOf(if (en) "7 days" else "7 gün", if (en) "30 days" else "30 gün"), historyDays, { historyDays = it })
+                        Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                            recent.forEach { day ->
+                                Box(
+                                    Modifier.weight(1f).fillMaxHeight(day.steps / maxSteps.toFloat().coerceAtLeast(.03f))
+                                        .background(if (day.steps >= goal) HedefitColors.Water else HedefitColors.SurfaceSoft, RoundedCornerShape(3.dp)),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Close" else "Kapat") } },
+        confirmButton = { TextButton(onClick = { onSave(target.toIntOrNull()?.coerceIn(1000, 50000) ?: goal) }) { Text(if (en) "Save" else "Kaydet", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) } },
+    )
 }
 
 @Composable
@@ -550,28 +627,72 @@ private fun CalorieDetailDialog(data: DashboardData?, en: Boolean, stepSource: S
     val manualBurned = data?.sessions.orEmpty().filter { session -> session.manualActivityKey != null && runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == LocalDate.now() }.getOrDefault(false) }.sumOf { it.calories }
     val burned = (data?.activeCalories ?: 0) + if (stepSource == StepSource.HEALTH_CONNECT) 0 else manualBurned
     val target = base + burned.coerceIn(0, 600)
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (en) "Calorie balance" else "Kalori dengesi") }, text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(if (en) "Your target is $target kcal" else "$target kcal almalısın", color = HedefitColors.Lime, style = MaterialTheme.typography.headlineSmall)
-        HedefitCard { Column(verticalArrangement = Arrangement.spacedBy(7.dp)) { Text(if (en) "Consumed: $consumed kcal" else "Alınan: $consumed kcal"); Text(if (en) "Active burn: $burned kcal" else "Aktivitede harcanan: $burned kcal"); Text(if (en) "Remaining: ${(target - consumed).coerceAtLeast(0)} kcal" else "Kalan: ${(target - consumed).coerceAtLeast(0)} kcal", color = HedefitColors.Lime) } }
-        Text(if (en) "Health Connect and manually logged sports update this value." else "Health Connect ve elle eklediğin sporlar bu değeri günceller.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-    } }, confirmButton = { TextButton(onClick = onDismiss) { Text(if (en) "Done" else "Tamam") } })
+    val progress = (consumed / target.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (en) "Calories" else "Kalori") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    ProgressRing(progress, Modifier.size(76.dp), 8.dp, color = HedefitColors.Lime) {
+                        Icon(Icons.Default.LocalFireDepartment, null, tint = HedefitColors.Lime, modifier = Modifier.size(26.dp))
+                    }
+                    Column {
+                        Text(if (en) "$consumed kcal" else "$consumed kcal", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+                        Text(if (en) "of $target kcal target" else "/ $target kcal hedef", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                HfDivider()
+                HfListRow(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Consumed" else "Alınan", null, null, chevron = false) { Text("$consumed kcal", fontWeight = FontWeight.Bold) }
+                HfListRow(Icons.Default.LocalFireDepartment, HedefitColors.Warning, if (en) "Active burn" else "Aktivitede harcanan", null, null, chevron = false) { Text("$burned kcal", fontWeight = FontWeight.Bold) }
+                HfListRow(Icons.Default.CheckCircleOutline, HedefitColors.Water, if (en) "Remaining" else "Kalan", null, null, chevron = false) { Text("${(target - consumed).coerceAtLeast(0)} kcal", fontWeight = FontWeight.Bold, color = HedefitColors.Lime) }
+                Text(if (en) "Health Connect and manually logged sports update this value." else "Health Connect ve elle eklediğin sporlar bu değeri günceller.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(if (en) "Done" else "Tamam", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) } },
+    )
 }
 
 @Composable
 private fun WaterAddDialog(currentMl: Int, goalMl: Int, en: Boolean, unitSystem: String, onDismiss: () -> Unit, onGoalChange: (Int) -> Unit, onAdd: (Int) -> Unit) {
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (en) "Add water" else "Su ekle") }, text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(if (en) "${MeasurementUnits.formatWater(currentMl, unitSystem)} today" else "Bugün ${MeasurementUnits.formatWater(currentMl, unitSystem)} içtin", color = HedefitColors.Water, style = MaterialTheme.typography.headlineSmall)
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(if (en) "Daily goal" else "Günlük hedef", color = HedefitColors.TextSecondary)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { onGoalChange((goalMl - 250).coerceAtLeast(500)) }) { Icon(Icons.Default.Remove, if (en) "Decrease goal" else "Hedefi azalt") }
-                Text(MeasurementUnits.formatWater(goalMl, unitSystem), color = HedefitColors.Water, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { onGoalChange((goalMl + 250).coerceAtMost(10_000)) }) { Icon(Icons.Default.Add, if (en) "Increase goal" else "Hedefi artır") }
+    val glasses = (goalMl / 250).coerceIn(1, 12)
+    val filled = (currentMl / 250).coerceIn(0, glasses)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (en) "Water" else "Su") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocalDrink, null, tint = HedefitColors.Water, modifier = Modifier.size(28.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(MeasurementUnits.formatWater(currentMl, unitSystem), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+                        Text(if (en) "of ${MeasurementUnits.formatWater(goalMl, unitSystem)} target" else "/ ${MeasurementUnits.formatWater(goalMl, unitSystem)} hedef", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    repeat(glasses) { index -> Box(Modifier.weight(1f).height(18.dp).background(if (index < filled) HedefitColors.Water else HedefitColors.SurfaceSoft, RoundedCornerShape(5.dp))) }
+                }
+                HfDivider()
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(if (en) "Daily goal" else "Günlük hedef", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        HfCircleButton(Icons.Default.Remove, if (en) "Decrease goal" else "Hedefi azalt", { onGoalChange((goalMl - 250).coerceAtLeast(500)) })
+                        Text(MeasurementUnits.formatWater(goalMl, unitSystem), color = HedefitColors.Water, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp))
+                        HfCircleButton(Icons.Default.Add, if (en) "Increase goal" else "Hedefi artır", { onGoalChange((goalMl + 250).coerceAtMost(10_000)) })
+                    }
+                }
+                HfChipRow {
+                    listOf(200, 300, 500).forEach { amount ->
+                        val label = "+${if (MeasurementUnits.isImperial(unitSystem)) MeasurementUnits.formatWater(amount, unitSystem) else "$amount ml"}"
+                        HfChip(label, false, { onAdd(amount) })
+                    }
+                }
             }
-        }
-        Box(Modifier.fillMaxWidth().height(7.dp).background(HedefitColors.Divider, CircleShape)) { Box(Modifier.fillMaxWidth((currentMl / goalMl.toFloat()).coerceIn(0f, 1f)).height(7.dp).background(HedefitColors.Water, CircleShape)) }
-        listOf(200, 300, 500).forEach { amount -> Button(onClick = { onAdd(amount) }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.SurfaceHigh, contentColor = HedefitColors.Water)) { Text("+${if (MeasurementUnits.isImperial(unitSystem)) MeasurementUnits.formatWater(amount, unitSystem) else "$amount ml"}") } }
-    } }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Close" else "Kapat") } }, confirmButton = {})
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Close" else "Kapat") } },
+    )
 }
 
 @Composable
@@ -587,143 +708,71 @@ private fun SleepDetailDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (en) "Sleep Tracking" else "Uyku Takibi") },
+        title = { Text(if (en) "Sleep" else "Uyku") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text(
-                    text = if (currentMinutes > 0) {
-                        if (en) "${currentMinutes / 60}h ${currentMinutes % 60}m recorded today"
-                        else "Bugün ${currentMinutes / 60} sa ${currentMinutes % 60} dk kayıtlı"
-                    } else {
-                        if (en) "Log last night's sleep" else "Dün gecenin uykusunu kaydet"
-                    },
-                    color = HedefitColors.Sleep,
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-
-                Text(
-                    if (en) "Quick presets:" else "Hızlı seçim:",
-                    color = HedefitColors.TextSecondary,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    listOf(
-                        (6 to 0) to "6s",
-                        (7 to 0) to "7s",
-                        (7 to 30) to "7.5s",
-                        (8 to 0) to "8s",
-                        (8 to 30) to "8.5s",
-                    ).forEach { (pair, label) ->
-                        val (h, m) = pair
-                        val isSelected = hours == h && minutes == m
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) HedefitColors.Sleep.copy(alpha = 0.25f) else HedefitColors.SurfaceHigh)
-                                .border(1.dp, if (isSelected) HedefitColors.Sleep else Color.Transparent, RoundedCornerShape(8.dp))
-                                .clickable {
-                                    hours = h
-                                    minutes = m
-                                }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) HedefitColors.Sleep else HedefitColors.TextPrimary,
-                            )
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    HfIconBadge(Icons.Default.Bedtime, HedefitColors.Sleep, 52.dp, 26.dp, 16.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            if (currentMinutes > 0) (if (en) "${currentMinutes / 60}h ${currentMinutes % 60}m recorded" else "${currentMinutes / 60} sa ${currentMinutes % 60} dk kayıtlı")
+                            else if (en) "Log last night" else "Dün geceyi kaydet",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                        )
+                        Text(if (en) "Recovery capacity" else "Toparlanma kapasiten", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                HfDivider()
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(if (en) "Quick presets" else "Hızlı seçim", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    HfChipRow {
+                        listOf((6 to 0) to "6s", (7 to 0) to "7s", (7 to 30) to "7.5s", (8 to 0) to "8s", (8 to 30) to "8.5s").forEach { (pair, label) ->
+                            val (h, m) = pair
+                            HfChip(label, hours == h && minutes == m, { hours = h; minutes = m })
                         }
                     }
                 }
-
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(if (en) "Hours" else "Saat", style = MaterialTheme.typography.labelSmall, color = HedefitColors.TextSecondary)
-                        Spacer(Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { if (hours > 0) hours-- }) {
-                                Icon(Icons.Default.Remove, null, tint = HedefitColors.TextPrimary)
-                            }
-                            Text("$hours", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            IconButton(onClick = { if (hours < 18) hours++ }) {
-                                Icon(Icons.Default.Add, null, tint = HedefitColors.TextPrimary)
-                            }
-                        }
-                    }
-
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(if (en) "Minutes" else "Dakika", style = MaterialTheme.typography.labelSmall, color = HedefitColors.TextSecondary)
-                        Spacer(Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { minutes = (minutes - 15 + 60) % 60 }) {
-                                Icon(Icons.Default.Remove, null, tint = HedefitColors.TextPrimary)
-                            }
-                            Text("%02d".format(minutes), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            IconButton(onClick = { minutes = (minutes + 15) % 60 }) {
-                                Icon(Icons.Default.Add, null, tint = HedefitColors.TextPrimary)
-                            }
-                        }
-                    }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    HfStepperColumn(if (en) "Hours" else "Saat", "$hours", { if (hours > 0) hours-- }, { if (hours < 18) hours++ }, Modifier.weight(1f))
+                    HfStepperColumn(if (en) "Minutes" else "Dakika", "%02d".format(minutes), { minutes = (minutes - 15 + 60) % 60 }, { minutes = (minutes + 15) % 60 }, Modifier.weight(1f))
                 }
-
-                Text(if (en) "Sleep Quality" else "Uyku Kalitesi", style = MaterialTheme.typography.labelSmall, color = HedefitColors.TextSecondary)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    listOf(
-                        "kotu" to (if (en) "Poor" else "Kötü"),
-                        "orta" to (if (en) "Average" else "Orta"),
-                        "iyi" to (if (en) "Good" else "İyi"),
-                    ).forEach { (qKey, qLabel) ->
-                        val isSel = quality == qKey
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSel) HedefitColors.Sleep.copy(alpha = 0.25f) else HedefitColors.SurfaceHigh)
-                                .border(1.dp, if (isSel) HedefitColors.Sleep else Color.Transparent, RoundedCornerShape(10.dp))
-                                .clickable { quality = qKey }
-                                .padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = qLabel,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSel) HedefitColors.Sleep else HedefitColors.TextPrimary,
-                            )
-                        }
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(if (en) "Sleep quality" else "Uyku kalitesi", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    HfSegmented(
+                        listOf(if (en) "Poor" else "Kötü", if (en) "Average" else "Orta", if (en) "Good" else "İyi"),
+                        listOf("kotu", "orta", "iyi").indexOf(quality).coerceAtLeast(0),
+                        { quality = listOf("kotu", "orta", "iyi")[it] },
+                    )
                 }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "İptal") }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val totalMinutes = hours * 60 + minutes
-                    onSave(totalMinutes, quality)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Sleep, contentColor = Color.Black),
-            ) {
-                Text(if (en) "Save" else "Kaydet", fontWeight = FontWeight.Bold)
-            }
-        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
+        confirmButton = { TextButton(onClick = { onSave(hours * 60 + minutes, quality) }) { Text(if (en) "Save" else "Kaydet", color = HedefitColors.Sleep, fontWeight = FontWeight.Bold) } },
     )
 }
+
+@Composable
+private fun HfStepperColumn(label: String, value: String, onMinus: () -> Unit, onPlus: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = HedefitColors.TextMuted, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            HfCircleButton(Icons.Default.Remove, "-", onMinus)
+            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 8.dp))
+            HfCircleButton(Icons.Default.Add, "+", onPlus)
+        }
+    }
+}
+
+@Composable
+private fun homeFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = HedefitColors.Lime,
+    unfocusedBorderColor = HedefitColors.Divider,
+    focusedContainerColor = HedefitColors.Surface,
+    unfocusedContainerColor = HedefitColors.Surface,
+)
 
 @Composable
 private fun CompactRecovery(data: DashboardData, en: Boolean) {
