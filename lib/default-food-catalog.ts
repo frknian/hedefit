@@ -168,6 +168,7 @@ export function searchDefaultFoods(query: string, limit = 12, locale: "tr" | "en
       return { food, score };
     })
     .filter(({ score }) => score > 0)
+    .filter(({ food }, index, all) => all.findIndex(({ food: other }) => normalize(other.name) === normalize(food.name)) === index)
     .sort((a, b) => b.score - a.score || (locale === "en" ? a.food.nameEn : a.food.name).localeCompare(locale === "en" ? b.food.nameEn : b.food.name, locale))
     .slice(0, limit)
     .map(({ food }) => food);
@@ -182,8 +183,10 @@ export function matchDefaultFood(query: string): DefaultFood | null {
     .replace(/\b\d+(?:[.,]\d+)?\s*(?:adet|tane|gram|gr|g|ml|porsiyon)?\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  // Parents carry their variants' names as aliases, so an entry whose own name
+  // matches must win over a parent that only lists it as an alias.
   return DEFAULT_FOODS
-    .flatMap((food) => [food.name, ...food.aliases].map((label) => ({ food, phrase: normalize(label) })))
+    .flatMap((food) => [food.name, ...food.aliases].map((label, index) => ({ food, phrase: normalize(label), ownName: index === 0 })))
     .filter(({ phrase }) => phrase.length >= 3 && phrase === clean)
-    .sort((a, b) => b.phrase.length - a.phrase.length)[0]?.food ?? null;
+    .sort((a, b) => Number(b.ownName) - Number(a.ownName) || b.phrase.length - a.phrase.length)[0]?.food ?? null;
 }
