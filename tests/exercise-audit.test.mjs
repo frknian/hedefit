@@ -11,7 +11,7 @@ const history = (answers) => { const list = emptyHistory(); for (const [k, v] of
 const LEVELS = ["beginner", "intermediate", "advanced"];
 
 test("Every exercise carries audited equipment, environment and level", () => {
-  assert.equal(exercises.length, 606);
+  assert.equal(exercises.length, 601);
   for (const e of exercises) {
     assert.ok(Array.isArray(e.requiredEquipment) && e.requiredEquipment.length > 0, `${e.id} has no requiredEquipment`);
     assert.ok(LEVELS.includes(e.level), `${e.id} level ${e.level}`);

@@ -53,6 +53,9 @@ const NEEDS = {
   "squat": ["barbell", "machine"], "pause-squat": ["barbell", "machine"], "front-squat": ["barbell", "machine"], "heel-elevated-squat": ["barbell", "machine"],
   "overhead-squat": ["barbell", "machine"], "sumo-squat": ["barbell", "machine"], "barbell-lunge": ["barbell", "machine"], "barbell-reverse-lunge": ["barbell", "machine"],
   "good-morning": ["barbell", "machine"], "box-jump": ["plyo_box"],
+  // Found in the image review: lying on a bench, or apparatus the slug hides
+  "kettlebell-pullover": ["kettlebell", "bench"], "kettlebell-skull-crusher": ["kettlebell", "bench"],
+  "plate-pullover": ["plates", "bench"], "human-flag": ["gym_gear"],
 };
 
 /** Moves that work with either tool; each entry replaces requiredEquipment with alternatives. */
@@ -66,6 +69,8 @@ const EITHER = {
   "band-assisted-pull-ups": [["band", "pull_up_bar"]],
   "dead-hang": [["pull_up_bar"], ["suspension"]],
   "jefferson-curl": [["dumbbell"], ["kettlebell"], ["barbell"]],
+  "weighted-pull-up": [["pull_up_bar", "plates"], ["pull_up_bar", "dumbbell"]],
+  "weighted-dips": [["dip_station", "plates"], ["dip_station", "dumbbell"]],
 };
 
 // ---- Manual review: level corrections ---------------------------------------------------------------

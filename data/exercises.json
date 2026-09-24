@@ -16003,7 +16003,6 @@
       "muscle_gain"
     ],
     "environment": [
-      "home",
       "gym"
     ],
     "laterality": "bilateral",
@@ -16015,7 +16014,7 @@
     "isActive": true,
     "requiredEquipment": [
       [
-        "pull_up_bar"
+        "gym_gear"
       ]
     ]
   },
@@ -17868,6 +17867,7 @@
     "isActive": true,
     "requiredEquipment": [
       [
+        "bench",
         "kettlebell"
       ]
     ]
@@ -18268,6 +18268,7 @@
     "isActive": true,
     "requiredEquipment": [
       [
+        "bench",
         "kettlebell"
       ]
     ]
@@ -23613,6 +23614,7 @@
     "isActive": true,
     "requiredEquipment": [
       [
+        "bench",
         "plates"
       ]
     ]
@@ -33331,7 +33333,12 @@
     "isActive": true,
     "requiredEquipment": [
       [
-        "dip_station"
+        "dip_station",
+        "plates"
+      ],
+      [
+        "dip_station",
+        "dumbbell"
       ]
     ]
   },
@@ -33390,6 +33397,11 @@
     "isActive": true,
     "requiredEquipment": [
       [
+        "plates",
+        "pull_up_bar"
+      ],
+      [
+        "dumbbell",
         "pull_up_bar"
       ]
     ]
@@ -33962,286 +33974,6 @@
     "requiredEquipment": [
       [
         "dumbbell"
-      ]
-    ]
-  },
-  {
-    "id": "banded-seated-row",
-    "name": "Banded Seated Row",
-    "force": "pull",
-    "level": "beginner",
-    "mechanic": "compound",
-    "equipment": "resistance_band",
-    "primaryMuscles": [
-      "latissimus_dorsi",
-      "rhomboids"
-    ],
-    "secondaryMuscles": [
-      "biceps_brachii",
-      "posterior_deltoid",
-      "trapezius"
-    ],
-    "instructions": [
-      "Sit on the floor with legs extended and loop the middle of the band around your feet.",
-      "Hold an end in each hand with arms straight and chest tall.",
-      "Pull the handles to your lower ribs, driving the elbows back and squeezing the shoulder blades together.",
-      "Pause for a second, then let the arms extend slowly without rounding the back."
-    ],
-    "category": "strength",
-    "images": [
-      "/exercise-images/banded-seated-row/start.webp",
-      "/exercise-images/banded-seated-row/peak.webp"
-    ],
-    "source": "repdb",
-    "sourceExerciseId": "banded-seated-row",
-    "descriptionEn": "A seated rowing pull with a resistance band looped around the feet, training the mid and upper back.",
-    "tipsEn": [
-      "Keep the torso still; the arms and back do the work.",
-      "Choke up on the band to add resistance."
-    ],
-    "bodyPart": "back",
-    "goalCompatibility": [
-      "general_fitness",
-      "muscle_gain",
-      "fat_loss"
-    ],
-    "environment": [
-      "home",
-      "gym"
-    ],
-    "laterality": "bilateral",
-    "isBodyweight": false,
-    "metValue": 4,
-    "imageStart": "/exercise-images/banded-seated-row/start.webp",
-    "imageEnd": "/exercise-images/banded-seated-row/peak.webp",
-    "mediaStatus": "complete",
-    "isActive": true,
-    "requiredEquipment": [
-      [
-        "band"
-      ]
-    ]
-  },
-  {
-    "id": "banded-bent-over-row",
-    "name": "Banded Bent-Over Row",
-    "force": "pull",
-    "level": "beginner",
-    "mechanic": "compound",
-    "equipment": "resistance_band",
-    "primaryMuscles": [
-      "latissimus_dorsi",
-      "rhomboids"
-    ],
-    "secondaryMuscles": [
-      "biceps_brachii",
-      "posterior_deltoid",
-      "erector_spinae"
-    ],
-    "instructions": [
-      "Stand on the middle of the band with feet hip-width apart and hold one end in each hand.",
-      "Hinge at the hips until the torso is about 45 degrees, knees soft and back flat.",
-      "Row the hands to the hips, keeping the elbows close to the body.",
-      "Lower under control and keep the hinge position throughout the set."
-    ],
-    "category": "strength",
-    "images": [
-      "/exercise-images/banded-bent-over-row/start.webp",
-      "/exercise-images/banded-bent-over-row/peak.webp"
-    ],
-    "source": "repdb",
-    "sourceExerciseId": "banded-bent-over-row",
-    "descriptionEn": "A hip-hinged row standing on a resistance band, a home replacement for the barbell or dumbbell row.",
-    "tipsEn": [
-      "Brace the core so the lower back stays neutral.",
-      "A wider stance on the band increases the tension."
-    ],
-    "bodyPart": "back",
-    "goalCompatibility": [
-      "general_fitness",
-      "muscle_gain",
-      "fat_loss"
-    ],
-    "environment": [
-      "home",
-      "gym"
-    ],
-    "laterality": "bilateral",
-    "isBodyweight": false,
-    "metValue": 4,
-    "imageStart": "/exercise-images/banded-bent-over-row/start.webp",
-    "imageEnd": "/exercise-images/banded-bent-over-row/peak.webp",
-    "mediaStatus": "complete",
-    "isActive": true,
-    "requiredEquipment": [
-      [
-        "band"
-      ]
-    ]
-  },
-  {
-    "id": "banded-lat-pulldown",
-    "name": "Banded Lat Pulldown",
-    "force": "pull",
-    "level": "beginner",
-    "mechanic": "compound",
-    "equipment": "resistance_band",
-    "primaryMuscles": [
-      "latissimus_dorsi"
-    ],
-    "secondaryMuscles": [
-      "biceps_brachii",
-      "rhomboids",
-      "trapezius"
-    ],
-    "instructions": [
-      "Anchor the band high on a closed door or a pull-up bar and kneel facing it.",
-      "Grab the band with arms extended overhead and lean back slightly.",
-      "Pull the hands down to the upper chest, driving the elbows toward the ribs.",
-      "Return slowly until the arms are straight again."
-    ],
-    "category": "strength",
-    "images": [
-      "/exercise-images/banded-lat-pulldown/start.webp",
-      "/exercise-images/banded-lat-pulldown/peak.webp"
-    ],
-    "source": "repdb",
-    "sourceExerciseId": "banded-lat-pulldown",
-    "descriptionEn": "A vertical pull with a band anchored high on a door or bar, training the lats like a cable pulldown.",
-    "tipsEn": [
-      "Think about pulling with the elbows, not the hands.",
-      "Keep the ribs down; do not swing the torso."
-    ],
-    "bodyPart": "back",
-    "goalCompatibility": [
-      "general_fitness",
-      "muscle_gain",
-      "fat_loss"
-    ],
-    "environment": [
-      "home",
-      "gym"
-    ],
-    "laterality": "bilateral",
-    "isBodyweight": false,
-    "metValue": 4,
-    "imageStart": "/exercise-images/banded-lat-pulldown/start.webp",
-    "imageEnd": "/exercise-images/banded-lat-pulldown/peak.webp",
-    "mediaStatus": "complete",
-    "isActive": true,
-    "requiredEquipment": [
-      [
-        "band"
-      ]
-    ]
-  },
-  {
-    "id": "banded-straight-arm-pulldown",
-    "name": "Banded Straight-Arm Pulldown",
-    "force": "pull",
-    "level": "beginner",
-    "mechanic": "isolation",
-    "equipment": "resistance_band",
-    "primaryMuscles": [
-      "latissimus_dorsi"
-    ],
-    "secondaryMuscles": [
-      "posterior_deltoid",
-      "triceps_brachii"
-    ],
-    "instructions": [
-      "Anchor the band at head height or higher and stand facing it, one step back.",
-      "Hold the band with straight arms in front of you at shoulder height.",
-      "Sweep the arms down to the thighs while keeping the elbows almost straight.",
-      "Let the arms rise back up slowly to shoulder height."
-    ],
-    "category": "strength",
-    "images": [
-      "/exercise-images/banded-straight-arm-pulldown/start.webp",
-      "/exercise-images/banded-straight-arm-pulldown/peak.webp"
-    ],
-    "source": "repdb",
-    "sourceExerciseId": "banded-straight-arm-pulldown",
-    "descriptionEn": "A lat isolation pull with straight arms against a high-anchored band.",
-    "tipsEn": [
-      "Hinge slightly forward at the hips for a better lat stretch.",
-      "Keep the shoulders down away from the ears."
-    ],
-    "bodyPart": "back",
-    "goalCompatibility": [
-      "general_fitness",
-      "muscle_gain",
-      "fat_loss"
-    ],
-    "environment": [
-      "home",
-      "gym"
-    ],
-    "laterality": "bilateral",
-    "isBodyweight": false,
-    "metValue": 4,
-    "imageStart": "/exercise-images/banded-straight-arm-pulldown/start.webp",
-    "imageEnd": "/exercise-images/banded-straight-arm-pulldown/peak.webp",
-    "mediaStatus": "complete",
-    "isActive": true,
-    "requiredEquipment": [
-      [
-        "band"
-      ]
-    ]
-  },
-  {
-    "id": "banded-face-pull",
-    "name": "Banded Face Pull",
-    "force": "pull",
-    "level": "beginner",
-    "mechanic": "compound",
-    "equipment": "resistance_band",
-    "primaryMuscles": [
-      "posterior_deltoid",
-      "rhomboids"
-    ],
-    "secondaryMuscles": [
-      "trapezius"
-    ],
-    "instructions": [
-      "Anchor the band at face height and hold an end in each hand, palms facing down.",
-      "Step back until the band is taut with arms straight.",
-      "Pull the hands toward your face, splitting them apart with elbows high.",
-      "Squeeze the upper back, then return slowly."
-    ],
-    "category": "strength",
-    "images": [
-      "/exercise-images/banded-face-pull/start.webp",
-      "/exercise-images/banded-face-pull/peak.webp"
-    ],
-    "source": "repdb",
-    "sourceExerciseId": "banded-face-pull",
-    "descriptionEn": "A face-height pull with a band that trains the rear delts and upper back.",
-    "tipsEn": [
-      "Keep the elbows at shoulder height.",
-      "Use a light band and control each rep."
-    ],
-    "bodyPart": "shoulders",
-    "goalCompatibility": [
-      "general_fitness",
-      "muscle_gain",
-      "fat_loss"
-    ],
-    "environment": [
-      "home",
-      "gym"
-    ],
-    "laterality": "bilateral",
-    "isBodyweight": false,
-    "metValue": 4,
-    "imageStart": "/exercise-images/banded-face-pull/start.webp",
-    "imageEnd": "/exercise-images/banded-face-pull/peak.webp",
-    "mediaStatus": "complete",
-    "isActive": true,
-    "requiredEquipment": [
-      [
-        "band"
       ]
     ]
   }

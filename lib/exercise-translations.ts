@@ -1,4 +1,5 @@
 import type { Exercise } from "@/types/exercise";
+import { catalogExerciseNamesTr } from "./exercise-names-tr.ts";
 import type { Locale } from "@/lib/i18n/server";
 
 const labelsTr: Record<string, string> = {
@@ -517,7 +518,7 @@ const exactExerciseNamesTr: Record<string, string> = {
 
 export function translateExerciseName(value: string, locale: Locale = "tr") {
   if (locale === "en") return value;
-  const exact = exactExerciseNamesTr[value];
+  const exact = catalogExerciseNamesTr[value] ?? exactExerciseNamesTr[value];
   if (exact) return exact;
   return exerciseNameTerms.reduce((name, [pattern, replacement]) => name.replace(pattern, replacement), value)
     .replace(/\s+/g, " ").replace(/\s+-\s+/g, " - ").trim();
