@@ -280,7 +280,7 @@ const exerciseNameTerms: Array<[RegExp, string]> = [
   // \ban?\b ile bağımsız bir "a" sanılıp silinir, "ğırlığı" kalırdı.
   // "Push-off" bileşik terim: sonraki satırdaki genel "off" temizliği bunu
   // "Push-" halinde bozardı, o yüzden burada kendi başına önce çevrilir.
-  [/\bpush-off\b/gi, "itiş sıçraması"],
+  [/\bbehind[- ]the[- ]neck\b/gi, "Ense arkası"], [/\bbehind[- ]the[- ]back\b/gi, "Arkadan"], [/\bpush-off\b/gi, "itiş sıçraması"],
   [/\bthe\b/gi, ""], [/\ban?\b/gi, ""], [/\bof\b/gi, ""], [/\boff\b/gi, ""],
   [/\bon your side\b/gi, "Yan yatarak"],
   [/\ball fours\b/gi, "Dört ayak"], [/\bworld'?s greatest stretch\b/gi, "Tüm vücut esnetme"],

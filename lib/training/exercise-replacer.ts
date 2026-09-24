@@ -73,7 +73,7 @@ export function replaceExercise(
     const regressionId = getRegressionExerciseId(current.id);
     if (regressionId) {
       const regEx = getStandardizedExerciseById(regressionId);
-      if (regEx && isEquipmentAvailable(regEx.equipment, profile.equipment) && !usedIds.has(regEx.id)) {
+      if (regEx && isEquipmentAvailable(regEx.equipmentOptions, profile.equipment) && !usedIds.has(regEx.id)) {
         candidate = regEx;
       }
     }
@@ -86,7 +86,7 @@ export function replaceExercise(
             !usedIds.has(e.id) &&
             e.primaryMuscles.includes(currentMuscle) &&
             (e.difficulty === "beginner" || e.compoundOrIsolation === "isolation") &&
-            isEquipmentAvailable(e.equipment, profile.equipment) &&
+            isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
             isSafeForLimitations(e, profile.limitations) &&
             e.category !== "stretching",
         ) ||
@@ -94,7 +94,7 @@ export function replaceExercise(
           (e) =>
             !usedIds.has(e.id) &&
             (e.primaryMuscles.includes(currentMuscle) || e.secondaryMuscles.includes(currentMuscle)) &&
-            isEquipmentAvailable(e.equipment, profile.equipment) &&
+            isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
             isSafeForLimitations(e, profile.limitations) &&
             e.category !== "stretching",
         ) ||
@@ -102,7 +102,7 @@ export function replaceExercise(
           (e) =>
             !usedIds.has(e.id) &&
             e.difficulty === "beginner" &&
-            isEquipmentAvailable(e.equipment, profile.equipment) &&
+            isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
             isSafeForLimitations(e, profile.limitations) &&
             e.category !== "stretching",
         ) ||
@@ -119,7 +119,7 @@ export function replaceExercise(
     const progressionId = getProgressionExerciseId(current.id);
     if (progressionId) {
       const progEx = getStandardizedExerciseById(progressionId);
-      if (progEx && isEquipmentAvailable(progEx.equipment, profile.equipment) && !usedIds.has(progEx.id)) {
+      if (progEx && isEquipmentAvailable(progEx.equipmentOptions, profile.equipment) && !usedIds.has(progEx.id)) {
         candidate = progEx;
       }
     }
@@ -132,7 +132,7 @@ export function replaceExercise(
             e.primaryMuscles.includes(currentMuscle) &&
             e.compoundOrIsolation === "compound" &&
             e.id !== current.id &&
-            isEquipmentAvailable(e.equipment, profile.equipment) &&
+            isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
             isSafeForLimitations(e, profile.limitations) &&
             e.category !== "stretching",
         ) || null;
@@ -152,7 +152,7 @@ export function replaceExercise(
           !usedIds.has(e.id) &&
           e.primaryMuscles.includes(currentMuscle) &&
           e.movementPattern === current.movementPattern &&
-          isEquipmentAvailable(e.equipment, profile.equipment) &&
+          isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
           isSafeForLimitations(e, profile.limitations) &&
           e.category !== "stretching",
       ) ||
@@ -160,7 +160,7 @@ export function replaceExercise(
         (e) =>
           !usedIds.has(e.id) &&
           e.primaryMuscles.includes(currentMuscle) &&
-          isEquipmentAvailable(e.equipment, profile.equipment) &&
+          isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
           isSafeForLimitations(e, profile.limitations) &&
           e.category !== "stretching",
       ) ||
@@ -181,7 +181,7 @@ export function replaceExercise(
         if (usedIds.has(e.id)) return false;
         if (!e.primaryMuscles.includes(currentMuscle)) return false;
         if (e.category === "stretching") return false;
-        if (!isEquipmentAvailable(e.equipment, profile.equipment)) return false;
+        if (!isEquipmentAvailable(e.equipmentOptions, profile.equipment)) return false;
         if (!isSafeForLimitations(e, painList)) return false;
         // Also avoid same aggressive movement pattern if it caused discomfort
         if (e.movementPattern === current.movementPattern && (discomfortArea === "knee" || discomfortArea === "shoulder")) {
@@ -193,7 +193,7 @@ export function replaceExercise(
         (e) =>
           !usedIds.has(e.id) &&
           e.primaryMuscles.includes(currentMuscle) &&
-          isEquipmentAvailable(e.equipment, profile.equipment) &&
+          isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
           isSafeForLimitations(e, painList) &&
           e.category !== "stretching",
       ) ||
@@ -214,7 +214,7 @@ export function replaceExercise(
           e.primaryMuscles.includes(currentMuscle) &&
           e.movementPattern === current.movementPattern &&
           e.id !== current.id &&
-          isEquipmentAvailable(e.equipment, profile.equipment) &&
+          isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
           isSafeForLimitations(e, profile.limitations) &&
           e.category !== "stretching",
       ) ||
@@ -223,7 +223,7 @@ export function replaceExercise(
           !usedIds.has(e.id) &&
           e.primaryMuscles.includes(currentMuscle) &&
           e.id !== current.id &&
-          isEquipmentAvailable(e.equipment, profile.equipment) &&
+          isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
           isSafeForLimitations(e, profile.limitations) &&
           e.category !== "stretching",
       ) ||
@@ -240,7 +240,7 @@ export function replaceExercise(
         (e) =>
           !usedIds.has(e.id) &&
           (e.primaryMuscles.includes(currentMuscle) || e.secondaryMuscles.includes(currentMuscle)) &&
-          isEquipmentAvailable(e.equipment, profile.equipment) &&
+          isEquipmentAvailable(e.equipmentOptions, profile.equipment) &&
           isSafeForLimitations(e, profile.limitations) &&
           e.category !== "stretching",
       ) || null;

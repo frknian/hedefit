@@ -17,6 +17,7 @@ import {
   normalizeTurkishText,
 } from "./turkish-food-database.ts";
 import { containsPromptInjection } from "./nutrition-parser.ts";
+import { matchDefaultFood } from "./default-food-catalog.ts";
 
 export interface ParsedMealResult {
   items: ResolvedFood[];
@@ -163,19 +164,20 @@ export function parseMealTextLocally(text: string): ResolvedFood[] | null {
     .map((s) => s.trim())
     .filter((s) => s.length >= 2);
 
-  // Eğer tek parça kaldıysa ve içinde birden fazla bilinen yemek geçiyorsa (ör: "kuru fasulye pilav cacık", "2 yumurta 2 dilim ekmek peynir")
-  if (segments.length === 1) {
-    const splitByKnownFoods = trySegmentByDatabase(segments[0]);
-    if (splitByKnownFoods.length > 1) {
-      segments = splitByKnownFoods;
-    }
-  }
+  // Her parça ayrıca bilinen yemeklere göre bölünür; virgülle ayrılmış bir
+  // cümlenin ortasındaki "3 dilim ekmek 2 biber domates" de ayrışsın.
+  segments = segments.flatMap((segment) => trySegmentByDatabase(segment));
 
   if (segments.length === 0) return null;
 
   const resolvedItems: ResolvedFood[] = [];
 
   for (const segment of segments) {
+    // Miktarı adın içinde olan yemekler ("yarım ekmek tavuk döner") bütün olarak çözülür.
+    if (KNOWN_FOOD_PHRASES.has(normalizeTurkishText(segment))) {
+      resolvedItems.push(resolveFood({ text: segment }));
+      continue;
+    }
     const extracted = extractQuantityAndFood(segment);
     if (!extracted || extracted.foodName.length < 2) continue;
 
@@ -263,58 +265,57 @@ function extractQuantityAndFood(text: string): {
  * Bağlaçsız peş peşe yazılmış metinleri (ör: "kuru fasulye pilav cacık", "2 yumurta 2 dilim ekmek peynir")
  * veritabanındaki bilinen yemeklerle parçalar.
  */
-function trySegmentByDatabase(text: string): string[] {
-  const norm = normalizeTurkishText(text);
-  const words = norm.split(/\s+/);
+const KNOWN_FOOD_PHRASES: Set<string> = new Set(
+  TURKISH_FOOD_DATABASE.flatMap((food) => [
+    food.name,
+    ...food.aliases,
+    ...(food.variants ?? []).flatMap((variant) => [variant.name, ...(variant.aliases ?? [])]),
+  ]).map(normalizeTurkishText),
+);
+
+const isQuantityWord = (word: string) => /^\d+(?:[.,]\d+)?(?:g|gr|gram|ml)?$/i.test(word) || TURKISH_NUMBERS[word] !== undefined;
+const UNIT_WORDS = new Set(COMMON_UNITS.map(normalizeTurkishText));
+
+/** Words that name food: a unit word right after a quantity ("yarım ekmek", "3 dilim") is a unit, otherwise it can be food ("dilim ekmek"). */
+function foodWords(words: string[]): string[] {
+  return words.filter((w, i) => !isQuantityWord(w) && !(UNIT_WORDS.has(w) && i > 0 && isQuantityWord(words[i - 1])));
+}
+
+const isKnownPhrase = (phrase: string) => phrase.length > 0 && (KNOWN_FOOD_PHRASES.has(phrase) || matchDefaultFood(phrase) !== null);
+const isPrefixOfKnown = (phrase: string) => { for (const known of KNOWN_FOOD_PHRASES) if (known.startsWith(`${phrase} `)) return true; return false; };
+
+function startsKnownFood(word: string): boolean {
+  if (isQuantityWord(word)) return true;
+  for (const phrase of KNOWN_FOOD_PHRASES) if (phrase.split(" ")[0] === word) return true;
+  return false;
+}
+
+export function trySegmentByDatabase(text: string): string[] {
+  const words = normalizeTurkishText(text).split(/\s+/).filter(Boolean);
   if (words.length < 2) return [text];
 
   const segments: string[] = [];
-  let currentWords: string[] = [];
-
+  let current: string[] = [];
   for (let i = 0; i < words.length; i++) {
     const w = words[i];
-    // Sayı veya porsiyon belirteci mi?
-    const isNumberOrUnit =
-      /^\d+$/.test(w) ||
-      TURKISH_NUMBERS[w] !== undefined ||
-      COMMON_UNITS.includes(w) ||
-      /^\d+(?:g|gr|gram|ml)$/i.test(w);
-
-    if (isNumberOrUnit && currentWords.length > 0) {
-      // Önceki kısmı segment olarak ekle
-      segments.push(currentWords.join(" "));
-      currentWords = [w];
-      continue;
+    // Yeni bir miktar yeni bir yiyeceğin başlangıcıdır ("... ekmek 2 biber").
+    if (isQuantityWord(w) && foodWords(current).length > 0) {
+      segments.push(current.join(" "));
+      current = [];
     }
-
-    currentWords.push(w);
-
-    // Mevcut kelime dizisi veritabanında bilinen bir yemek veya alias'a tam uyuyor mu?
-    const phrase = currentWords.join(" ");
-    const exactMatch = TURKISH_FOOD_DATABASE.some((food) => {
-      const allNames = [food.name, ...food.aliases].map(normalizeTurkishText);
-      return allNames.includes(phrase);
-    });
-
-    // Eğer tam uyuyorsa ve bir sonraki kelime de bilinen başka bir yemeğin başlangıcıysa
-    if (exactMatch && i + 1 < words.length) {
-      const nextWord = words[i + 1];
-      const nextMatchesAnyFood = TURKISH_FOOD_DATABASE.some((f) => {
-        const allNames = [f.name, ...f.aliases].map(normalizeTurkishText);
-        return allNames.some((name) => name.startsWith(nextWord));
-      });
-
-      if (nextMatchesAnyFood) {
-        segments.push(currentWords.join(" "));
-        currentWords = [];
-      }
+    current.push(w);
+    const next = words[i + 1];
+    if (!next || isQuantityWord(next)) continue;
+    const phrase = foodWords(current).join(" ");
+    const extended = foodWords([...current, next]).join(" ");
+    // Bilinen bir yiyecek tamamlandıysa ve sonraki kelime yeni bir yiyecek başlatıyorsa böl ("biberi domates"),
+    // ama "tam buğday" + "ekmek" gibi daha uzun bir adın parçasıysa bölme.
+    if (isKnownPhrase(phrase) && !isKnownPhrase(extended) && !isPrefixOfKnown(extended) && startsKnownFood(next)) {
+      segments.push(current.join(" "));
+      current = [];
     }
   }
-
-  if (currentWords.length > 0) {
-    segments.push(currentWords.join(" "));
-  }
-
+  if (current.length > 0) segments.push(current.join(" "));
   return segments.length > 1 ? segments : [text];
 }
 

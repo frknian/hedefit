@@ -76,6 +76,8 @@ export interface StandardizedExercise {
   secondaryMuscles: MuscleGroup[];
   movementPattern: MovementPattern;
   equipment: string[];
+  /** Alternatives: the exercise is doable if every item of any one option is available ([] = no equipment). */
+  equipmentOptions: string[][];
   difficulty: FitnessLevel;
   compoundOrIsolation: "compound" | "isolation";
   contraindications: LimitationArea[];

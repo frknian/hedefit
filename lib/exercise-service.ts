@@ -9,29 +9,25 @@ const safeImage = (value: unknown) => typeof value === "string" && /^\/exercise-
 const fold = (value: string) => value.toLocaleLowerCase("en-US").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
 /**
- * The equipment filter is a small set of canonical groups the client offers (see
- * ExerciseLibraryScreen.kt's equipmentOptions), mapped to RepDB's ~55 raw equipment
- * slugs (scripts/import-repdb.mjs). "machine" covers every `*_machine` slug plus a
- * few machine-pattern exercises that don't end in that suffix.
+ * Equipment filters use the audited `requiredEquipment` alternatives written by
+ * scripts/audit-exercises.mjs (canonical groups such as dumbbell, band, bench,
+ * pull_up_bar, suspension, machine). A group filter shows every move that
+ * uses that equipment; `owned` keeps only moves doable with exactly what the
+ * user has, so "band at home" never returns dumbbell or machine work.
  */
-const EQUIPMENT_GROUPS: Record<string, string[]> = {
-  bodyweight: ["none"],
-  dumbbell: ["dumbbell"],
-  barbell: ["barbell", "ez_bar", "trap_bar"],
-  kettlebell: ["kettlebell"],
-  cable: ["cable"],
-  band: ["loop_band", "resistance_band"],
-  pull_up_bar: ["pull_up_bar", "dip_station", "rings", "suspension_trainer"],
-  machine: ["leg_press", "leg_curl", "leg_extension", "hack_squat", "pec_deck", "glute_ham_developer"],
-};
-const MACHINE_SUFFIX = "_machine";
+function equipmentOptions(exercise: Exercise): string[][] {
+  return exercise.requiredEquipment ?? [exercise.equipment ? [exercise.equipment] : []];
+}
 
-function matchesEquipment(exerciseEquipment: string | null, group: string): boolean {
-  const slug = exerciseEquipment || "none";
-  const members = EQUIPMENT_GROUPS[group];
-  if (members) return members.includes(slug) || (group === "machine" && slug.endsWith(MACHINE_SUFFIX));
-  // Unknown group (e.g. an internal caller passing a raw RepDB slug directly): fall back to exact match.
-  return fold(slug) === fold(group);
+export function matchesEquipment(exercise: Exercise, group: string): boolean {
+  const options = equipmentOptions(exercise);
+  if (group === "bodyweight") return options.some((option) => option.length === 0);
+  return options.some((option) => option.includes(group));
+}
+
+export function isDoableWith(exercise: Exercise, owned: string[]): boolean {
+  if (owned.includes("gym")) return true;
+  return equipmentOptions(exercise).some((option) => option.every((item) => owned.includes(item)));
 }
 
 export function normalizeExercise(value: unknown): Exercise | null {
@@ -47,6 +43,9 @@ export function normalizeExercise(value: unknown): Exercise | null {
     level: safeText(item.level, "beginner"),
     mechanic: safeText(item.mechanic) || null,
     equipment: safeText(item.equipment) || null,
+    requiredEquipment: Array.isArray(item.requiredEquipment)
+      ? (item.requiredEquipment as unknown[]).filter(Array.isArray).map((option) => safeList(option, 6, 30))
+      : undefined,
     primaryMuscles: safeList(item.primaryMuscles),
     secondaryMuscles: safeList(item.secondaryMuscles),
     instructions: safeList(item.instructions, 12, 1200),
@@ -136,12 +135,14 @@ export function filterExercises(filters: ExerciseFilters = {}) {
   const search = fold(filters.search || "").slice(0, 100);
   const muscleTargets = expandMuscleFilter(filters.muscle || "");
   const equipment = filters.equipment?.trim() || "";
+  const owned = filters.owned?.map((item) => item.trim()).filter(Boolean) ?? [];
   const level = fold(filters.level || "");
   const category = fold(filters.category || "");
   return exercises.filter((exercise, index) => {
     return (!search || searchHaystacks[index].includes(search))
       && (!muscleTargets.length || [...exercise.primaryMuscles, ...exercise.secondaryMuscles].some((item) => muscleTargets.includes(fold(item))))
-      && (!equipment || matchesEquipment(exercise.equipment, equipment))
+      && (!equipment || matchesEquipment(exercise, equipment))
+      && (!owned.length || isDoableWith(exercise, owned))
       && (!level || fold(exercise.level) === level)
       && (!category || fold(exercise.category) === category);
   });

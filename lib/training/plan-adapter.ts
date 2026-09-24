@@ -112,7 +112,7 @@ export function adaptWorkoutPlanOnTheFly(
       if (!origEx) return item;
 
       // Check if current exercise already matches allowed equipment
-      if (isEquipmentAvailable(origEx.equipment, allowedEquipment)) {
+      if (isEquipmentAvailable(origEx.equipmentOptions, allowedEquipment)) {
         return item;
       }
 
@@ -122,13 +122,13 @@ export function adaptWorkoutPlanOnTheFly(
         catalog.find(
           (c) =>
             c.primaryMuscles.includes(targetMuscle) &&
-            isEquipmentAvailable(c.equipment, allowedEquipment) &&
+            isEquipmentAvailable(c.equipmentOptions, allowedEquipment) &&
             c.category !== "stretching",
         ) ||
         catalog.find(
           (c) =>
             c.secondaryMuscles.includes(targetMuscle) &&
-            isEquipmentAvailable(c.equipment, allowedEquipment) &&
+            isEquipmentAvailable(c.equipmentOptions, allowedEquipment) &&
             c.category !== "stretching",
         );
 

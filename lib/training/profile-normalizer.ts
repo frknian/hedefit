@@ -93,7 +93,7 @@ export function normalizeEquipment(equipText: string, env: EnvironmentType): str
   }
 
   if (env === "gym") {
-    return ["barbell", "dumbbell", "cable", "machine", "bodyweight", "bench", "pull-up bar"];
+    return ["gym", "barbell", "dumbbell", "kettlebell", "bands", "cable", "machine", "bodyweight", "bench", "pull-up bar"];
   }
 
   const list = new Set<string>(["bodyweight"]);
@@ -104,7 +104,12 @@ export function normalizeEquipment(equipText: string, env: EnvironmentType): str
   if (lower.includes("kettlebell")) list.add("kettlebell");
   if (lower.includes("sehpa") || lower.includes("bench")) list.add("bench");
   if (lower.includes("makara") || lower.includes("cable")) list.add("cable");
-  if (lower.includes("barfiks") || lower.includes("pull-up bar")) list.add("pull-up bar");
+  if (lower.includes("barfiks") || lower.includes("pull-up bar") || lower.includes("pull_up_bar")) list.add("pull-up bar");
+  if (lower.includes("trx") || lower.includes("halka") || lower.includes("suspension") || lower.includes("rings")) list.add("suspension");
+  if (lower.includes("pilates topu") || lower.includes("denge topu") || lower.includes("stability ball") || lower.includes("stability_ball")) list.add("stability ball");
+  if (lower.includes("atlama ipi") || lower.includes("ip atla") || lower.includes("jump rope") || lower.includes("jump_rope")) list.add("jump rope");
+  if (lower.includes("tekerlek") || lower.includes("ab wheel") || lower.includes("ab_wheel")) list.add("ab wheel");
+  if (lower.includes("dip")) list.add("dip station");
 
   return Array.from(list);
 }

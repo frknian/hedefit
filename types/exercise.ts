@@ -7,6 +7,8 @@ export interface Exercise {
   mechanic: string | null;
   /** Raw source equipment tag (RepDB slug, e.g. `dumbbell`), null = bodyweight. */
   equipment: string | null;
+  /** Audited alternatives (scripts/audit-exercises.mjs): doable if every item of one option is owned; [] = none. */
+  requiredEquipment?: string[][];
   primaryMuscles: string[];
   secondaryMuscles: string[];
   instructions: string[];
@@ -45,6 +47,8 @@ export interface ExerciseFilters {
   search?: string;
   muscle?: string;
   equipment?: string;
+  /** Only exercises doable with exactly this owned equipment (no-equipment moves always included). */
+  owned?: string[];
   level?: string;
   category?: string;
 }

@@ -20,13 +20,11 @@ const GOAL_TO_COMPATIBILITY: Record<GoalType, string> = {
   general_fitness: "general_fitness",
 };
 
-export function isEquipmentAvailable(exerciseEquipment: string[], userEquipment: string[]): boolean {
-  if (userEquipment.includes("gym")) return true;
-  // If exercise requires bodyweight only, it's always available
-  if (exerciseEquipment.length === 1 && exerciseEquipment[0] === "bodyweight") return true;
+const LOADED_EQUIPMENT = ["dumbbell", "kettlebell", "barbell", "machine", "cable"];
 
-  // Check if every equipment piece required by exercise is in user equipment
-  return exerciseEquipment.every((item) => userEquipment.includes(item) || item === "bodyweight");
+export function isEquipmentAvailable(equipmentOptions: string[][], userEquipment: string[]): boolean {
+  if (userEquipment.includes("gym")) return true;
+  return equipmentOptions.some((option) => option.every((item) => item === "bodyweight" || userEquipment.includes(item)));
 }
 
 export function isSafeForLimitations(exercise: StandardizedExercise, limitations: string[]): boolean {
@@ -91,7 +89,7 @@ export function selectExerciseForBudget(
     if (ex.category === "stretching") return false;
 
     // 3. Equipment must be available
-    if (!isEquipmentAvailable(ex.equipment, profile.equipment)) return false;
+    if (!isEquipmentAvailable(ex.equipmentOptions, profile.equipment)) return false;
 
     // 4. Must be safe for limitations / injuries
     if (!isSafeForLimitations(ex, profile.limitations)) return false;
@@ -110,7 +108,7 @@ export function selectExerciseForBudget(
     let fallback = catalog.filter((ex) => {
       if (ex.category === "stretching") return false;
       if (!ex.secondaryMuscles.includes(targetMuscle) && !ex.primaryMuscles.includes(targetMuscle)) return false;
-      if (!isEquipmentAvailable(ex.equipment, profile.equipment)) return false;
+      if (!isEquipmentAvailable(ex.equipmentOptions, profile.equipment)) return false;
       if (!isSafeForLimitations(ex, profile.limitations)) return false;
       if (!isDifficultySuitable(ex.difficulty, profile.fitnessLevel)) return false;
       if (alreadySelectedIds.has(ex.id)) return false;
@@ -119,7 +117,7 @@ export function selectExerciseForBudget(
     if (fallback.length === 0) {
       fallback = catalog.filter((ex) => {
         if (ex.category === "stretching") return false;
-        if (!isEquipmentAvailable(ex.equipment, profile.equipment)) return false;
+        if (!isEquipmentAvailable(ex.equipmentOptions, profile.equipment)) return false;
         if (!isSafeForLimitations(ex, profile.limitations)) return false;
         if (!isDifficultySuitable(ex.difficulty, profile.fitnessLevel)) return false;
         if (alreadySelectedIds.has(ex.id)) return false;
@@ -129,7 +127,7 @@ export function selectExerciseForBudget(
     if (fallback.length === 0) {
       fallback = catalog.filter((ex) => {
         if (ex.category === "stretching") return false;
-        if (!isEquipmentAvailable(ex.equipment, profile.equipment)) return false;
+        if (!isEquipmentAvailable(ex.equipmentOptions, profile.equipment)) return false;
         if (!isSafeForLimitations(ex, profile.limitations)) return false;
         if (alreadySelectedIds.has(ex.id)) return false;
         return true;
@@ -177,6 +175,17 @@ export function selectExerciseForBudget(
     if (/bench press|squat|deadlift|overhead press|barbell row|pull-up|lat pulldown|hip thrust|leg press|dip/i.test(exercise.name)) {
       score += 10;
     }
+
+    // Use the best tool the person actually has: loaded moves beat band/bodyweight
+    // versions when weights are available, and gym sessions favour gym equipment.
+    const loaded = LOADED_EQUIPMENT.filter((item) => profile.equipment.includes(item) || profile.equipment.includes("gym"));
+    const usesLoaded = exercise.equipmentOptions.some((option) => option.some((item) => loaded.includes(item)));
+    const lightOnly = exercise.equipmentOptions.every((option) => option.every((item) => item === "bodyweight" || item === "bands"));
+    if (loaded.length > 0 && usesLoaded) score += profile.environment === "gym" ? 25 : 20;
+    if (loaded.length > 0 && lightOnly && exercise.compoundOrIsolation === "compound") score -= 15;
+    // Someone who said they own a band (or TRX, ball…) should see it used, not only bodyweight moves.
+    const ownedGear = profile.equipment.filter((item) => item !== "bodyweight" && item !== "gym");
+    if (!usesLoaded && exercise.equipmentOptions.some((option) => option.length > 0 && option.every((item) => ownedGear.includes(item)))) score += 18;
 
     // RepDB-derived goal fit (see scripts/import-repdb.mjs GOAL_MAP)
     if (exercise.goalCompatibility?.includes(GOAL_TO_COMPATIBILITY[profile.goal])) {

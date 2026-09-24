@@ -4,6 +4,25 @@ import { translateExerciseLabel, translateExerciseName, turkishExerciseInstructi
 
 const safeParam = (value: string | null) => (value || "").trim().slice(0, 100);
 
+const GROUP_LABELS: Record<string, [string, string]> = {
+  dumbbell: ["Dambıl", "Dumbbell"], barbell: ["Halter", "Barbell"], kettlebell: ["Kettlebell", "Kettlebell"],
+  band: ["Direnç bandı", "Resistance band"], pull_up_bar: ["Barfiks barı", "Pull-up bar"], bench: ["Sehpa", "Bench"],
+  cable: ["Kablo", "Cable"], machine: ["Makine", "Machine"], suspension: ["TRX / halka", "TRX / rings"],
+  stability_ball: ["Pilates topu", "Stability ball"], jump_rope: ["Atlama ipi", "Jump rope"], ab_wheel: ["Karın tekerleği", "Ab wheel"],
+  plates: ["Plaka", "Weight plate"], dip_station: ["Dips istasyonu", "Dip station"], plyo_box: ["Plyo kutusu", "Plyo box"],
+  gym_gear: ["Salon ekipmanı", "Gym equipment"], cardio_machine: ["Kardiyo makinesi", "Cardio machine"],
+};
+
+/** "Dambıl + Sehpa", "Kettlebell / Dambıl" for alternatives, "Ekipmansız" when nothing is needed. */
+function equipmentLabel(options: string[][] | undefined, raw: string | null, locale: "tr" | "en") {
+  if (!options) return translateExerciseLabel(raw, locale);
+  const en = locale === "en";
+  if (options.some((option) => option.length === 0)) return en ? "No equipment" : "Ekipmansız";
+  return options
+    .map((option) => option.map((group) => GROUP_LABELS[group]?.[en ? 1 : 0] ?? group).join(" + "))
+    .join(" / ");
+}
+
 export function GET(request: Request) {
   // Herkese açık katalog: kimlik gerektirmez, ancak toplu kazımaya karşı sınırlandırılır.
   const rateLimitResult = rateLimit(`exercises:${clientKey(request)}`, 120, 60_000);
@@ -19,7 +38,8 @@ export function GET(request: Request) {
   const force = safeParam(searchParams.get("force"));
   const mechanic = safeParam(searchParams.get("mechanic"));
   const muscleTargets = expandMuscleFilter(muscle);
-  const filtered = filterExercises({ search: safeParam(searchParams.get("search")), equipment: safeParam(searchParams.get("equipment")), level: safeParam(searchParams.get("level")), category: safeParam(searchParams.get("category")) });
+  const owned = safeParam(searchParams.get("owned")).split(",").map((item) => item.trim()).filter(Boolean);
+  const filtered = filterExercises({ search: safeParam(searchParams.get("search")), equipment: safeParam(searchParams.get("equipment")), owned, level: safeParam(searchParams.get("level")), category: safeParam(searchParams.get("category")) });
   const byMuscle = muscleTargets.length
     ? filtered.filter((item) => [...item.primaryMuscles, ...item.secondaryMuscles].some((value) => muscleTargets.includes(value)))
     : filtered;
@@ -50,8 +70,10 @@ export function GET(request: Request) {
     name: translateExerciseName(item.name, locale),
     primaryMuscles: item.primaryMuscles.map((value) => translateExerciseLabel(value, locale)),
     secondaryMuscles: item.secondaryMuscles.map((value) => translateExerciseLabel(value, locale)),
-    equipment: translateExerciseLabel(item.equipment, locale),
+    equipment: equipmentLabel(item.requiredEquipment, item.equipment, locale),
+    requiredEquipment: item.requiredEquipment ?? [],
     level: translateExerciseLabel(item.level, locale),
+    levelKey: item.level,
     category: translateExerciseLabel(item.category, locale),
     instructions: turkishExerciseInstructions(item, locale),
   }));

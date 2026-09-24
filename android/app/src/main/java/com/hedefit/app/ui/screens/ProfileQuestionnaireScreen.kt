@@ -44,7 +44,7 @@ private val profileQuestions = listOf(
     ProfileQuestion("Bir antrenman için ne kadar süren var?", "Isınma ve soğuma dahil ayırabileceğin toplam süre.", listOf("15 dk", "30 dk", "45 dk", "60 dk", "75+ dk")),
     ProfileQuestion("Hangi antrenmanları seversin?", "Birden fazla seçebilirsin.", listOf("Ağırlık", "HIIT", "Koşu", "Bisiklet", "Vücut ağırlığı"), multiSelect = true),
     ProfileQuestion("Nerede çalışacaksın?", "Egzersizler ortama göre seçilir.", listOf("Evde", "Spor salonunda", "Açık havada", "Karışık")),
-    ProfileQuestion("Hangi ekipmanların var?", "Birden fazla seçebilirsin. “Ekipman yok” tek başına seçilir.", listOf("Ekipman yok", "Dambıl", "Direnç bandı", "Tam salon", "Kardiyo aleti"), multiSelect = true, exclusiveChoice = "Ekipman yok"),
+    ProfileQuestion("Hangi ekipmanların var?", "Birden fazla seçebilirsin. “Ekipman yok” tek başına seçilir.", listOf("Ekipman yok", "Dambıl", "Kettlebell", "Direnç bandı", "Barfiks barı", "Sehpa", "Halter", "TRX / halka", "Pilates topu", "Atlama ipi", "Tam salon", "Kardiyo aleti"), multiSelect = true, exclusiveChoice = "Ekipman yok"),
     ProfileQuestion("Ağrı veya sakatlık var mı?", "Birden fazla bölge seçebilirsin. “Yok” tek başına seçilir.", listOf("Yok", "Bel", "Diz", "Omuz", "Boyun", "Diğer"), multiSelect = true, exclusiveChoice = "Yok"),
     ProfileQuestion("Gün içinde ne kadar hareketlisin?", "Günlük enerji hesabı", listOf("Çoğunlukla oturuyorum", "Ara sıra hareket", "Aktif", "Çok aktif")),
     ProfileQuestion("Uyku düzenin nasıl?", "Toparlanma kapasiten", listOf("5 saatten az", "5–6 saat", "7–8 saat", "9+ saat")),

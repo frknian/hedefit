@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -185,7 +186,7 @@ fun WorkoutPlanScreen(
     onOpenRoute: () -> Unit,
     onGenerateRegional: (String, String, Pair<String, String>?) -> Unit,
     onLoadRegional: (String) -> Unit,
-    onGenerateQuickWorkout: (List<Pair<String, String>>, Int, String, String, String) -> Unit,
+    onGenerateQuickWorkout: (List<Pair<String, String>>, Int, String, String, List<String>, String) -> Unit,
     onCreateOwnPlan: (CustomProgramDraft) -> Unit,
     onAddPushPullTemplate: (String) -> Unit,
     onSelectProgram: (WorkoutProgramData) -> Unit,
@@ -264,7 +265,7 @@ fun WorkoutPlanScreen(
         BackHandler(onBack = back)
         when (current) {
             "hub" -> ProgramCreateHub(padding, en, onBack = back, onOpen = { page = it }, onOpenRegional = { showRegional = true })
-            "quick" -> QuickWorkoutPage(padding, en, generating, onBack = back) { regions, duration, fatigue, environment, equipment -> onGenerateQuickWorkout(regions, duration, fatigue, environment, equipment); page = null }
+            "quick" -> QuickWorkoutPage(padding, en, generating, onBack = back) { regions, duration, fatigue, environment, owned, level -> onGenerateQuickWorkout(regions, duration, fatigue, environment, owned, level); page = null }
             "ai" -> AiProgramPage(padding, en, profile, generating, onBack = back, onEditPreferences = onOpenQuestionnaire) { onGeneratePlan(); page = null }
             "ready" -> ReadyProgramsPage(padding, en, generating, onBack = back) { key -> onAddPushPullTemplate(key); page = null }
             "custom" -> CustomProgramPage(padding, en, onBack = back) { draft -> onCreateOwnPlan(draft); page = null }
@@ -1385,89 +1386,73 @@ private fun ProgramCreateHub(padding: PaddingValues, en: Boolean, onBack: () -> 
     }
 }
 
+internal val HOME_EQUIPMENT_OPTIONS = listOf(
+    "dumbbell" to ("Dambıl" to "Dumbbell"),
+    "kettlebell" to ("Kettlebell" to "Kettlebell"),
+    "band" to ("Direnç bandı" to "Resistance band"),
+    "pull_up_bar" to ("Barfiks barı" to "Pull-up bar"),
+    "bench" to ("Sehpa" to "Bench"),
+    "barbell" to ("Halter" to "Barbell"),
+    "suspension" to ("TRX / halka" to "TRX / rings"),
+    "stability_ball" to ("Pilates topu" to "Stability ball"),
+    "jump_rope" to ("Atlama ipi" to "Jump rope"),
+    "ab_wheel" to ("Karın tekerleği" to "Ab wheel"),
+)
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun QuickWorkoutPage(padding: PaddingValues, en: Boolean, busy: Boolean, onBack: () -> Unit, onCreate: (List<Pair<String, String>>, Int, String, String, String) -> Unit) {
+private fun QuickWorkoutPage(padding: PaddingValues, en: Boolean, busy: Boolean, onBack: () -> Unit, onCreate: (List<Pair<String, String>>, Int, String, String, List<String>, String) -> Unit) {
     var duration by rememberSaveable { mutableIntStateOf(30) }
     var fatigue by rememberSaveable { mutableStateOf("normal") }
-    var environment by rememberSaveable { mutableStateOf("") }
-    var equipment by rememberSaveable { mutableStateOf("") }
-    val allRegions = regionalMuscleRegions(en)
-    var selectedRegions by rememberSaveable { mutableStateOf(setOf("chest")) }
+    var environment by rememberSaveable { mutableStateOf("home") }
+    var owned by rememberSaveable { mutableStateOf(emptySet<String>()) }
+    var level by rememberSaveable { mutableStateOf("intermediate") }
+    val allRegions = listOf(MuscleRegion(com.hedefit.app.ui.state.FULL_BODY, if (en) "Full body" else "Tüm vücut", "")) + regionalMuscleRegions(en)
+    var selectedRegions by rememberSaveable { mutableStateOf(setOf(com.hedefit.app.ui.state.FULL_BODY)) }
     val durations = listOf(15, 20, 30, 45, 60)
-    val fatigueOptions = listOf("dinc" to (if (en) "Fresh" else "Dinç"), "normal" to (if (en) "Normal" else "Normal"), "yorgun" to (if (en) "Tired" else "Yorgun"))
-    val environmentOptions = listOf("" to (if (en) "Any" else "Fark etmez"), "gym" to (if (en) "Gym" else "Spor salonu"), "home" to (if (en) "Home" else "Ev"))
-    val equipmentOptions = listOf(
-        "" to (if (en) "Any" else "Tümü"),
-        "bodyweight" to (if (en) "Bodyweight" else "Vücut ağırlığı"),
-        "dumbbell" to (if (en) "Dumbbell" else "Dambıl"),
-        "barbell" to (if (en) "Barbell" else "Halter"),
-        "kettlebell" to "Kettlebell",
-        "cable" to (if (en) "Cable" else "Kablo"),
-        "band" to (if (en) "Band" else "Direnç bandı"),
-        "machine" to (if (en) "Machine" else "Makine"),
-        "pull_up_bar" to (if (en) "Pull-up bar" else "Barfiks barı"),
-    )
+    val fatigueOptions = listOf("dinc" to (if (en) "Fresh" else "Dinç"), "normal" to "Normal", "yorgun" to (if (en) "Tired" else "Yorgun"))
+    val levelOptions = listOf("beginner" to (if (en) "Beginner" else "Başlangıç"), "intermediate" to (if (en) "Intermediate" else "Orta"), "advanced" to (if (en) "Advanced" else "İleri"))
+    @Composable
+    fun Section(title: String, content: @Composable ColumnScope.() -> Unit) = HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+            content()
+        }
+    }
     ScreenContainer(padding) {
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            item { HfScreenHeader(if (en) "Quick workout" else "Hızlı antrenman", if (en) "Tell us what you've got right now" else "Şu an elindekini söyle", onBack = onBack) }
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            item { HfScreenHeader(if (en) "Quick workout" else "Hızlı antrenman", onBack = onBack) }
+            item { Section(if (en) "How much time do you have?" else "Ne kadar süren var?") { HfChipRow { durations.forEach { value -> HfChip(if (en) "$value min" else "$value dk", duration == value, { duration = value }) } } } }
             item {
-                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (en) "How much time do you have?" else "Ne kadar süren var?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-                        HfChipRow { durations.forEach { value -> HfChip(if (en) "$value min" else "$value dk", duration == value, { duration = value }) } }
-                    }
+                Section(if (en) "How's your energy?" else "Yorgunluk durumun?") {
+                    HfSegmented(fatigueOptions.map { it.second }, fatigueOptions.indexOfFirst { it.first == fatigue }.coerceAtLeast(0), { fatigue = fatigueOptions[it].first })
                 }
             }
+            item { Section(if (en) "Level" else "Seviye") { HfSegmented(levelOptions.map { it.second }, levelOptions.indexOfFirst { it.first == level }.coerceAtLeast(0), { level = levelOptions[it].first }) } }
             item {
-                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (en) "How's your energy?" else "Yorgunluk durumun?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-                        HfSegmented(fatigueOptions.map { it.second }, fatigueOptions.indexOfFirst { it.first == fatigue }.coerceAtLeast(0), { fatigue = fatigueOptions[it].first })
-                        Text(
-                            when (fatigue) {
-                                "yorgun" -> if (en) "Fewer sets, lighter session." else "Daha az set, hafif bir seans."
-                                "dinc" -> if (en) "More sets, higher intensity." else "Daha çok set, yüksek yoğunluk."
-                                else -> if (en) "Balanced volume and intensity." else "Dengeli hacim ve yoğunluk."
-                            },
-                            color = HedefitColors.TextMuted,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
-            }
-            item {
-                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (en) "Where are you training?" else "Nerede antrenman yapıyorsun?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-                        HfChipRow { environmentOptions.forEach { (key, label) -> HfChip(label, environment == key, onClick = { environment = key }) } }
-                    }
-                }
-            }
-            item {
-                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (en) "What equipment do you have?" else "Hangi ekipman elinde var?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                Section(if (en) "Where are you training?" else "Nerede antrenman yapıyorsun?") {
+                    HfSegmented(listOf(if (en) "Home" else "Ev", if (en) "Gym" else "Spor salonu"), if (environment == "gym") 1 else 0, { environment = if (it == 1) "gym" else "home" })
+                    if (environment == "home") {
+                        Text(if (en) "What do you have? (nothing = bodyweight only)" else "Elinde ne var? (hiçbiri = sadece vücut ağırlığı)", fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            equipmentOptions.forEach { (key, label) -> HfChip(label, equipment == key, onClick = { equipment = key }) }
+                            HOME_EQUIPMENT_OPTIONS.forEach { (key, labels) ->
+                                HfChip(if (en) labels.second else labels.first, key in owned, onClick = { owned = if (key in owned) owned - key else owned + key })
+                            }
                         }
                     }
                 }
             }
             item {
-                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(if (en) "Which areas? (up to 3)" else "Hangi bölgeler? (en fazla 3)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            allRegions.forEach { region ->
-                                HfChip(region.label, region.key in selectedRegions, onClick = {
-                                    selectedRegions = when {
-                                        region.key in selectedRegions -> selectedRegions - region.key
-                                        selectedRegions.size >= 3 -> selectedRegions
-                                        else -> selectedRegions + region.key
-                                    }
-                                })
-                            }
+                Section(if (en) "Which areas? (up to 3)" else "Hangi bölgeler? (en fazla 3)") {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        allRegions.forEach { region ->
+                            HfChip(region.label, region.key in selectedRegions, onClick = {
+                                selectedRegions = when {
+                                    region.key == com.hedefit.app.ui.state.FULL_BODY -> setOf(region.key)
+                                    region.key in selectedRegions -> selectedRegions - region.key
+                                    else -> (selectedRegions - com.hedefit.app.ui.state.FULL_BODY).let { if (it.size >= 3) it else it + region.key }
+                                }
+                            })
                         }
                     }
                 }
@@ -1477,7 +1462,7 @@ private fun QuickWorkoutPage(padding: PaddingValues, en: Boolean, busy: Boolean,
                     if (busy) (if (en) "Preparing…" else "Hazırlanıyor…") else if (en) "Create my workout" else "Antrenmanımı oluştur",
                     {
                         val chosen = selectedRegions.mapNotNull { key -> allRegions.firstOrNull { it.key == key }?.let { key to it.label } }
-                        if (chosen.isNotEmpty()) onCreate(chosen, duration, fatigue, environment, equipment)
+                        if (chosen.isNotEmpty()) onCreate(chosen, duration, fatigue, environment, owned.toList(), level)
                     },
                     Modifier.fillMaxWidth(),
                     Icons.Default.Bolt,

@@ -183,9 +183,16 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
   const unitRaw = input.unit ? normalizeTurkishText(input.unit) : "";
   let calculatedGrams = 0;
 
+  // Adında miktar geçen varyantlar ("Yarım Ekmek Tavuk Döner") kendi gramajını kullanır;
+  // "yarım" kelimesi tekrar yarıya indirmemeli.
+  const namedVariant = matchedVariant && matchedVariant.defaultGrams && [matchedVariant.name, ...(matchedVariant.aliases || [])].map(normalizeTurkishText).includes(normText)
+    ? matchedVariant : null;
+
   if (input.grams && input.grams > 0) {
     // Kullanıcı doğrudan gramaj belirtmişse (ör. "200 gram tavuk")
     calculatedGrams = input.grams;
+  } else if (namedVariant) {
+    calculatedGrams = (namedVariant.defaultGrams ?? 150) * qty;
   } else if (matchedFood) {
     // Yiyeceğe özel porsiyon tablosunda birim ara
     const specificPortion = matchedFood.portions.find((p) => {

@@ -502,7 +502,7 @@ class HedefitRepository(
         }
     }
 
-    suspend fun savePhotoNutrition(items: List<NutritionEstimateData>, meal: String): List<NutritionLogData> = items.map { item ->
+    suspend fun savePhotoNutrition(items: List<NutritionEstimateData>, meal: String, inputMethod: String = "photo"): List<NutritionLogData> = items.map { item ->
         val grams = item.grams.coerceIn(1.0, 5000.0)
         val ratioTo100 = 100.0 / grams
         addCatalogFood(FoodSearchData(
@@ -510,8 +510,8 @@ class HedefitRepository(
             calories = (item.calories * ratioTo100).toInt(), protein = item.protein * ratioTo100, carbs = item.carbs * ratioTo100,
             fat = item.fat * ratioTo100, fiber = item.fiber * ratioTo100, sugar = item.sugar * ratioTo100,
             sodiumMg = item.sodiumMg * ratioTo100, potassiumMg = item.potassiumMg * ratioTo100, calciumMg = item.calciumMg * ratioTo100,
-            ironMg = item.ironMg * ratioTo100, vitaminCMg = item.vitaminCMg * ratioTo100, verified = false, source = "photo_ai",
-        ), grams, meal, "photo")
+            ironMg = item.ironMg * ratioTo100, vitaminCMg = item.vitaminCMg * ratioTo100, verified = false, source = if (inputMethod == "photo") "photo_ai" else "meal_text",
+        ), grams, meal, inputMethod)
     }
 
     suspend fun addCatalogFood(food: FoodSearchData, grams: Double, meal: String, inputMethod: String = "search"): NutritionLogData {
@@ -590,22 +590,9 @@ class HedefitRepository(
         return parseScheduleItem(rest.upsert("workout_schedule", row, "user_id,scheduled_date"))
     }
 
-    suspend fun loadExerciseCatalog(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr"): List<ExerciseCatalogData> {
-        val requestedMuscles = when (muscle) {
-            "arms" -> listOf("biceps", "triceps", "forearms")
-            "back" -> listOf("lats", "middle back", "lower back", "traps")
-            "core" -> listOf("abdominals", "lower back")
-            "hips" -> listOf("glutes", "adductors", "abductors")
-            "legs" -> listOf("quadriceps", "hamstrings", "calves", "adductors", "abductors", "glutes")
-            else -> listOf(muscle)
-        }
-        if (requestedMuscles.size > 1) return coroutineScope {
-            requestedMuscles.map { target ->
-                async { loadExerciseCatalog(search, target, equipment, level, environment, muscleRole, force, mechanic, category, locale) }
-            }.map { it.await() }.flatten().distinctBy(ExerciseCatalogData::id).sortedBy(ExerciseCatalogData::name)
-        }
+    suspend fun loadExerciseCatalog(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", owned: List<String> = emptyList()): List<ExerciseCatalogData> {
         val encode = { value: String -> java.net.URLEncoder.encode(value, Charsets.UTF_8.name()) }
-        val path = "/api/exercises?limit=1000&search=${encode(search)}&muscle=${encode(muscle)}&equipment=${encode(equipment)}&level=${encode(level)}&environment=${encode(environment)}&muscleRole=${encode(muscleRole)}&force=${encode(force)}&mechanic=${encode(mechanic)}&category=${encode(category)}&locale=${if (locale == "en") "en" else "tr"}"
+        val path = "/api/exercises?limit=1000&search=${encode(search)}&muscle=${encode(muscle)}&equipment=${encode(equipment)}&level=${encode(level)}&environment=${encode(environment)}&muscleRole=${encode(muscleRole)}&force=${encode(force)}&mechanic=${encode(mechanic)}&category=${encode(category)}&owned=${encode(owned.joinToString(","))}&locale=${if (locale == "en") "en" else "tr"}"
         val array = api.get(path).requireSuccess("Egzersiz kütüphanesi yüklenemedi.").jsonObject().optJSONArray("items") ?: JSONArray()
         return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
             add(ExerciseCatalogData(
@@ -620,6 +607,10 @@ class HedefitRepository(
                 secondaryMuscles = item.optJSONArray("secondaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
                 force = item.optString("force"),
                 mechanic = item.optString("mechanic"),
+                levelKey = item.optString("levelKey"),
+                requiredEquipment = item.optJSONArray("requiredEquipment")?.let { options ->
+                    List(options.length()) { i -> options.optJSONArray(i)?.let { groups -> List(groups.length()) { groups.optString(it) } }.orEmpty() }
+                }.orEmpty(),
             ))
         } }
     }
@@ -676,6 +667,35 @@ class HedefitRepository(
     }
 
     private fun workoutsJson(workouts: List<WorkoutExerciseData>) = JSONArray(workouts.map { JSONObject().put("id", it.id).put("name", it.name).put("area", it.area).put("sets", it.sets).put("reps", it.reps).put("restSeconds", it.restSeconds).put("targetWeightKg", it.targetWeightKg ?: JSONObject.NULL) })
+
+    /** Splits a whole-meal sentence ("omlet, 3 dilim ekmek, domates") into separately portioned foods. */
+    suspend fun parseMealText(text: String): List<NutritionEstimateData> {
+        val response = api.post("/api/nutrition/parse-text", JSONObject().put("text", text))
+            .requireSuccess("Öğün metni çözümlenemedi.").jsonObject()
+        val items = response.optJSONArray("items") ?: JSONArray()
+        return List(items.length()) { index ->
+            val item = items.getJSONObject(index)
+            val nutrition = item.getJSONObject("nutrition")
+            NutritionEstimateData(
+                name = item.optString("name", item.optString("query")),
+                grams = item.optDouble("estimatedGrams", 100.0),
+                calories = nutrition.optInt("calories"),
+                protein = nutrition.optDouble("protein"),
+                carbs = nutrition.optDouble("carbohydrates"),
+                fat = nutrition.optDouble("fat"),
+                fiber = nutrition.optDouble("fiber"),
+                sugar = nutrition.optDouble("sugar", 0.0),
+                sodiumMg = nutrition.optDouble("sodiumMg", 0.0),
+                potassiumMg = nutrition.optDouble("potassiumMg", 0.0),
+                calciumMg = nutrition.optDouble("calciumMg", 0.0),
+                ironMg = nutrition.optDouble("ironMg", 0.0),
+                vitaminCMg = nutrition.optDouble("vitaminCMg", 0.0),
+                confidence = item.optDouble("confidence", .7),
+                portionQuantity = item.optDouble("quantity").takeIf { it.isFinite() && it > 0 },
+                portionUnit = item.optString("unit").takeIf { it.isNotBlank() && it != "null" },
+            )
+        }
+    }
 
     suspend fun estimateNutrition(food: String, grams: Double): NutritionEstimateData {
         val response = api.post("/api/nutrition/parse-text", JSONObject().put("query", food).put("grams", grams))

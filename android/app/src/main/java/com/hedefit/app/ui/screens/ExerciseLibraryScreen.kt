@@ -249,14 +249,10 @@ private fun levelOptions(en: Boolean) = listOf(
 // oradan bu küçük gruplara indirgeniyor.
 private fun equipmentOptions(en: Boolean) = listOf(
     "" to if (en) "All" else "Tümü",
-    "bodyweight" to if (en) "Bodyweight" else "Vücut ağırlığı",
-    "dumbbell" to if (en) "Dumbbell" else "Dambıl",
-    "barbell" to if (en) "Barbell" else "Halter",
-    "kettlebell" to "Kettlebell",
+    "bodyweight" to if (en) "No equipment" else "Ekipmansız",
+) + HOME_EQUIPMENT_OPTIONS.map { (key, labels) -> key to if (en) labels.second else labels.first } + listOf(
     "cable" to if (en) "Cable" else "Kablo",
-    "band" to if (en) "Band" else "Direnç bandı",
     "machine" to if (en) "Machine" else "Makine",
-    "pull_up_bar" to if (en) "Pull-up bar" else "Barfiks barı",
 )
 
 private fun forceOptions(en: Boolean) = listOf(

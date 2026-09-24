@@ -238,6 +238,14 @@ const REPDB_EQUIPMENT_MAP: Record<string, string[]> = {
   suspension_trainer: ["pull-up bar"],
 };
 
+/** scripts/audit-exercises.mjs groups -> engine vocabulary shared with profile-normalizer. */
+const AUDIT_GROUP_TO_ENGINE: Record<string, string> = {
+  dumbbell: "dumbbell", barbell: "barbell", kettlebell: "kettlebell", band: "bands", pull_up_bar: "pull-up bar",
+  bench: "bench", cable: "cable", machine: "machine", suspension: "suspension", stability_ball: "stability ball",
+  jump_rope: "jump rope", ab_wheel: "ab wheel", plates: "barbell", dip_station: "dip station", plyo_box: "machine",
+  gym_gear: "machine", cardio_machine: "machine",
+};
+
 export function normalizeEquipmentList(rawEquipment: string | null): string[] {
   if (!rawEquipment) return ["bodyweight"];
   const key = rawEquipment.toLowerCase().trim();
@@ -297,7 +305,10 @@ const standardizedExercises: StandardizedExercise[] = (exerciseData as Array<Rec
   const category = String(item.category || "strength");
   const force = item.force ? String(item.force) : null;
   const mechanic = item.mechanic ? String(item.mechanic) : null;
-  const equipment = normalizeEquipmentList(item.equipment ? String(item.equipment) : null);
+  const equipmentOptions = Array.isArray(item.requiredEquipment)
+    ? (item.requiredEquipment as unknown[][]).map((option) => option.map((group) => AUDIT_GROUP_TO_ENGINE[String(group)] ?? "machine"))
+    : [normalizeEquipmentList(item.equipment ? String(item.equipment) : null).filter((e) => e !== "bodyweight")];
+  const equipment = equipmentOptions[0].length > 0 ? equipmentOptions[0] : ["bodyweight"];
   const difficulty = normalizeDifficulty(String(item.level || "beginner"));
 
   const movementPattern = detectMovementPattern(name, primaryMuscles, category, force);
@@ -312,6 +323,7 @@ const standardizedExercises: StandardizedExercise[] = (exerciseData as Array<Rec
     secondaryMuscles,
     movementPattern,
     equipment,
+    equipmentOptions,
     difficulty,
     compoundOrIsolation,
     contraindications,

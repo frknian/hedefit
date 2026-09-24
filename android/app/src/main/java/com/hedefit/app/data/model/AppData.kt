@@ -230,6 +230,10 @@ data class ExerciseCatalogData(
     val secondaryMuscles: List<String> = emptyList(),
     val force: String = "",
     val mechanic: String = "",
+    /** Raw catalog level: beginner | intermediate | advanced. */
+    val levelKey: String = "",
+    /** Audited equipment alternatives; an empty option means no equipment is needed. */
+    val requiredEquipment: List<List<String>> = emptyList(),
 )
 
 data class NutritionGoalData(
@@ -293,6 +297,9 @@ data class NutritionEstimateData(
     val ironMg: Double = 0.0,
     val vitaminCMg: Double = 0.0,
     val confidence: Double,
+    /** Household portion the parser recognised ("3" + "dilim"); grams are derived from it. */
+    val portionQuantity: Double? = null,
+    val portionUnit: String? = null,
 )
 
 data class CoachActionData(

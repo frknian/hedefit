@@ -176,6 +176,8 @@ fun NutritionScreen(
     onClearPhotoResults: () -> Unit = {},
     onSavePhotoResults: (List<NutritionEstimateData>, String) -> Unit = { _, _ -> },
     onAskCoach: (String) -> Unit = {},
+    reviewFromText: Boolean = false,
+    reviewMeal: String? = null,
 ) {
     val en = language == "en"
     var showFoodSearch by remember { mutableStateOf(false) }
@@ -344,7 +346,7 @@ fun NutritionScreen(
         dismissButton = { TextButton(onClick = { showPhotoSource = false; galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Icon(Icons.Default.PhotoLibrary, null); Spacer(Modifier.width(5.dp)); Text(if (en) "Gallery" else "Galeri") } },
     )
     if (photoBusy) AlertDialog(onDismissRequest = {}, title = { Text(if (en) "Analyzing meal…" else "Öğün analiz ediliyor…") }, text = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { CircularProgressIndicator(color = HedefitColors.Lime); Text(if (en) "Foods, portions and nutrients are being estimated." else "Besinler, porsiyonlar ve değerler tahmin ediliyor.") } }, confirmButton = {})
-    if (photoResults.isNotEmpty()) PhotoNutritionReviewDialog(photoResults, busy, en, onClearPhotoResults, onSavePhotoResults)
+    if (photoResults.isNotEmpty()) PhotoNutritionReviewDialog(photoResults, busy, en, onClearPhotoResults, onSavePhotoResults, fromText = reviewFromText, initialMeal = reviewMeal)
 }
 
 private val MEAL_TYPES = listOf("Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık")
@@ -765,17 +767,18 @@ private fun MealEntryCard(
             OutlinedTextField(
                 value = name,
                 onValueChange = {
-                    name = it.take(80)
+                    name = it.take(300)
                     if (selectedFood?.name != name) selectedFood = null
                 },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(if (en) "Food name" else "Besin adı") },
+                placeholder = { Text(if (en) "Food or whole meal: omelette, 2 slices bread…" else "Besin ya da öğün: omlet, 2 dilim ekmek…") },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = HedefitColors.TextSecondary) },
                 trailingIcon = { if (searching) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = HedefitColors.Lime) },
-                singleLine = true,
+                maxLines = 3,
                 colors = nutritionFieldColors(),
             )
-            if (suggestions.isNotEmpty()) {
+            val wholeMeal = selectedFood == null && com.hedefit.app.ui.state.looksLikeWholeMeal(cleanName)
+            if (suggestions.isNotEmpty() && !wholeMeal) {
                 Column(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(14.dp)).padding(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     suggestions.forEach { food ->
                         Row(
@@ -828,7 +831,7 @@ private fun MealEntryCard(
                     }
                 }
             }
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (!wholeMeal) LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(listOf("g", "adet")) { value ->
                     FilterChip(
                         selected = unit == value,
@@ -837,7 +840,7 @@ private fun MealEntryCard(
                     )
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (!wholeMeal) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IconButton(onClick = { amount = ((numericAmount ?: 1.0) - amountStep(unit)).coerceAtLeast(amountStep(unit)).cleanNumber() }, modifier = Modifier.background(HedefitColors.SurfaceHigh, CircleShape)) { Icon(Icons.Default.Remove, null) }
                 OutlinedTextField(
                     amount,
@@ -850,7 +853,7 @@ private fun MealEntryCard(
                 )
                 IconButton(onClick = { amount = ((numericAmount ?: 0.0) + amountStep(unit)).cleanNumber() }, modifier = Modifier.background(HedefitColors.Lime, CircleShape)) { Icon(Icons.Default.Add, null, tint = HedefitColors.OnLime) }
             }
-            grams?.takeIf { it > 0 }?.let { totalGrams ->
+            if (!wholeMeal) grams?.takeIf { it > 0 }?.let { totalGrams ->
                 val ratio = totalGrams / 100.0
                 Column(Modifier.fillMaxWidth().background(HedefitColors.Lime.copy(alpha = .08f), RoundedCornerShape(13.dp)).padding(11.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -879,8 +882,13 @@ private fun MealEntryCard(
                 items(listOf("Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık")) { type -> FilterChip(meal == type, { meal = type }, label = { Text(mealLabel(type, en)) }) }
             }
             Button(
-                enabled = enabled && !busy && cleanName.length >= 2 && grams != null && grams > 0,
+                enabled = enabled && !busy && cleanName.length >= 2 && (wholeMeal || grams != null && grams > 0),
                 onClick = {
+                    if (wholeMeal) {
+                        onAddWithAi(cleanName, 100.0, meal)
+                        name = ""
+                        return@Button
+                    }
                     grams?.let { total ->
                         // Search suggestions are never silently accepted: the user must tap one.
                         // Otherwise the full phrase goes to the server, where exact catalogue
@@ -899,6 +907,7 @@ private fun MealEntryCard(
                 Text(when {
                     !enabled -> if (en) "Past day" else "Geçmiş gün"
                     busy -> if (en) "Adding…" else "Ekleniyor…"
+                    wholeMeal -> if (en) "Split into foods and review" else "Besinlere ayır ve kontrol et"
                     selectedFood == null && cleanName.length >= 2 -> if (en) "Add \"$cleanName\" to ${mealLabel(meal, true)}" else "\"$cleanName\" → ${mealLabel(meal, false)}"
                     en -> "Add to ${mealLabel(meal, true)}"
                     else -> "${mealLabel(meal, false)} öğününe ekle"
@@ -1233,15 +1242,28 @@ private fun FoodSearchDialog(results: List<FoodSearchData>, searching: Boolean, 
     )
 }
 
+private fun portionStepHalf(unit: String?) = unit in setOf("porsiyon", "tabak", "kase", "bardak", "portion")
+private fun formatPortion(q: Double) = if (q % 1.0 == 0.0) q.toInt().toString() else "%.1f".format(q).replace('.', ',')
+private fun portionUnitLabel(unit: String?, en: Boolean): String = when (unit) {
+    null, "", "tane", "adet" -> if (en) "pc" else "adet"
+    "dilim" -> if (en) "slice" else "dilim"
+    "porsiyon", "portion" -> if (en) "serving" else "porsiyon"
+    "tabak" -> if (en) "plate" else "tabak"
+    "kase" -> if (en) "bowl" else "kase"
+    "bardak" -> if (en) "glass" else "bardak"
+    else -> unit
+}
+
 private data class EditablePhotoFood(val original: NutritionEstimateData, val name: String, val gramsText: String, val included: Boolean = true)
 
 @Composable
 private fun PhotoNutritionReviewDialog(
     detected: List<NutritionEstimateData>, busy: Boolean, en: Boolean,
     onDismiss: () -> Unit, onSave: (List<NutritionEstimateData>, String) -> Unit,
+    fromText: Boolean = false, initialMeal: String? = null,
 ) {
     var foods by remember(detected) { mutableStateOf(detected.map { EditablePhotoFood(it, it.name, it.grams.toInt().toString()) }) }
-    var meal by remember { mutableStateOf(smartMealForCurrentTime()) }
+    var meal by remember { mutableStateOf(initialMeal ?: smartMealForCurrentTime()) }
     fun scaled(editable: EditablePhotoFood): NutritionEstimateData? {
         val grams = editable.gramsText.replace(',', '.').toDoubleOrNull()?.takeIf { it in 1.0..5000.0 } ?: return null
         val ratio = grams / editable.original.grams.coerceAtLeast(1.0)
@@ -1251,18 +1273,39 @@ private fun PhotoNutritionReviewDialog(
     val calories = ready.sumOf { it.calories }
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
-        title = { Text(if (en) "Check photo analysis" else "Fotoğraf analizini kontrol et") },
+        title = { Text(if (fromText) (if (en) "Check your meal" else "Öğününü kontrol et") else if (en) "Check photo analysis" else "Fotoğraf analizini kontrol et") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(if (en) "Portions are visual estimates. Edit names and grams before saving." else "Porsiyonlar görsel tahmindir. Kaydetmeden önce adları ve gramları düzenle.", color = HedefitColors.Warning, style = MaterialTheme.typography.bodySmall)
+            if (!fromText) Text(if (en) "Portions are visual estimates. Edit names and grams before saving." else "Porsiyonlar görsel tahmindir. Kaydetmeden önce adları ve gramları düzenle.", color = HedefitColors.Warning, style = MaterialTheme.typography.bodySmall)
             LazyColumn(Modifier.heightIn(max = 390.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 items(foods.size) { index ->
                     val food = foods[index]; val value = scaled(food)
+                    val portion = food.original.portionQuantity
+                    if (fromText && portion != null) {
+                        val perUnit = food.original.grams / portion
+                        val quantity = (food.gramsText.replace(',', '.').toDoubleOrNull() ?: food.original.grams) / perUnit
+                        val step = if (portionStepHalf(food.original.portionUnit)) .5 else 1.0
+                        fun setQuantity(q: Double) { foods = foods.toMutableList().also { it[index] = food.copy(gramsText = (perUnit * q).toInt().toString()) } }
+                        Row(
+                            Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(14.dp)).padding(horizontal = 6.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(food.included, onCheckedChange = { checked -> foods = foods.toMutableList().also { it[index] = food.copy(included = checked) } })
+                            Column(Modifier.weight(1f)) {
+                                Text(food.name, fontWeight = FontWeight.Bold, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                value?.let { Text("${it.grams.toInt()} g • ${it.calories} kcal", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold) }
+                            }
+                            IconButton(onClick = { setQuantity((quantity - step).coerceAtLeast(step)) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Remove, if (en) "Less" else "Azalt") }
+                            Text("${formatPortion(quantity)} ${portionUnitLabel(food.original.portionUnit, en)}", fontWeight = FontWeight.ExtraBold, modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            IconButton(onClick = { setQuantity(quantity + step) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Add, if (en) "More" else "Artır") }
+                        }
+                        return@items
+                    }
                     Column(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(14.dp)).padding(9.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(food.included, onCheckedChange = { checked -> foods = foods.toMutableList().also { it[index] = food.copy(included = checked) } })
                             OutlinedTextField(food.name, { name -> foods = foods.toMutableList().also { it[index] = food.copy(name = name.take(100)) } }, Modifier.weight(1f), label = { Text(if (en) "Food" else "Besin") }, singleLine = true)
                         }
-                        OutlinedTextField(food.gramsText, { grams -> foods = foods.toMutableList().also { it[index] = food.copy(gramsText = grams.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(7)) } }, Modifier.fillMaxWidth(), label = { Text(if (en) "Estimated amount (g)" else "Tahmini miktar (g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
+                        OutlinedTextField(food.gramsText, { grams -> foods = foods.toMutableList().also { it[index] = food.copy(gramsText = grams.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(7)) } }, Modifier.fillMaxWidth(), label = { Text(if (fromText) (if (en) "Amount (g)" else "Miktar (g)") else if (en) "Estimated amount (g)" else "Tahmini miktar (g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
                         value?.let { Text("${it.calories} kcal • P ${it.protein.toInt()} g • K ${it.carbs.toInt()} g • Y ${it.fat.toInt()} g • Lif ${it.fiber.toInt()} g", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall); Text("Na ${it.sodiumMg.toInt()} mg • K ${it.potassiumMg.toInt()} mg • Ca ${it.calciumMg.toInt()} mg • Fe ${"%.1f".format(it.ironMg)} mg • C ${it.vitaminCMg.toInt()} mg", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall) }
                     }
                 }

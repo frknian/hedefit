@@ -108,6 +108,9 @@ data class MainUiState(
     val foodSearchQuery: String? = null,
     val photoNutritionBusy: Boolean = false,
     val photoNutritionResults: List<com.hedefit.app.data.model.NutritionEstimateData> = emptyList(),
+    /** "photo" or "text": where the items in [photoNutritionResults] came from. */
+    val mealReviewSource: String = "photo",
+    val mealReviewMeal: String? = null,
     val exerciseLibraryBusy: Boolean = false,
     val exerciseLibrary: List<ExerciseCatalogData> = emptyList(),
     val offlinePendingCount: Int = 0,
@@ -493,7 +496,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun clearPhotoNutritionResults() = _state.update { it.copy(photoNutritionResults = emptyList()) }
+    fun clearPhotoNutritionResults() = _state.update { it.copy(photoNutritionResults = emptyList(), mealReviewSource = "photo", mealReviewMeal = null) }
 
     suspend fun recognizeEquipment(jpegBytes: ByteArray) = repository.recognizeEquipment(jpegBytes)
 
@@ -501,13 +504,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.nutritionBusy || items.isEmpty()) return
         viewModelScope.launch {
             _state.update { it.copy(nutritionBusy = true) }
-            runCatching { repository.savePhotoNutrition(items, meal) }
+            val source = _state.value.mealReviewSource
+            runCatching { repository.savePhotoNutrition(items, meal, if (source == "text") "natural_language" else "photo") }
                 .onSuccess { logs -> _state.update { current -> current.copy(
-                    nutritionBusy = false, photoNutritionResults = emptyList(),
+                    nutritionBusy = false, photoNutritionResults = emptyList(), mealReviewSource = "photo", mealReviewMeal = null,
                     dashboard = current.dashboard?.copy(nutritionLogs = logs + current.dashboard.nutritionLogs),
                     nutritionViewingLogs = if (current.nutritionViewingDate == LocalDate.now()) logs + current.nutritionViewingLogs else current.nutritionViewingLogs,
                     nutritionHistory = logs + current.nutritionHistory,
-                    transientMessage = "Fotoğraftaki ${logs.size} besin öğüne eklendi.",
+                    transientMessage = if (source == "text") "${logs.size} besin öğüne eklendi." else "Fotoğraftaki ${logs.size} besin öğüne eklendi.",
                 ) } }
                 .onFailure { error -> _state.update { it.copy(nutritionBusy = false, transientMessage = friendlyError(error)) } }
         }
@@ -1022,7 +1026,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * karşılar. Birden fazla bölge seçilirse hareket sayısı bölgeler arasında
      * mümkün olduğunca eşit paylaştırılır.
      */
-    fun generateQuickWorkout(regions: List<Pair<String, String>>, durationMinutes: Int, fatigue: String, environment: String = "", equipment: String = "", locale: String = "tr") {
+    /**
+     * Builds a one-off session from the user's time, energy, place, owned equipment and level.
+     * Equipment is strict: at home only moves doable with exactly the owned items (plus
+     * no-equipment moves) are used; nothing is silently swapped for other gear.
+     */
+    fun generateQuickWorkout(regions: List<Pair<String, String>>, durationMinutes: Int, fatigue: String, environment: String, owned: List<String>, level: String, locale: String = "tr") {
         if (_state.value.planGenerating || regions.isEmpty()) return
         val en = locale == "en"
         viewModelScope.launch {
@@ -1035,24 +1044,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     else -> 8
                 }
                 val (sets, reps, rest) = when (fatigue) {
-                    "yorgun" -> Triple(2, if (en) "12–15" else "12–15", 45)
-                    "dinc" -> Triple(4, if (en) "6–10" else "6–10", 90)
-                    else -> Triple(3, if (en) "8–12" else "8–12", 60)
+                    "yorgun" -> Triple(2, "12–15", 45)
+                    "dinc" -> Triple(4, "6–10", 90)
+                    else -> Triple(3, "8–12", 60)
                 }
-                val perRegion = (totalExercises / regions.size).coerceAtLeast(1)
-                suspend fun catalogFor(muscle: String) = repository.loadExerciseCatalog(muscle = muscle, equipment = equipment, environment = environment, muscleRole = "primary", category = "strength", locale = locale)
-                    .ifEmpty { if (equipment.isNotBlank()) repository.loadExerciseCatalog(muscle = muscle, environment = environment, muscleRole = "primary", category = "strength", locale = locale) else emptyList() }
-                val plan = regions.flatMapIndexed { index, (muscle, label) ->
-                    val take = if (index == regions.lastIndex) totalExercises - perRegion * (regions.size - 1) else perRegion
-                    catalogFor(muscle)
-                        .sortedWith(compareBy<ExerciseCatalogData> { if (it.mechanic == "compound") 0 else 1 }.thenBy { it.name })
-                        .take(take.coerceAtLeast(1))
-                        .map { item -> com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, label, sets, reps, rest) }
+                val fullBody = regions.any { it.first == FULL_BODY }
+                val targets = if (fullBody) FULL_BODY_REGIONS.map { it to regionLabel(it, en) } else regions
+                val ownedFilter = if (environment == "gym") listOf("gym") else owned.ifEmpty { listOf("none") }
+                val maxLevel = LEVEL_ORDER.indexOf(level).coerceAtLeast(0)
+                val chosen = mutableListOf<com.hedefit.app.data.model.WorkoutExerciseData>()
+                val usedFamilies = mutableSetOf<String>()
+                val perRegion = targets.associate { (muscle, _) ->
+                    muscle to repository.loadExerciseCatalog(muscle = muscle, muscleRole = "primary", category = "strength", locale = locale, owned = ownedFilter)
+                        .filter { LEVEL_ORDER.indexOf(it.levelKey).let { lvl -> lvl < 0 || lvl <= maxLevel } }
+                        .sortedWith(compareBy<ExerciseCatalogData>(
+                            // At home, use the equipment the person chose before falling back to bodyweight.
+                            { item -> if (environment != "gym" && owned.isNotEmpty() && item.requiredEquipment.none { option -> option.isNotEmpty() && option.all(owned::contains) }) 1 else 0 },
+                            { if (it.mechanic == "compound") 0 else 1 },
+                            { if (FOUNDATION_LIFT.containsMatchIn(it.id)) 0 else 1 },
+                            // Prefer the user's own level, then easier, over harder variations.
+                            { kotlin.math.abs(LEVEL_ORDER.indexOf(it.levelKey).coerceAtLeast(0) - maxLevel) },
+                            { it.id.hashCode() },
+                        ))
                 }
-                require(plan.isNotEmpty()) { if (en) "No exercises found for the selected areas." else "Seçilen bölgeler için hareket bulunamadı." }
-                val regionNames = regions.joinToString(if (en) " & " else " & ") { it.second }
+                // Round-robin across regions so every selected area gets work before any gets a second move.
+                var round = 0
+                while (chosen.size < totalExercises && round < 6) {
+                    targets.forEach { (muscle, label) ->
+                        if (chosen.size >= totalExercises) return@forEach
+                        val pool = perRegion[muscle].orEmpty().filter { item -> chosen.none { it.id == item.id } }
+                        val pick = pool.firstOrNull { movementFamily(it.id) !in usedFamilies } ?: pool.firstOrNull()
+                        if (pick != null) {
+                            usedFamilies += movementFamily(pick.id)
+                            chosen += com.hedefit.app.data.model.WorkoutExerciseData(pick.id, pick.name, label, sets, reps, rest)
+                        }
+                    }
+                    round++
+                }
+                require(chosen.isNotEmpty()) { if (en) "No exercises match this equipment and level for the selected areas." else "Seçilen bölgeler için bu ekipman ve seviyeye uygun hareket bulunamadı." }
+                val regionNames = if (fullBody) (if (en) "Full body" else "Tüm vücut") else regions.joinToString(" & ") { it.second }
                 val name = if (en) "Quick Workout: $regionNames" else "Hızlı Antrenman: $regionNames"
-                repository.saveProgram(name, "custom", regionNames, plan)
+                repository.saveProgram(name, "custom", regionNames, chosen)
             }.onSuccess { program -> _state.update { current -> current.copy(
                 planGenerating = false,
                 dashboard = current.dashboard?.let { data -> data.copy(workouts = program.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, program)) },
@@ -1084,6 +1116,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addNutritionWithAi(food: String, grams: Double, meal: String) {
         if (_state.value.nutritionBusy) return
+        if (looksLikeWholeMeal(food)) {
+            viewModelScope.launch {
+                _state.update { it.copy(nutritionBusy = true, transientMessage = null) }
+                runCatching { repository.parseMealText(food) }
+                    .onSuccess { items -> _state.update { it.copy(nutritionBusy = false, photoNutritionResults = items, mealReviewSource = "text", mealReviewMeal = meal) } }
+                    .onFailure { error -> _state.update { it.copy(nutritionBusy = false, transientMessage = friendlyError(error)) } }
+            }
+            return
+        }
         viewModelScope.launch {
             _state.update { it.copy(nutritionBusy = true, transientMessage = null) }
             runCatching {
@@ -1544,4 +1585,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             else -> "Beklenmeyen bir hata oluştu."
         }
     }
+}
+
+/** A sentence listing several foods ("omlet, 3 dilim ekmek ve domates") rather than one food name. */
+internal fun looksLikeWholeMeal(text: String): Boolean =
+    Regex("[,;+\\n]|\\s(ve|ile)\\s|\\s\\d", RegexOption.IGNORE_CASE).containsMatchIn(text.trim())
+
+internal const val FULL_BODY = "full_body"
+private val FULL_BODY_REGIONS = listOf("legs", "chest", "back", "shoulders", "glutes", "abdominals")
+private val LEVEL_ORDER = listOf("beginner", "intermediate", "advanced")
+private val FOUNDATION_LIFT = Regex("(^|-)(squat|leg-press|deadlift|romanian|lunge|split-squat|hip-thrust|bench-press|push-up|pull-up|chin-up|lat-pulldown|row|shoulder-press|ohp|overhead-press|dips?)(-|$)")
+
+private fun regionLabel(key: String, en: Boolean) = when (key) {
+    "legs" -> if (en) "Legs" else "Bacak"
+    "chest" -> if (en) "Chest" else "Göğüs"
+    "back" -> if (en) "Back" else "Sırt"
+    "shoulders" -> if (en) "Shoulders" else "Omuz"
+    "glutes" -> if (en) "Glutes" else "Kalça"
+    else -> if (en) "Core" else "Karın"
+}
+
+/** Groups variations of one movement ("push-up", "knee-push-ups", "wide-grip-push-ups") so a session isn't three push-ups. */
+private fun movementFamily(id: String): String {
+    val key = id.lowercase().removeSuffix("s")
+    return listOf(
+        "push-up", "pull-up", "chin-up", "squat", "lunge", "row", "deadlift", "rdl",
+        "bench-press", "floor-press", "leg-press", "shoulder-press", "overhead-press", "push-press", "press",
+        "curl", "lateral-raise", "front-raise", "calf-raise", "raise", "fly", "dip", "plank", "crunch", "bridge", "thrust", "extension", "pulldown", "kickback",
+    )
+        .firstOrNull { key.contains(it) } ?: key
 }

@@ -59,7 +59,7 @@ export function repairPlan(
         const candidates = catalog.filter((candidate) => {
           if (existingIds.has(candidate.id)) return false;
           if (!candidate.primaryMuscles.includes(targetMuscle)) return false;
-          if (!isEquipmentAvailable(candidate.equipment, profile.equipment)) return false;
+          if (!isEquipmentAvailable(candidate.equipmentOptions, profile.equipment)) return false;
           if (!isSafeForLimitations(candidate, profile.limitations)) return false;
           if (!isDifficultySuitable(candidate.difficulty, profile.fitnessLevel)) return false;
           return true;
@@ -87,7 +87,7 @@ export function repairPlan(
           const fallbackCandidates = catalog.filter((candidate) => {
             if (existingIds.has(candidate.id)) return false;
             if (!candidate.secondaryMuscles.includes(targetMuscle) && !candidate.primaryMuscles.includes("core")) return false;
-            if (!isEquipmentAvailable(candidate.equipment, profile.equipment)) return false;
+            if (!isEquipmentAvailable(candidate.equipmentOptions, profile.equipment)) return false;
             if (!isSafeForLimitations(candidate, profile.limitations)) return false;
             if (!isDifficultySuitable(candidate.difficulty, profile.fitnessLevel)) return false;
             return true;
@@ -122,7 +122,7 @@ export function repairPlan(
               (c) =>
                 !existingIds.has(c.id) &&
                 c.primaryMuscles.includes(m) &&
-                isEquipmentAvailable(c.equipment, profile.equipment) &&
+                isEquipmentAvailable(c.equipmentOptions, profile.equipment) &&
                 isSafeForLimitations(c, profile.limitations) &&
                 isDifficultySuitable(c.difficulty, profile.fitnessLevel)
             );
@@ -158,7 +158,7 @@ export function repairPlan(
           (c) =>
             !seen.has(c.id) &&
             c.primaryMuscles.includes(inst.exercise.primaryMuscles[0] || "core") &&
-            isEquipmentAvailable(c.equipment, profile.equipment) &&
+            isEquipmentAvailable(c.equipmentOptions, profile.equipment) &&
             isSafeForLimitations(c, profile.limitations) &&
             isDifficultySuitable(c.difficulty, profile.fitnessLevel)
         );

@@ -513,7 +513,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenRoute = { utilityPage = UtilityPage.Route },
                                 onGenerateRegional = { muscle, label, connected -> mainViewModel.generateRegionalPlan(muscle, label, connected, preferences.language) },
                                 onLoadRegional = { muscle -> mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", category = "strength", locale = preferences.language) },
-                                onGenerateQuickWorkout = { regions, duration, fatigue, environment, equipment -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, equipment, preferences.language) },
+                                onGenerateQuickWorkout = { regions, duration, fatigue, environment, owned, level -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, owned, level, preferences.language) },
                                 onCreateOwnPlan = { draft -> mainViewModel.createCustomProgram(draft, preferences.language) { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary } },
                                 onAddPushPullTemplate = { key -> mainViewModel.addPushPullTemplate(key, preferences.language) },
                                 onSelectProgram = mainViewModel::activateProgram,
@@ -573,6 +573,8 @@ class MainActivity : ComponentActivity() {
                                 onAnalyzePhoto = mainViewModel::analyzeNutritionPhoto,
                                 onClearPhotoResults = mainViewModel::clearPhotoNutritionResults,
                                 onSavePhotoResults = mainViewModel::savePhotoNutrition,
+                                reviewFromText = uiState.mealReviewSource == "text",
+                                reviewMeal = uiState.mealReviewMeal,
                                 openMealComposer = openMealComposer,
                                 onMealComposerOpened = { openMealComposer = false },
                             )
