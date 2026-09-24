@@ -607,7 +607,41 @@ class MainActivity : ComponentActivity() {
                                 coachName = coachDisplayName,
                                 onCoachNameChange = { updatePreferences(preferences.copy(coachName = it)) },
                                 onClearChat = mainViewModel::clearChat,
-                                onExecuteAction = mainViewModel::executeCoachAction,
+                                onExecuteAction = { action ->
+                                    // Bu 6 eylem tipi bir EKRAN GEÇİŞİ ister; bu durum (selected/
+                                    // utilityPage) yalnız burada, Compose ağacında tutuluyor —
+                                    // ViewModel'in erişimi yok. Diğer eylemler (hareket değiştirme,
+                                    // set/tekrar/dinlenme güncelleme vb.) veri mutasyonudur ve
+                                    // olduğu gibi ViewModel'e devredilir.
+                                    when (action.type) {
+                                        "openWorkout" -> {
+                                            selected = AppDestination.Workout
+                                            mainViewModel.showTransientMessage(if (preferences.language == "en") "Today's workout is open." else "Bugünkü antrenman açıldı.")
+                                        }
+                                        "createWorkout" -> {
+                                            selected = AppDestination.Workout
+                                            val region = action.region
+                                            mainViewModel.showTransientMessage(
+                                                if (preferences.language == "en") "Opening the workout screen${if (region != null) " for $region" else ""}."
+                                                else "Antrenman ekranı${if (region != null) " ($region)" else ""} açılıyor.",
+                                            )
+                                        }
+                                        "startOutdoor" -> {
+                                            utilityPage = UtilityPage.Route
+                                        }
+                                        "suggestMeal" -> {
+                                            selected = AppDestination.Nutrition
+                                            openMealComposer = true
+                                        }
+                                        "remind" -> {
+                                            utilityPage = UtilityPage.Notifications
+                                        }
+                                        "changeGoal" -> {
+                                            utilityPage = UtilityPage.GoalJourney
+                                        }
+                                        else -> mainViewModel.executeCoachAction(action)
+                                    }
+                                },
                                 usageUsed = uiState.chatUsageUsed,
                                 usageLimit = uiState.chatUsageLimit,
                             )

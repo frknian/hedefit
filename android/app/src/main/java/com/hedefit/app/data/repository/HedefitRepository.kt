@@ -860,6 +860,7 @@ class HedefitRepository(
                             targetMinutes = actObj.optInt("targetMinutes").takeIf { it > 0 },
                             percent = actObj.optInt("percent").takeIf { it > 0 },
                             region = actObj.optString("region").takeIf { it.isNotBlank() },
+                            targetKcal = actObj.optInt("targetKcal").takeIf { it > 0 },
                         )
                     )
                 }

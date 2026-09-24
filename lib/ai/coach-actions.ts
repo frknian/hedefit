@@ -80,6 +80,17 @@ export const MAX_COACH_ACTIONS = 3;
 
 const BLOCK = /```hedefit-actions\s*([\s\S]*?)```/i;
 
+// Model bazen sistem promptundaki <facts>/<memory>/... etiket sözdizimini
+// kullanıcıya giden metne kopyalıyor (ör. "olan <facts>2329</facts> kaloriye
+// dikkat ederek..."). İçerideki değer (2329) doğru ve kalsın; yalnız etiket
+// işaretlerini kaldırıyoruz. Prompt tarafında da bu ayrıca yasaklanır
+// (bkz. prompts.ts NO_RAW_TAGS_RULE); bu, ikinci ve garanti savunma hattı.
+const LEAKED_CONTEXT_TAGS = /<\/?(?:facts|memory|knowledge|atlas|workout_context|conversation_summary)>/gi;
+
+export function stripLeakedContextTags(text: string): string {
+  return text.replace(LEAKED_CONTEXT_TAGS, "").replace(/[ \t]{2,}/g, " ").trim();
+}
+
 /** Katalogdaki bölge adları; uydurulmuş bir bölge kabul edilmez. */
 const REGIONS = new Set(["Göğüs", "Sırt", "Omuz", "Kol", "Bacak", "Kalça", "Core", "Kondisyon"]);
 
@@ -200,9 +211,9 @@ export type ParsedCoachResponse = {
 export function parseCoachActions(rawText: string): ParsedCoachResponse {
   const text = typeof rawText === "string" ? rawText : "";
   const match = BLOCK.exec(text);
-  if (!match) return { text: text.trim(), actions: [] };
+  if (!match) return { text: stripLeakedContextTags(text), actions: [] };
 
-  const cleaned = text.replace(BLOCK, "").trim();
+  const cleaned = stripLeakedContextTags(text.replace(BLOCK, ""));
   let parsed: unknown;
   try {
     parsed = JSON.parse(match[1].trim());

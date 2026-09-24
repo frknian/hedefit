@@ -1365,6 +1365,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             "start_recovery_check" -> {
+                _state.update { it.copy(transientMessage = "Hazırlık ve toparlanma kontrolü için Antrenman sekmesini aç.") }
                 onActionHandled("start_recovery_check")
             }
             "modify_sets" -> {
@@ -1391,8 +1392,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _state.update { it.copy(dashboard = it.dashboard?.copy(workouts = next), transientMessage = "Dinlenme süresi ${rest}s olarak güncellendi.") }
                 onActionHandled("Dinlenme süresi güncellendi")
             }
-            else -> onActionHandled(action.type)
+            // openWorkout/createWorkout/startOutdoor/suggestMeal/remind/changeGoal
+            // ekran GEÇİŞİ gerektirir; bu ViewModel'in erişemediği navigasyon
+            // durumu (MainActivity'deki `selected`/`utilityPage`) MainActivity'de
+            // ele alınır (bkz. MainActivity onExecuteAction sarmalayıcısı).
+            // Buraya düşerlerse (ör. eski istemci sürümü) en azından bir
+            // geri bildirim göster; sessizce hiçbir şey olmasın.
+            else -> {
+                _state.update { it.copy(transientMessage = "Bu öneriyi uygulamak için ilgili sekmeyi aç.") }
+                onActionHandled(action.type)
+            }
         }
+    }
+
+    /** Ekrana taşınan koç eylemleri (openWorkout, createWorkout, ...) için kısa geri bildirim. */
+    fun showTransientMessage(text: String) {
+        _state.update { it.copy(transientMessage = text) }
     }
 
     fun clearChat() {

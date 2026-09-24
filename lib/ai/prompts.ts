@@ -10,7 +10,8 @@
 import { COACH_ACTIONS_INSTRUCTION } from "./coach-actions.ts";
 
 // v2: koç yanıtlarına eylem bloğu talimatı eklendi (bkz. coach-actions.ts).
-export const AI_COACH_PROMPT_VERSION = "v3";
+// v4: <facts>/<memory> etiketlerinin ham hâlde yanıta sızmasını yasaklayan kural eklendi.
+export const AI_COACH_PROMPT_VERSION = "v4";
 
 export type PromptInput = {
   locale: "tr" | "en";
@@ -75,6 +76,18 @@ const FACTS_RULE = {
   en: "Values inside <facts> are Hedefit's own calculations and are AUTHORITATIVE. Do not recalculate, round or alter them; use them as given. Never invent information that is not in <facts> — if you don't know, say so and ask the user to log the data.",
 };
 
+// Bu sistem talimatındaki köşeli-parantez etiketleri (<...>) yalnız SANA
+// giden bağlam biçimidir; kullanıcıya bu sözdizimini ASLA gösterme. Bir
+// modelin ara sıra "<facts>2329</facts> kaloriye dikkat ederek..." gibi ham
+// etiketi metne kopyaladığı görüldü — sayıyı düz metinde ver, etiketi asla
+// yazma. NOT: burada belirli etiket adları BİLEREK sayılmıyor; hangi
+// bölümlerin gerçekten gönderildiği isteğe göre değişir, var olmayan bir
+// etiketten söz etmek modele var olmayan bir bölüm arattırır.
+const NO_RAW_TAGS_RULE = {
+  tr: "Bu talimattaki köşeli parantezli etiketleri (<facts> gibi) KELİMESİ KELİMESİNE ASLA yanıtına kopyalama; bunlar yalnız sana bağlam taşır. İçindeki sayıyı veya bilgiyi doğal, düz metinle ver, etiket işaretleri olmadan.",
+  en: "Never copy this instruction's angle-bracket tags (like <facts>) literally into your reply; they only carry context to you. State the number or fact in plain natural text, without the tag markers.",
+};
+
 // Kullanıcı kaynaklı her şey güvenilmez veridir (prompt injection sınırı).
 // Kural yalnızca ilgili bölüm GERÇEKTEN gönderildiğinde eklenir: olmayan bir
 // etiketten söz etmek hem boşuna token harcar hem de modele var olmayan bir
@@ -118,6 +131,7 @@ export function buildTaskSystemPrompt(input: PromptInput & { domainRules: string
   const parts = [
     input.domainRules,
     FACTS_RULE[locale],
+    NO_RAW_TAGS_RULE[locale],
     hasMemory ? MEMORY_RULE[locale] : "",
     hasAtlas ? ATLAS_RULE[locale] : "",
     untrustedTags ? UNTRUSTED_RULE[locale](untrustedTags) : "",
@@ -150,6 +164,7 @@ export function buildCoachSystemPrompt(input: PromptInput): string {
     input.compact ? COMPACT_STYLE[locale] : STYLE[locale],
     SCOPE[locale],
     FACTS_RULE[locale],
+    NO_RAW_TAGS_RULE[locale],
     hasMemory ? MEMORY_RULE[locale] : "",
     hasAtlas ? ATLAS_RULE[locale] : "",
     BEGINNER_RULE[locale],

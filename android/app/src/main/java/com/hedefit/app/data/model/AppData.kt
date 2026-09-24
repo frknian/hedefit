@@ -314,6 +314,7 @@ data class CoachActionData(
     val targetMinutes: Int? = null,
     val percent: Int? = null,
     val region: String? = null,
+    val targetKcal: Int? = null,
 )
 
 data class ChatReplyData(

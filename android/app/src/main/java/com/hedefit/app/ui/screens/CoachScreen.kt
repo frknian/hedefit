@@ -260,6 +260,12 @@ private fun MessageBubble(
                             "start_recovery_check" -> if (en) "Start readiness & recovery check" else "Hazırlık ve toparlanma kontrolü yap"
                             "modify_sets" -> if (en) "Set count: ${action.sets ?: 3}" else "Set sayısını ${action.sets ?: 3} yap"
                             "modify_rest_time" -> if (en) "Rest time: ${action.restSeconds ?: 60}s" else "Dinlenmeyi ${action.restSeconds ?: 60}s yap"
+                            "openWorkout" -> if (en) "Open today's workout" else "Bugünkü antrenmanı aç"
+                            "createWorkout" -> if (en) "Create a ${action.region ?: "quick"} workout" else "${action.region ?: "Hızlı"} programı oluştur"
+                            "startOutdoor" -> if (en) "Start an outdoor activity" else "Açık hava aktivitesi başlat"
+                            "suggestMeal" -> if (en) "Open meal suggestions" else "Öğün önerilerini aç"
+                            "remind" -> if (en) "Open reminder settings" else "Hatırlatma ayarlarını aç"
+                            "changeGoal" -> if (en) "Review my goal plan" else "Hedef planımı incele"
                             else -> if (en) "Apply recommendation" else "Önerilen eylemi uygula"
                         }
 
