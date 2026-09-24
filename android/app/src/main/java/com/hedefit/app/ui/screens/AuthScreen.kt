@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -71,14 +73,15 @@ fun AuthGateScreen(
     googleBusy: Boolean,
     message: String?,
     onSignIn: (String, String) -> Unit,
-    onSignUp: (String, String, RegistrationLegalAcceptance) -> Unit,
+    onSignUp: (String, String, String, RegistrationLegalAcceptance) -> Unit,
     onGoogleSignIn: (RegistrationLegalAcceptance?) -> Unit,
     onClearMessage: () -> Unit,
+    onCheckUsername: (String, (String) -> Unit) -> Unit = { _, done -> done("ok") },
 ) {
     when (authState) {
         AuthState.Loading -> FullScreenLoader("Oturum kontrol ediliyor")
         is AuthState.ConfigurationError -> ConfigurationErrorScreen(authState.message)
-        AuthState.SignedOut -> AuthForm(busy, googleBusy, message, onSignIn, onSignUp, onGoogleSignIn, onClearMessage)
+        AuthState.SignedOut -> AuthForm(busy, googleBusy, message, onSignIn, onSignUp, onGoogleSignIn, onClearMessage, onCheckUsername)
         is AuthState.SignedIn -> Unit
     }
 }
@@ -89,12 +92,24 @@ private fun AuthForm(
     googleBusy: Boolean,
     message: String?,
     onSignIn: (String, String) -> Unit,
-    onSignUp: (String, String, RegistrationLegalAcceptance) -> Unit,
+    onSignUp: (String, String, String, RegistrationLegalAcceptance) -> Unit,
     onGoogleSignIn: (RegistrationLegalAcceptance?) -> Unit,
     onClearMessage: () -> Unit,
+    onCheckUsername: (String, (String) -> Unit) -> Unit,
 ) {
     var login by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var usernameStatus by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(username, login) {
+        usernameStatus = null
+        val local = localUsernameStatus(username)
+        if (login || username.isBlank()) return@LaunchedEffect
+        if (local != null) { usernameStatus = local; return@LaunchedEffect }
+        kotlinx.coroutines.delay(450)
+        usernameStatus = "checking"
+        onCheckUsername(username) { usernameStatus = it }
+    }
     var password by remember { mutableStateOf("") }
     var passwordAgain by remember { mutableStateOf("") }
     var reveal by remember { mutableStateOf(false) }
@@ -157,6 +172,12 @@ private fun AuthForm(
                         AuthModeChip("Kayıt Ol", !login, Modifier.weight(1f)) { edited { login = false; submitted = false } }
                     }
                     if (!login) Text("Hesabını oluştur", style = MaterialTheme.typography.headlineSmall)
+                    if (!login) {
+                        AuthTextField(username, { next -> edited { username = next.lowercase().filter { it.isLetterOrDigit() || it == '.' || it == '_' }.take(20) } }, "Kullanıcı adı", Icons.Default.AlternateEmail, KeyboardType.Ascii)
+                        usernameStatusText(usernameStatus)?.let { (text, ok) ->
+                            Text(text, color = if (ok) HedefitColors.Lime else HedefitColors.Coral, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 0.dp))
+                        }
+                    }
                     AuthTextField(email, { next -> edited { email = next } }, "E-posta", Icons.Default.Email, KeyboardType.Email)
                     AuthTextField(
                         password, { next -> edited { password = next } }, "Şifre", Icons.Default.Lock, KeyboardType.Password,
@@ -182,10 +203,11 @@ private fun AuthForm(
                     }
                     PrimaryButton(if (busy) "İşleniyor…" else if (login) "Giriş Yap" else "Hesap Oluştur", onClick = {
                         submitted = true
-                        val error = validateAuthForm(email, password, passwordAgain, login, submitted = true) ?: legalError(requireSubmission = false)
+                        val usernameError = if (login || usernameStatus == "ok") null else usernameStatusText(usernameStatus ?: localUsernameStatus(username) ?: "checking")?.first
+                        val error = validateAuthForm(email, password, passwordAgain, login, submitted = true) ?: usernameError ?: legalError(requireSubmission = false)
                         if (!busy && error == null) {
                             if (login) onSignIn(email.trim(), password)
-                            else onSignUp(email.trim(), password, RegistrationLegalAcceptance(kvkkAccepted, privacyAccepted))
+                            else onSignUp(email.trim(), password, username, RegistrationLegalAcceptance(kvkkAccepted, privacyAccepted))
                         }
                     })
                     Row(
@@ -238,14 +260,24 @@ private fun LegalAcceptanceFields(
 
 @Composable
 private fun LegalDocumentDialog(document: LegalDocument, onDismiss: () -> Unit) {
-    val (title, body) = when (document) {
-        LegalDocument.Kvkk -> "KVKK Aydınlatma Metni" to "Hedefit; hesap oluşturma, kişisel antrenman planı, beslenme ve ilerleme takibi hizmetlerini sunmak için e-posta, hesap bilgileri, profil/ölçüm, antrenman, beslenme ve uygulama kullanım verilerini işler. Sağlıkla ilgili veriler yalnızca uygulamada seçtiğin özellikleri sunmak için ve gerekli olduğu ölçüde işlenir. Veriler, hizmet altyapısı sağlayıcılarına teknik hizmet sunumu amacıyla aktarılabilir; reklam veya pazarlama amacıyla satılmaz. Verilerin işlenmesi, saklanması, silinmesi ve KVKK kapsamındaki erişim, düzeltme, silme ve itiraz haklarınla ilgili ayrıntılar yayımlanacak nihai aydınlatma metninde yer alır."
-        LegalDocument.Privacy -> "Gizlilik Politikası" to "Hedefit hesabın, planın, öğünlerin, ölçümlerin ve uygulama tercihlerin kişiselleştirilmiş hizmet sunmak için saklanır. Hesap ayarlarından verilerini güncelleyebilir; uygulama içindeki hesap silme akışıyla hesabının silinmesini isteyebilirsin. Yerel Fit Koç modeli cihazında çalışır; bu modda sohbet içeriği sunucuya gönderilmez. Güvenlik için erişim kontrolleri ve şifreli bağlantılar kullanılır. Bu metin uygulama sürümüyle birlikte güncellenebilir; önemli değişiklikler ayrıca bildirilir."
+    val (title, sections) = when (document) {
+        LegalDocument.Kvkk -> "KVKK Aydınlatma Metni" to KVKK_NOTICE
+        LegalDocument.Privacy -> "Gizlilik Politikası" to PRIVACY_POLICY
     }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = { Text(body, modifier = Modifier.verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodyMedium) },
+        text = {
+            Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Sürüm: ${com.hedefit.app.data.auth.AuthRepository.LEGAL_DOCUMENT_VERSION}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                sections.forEach { section ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(section.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+                        Text(section.body, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Okudum") } },
     )
 }
@@ -339,4 +371,60 @@ private fun ConfigurationErrorScreen(message: String) {
             }
         }
     }
+}
+
+internal fun localUsernameStatus(username: String): String? = when {
+    username.isBlank() -> "empty"
+    username.length < 3 -> "too_short"
+    !Regex("^[a-z0-9._]{3,20}$").matches(username) -> "invalid"
+    else -> null
+}
+
+internal fun usernameStatusText(status: String?): Pair<String, Boolean>? = when (status) {
+    null -> null
+    "ok" -> "Bu kullanıcı adı kullanılabilir." to true
+    "checking" -> "Kontrol ediliyor…" to true
+    "empty" -> "Bir kullanıcı adı seç." to false
+    "too_short" -> "Kullanıcı adı en az 3 karakter olmalı." to false
+    "invalid" -> "Yalnızca küçük harf, rakam, nokta ve alt çizgi kullanabilirsin." to false
+    "taken" -> "Bu kullanıcı adı alınmış." to false
+    "blocked" -> "Bu kullanıcı adı uygun değil." to false
+    else -> "Kullanıcı adı şu an kontrol edilemedi." to false
+}
+
+@Composable
+fun UsernameSetupDialog(onCheck: (String, (String) -> Unit) -> Unit, onSave: (String, (String?) -> Unit) -> Unit) {
+    var username by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf<String?>(null) }
+    var saving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(username) {
+        status = null
+        saveError = null
+        if (username.isBlank()) return@LaunchedEffect
+        localUsernameStatus(username)?.let { status = it; return@LaunchedEffect }
+        kotlinx.coroutines.delay(450)
+        status = "checking"
+        onCheck(username) { status = it }
+    }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = {},
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        title = { Text("Kullanıcı adını seç") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                AuthTextField(username, { next -> username = next.lowercase().filter { it.isLetterOrDigit() || it == '.' || it == '_' }.take(20) }, "Kullanıcı adı", Icons.Default.AlternateEmail, KeyboardType.Ascii)
+                (saveError?.let { it to false } ?: usernameStatusText(status))?.let { (text, ok) ->
+                    Text(text, color = if (ok) HedefitColors.Lime else HedefitColors.Coral, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(
+                enabled = status == "ok" && !saving,
+                onClick = { saving = true; onSave(username) { error -> saving = false; saveError = error } },
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
+            ) { Text(if (saving) "Kaydediliyor…" else "Kaydet") }
+        },
+    )
 }

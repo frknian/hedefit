@@ -304,7 +304,6 @@ fun RouteScreen(
             ) {
                 HfIconBadge(Icons.Default.Route, HedefitColors.Lime, 56.dp, 28.dp, 18.dp)
                 Text(if (en) "Choose an activity" else "Aktiviteni seç", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                Text(if (en) "Precise GPS tracking starts when you are ready." else "Hazır olduğunda hassas GPS kaydı başlayacak.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(4.dp))
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Koşu" to (if (en) "Run" else "Koşu"), "Yürüyüş" to (if (en) "Walk" else "Yürüyüş"), "Trail Koşusu" to (if (en) "Trail run" else "Trail koşusu"), "Doğa Yürüyüşü" to (if (en) "Hike" else "Doğa yürüyüşü"), "Bisiklet" to (if (en) "Ride" else "Bisiklet")).forEach { (key, label) ->
@@ -730,7 +729,6 @@ private fun LocationPickerDialog(
         Surface(Modifier.fillMaxWidth().heightIn(max = 690.dp), shape = RoundedCornerShape(24.dp), color = HedefitColors.Surface) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(title, style = MaterialTheme.typography.titleLarge)
-                Text(if (en) "Search for a place, then tap the exact point on the map." else "Bir yer ara, ardından haritada tam noktaya dokun.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(query, { query = it }, Modifier.weight(1f), singleLine = true, label = { Text(if (en) "Place or address" else "Yer veya adres") })
                     Button(onClick = {
@@ -836,7 +834,7 @@ private fun RouteHistoryPage(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack, modifier = Modifier.background(HedefitColors.SurfaceHigh, CircleShape)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri") }
                 Spacer(Modifier.width(10.dp))
-                Column { Text(if (en) "Completed activities" else "Yapılanlar", style = MaterialTheme.typography.headlineSmall); Text(if (en) "Your saved GPS routes" else "Kaydettiğin tüm GPS rotaları", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
+                Column { Text(if (en) "Completed activities" else "Yapılanlar", style = MaterialTheme.typography.headlineSmall) }
             }
             RouteSections("history", en) { if (it == "new") onNewActivity() }
             RouteHistory(routes, en, unitSystem, onDeleteRoute, onReuseRoute, Modifier.weight(1f))
@@ -866,7 +864,6 @@ private fun RouteHistory(
                 Column(Modifier.fillMaxWidth().padding(vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.DirectionsRun, null, tint = HedefitColors.Lime, modifier = Modifier.size(36.dp))
                     Text(if (en) "No completed routes yet" else "Henüz tamamlanan rota yok", style = MaterialTheme.typography.titleMedium)
-                    Text(if (en) "Every GPS activity you save will appear here." else "Kaydettiğin tüm GPS aktiviteleri burada görünecek.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }

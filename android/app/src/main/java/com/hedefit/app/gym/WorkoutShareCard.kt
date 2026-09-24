@@ -17,23 +17,26 @@ data class WorkoutSummary(
     val calories: Int,
     val sets: List<WorkoutSetInput>,
     val personalRecords: List<PersonalRecordResult>,
+    val exerciseAreas: Map<String, String> = emptyMap(),
 ) {
     val exerciseCount = sets.distinctBy { it.exerciseId }.size
     val setCount = sets.size
     val repetitions = sets.sumOf { it.reps ?: 0 }
     val volumeKg = sets.sumOf { setVolume(it.weightKg, it.reps) }
     val strongestExercise = sets.groupBy { it.exerciseName }.maxByOrNull { (_, exerciseSets) -> exerciseSets.sumOf { setVolume(it.weightKg, it.reps) } }?.key
-    val muscleGroups = sets.map { normalizeMuscle(it.exerciseName) }.filterNot { it == "other" }.distinct()
+    val muscleGroups = sets.map { normalizeMuscle(exerciseAreas[it.exerciseId]?.takeIf(String::isNotBlank) ?: it.exerciseName) }
+        .filter { muscle -> muscleRegions.any { it.muscle == muscle } }
+        .distinct()
 }
 
 object WorkoutShareCard {
     enum class Template { WORKOUT_SUMMARY, PERSONAL_RECORD, MUSCLE_MAP }
 
     fun share(context: Context, summary: WorkoutSummary, template: Template = Template.WORKOUT_SUMMARY) {
-        shareBitmap(context, render(summary, template), summary, template)
+        shareBitmap(context, render(context, summary, template), summary, template)
     }
 
-    fun render(summary: WorkoutSummary, template: Template = Template.WORKOUT_SUMMARY): Bitmap {
+    fun render(context: Context, summary: WorkoutSummary, template: Template = Template.WORKOUT_SUMMARY): Bitmap {
         val bitmap = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.rgb(8, 10, 9))
@@ -62,10 +65,11 @@ object WorkoutShareCard {
                 canvas.drawText("TAHMİNİ 1RM  %.1f KG".format(record?.estimatedOneRepMax ?: 0.0), 84f, 1160f, paint)
             }
             Template.MUSCLE_MAP -> {
-                paint.color = Color.WHITE; paint.textSize = 88f
-                drawMultiline(canvas, "BUGÜN ÇALIŞAN KASLAR", 84f, 430f, 920f, paint)
-                paint.color = Color.rgb(181, 255, 43); paint.textSize = 76f
-                drawMultiline(canvas, summary.muscleGroups.joinToString("  •  ") { muscleNameTr(it).uppercase() }.ifBlank { "ANTRENMAN TAMAMLANDI" }, 84f, 800f, 920f, paint)
+                paint.color = Color.WHITE; paint.textSize = 80f
+                canvas.drawText("BUGÜN ÇALIŞAN KASLAR", 84f, 300f, paint)
+                drawAnatomy(context, canvas, android.graphics.RectF(40f, 360f, 1040f, 1360f), summary.muscleGroups.toSet())
+                paint.color = Color.rgb(181, 255, 43); paint.textSize = 58f
+                drawMultiline(canvas, summary.muscleGroups.joinToString("  •  ") { muscleNameTr(it).uppercase() }.ifBlank { "ANTRENMAN TAMAMLANDI" }, 84f, 1470f, 920f, paint)
             }
         }
         paint.color = Color.rgb(75, 82, 78); paint.strokeWidth = 4f
@@ -87,6 +91,32 @@ object WorkoutShareCard {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         context.startActivity(Intent.createChooser(intent, "Antrenman özetini paylaş"))
+    }
+
+    private fun drawAnatomy(context: Context, canvas: Canvas, area: android.graphics.RectF, worked: Set<String>) {
+        val anatomy = android.graphics.BitmapFactory.decodeResource(context.resources, com.hedefit.app.R.drawable.muscle_anatomy) ?: return
+        val side = minOf(area.width(), area.height())
+        val target = android.graphics.RectF(area.centerX() - side / 2, area.centerY() - side / 2, area.centerX() + side / 2, area.centerY() + side / 2)
+        val body = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            colorFilter = android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix().apply { setSaturation(0f) })
+            alpha = 150
+        }
+        canvas.drawBitmap(anatomy, null, target, body)
+        val heat = Paint(Paint.ANTI_ALIAS_FLAG)
+        muscleRegions.filter { it.muscle in worked }.forEach { region ->
+            val cx = target.left + region.x * side
+            val cy = target.top + region.y * side
+            val rx = region.rx * side * 1.45f
+            val ry = region.ry * side * 1.45f
+            heat.shader = android.graphics.RadialGradient(cx, cy, rx, intArrayOf(Color.argb(235, 181, 255, 43), Color.argb(150, 181, 255, 43), Color.argb(0, 181, 255, 43)), floatArrayOf(0f, .55f, 1f), android.graphics.Shader.TileMode.CLAMP)
+            canvas.save()
+            canvas.scale(1f, ry / rx, cx, cy)
+            canvas.drawCircle(cx, cy, rx, heat)
+            canvas.restore()
+        }
+        val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(158, 166, 161); textSize = 38f; typeface = android.graphics.Typeface.DEFAULT_BOLD }
+        canvas.drawText("ÖN", target.left + side * .29f, target.bottom - 8f, label)
+        canvas.drawText("ARKA", target.left + side * .65f, target.bottom - 8f, label)
     }
 
     private fun drawMultiline(canvas: Canvas, text: String, x: Float, y: Float, maxWidth: Float, paint: Paint) {

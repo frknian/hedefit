@@ -649,7 +649,6 @@ private fun RegionalProgramBrowser(
                         HfIconBadge(Icons.Default.Link, HedefitColors.Sleep, 34.dp, 17.dp, 11.dp)
                         Column(Modifier.weight(1f)) {
                             Text(if (en) "Also add connected area: $connectedLabel" else "Bağlı bölgeyi de ekle: $connectedLabel", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Text(if (en) "Creates a separate program for it" else "Onun için ayrı bir program oluşturulur", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                         }
                         androidx.compose.material3.Switch(checked = includeConnected, onCheckedChange = { includeConnected = it }, colors = androidx.compose.material3.SwitchDefaults.colors(checkedThumbColor = HedefitColors.OnLime, checkedTrackColor = HedefitColors.Lime))
                     }
@@ -1508,12 +1507,6 @@ private fun AiProgramPage(padding: PaddingValues, en: Boolean, profile: ProfileD
                     }
                 }
             }
-            item {
-                Row(Modifier.fillMaxWidth().background(HedefitColors.Lime.copy(alpha = .08f), RoundedCornerShape(18.dp)).padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    HfIconBadge(Icons.Default.AutoAwesome, HedefitColors.Lime, 34.dp, 17.dp, 11.dp)
-                    Text(if (en) "Your injury notes and past workouts are considered too. You can change every movement after the program is created." else "Sakatlık notların ve geçmiş antrenmanların da hesaba katılır. Program oluştuktan sonra her hareketi değiştirebilirsin.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                }
-            }
             item { HfPrimaryButton(if (generating) (if (en) "Creating…" else "Oluşturuluyor…") else if (en) "Create my program" else "Programımı oluştur", onGenerate, Modifier.fillMaxWidth(), Icons.Default.AutoAwesome, enabled = !generating) }
             item { HfPrimaryButton(if (en) "Update my preferences" else "Tercihlerimi güncelle", onEditPreferences, Modifier.fillMaxWidth(), Icons.Default.Edit, secondary = true) }
         }
@@ -1540,7 +1533,6 @@ private fun ReadyProgramsPage(padding: PaddingValues, en: Boolean, busy: Boolean
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { HfScreenHeader(if (en) "Ready programs" else "Hazır programlar", if (en) "${readyTemplates(en).size} templates" else "${readyTemplates(en).size} şablon", onBack = onBack) }
             item { HfChipRow { filters.forEach { (key, label) -> HfChip(label, filter == key, { filter = key }) } } }
-            item { Text(if (en) "Only the program you choose is added. You can edit every movement afterwards." else "Yalnızca seçtiğin program eklenir. Sonrasında tüm hareketleri düzenleyebilirsin.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall) }
             items(templates, key = { it.first }) { (key, title, group) ->
                 val tint = when (group) { "push" -> HedefitColors.Lime; "pull" -> HedefitColors.Water; "legs" -> HedefitColors.Warning; else -> HedefitColors.Sleep }
                 HfNavRow(Icons.Default.FitnessCenter, tint, title, filters.first { it.first == group }.second, onClick = if (busy) null else ({ onAdd(key) }), chevron = false) {
@@ -1581,7 +1573,6 @@ private fun CustomProgramPage(padding: PaddingValues, en: Boolean, onBack: () ->
                     }
                 }
             }
-            item { Text(if (en) "After saving, choose exercises from the Movement Atlas; sets, reps, target weight and rest can be edited in the program." else "Kaydettikten sonra Hareket Atlası'ndan hareket seç; set, tekrar, hedef ağırlık ve dinlenmeyi programdan düzenle.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall) }
             item { HfPrimaryButton(if (en) "Save program" else "Programı kaydet", { onCreate(CustomProgramDraft(name.trim(), titles.mapIndexed { index, title -> WorkoutProgramDayData(index + 1, title.trim()) })) }, Modifier.fillMaxWidth(), Icons.Default.Check, enabled = valid) }
         }
     }

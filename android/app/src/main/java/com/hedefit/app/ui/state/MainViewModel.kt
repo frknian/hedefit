@@ -99,6 +99,9 @@ data class MainUiState(
     val accountFrozen: Boolean = false,
     val healthConnected: Boolean = false,
     val healthBusy: Boolean = false,
+    val wearables: com.hedefit.app.health.WearableSnapshot? = null,
+    val wearablesBusy: Boolean = false,
+    val wearablesError: String? = null,
     val stepSource: StepSource = StepSource.UNAVAILABLE,
     val foodSearchBusy: Boolean = false,
     val foodSearchResults: List<FoodSearchData> = emptyList(),
@@ -164,12 +167,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         onSignedIn(session)
     }
 
-    fun signUp(email: String, password: String, legalAcceptance: RegistrationLegalAcceptance) = authAction {
-        when (val result = authRepository.signUp(email, password, legalAcceptance)) {
+    fun signUp(email: String, password: String, username: String, legalAcceptance: RegistrationLegalAcceptance) = authAction {
+        when (val result = authRepository.signUp(email, password, username, legalAcceptance)) {
             is SignUpResult.SignedIn -> onSignedIn(result.session)
             SignUpResult.VerificationRequired -> _state.update {
                 it.copy(authBusy = false, authMessage = "Doğrulama bağlantısı e-posta adresine gönderildi. Doğruladıktan sonra giriş yapabilirsin.")
             }
+        }
+    }
+
+    fun checkUsername(username: String, onResult: (String) -> Unit) {
+        viewModelScope.launch { onResult(runCatching { authRepository.checkUsername(username) }.getOrDefault("error")) }
+    }
+
+    fun saveUsername(username: String, onDone: (String?) -> Unit) {
+        viewModelScope.launch {
+            runCatching { repository.saveUsername(username) }
+                .onSuccess { saved ->
+                    _state.update { current -> current.copy(dashboard = current.dashboard?.let { it.copy(profile = it.profile.copy(username = saved)) }) }
+                    onDone(null)
+                }
+                .onFailure { error -> onDone(friendlyError(error)) }
         }
     }
 
@@ -366,6 +384,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadProgressNutrition() {
+        viewModelScope.launch {
+            val to = LocalDate.now()
+            val from = to.with(java.time.DayOfWeek.MONDAY).minusWeeks(7)
+            runCatching { repository.loadNutritionHistory(from, to) }
+                .onSuccess { logs -> _state.update { it.copy(nutritionHistory = (logs + it.nutritionHistory).distinctBy { log -> log.id }) } }
+        }
+    }
+
+    fun loadWearables() {
+        if (_state.value.wearablesBusy) return
+        viewModelScope.launch {
+            _state.update { it.copy(wearablesBusy = true, wearablesError = null) }
+            runCatching { healthConnect.readWearableSources() }
+                .onSuccess { snapshot -> _state.update { it.copy(wearablesBusy = false, wearables = snapshot) } }
+                .onFailure { error -> _state.update { it.copy(wearablesBusy = false, wearablesError = friendlyError(error)) } }
+        }
+    }
+
     fun syncHealthConnect() = syncHealth(showMessage = true, checkPermissionFirst = false)
 
     fun syncHealthIfConnected() = syncHealth(showMessage = false, checkPermissionFirst = true)
@@ -408,7 +445,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // not leave the dashboard displaying yesterday's cached database value.
             _state.update { current -> current.copy(
                 healthConnected = true,
-                dashboard = current.dashboard?.copy(steps = snapshot.steps, sleepMinutes = snapshot.sleepMinutes, activeCalories = snapshot.activeCalories),
+                dashboard = current.dashboard?.copy(steps = snapshot.steps, sleepMinutes = snapshot.sleepMinutes.takeIf { it > 0 } ?: current.dashboard.sleepMinutes, activeCalories = snapshot.activeCalories),
             ) }
             runCatching { repository.syncHealth(snapshot) }.onSuccess {
                 _state.update { current -> current.copy(
@@ -612,12 +649,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveSleep(minutes: Int, quality: String = "iyi") {
+    fun saveSleep(minutes: Int, quality: String = "iyi", bedTime: String? = null, wakeTime: String? = null) {
         val safeMinutes = minutes.coerceIn(0, 1_440)
         _state.update { current -> current.copy(dashboard = current.dashboard?.copy(sleepMinutes = safeMinutes)) }
         viewModelScope.launch {
             runCatching {
-                repository.saveSleepLog(safeMinutes, quality)
+                repository.saveSleepLog(safeMinutes, quality, bedTime = bedTime, wakeTime = wakeTime)
             }.onSuccess {
                 _state.update { it.copy(transientMessage = "Uyku süresi kaydedildi.") }
             }.onFailure { error ->
@@ -689,14 +726,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
     }
 
-    fun autoDistributeProgram(month: java.time.YearMonth, weekdays: Set<java.time.DayOfWeek>, time: String, programs: List<Pair<String, String>>, locale: String = "tr") = viewModelScope.launch {
+    fun autoDistributeProgram(month: java.time.YearMonth, dayTimes: Map<java.time.DayOfWeek, String>, programs: List<Pair<String, String>>, locale: String = "tr") = viewModelScope.launch {
         val en = locale == "en"
-        if (programs.isEmpty()) return@launch
+        if (programs.isEmpty() || dayTimes.isEmpty()) return@launch
         val today = java.time.LocalDate.now()
         val start = if (month.atDay(1).isBefore(today)) today else month.atDay(1)
         val dates = generateSequence(start) { it.plusDays(1) }
             .takeWhile { java.time.YearMonth.from(it) == month }
-            .filter { it.dayOfWeek in weekdays }
+            .filter { it.dayOfWeek in dayTimes }
             .toList()
         if (dates.isEmpty()) {
             _state.update { it.copy(transientMessage = if (en) "No matching days left this month." else "Bu ay için uygun gün kalmadı.") }
@@ -705,15 +742,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         runCatching {
             dates.mapIndexed { index, date ->
                 val (programId, programName) = programs[index % programs.size]
-                repository.scheduleWorkout(date, time, programId = programId, programName = programName)
+                repository.scheduleWorkout(date, dayTimes.getValue(date.dayOfWeek), programId = programId, programName = programName)
             }
         }.onSuccess { entries -> _state.update { current -> current.copy(
                 dashboard = current.dashboard?.let { data -> data.copy(schedule = data.schedule.filterNot { s -> entries.any { it.date == s.date } } + entries) },
-                transientMessage = if (programs.size > 1) {
-                    if (en) "${programs.size} programs scheduled on ${entries.size} days." else "${programs.size} program ${entries.size} güne dağıtıldı."
-                } else {
-                    if (en) "${programs.first().second} scheduled on ${entries.size} days." else "${programs.first().second} ${entries.size} güne dağıtıldı."
-                },
+                transientMessage = if (en) "Scheduled on ${entries.size} days." else "${entries.size} güne dağıtıldı.",
             ) } }
             .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
     }
@@ -1505,6 +1538,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             message.contains("Email address", true) && message.contains("invalid", true) -> "Bu e-posta adresi kabul edilmedi. Başka bir e-posta adresi dene."
             message.contains("already registered", true) || message.contains("already exists", true) -> "Bu e-posta adresiyle zaten bir hesap var. Giriş yapmayı dene."
             message.contains("rate limit", true) || message.contains("too many", true) -> "Çok fazla deneme yapıldı. Biraz bekleyip yeniden dene."
+            message.contains("Database error saving new user", true) || message.contains("profiles_username", true) -> "Bu kullanıcı adı alınmış ya da kullanılamaz. Başka bir kullanıcı adı dene."
             message.contains("network", true) || message.contains("Unable to resolve host", true) -> "İnternet bağlantısı kurulamadı."
             message.isNotBlank() -> message.take(220)
             else -> "Beklenmeyen bir hata oluştu."

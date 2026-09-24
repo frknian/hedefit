@@ -69,7 +69,6 @@ fun NotificationCalendarScreen(preferences: AppPreferences, onBack: () -> Unit, 
                     }
                 }
             }
-            item { Text(if (en) "Reminders are scheduled locally on your device and work without an internet connection." else "Bildirimler cihazında yerel olarak planlanır. İnternet bağlantısı olmasa da çalışır.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
         }
     } }
 }

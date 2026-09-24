@@ -71,6 +71,12 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.FitnessCenter
+import com.hedefit.app.ui.components.HfPill
+import com.hedefit.app.ui.components.HfDivider
+import com.hedefit.app.ui.components.HfIconBadge
+import com.hedefit.app.ui.components.HfPrimaryButton
 import androidx.compose.material.icons.filled.WaterDrop
 import com.hedefit.app.ui.components.AlertDialog
 import androidx.compose.material3.Icon
@@ -169,6 +175,7 @@ fun NutritionScreen(
     onAnalyzePhoto: (ByteArray) -> Unit = {},
     onClearPhotoResults: () -> Unit = {},
     onSavePhotoResults: (List<NutritionEstimateData>, String) -> Unit = { _, _ -> },
+    onAskCoach: (String) -> Unit = {},
 ) {
     val en = language == "en"
     var showFoodSearch by remember { mutableStateOf(false) }
@@ -176,6 +183,7 @@ fun NutritionScreen(
     var showPhotoSource by remember { mutableStateOf(false) }
     var quickAddMeal by remember { mutableStateOf<String?>(null) }
     var showPlanner by rememberSaveable { mutableStateOf(false) }
+    var showTrainingMeals by rememberSaveable { mutableStateOf(false) }
     var showMicros by rememberSaveable { mutableStateOf(false) }
     var tipDismissed by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
@@ -216,6 +224,7 @@ fun NutritionScreen(
                 DailySummaryCard(
                     logs = logs,
                     goal = data?.nutritionGoal ?: NutritionGoalData(),
+                    trainingDay = isTrainingDay(data, selectedDate),
                     activeCalories = if (canLog) data?.activeCalories ?: 0 else 0,
                     waterMl = if (canLog) data?.waterMl else null,
                     waterGoalMl = waterGoalMl,
@@ -223,6 +232,25 @@ fun NutritionScreen(
                     onWaterGoalChange = onWaterGoalChange,
                     en = en,
                 )
+            }
+            if (canLog && isTrainingDay(data, selectedDate)) item {
+                ExpandableRow(
+                    icon = Icons.Default.FitnessCenter,
+                    tint = HedefitColors.Warning,
+                    title = if (en) "Training day meals" else "Spor günü öğünleri",
+                    subtitle = if (en) "Before and after training" else "Antrenman öncesi ve sonrası",
+                    expanded = showTrainingMeals,
+                    onToggle = { showTrainingMeals = !showTrainingMeals },
+                ) { TrainingDayMealsCard(
+                    en,
+                    enabled = !busy,
+                    workoutTime = data?.schedule?.firstOrNull { it.date.take(10) == selectedDate.toString() }?.time,
+                    goalDirection = data?.let { d -> val now = d.measurements.lastOrNull()?.weightKg ?: d.profile.weightKg; val target = d.profile.targetWeightKg; if (now == null || target == null || kotlin.math.abs(target - now) < 0.5) 0 else if (target < now) -1 else 1 } ?: 0,
+                    onAdd = onAddWithAi,
+                    onAddWater = onAddWater,
+                    onAskCoach = {
+                    onAskCoach(if (en) "Today is a training day. Based on my goal and what I've eaten so far, suggest my pre- and post-workout meals with portions." else "Bugün spor günüm. Hedefime ve bugün yediklerime göre antrenman öncesi ve sonrası öğünlerimi porsiyonlarıyla önerir misin?")
+                }) }
             }
             item {
                 val weekStart = today.with(DayOfWeek.MONDAY)
@@ -405,6 +433,7 @@ private fun PastDayBanner(date: LocalDate, en: Boolean, onBackToToday: () -> Uni
 private fun DailySummaryCard(
     logs: List<NutritionLogData>,
     goal: NutritionGoalData,
+    trainingDay: Boolean,
     activeCalories: Int,
     waterMl: Int?,
     waterGoalMl: Int,
@@ -417,7 +446,8 @@ private fun DailySummaryCard(
     val carbs = logs.sumOf { it.carbs }
     val fat = logs.sumOf { it.fat }
     val activityBonus = activeCalories.coerceIn(0, 600)
-    val target = (goal.calories + activityBonus).coerceAtLeast(1)
+    val bonus = maxOf(activityBonus, if (trainingDay) TRAINING_DAY_KCAL else 0)
+    val target = (goal.calories + bonus).coerceAtLeast(1)
     val over = consumed > target
     HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -438,13 +468,14 @@ private fun DailySummaryCard(
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.background(accent.copy(alpha = .15f), CircleShape).padding(horizontal = 12.dp, vertical = 6.dp),
                     )
-                    if (activityBonus > 0) Text(if (en) "Includes +$activityBonus kcal activity" else "+$activityBonus kcal aktivite dahil", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                    if (trainingDay) HfPill(if (en) "Training day +$bonus kcal" else "Spor günü +$bonus kcal", HedefitColors.Warning)
+                    else if (bonus > 0) HfPill(if (en) "Activity +$bonus kcal" else "Aktivite +$bonus kcal", HedefitColors.Water)
                 }
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(HedefitColors.Divider))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MacroColumn("Protein", protein, goal.protein, HedefitColors.Lime, Modifier.weight(1f))
-                MacroColumn(if (en) "Carbs" else "Karb.", carbs, goal.carbs, HedefitColors.Water, Modifier.weight(1f))
+                MacroColumn("Protein", protein, goal.protein + if (trainingDay) 20 else 0, HedefitColors.Lime, Modifier.weight(1f))
+                MacroColumn(if (en) "Carbs" else "Karb.", carbs, goal.carbs + if (trainingDay) 40 else 0, HedefitColors.Water, Modifier.weight(1f))
                 MacroColumn(if (en) "Fat" else "Yağ", fat, goal.fat, HedefitColors.Warning, Modifier.weight(1f))
             }
             if (waterMl != null) {
@@ -701,7 +732,7 @@ private fun MealEntryCard(
     val unitGrams = if (unit == "adet") selectedFood?.servingGrams?.coerceAtLeast(1.0) ?: 100.0 else 1.0
     val grams = numericAmount?.times(unitGrams)
     val cleanName = name.trim()
-    val suggestions = if (cleanName.length >= 2 && searchedQuery == cleanName) results.take(4) else emptyList()
+    val suggestions = if (cleanName.length >= 2 && searchedQuery == cleanName) results.take(8) else emptyList()
 
     LaunchedEffect(cleanName, searching, searchedQuery) {
         if (cleanName.length >= 2 && !searching && cleanName != searchedQuery) {
@@ -718,7 +749,6 @@ private fun MealEntryCard(
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(if (en) "Smart meal entry" else "Akıllı öğün ekle", style = MaterialTheme.typography.titleLarge)
-                    Text(if (en) "Enter a name, grams or count" else "Besin adı, gramaj veya adet gir", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
                 IconButton(enabled = enabled, onClick = onOpenCatalog, modifier = Modifier.background(HedefitColors.SurfaceHigh, CircleShape)) {
                     Icon(Icons.Default.MenuBook, if (en) "Food catalogue" else "Besin kataloğu", tint = HedefitColors.Lime)
@@ -757,10 +787,18 @@ private fun MealEntryCard(
                             }.padding(horizontal = 10.dp, vertical = 9.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            val portion = food.servingGrams.coerceAtLeast(1.0)
+                            val portionKcal = (food.calories * portion / 100.0).toInt()
                             Column(Modifier.weight(1f)) {
                                 Text(food.name, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    "${portion.cleanNumber()} g • $portionKcal kcal • P ${"%.0f".format(food.protein * portion / 100)} K ${"%.0f".format(food.carbs * portion / 100)} Y ${"%.0f".format(food.fat * portion / 100)}",
+                                    color = HedefitColors.TextPrimary,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
                             }
-                            if (food.verified) Icon(Icons.Default.Verified, null, tint = HedefitColors.Lime, modifier = Modifier.size(18.dp))
+                            if (selectedFood?.id == food.id) Icon(Icons.Default.CheckCircle, null, tint = HedefitColors.Lime, modifier = Modifier.size(20.dp))
+                            else if (food.verified) Icon(Icons.Default.Verified, null, tint = HedefitColors.Lime, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -824,18 +862,22 @@ private fun MealEntryCard(
                         fontWeight = FontWeight.Bold,
                     )
                     selectedFood?.let { food ->
+                        Text(food.name, fontWeight = FontWeight.ExtraBold)
                         Text(
-                            if (en) "If eaten: ${(food.calories * ratio).toInt()} kcal" else "Yenirse: ${(food.calories * ratio).toInt()} kcal",
+                            "${(food.calories * ratio).toInt()} kcal • ${if (en) "P" else "Protein"} ${"%.1f".format(food.protein * ratio)} g • ${if (en) "C" else "Karb"} ${"%.1f".format(food.carbs * ratio)} g • ${if (en) "F" else "Yağ"} ${"%.1f".format(food.fat * ratio)} g",
                             color = HedefitColors.Lime,
                             fontWeight = FontWeight.Bold,
                         )
-                    }
+                    } ?: Text(
+                        if (suggestions.isNotEmpty()) (if (en) "Pick the exact item above" else "Yukarıdan tam olarak ne yediğini seç")
+                        else if (en) "\"$cleanName\" will be estimated by AI" else "\"$cleanName\" yapay zekâ ile hesaplanacak",
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(listOf("Kahvaltı", "Öğle yemeği", "Akşam yemeği", "Atıştırmalık")) { type -> FilterChip(meal == type, { meal = type }, label = { Text(mealLabel(type, en)) }) }
             }
-            Text(if (en) "Catalogue values are used first. If no match exists, AI estimates it and you can edit it from the meal card." else "Önce katalog değeri kullanılır. Eşleşme yoksa AI tahmin eder; öğün kartından her zaman düzenleyebilirsin.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             Button(
                 enabled = enabled && !busy && cleanName.length >= 2 && grams != null && grams > 0,
                 onClick = {
@@ -853,7 +895,15 @@ private fun MealEntryCard(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
-            ) { Text(if (!enabled) (if (en) "Past day" else "Geçmiş gün") else if (busy) (if (en) "Adding…" else "Ekleniyor…") else if (en) "Add to ${mealLabel(meal, true)}" else "${mealLabel(meal, false)} öğününe ekle") }
+            ) {
+                Text(when {
+                    !enabled -> if (en) "Past day" else "Geçmiş gün"
+                    busy -> if (en) "Adding…" else "Ekleniyor…"
+                    selectedFood == null && cleanName.length >= 2 -> if (en) "Add \"$cleanName\" to ${mealLabel(meal, true)}" else "\"$cleanName\" → ${mealLabel(meal, false)}"
+                    en -> "Add to ${mealLabel(meal, true)}"
+                    else -> "${mealLabel(meal, false)} öğününe ekle"
+                }, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            }
         }
     }
     if (showRecipe) RecipeComposerDialog(en, busy, meal, onDismiss = { showRecipe = false }) { recipe, grams, selectedMeal ->
@@ -933,7 +983,6 @@ private fun RecipeComposerDialog(en: Boolean, busy: Boolean, meal: String, onDis
                         FilterChip(selected = selectedMeal == type, onClick = { selectedMeal = type }, label = { Text(mealLabel(type, en)) })
                     }
                 }
-                Text(if (en) "Each ingredient is calculated for the whole recipe, then divided by servings. Recipes remain editable after saving." else "Malzemeler önce toplam tarif için hesaplanır, sonra porsiyona bölünür. Kaydettikten sonra da düzenleyebilirsin.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
@@ -985,7 +1034,6 @@ private fun EditMealLogDialog(log: NutritionLogData, busy: Boolean, en: Boolean,
                         FilterChip(selected = meal == type, onClick = { meal = type }, label = { Text(mealLabel(type, en)) })
                     }
                 }
-                Text(if (en) "Calories and macros scale from the saved catalogue value." else "Kalori ve makrolar kayıtlı katalog değerine göre otomatik ölçeklenir.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
@@ -1067,7 +1115,6 @@ private fun NutritionCalendarDialog(
                     }
                 }
                 if (loading) CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally), color = HedefitColors.Lime)
-                Text(if (en) "Each value is that day's total calories." else "Her değer o günün toplam kalorisini gösterir.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(if (en) "Close" else "Kapat") } },
@@ -1250,3 +1297,121 @@ private fun encodeMealPhoto(bitmap: Bitmap): ByteArray? = runCatching {
     ByteArrayOutputStream().use { output -> resized.compress(Bitmap.CompressFormat.JPEG, 82, output); output.toByteArray() }
         .also { if (resized !== bitmap) resized.recycle() }
 }.getOrNull()?.takeIf { it.size <= 5 * 1024 * 1024 }
+
+// ~40 g carbs + 20 g protein extra around a session; the larger of this and
+// measured activity burn is added so the two are never double counted.
+private const val TRAINING_DAY_KCAL = 250
+
+private fun isTrainingDay(data: DashboardData?, date: LocalDate): Boolean {
+    if (data == null) return false
+    val zone = java.time.ZoneId.systemDefault()
+    val scheduled = data.schedule.any { it.date.take(10) == date.toString() && it.status in setOf("planned", "completed") }
+    val trained = data.sessions.any { session ->
+        runCatching { java.time.Instant.parse(session.completedAt).atZone(zone).toLocalDate() }.getOrElse { runCatching { LocalDate.parse(session.completedAt.take(10)) }.getOrNull() } == date
+    }
+    return scheduled || trained
+}
+
+private data class TrainingFood(
+    val catalogName: String,
+    val tr: String,
+    val en: String,
+    val kcal: Double,
+    val protein: Double,
+    val carbs: Double,
+    val fat: Double,
+    val grams: Double,
+    val meal: String,
+    val countLabelTr: String? = null,
+    val countLabelEn: String? = null,
+    val unit: String = "g",
+)
+
+// Per-100 g values mirror lib/default-food-catalog.ts so the preview matches what gets logged.
+private val PRE_WORKOUT_FOODS = listOf(
+    TrainingFood("Yulaf ezmesi", "Yulaf ezmesi", "Oats", 379.0, 13.0, 68.0, 6.5, 60.0, "Kahvaltı"),
+    TrainingFood("Muz", "Muz", "Banana", 89.0, 1.1, 23.0, 0.3, 120.0, "Atıştırmalık", "1 adet", "1 piece"),
+    TrainingFood("Tam buğday ekmeği", "Tam buğday ekmeği", "Whole wheat bread", 247.0, 13.0, 41.0, 3.4, 60.0, "Atıştırmalık", "2 dilim", "2 slices"),
+    TrainingFood("Süt, yarım yağlı", "Süt", "Milk", 50.0, 3.4, 4.8, 1.8, 200.0, "Atıştırmalık", unit = "ml"),
+)
+
+private val POST_WORKOUT_FOODS = listOf(
+    TrainingFood("Tavuk göğsü, pişmiş", "Tavuk göğsü", "Chicken breast", 165.0, 31.0, 0.0, 3.6, 150.0, "Akşam yemeği"),
+    TrainingFood("Pirinç pilavı, pişmiş", "Pirinç pilavı", "Rice", 130.0, 2.7, 28.0, 0.3, 150.0, "Akşam yemeği"),
+    TrainingFood("Somon, pişmiş", "Somon", "Salmon", 206.0, 22.0, 0.0, 12.0, 150.0, "Akşam yemeği"),
+    TrainingFood("Tatlı patates, pişmiş", "Tatlı patates", "Sweet potato", 90.0, 2.0, 21.0, 0.2, 200.0, "Akşam yemeği"),
+    TrainingFood("Ton Balıklı Sandviç", "Ton balıklı sandviç", "Tuna sandwich", 235.0, 15.0, 25.0, 8.0, 180.0, "Öğle yemeği", "1 adet", "1 piece"),
+    TrainingFood("Yumurta, bütün", "Yumurta", "Eggs", 143.0, 13.0, 0.7, 9.5, 100.0, "Atıştırmalık", "2 adet", "2 eggs"),
+    TrainingFood("Süzme yoğurt", "Süzme yoğurt", "Greek yogurt", 97.0, 9.0, 3.9, 5.0, 200.0, "Atıştırmalık"),
+)
+
+private fun TrainingFood.scaledGrams(factor: Double) = if (countLabelTr != null) grams else (kotlin.math.round(grams * factor / 10.0) * 10.0).coerceAtLeast(10.0)
+
+@Composable
+private fun TrainingDayMealsCard(
+    en: Boolean,
+    enabled: Boolean,
+    workoutTime: String?,
+    goalDirection: Int,
+    onAdd: (String, Double, String) -> Unit,
+    onAddWater: (Int) -> Unit,
+    onAskCoach: () -> Unit,
+) {
+    val factor = when { goalDirection < 0 -> 0.8; goalDirection > 0 -> 1.2; else -> 1.0 }
+    val start = workoutTime?.let { runCatching { java.time.LocalTime.parse(it.take(5)) }.getOrNull() }
+    fun at(minutes: Long) = start?.plusMinutes(minutes)?.toString()
+    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                when {
+                    goalDirection < 0 -> if (en) "Portions are trimmed for fat loss (×0.8)." else "Porsiyonlar yağ kaybı hedefine göre ayarlandı (×0.8)."
+                    goalDirection > 0 -> if (en) "Portions are increased for muscle/weight gain (×1.2)." else "Porsiyonlar kas/kilo alma hedefine göre artırıldı (×1.2)."
+                    else -> if (en) "Portions are set for maintenance." else "Porsiyonlar kilo koruma hedefine göre ayarlandı."
+                },
+                fontWeight = FontWeight.SemiBold,
+            )
+            TrainingSection(
+                title = if (en) "Before training" else "Antrenman öncesi",
+                timing = if (start != null) (if (en) "${at(-90)}–${at(-60)} • 60–90 min before" else "${at(-90)}–${at(-60)} • 60–90 dk önce") else if (en) "60–90 min before" else "Antrenmandan 60–90 dk önce",
+                why = if (en) "Easily digested carbs fuel the session; keep fat and fibre low." else "Kolay sindirilen karbonhidrat enerji verir; yağ ve lifi düşük tut.",
+                foods = PRE_WORKOUT_FOODS, factor = factor, en = en, enabled = enabled, onAdd = onAdd,
+            )
+            HfDivider()
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(if (en) "During training" else "Antrenman sırasında", color = HedefitColors.Water, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+                Text(if (en) "Sip water every 15–20 min, about 500 ml per hour." else "15–20 dakikada bir yudumla, saatte yaklaşık 500 ml su iç.")
+                HfPrimaryButton(if (en) "+500 ml water" else "+500 ml su", { onAddWater(500) }, Modifier.fillMaxWidth(), secondary = true, enabled = enabled)
+            }
+            HfDivider()
+            TrainingSection(
+                title = if (en) "After training" else "Antrenman sonrası",
+                timing = if (start != null) (if (en) "Until ${at(180)} • within 2 h" else "En geç ${at(180)} • 2 saat içinde") else if (en) "Within 2 hours" else "Antrenmandan sonraki 2 saat içinde",
+                why = if (en) "Protein (25–40 g) repairs muscle; carbs refill glycogen." else "Protein (25–40 g) kası onarır, karbonhidrat glikojen depolarını doldurur.",
+                foods = POST_WORKOUT_FOODS, factor = factor, en = en, enabled = enabled, onAdd = onAdd,
+            )
+            HfPrimaryButton(if (en) "Ask Fit Coach for a menu" else "FitKoç'tan menü iste", onAskCoach, Modifier.fillMaxWidth(), Icons.Default.AutoAwesome, secondary = true)
+        }
+    }
+}
+
+@Composable
+private fun TrainingSection(title: String, timing: String, why: String, foods: List<TrainingFood>, factor: Double, en: Boolean, enabled: Boolean, onAdd: (String, Double, String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, color = HedefitColors.Lime, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold)
+        Text(timing, fontWeight = FontWeight.Bold)
+        Text(why)
+        foods.forEach { food ->
+            val grams = food.scaledGrams(factor)
+            val r = grams / 100.0
+            Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${if (en) food.en else food.tr} • ${(if (en) food.countLabelEn else food.countLabelTr) ?: "${grams.toInt()} ${food.unit}"}", fontWeight = FontWeight.SemiBold)
+                    Text("${(food.kcal * r).toInt()} kcal • P ${"%.0f".format(food.protein * r)} • K ${"%.0f".format(food.carbs * r)} • Y ${"%.0f".format(food.fat * r)}", style = MaterialTheme.typography.labelMedium, color = HedefitColors.Lime)
+                }
+                IconButton(enabled = enabled, onClick = { onAdd(food.catalogName, grams, food.meal) }, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Default.Add, if (en) "Add ${food.en}" else "${food.tr} ekle", tint = HedefitColors.Lime, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+    }
+}

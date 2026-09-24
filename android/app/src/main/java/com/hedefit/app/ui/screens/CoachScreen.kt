@@ -138,7 +138,12 @@ private fun CoachHeader(
         usageUsed?.let { used -> if (en) "${(limit - used).coerceAtLeast(0)} questions left today" else "Bugün ${(limit - used).coerceAtLeast(0)} soru hakkın kaldı" }
             ?: if (en) "$limit questions daily" else "Günlük $limit soru hakkı"
     } ?: if (en) "Cloud AI" else "Bulut AI"
-    HfScreenHeader(coachName, usage) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        FitCoachRobotAvatar(Modifier.size(52.dp))
+        Column(Modifier.weight(1f)) {
+            Text(coachName, style = MaterialTheme.typography.headlineMedium, maxLines = 1)
+            Text(usage, color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
         Box {
             HfCircleButton(Icons.Default.MoreVert, if (en) "Coach options" else "Koç seçenekleri", { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -216,8 +221,12 @@ private fun MessageBubble(
         horizontalArrangement = if (message.user) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Top,
     ) {
+        if (!message.user) {
+            FitCoachRobotAvatar(Modifier.size(34.dp))
+            Spacer(Modifier.size(8.dp))
+        }
         Column(
-            modifier = Modifier.fillMaxWidth(if (message.user) .82f else .88f),
+            modifier = Modifier.fillMaxWidth(if (message.user) .82f else .92f),
             horizontalAlignment = if (message.user) Alignment.End else Alignment.Start,
         ) {
             Box(
@@ -278,6 +287,8 @@ private fun ThinkingIndicator(coachName: String, en: Boolean) {
         )
     }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        FitCoachRobotAvatar(Modifier.size(34.dp))
+        Spacer(Modifier.size(8.dp))
         Row(
             Modifier.background(HedefitColors.Surface, RoundedCornerShape(18.dp, 18.dp, 18.dp, 6.dp)).padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,

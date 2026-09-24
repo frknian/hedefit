@@ -158,7 +158,6 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(if (en) "Narrow results" else "Sonuçları daralt", style = MaterialTheme.typography.titleLarge)
-                    Text(if (en) "Choose only what matters" else "Yalnızca ihtiyacın olanı seç", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
                 if (activeFilterCount > 0) TextButton(onClick = clearFilters) { Text(if (en) "Reset" else "Sıfırla") }
             }

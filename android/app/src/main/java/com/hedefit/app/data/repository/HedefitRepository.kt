@@ -211,6 +211,13 @@ class HedefitRepository(
             .optJSONObject(0)?.optString("account_status", "active") ?: "active"
     }
 
+    suspend fun saveUsername(username: String): String {
+        val userId = requireNotNull(auth.userId())
+        val clean = username.trim().lowercase()
+        rest.upsert("profiles", JSONObject().put("id", userId).put("username", clean).put("updated_at", Instant.now().toString()), "id")
+        return clean
+    }
+
     suspend fun reactivateAccount() {
         val userId = requireNotNull(auth.userId())
         rest.update("profiles", "id=eq.$userId", JSONObject().put("account_status", "active").put("frozen_at", JSONObject.NULL))
@@ -373,7 +380,7 @@ class HedefitRepository(
         snapshot.weightKg?.let { weight -> rest.upsert("body_measurements", JSONObject().put("id", UUID.randomUUID().toString()).put("user_id", userId).put("measured_at", snapshot.date.toString()).put("weight_kg", weight), "user_id,measured_at") }
     }
 
-    suspend fun saveSleepLog(minutes: Int, quality: String = "iyi", date: LocalDate = LocalDate.now()) {
+    suspend fun saveSleepLog(minutes: Int, quality: String = "iyi", date: LocalDate = LocalDate.now(), bedTime: String? = null, wakeTime: String? = null) {
         val userId = requireNotNull(auth.userId())
         optionalHealthUpsert(
             "sleep_logs",
@@ -381,7 +388,9 @@ class HedefitRepository(
                 .put("user_id", userId)
                 .put("local_date", date.toString())
                 .put("minutes", minutes)
-                .put("quality", quality),
+                .put("quality", quality)
+                .put("bed_time", bedTime ?: JSONObject.NULL)
+                .put("wake_time", wakeTime ?: JSONObject.NULL),
             "user_id,local_date",
         )
     }
@@ -1109,6 +1118,7 @@ class HedefitRepository(
         targetWeeks = Regex("hafta:([0-9]+)").find(rawGoal)?.groupValues?.getOrNull(1)?.toIntOrNull(),
         accountStatus = json?.optString("account_status", "active") ?: "active",
         avatarPath = json?.stringOrNull("avatar_path"),
+        username = json?.stringOrNull("username"),
     )
     }
 
@@ -1125,7 +1135,9 @@ class HedefitRepository(
     }
 
     private suspend fun optionalSelect(table: String, query: String): JSONArray =
-        runCatching { rest.select(table, query) }.getOrDefault(JSONArray())
+        runCatching { rest.select(table, query) }
+            .onFailure { android.util.Log.w("HedefitRepository", "Optional load of $table failed: ${it.message}") }
+            .getOrDefault(JSONArray())
 
     private fun parseWorkouts(array: JSONArray): List<WorkoutExerciseData> = buildList {
         for (index in 0 until array.length()) {

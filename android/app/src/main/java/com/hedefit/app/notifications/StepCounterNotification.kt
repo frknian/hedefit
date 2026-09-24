@@ -18,7 +18,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 object StepCounterNotification {
-    private const val CHANNEL_ID = "hedefit_step_counter_v2"
+    private const val CHANNEL_ID = "hedefit_step_counter_v3"
+    private const val LEGACY_CHANNEL_ID = "hedefit_step_counter_v2"
     private const val NOTIFICATION_ID = 1210
     private var lastSteps = -1
     private var lastGoal = -1
@@ -37,7 +38,10 @@ object StepCounterNotification {
         // A visible update every 25 steps, or a refresh after 30 seconds, prevents notification churn.
         if (lastSteps >= 0 && kotlin.math.abs(safeSteps - lastSteps) < 25 && safeGoal == lastGoal && now - lastPublishedAt < 30_000L) return
         val manager = context.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Hedefit Adım Sayacı", NotificationManager.IMPORTANCE_DEFAULT).apply {
+        // Channel importance can't be raised after creation, so ranking needs a new
+        // HIGH channel; setSilent keeps it from ever producing a heads-up popup.
+        manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
+        manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Hedefit Adım Sayacı", NotificationManager.IMPORTANCE_HIGH).apply {
             setSound(null, null)
             enableVibration(false)
             setShowBadge(false)
@@ -62,8 +66,8 @@ object StepCounterNotification {
             .addAction(R.drawable.ic_notification_running, "Hedefit'i Aç", open)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setGroup("hedefit_activity")
             .setSortKey("00_steps")
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).edit()

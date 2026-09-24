@@ -70,7 +70,7 @@ fun ProfileSettingsScreen(
     onPreferencesChange: (AppPreferences) -> Unit,
     onOpenQuestionnaire: () -> Unit,
     onOpenNotifications: () -> Unit,
-    onOpenUserGuide: () -> Unit,
+    onOpenWearables: () -> Unit = {},
     onAddShortcut: (String) -> Unit,
     onConnectHealth: () -> Unit,
     onSave: (ProfileUpdateData) -> Unit,
@@ -178,10 +178,6 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsRowContent(Icons.Default.MenuBook, if (en) "User guide" else "Kullanım Kılavuzu", if (en) "Learn every part of Hedefit" else "Hedefit'in tüm özelliklerini öğren", onOpenUserGuide, HedefitColors.TextSecondary)
-                        CardDivider()
-                        SettingsRowContent(Icons.Default.School, if (en) "Replay the welcome tour" else "Başlangıç rehberini tekrar izle", if (en) "Step-by-step tour of the main features" else "Temel özelliklerin adım adım turu", onReplayGuide, HedefitColors.Lime)
-                        CardDivider()
                         SettingsSwitchRow(Icons.Default.LightMode, if (en) "Light theme" else "Beyaz tema", if (en) "Bright, high-contrast appearance" else "Açık ve yüksek kontrastlı görünüm", !preferences.darkTheme, HedefitColors.Sleep) {
                             onPreferencesChange(preferences.copy(darkTheme = !it))
                         }
@@ -196,13 +192,17 @@ fun ProfileSettingsScreen(
                         CardDivider()
                         SettingsRowContent(Icons.Default.Straighten, if (en) "Measurement units" else "Ölçü birimleri", if (preferences.unitSystem == "imperial") "Imperial • lb, in, mi, fl oz" else "${if (en) "Metric" else "Metrik"} • kg, cm, km, ml", onClick = { showUnits = true }, tint = HedefitColors.Warning)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", if (en) "Edit days and times" else "Gün ve saatlerini düzenle", onOpenNotifications, HedefitColors.Coral)
+                        SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", "", onOpenNotifications, HedefitColors.Coral)
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.School, if (en) "Getting started guide" else "Başlangıç rehberi", "", onReplayGuide, HedefitColors.Lime)
                         CardDivider()
                         SettingsSwitchRow(Icons.Default.DirectionsWalk, if (en) "Show steps in notification bar" else "Adımları bildirim çubuğunda göster", if (en) "Optional ongoing step counter" else "İsteğe bağlı sürekli adım sayar", preferences.stepCounterNotificationEnabled) {
                             onPreferencesChange(preferences.copy(stepCounterNotificationEnabled = it))
                         }
                         CardDivider()
-                        SettingsRowContent(Icons.Default.AddToHomeScreen, if (en) "Home screen shortcuts" else "Ana ekran kısayolları", if (en) "Route, workout and meal logging" else "Rota, antrenman ve öğün ekleme", { showShortcut = true })
+                        SettingsRowContent(Icons.Default.AddToHomeScreen, if (en) "Home screen shortcuts" else "Ana ekran kısayolları", "", { showShortcut = true })
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.Watch, if (en) "Smart watches" else "Akıllı saatler", "", onOpenWearables, HedefitColors.Lime)
                         CardDivider()
                         SettingsRowContent(Icons.Default.Favorite, "Health Connect", when {
                             healthBusy -> if (en) "Syncing data…" else "Veriler eşitleniyor…"
@@ -216,9 +216,9 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsRowContent(Icons.Default.Star, if (en) "Rate the app" else "Uygulamayı puanla", if (en) "Your review on Google Play helps a lot" else "Google Play'deki yorumun çok değerli", onRateApp, HedefitColors.Warning)
+                        SettingsRowContent(Icons.Default.Star, if (en) "Rate the app" else "Uygulamayı puanla", "", onRateApp, HedefitColors.Warning)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Share, if (en) "Share the app" else "Uygulamayı paylaş", if (en) "Invite a friend to train with you" else "Bir arkadaşını birlikte çalışmaya davet et", { showShare = true }, HedefitColors.Water)
+                        SettingsRowContent(Icons.Default.Share, if (en) "Share the app" else "Uygulamayı paylaş", "", { showShare = true }, HedefitColors.Water)
                     }
                 }
             }
@@ -226,13 +226,13 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", if (en) "Close the session on this device" else "Bu cihazdaki oturumu kapat", onSignOut, HedefitColors.TextSecondary)
+                        SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", "", onSignOut, HedefitColors.TextSecondary)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data remains while access pauses" else "Verilerin korunur, erişimin duraklar", onClick = { showFreeze = true }, tint = HedefitColors.Water)
+                        SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", "", onClick = { showFreeze = true }, tint = HedefitColors.Water)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Refresh, if (en) "Reset progress" else "İlerlemeyi sıfırla", if (en) "Logs are deleted; profile and plan remain" else "Kayıtlar silinir, profil ve plan korunur", onClick = { showReset = true }, tint = HedefitColors.Coral, danger = true)
+                        SettingsRowContent(Icons.Default.Refresh, if (en) "Reset progress" else "İlerlemeyi sıfırla", "", onClick = { showReset = true }, tint = HedefitColors.Coral, danger = true)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.DeleteForever, if (en) "Delete account permanently" else "Hesabı kalıcı sil", if (en) "All data will be deleted permanently" else "Tüm veriler geri alınamaz biçimde silinir", { showDelete = true }, HedefitColors.Coral, danger = true)
+                        SettingsRowContent(Icons.Default.DeleteForever, if (en) "Delete account permanently" else "Hesabı kalıcı sil", "", { showDelete = true }, HedefitColors.Coral, danger = true)
                     }
                 }
             }
@@ -262,7 +262,6 @@ private fun AccentColorPicker(hue: Float, en: Boolean, onHueChange: (Float) -> U
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(if (en) "Application colour" else "Uygulama rengi", style = MaterialTheme.typography.titleMedium)
-                Text(if (en) "Slide to choose your colour" else "İstediğin rengi seçmek için kaydır", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
             TextButton(onClick = { onHueChange(106f) }) {
                 Text(if (en) "Reset" else "Sıfırla", color = HedefitColors.Lime)
@@ -405,11 +404,11 @@ fun UtilityHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
 }
 
 @Composable private fun SettingsRowContent(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit, tint: Color = HedefitColors.Lime, danger: Boolean = false) {
-    HfListRow(icon, tint, title, subtitle, onClick, titleColor = if (danger) HedefitColors.Coral else HedefitColors.TextPrimary)
+    HfListRow(icon, tint, title, subtitle.ifBlank { null }, onClick, titleColor = if (danger) HedefitColors.Coral else HedefitColors.TextPrimary)
 }
 
 @Composable private fun SettingsSwitchRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, checked: Boolean, tint: Color = HedefitColors.Lime, onChecked: (Boolean) -> Unit) {
-    HfListRow(icon, tint, title, subtitle, onClick = { onChecked(!checked) }, chevron = false) {
+    HfListRow(icon, tint, title, null, onClick = { onChecked(!checked) }, chevron = false) {
         Switch(checked, onChecked, colors = SwitchDefaults.colors(checkedThumbColor = HedefitColors.OnLime, checkedTrackColor = HedefitColors.Lime))
     }
 }

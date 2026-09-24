@@ -136,6 +136,8 @@ private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en:
     ) {
         item { HfScreenHeader(if (en) "Rewards" else "Ödüller", "${if (en) "Level" else "Seviye"} ${snapshot.level.level} • ${leagueFor(snapshot.totalXp)}", onBack = onBack, backLabel = if (en) "Back" else "Geri") }
         item { HeroCard(snapshot, en) }
+        item { HfSectionHeader(if (en) "What you'll earn" else "Neler kazanacaksın") }
+        item { RewardRoadmapCard(snapshot.totalXp, en) }
         item { HfSectionHeader(if (en) "Today's quests" else "Bugünün görevleri", "${quests.count { it.completed }} / ${quests.size}") }
         item { QuestCard(snapshot) }
         item { HfSectionHeader(if (en) "Habit strength" else "Alışkanlık gücü", "%${snapshot.habitStrength}") }
@@ -165,7 +167,7 @@ private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en:
             }
         }
         item { HfSectionHeader(if (en) "League" else "Lig durumu", leagueFor(snapshot.totalXp)) }
-        item { LeagueCard(displayName.ifBlank { if (en) "You" else "Sen" }, snapshot.weeklyXp, en) }
+        item { LeagueCard(displayName.ifBlank { if (en) "You" else "Sen" }, snapshot.weeklyXp, snapshot.totalXp, en) }
         item { MotivationCard(snapshot.motivation) }
     }
     selectedAchievement?.let { item ->
@@ -286,15 +288,63 @@ private fun ChallengeCard(snapshot: GamificationSnapshot) = GameCard(GameHeat.co
 }
 
 @Composable
-private fun LeagueCard(displayName: String, weeklyXp: Int, en: Boolean) = GameCard {
+private fun LeagueCard(displayName: String, weeklyXp: Int, totalXp: Int, en: Boolean) = GameCard {
     Row(Modifier.fillMaxWidth().background(GameLime.copy(alpha = .12f), RoundedCornerShape(14.dp)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(36.dp).background(GameLime, CircleShape), contentAlignment = Alignment.Center) { Text(displayName.take(1).uppercase(), color = HedefitColors.OnLime, fontWeight = FontWeight.ExtraBold) }
         Spacer(Modifier.width(12.dp))
         Text(if (en) "$displayName (you)" else "$displayName (sen)", color = GameText, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text("$weeklyXp XP", color = GameText, fontWeight = FontWeight.Bold)
+        Text(if (en) "$weeklyXp XP this week" else "Bu hafta $weeklyXp XP", color = GameText, fontWeight = FontWeight.Bold)
     }
-    Spacer(Modifier.height(10.dp))
-    Text(if (en) "Only verified real users will appear here when the shared leaderboard is enabled." else "Ortak liderlik tablosu açıldığında burada yalnızca doğrulanmış gerçek kullanıcılar görünecek.", color = GameTextMuted, style = MaterialTheme.typography.bodySmall)
+    Spacer(Modifier.height(12.dp))
+    LEAGUES.forEachIndexed { index, (minXp, name) ->
+        val current = leagueFor(totalXp) == name
+        val reached = totalXp >= minXp
+        if (index > 0) HfDivider()
+        Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(if (reached) Icons.Default.EmojiEvents else Icons.Default.Lock, null, tint = if (current) GameHeat else if (reached) GameLime else GameTextMuted, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(leagueLabel(name, en), color = if (current) GameHeat else GameText, fontWeight = if (current) FontWeight.ExtraBold else FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Text(if (current) (if (en) "You are here" else "Buradasın") else "$minXp XP", color = if (current) GameHeat else GameText, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun RewardRoadmapCard(totalXp: Int, en: Boolean) = GameCard {
+    val milestones = listOf(
+        300 to (if (en) "+1 daily Fit Coach question" else "+1 günlük FitKoç sorusu"),
+        500 to (if (en) "+2 daily Fit Coach questions" else "+2 günlük FitKoç sorusu"),
+        750 to (if (en) "+3 daily Fit Coach questions" else "+3 günlük FitKoç sorusu"),
+        1_000 to (if (en) "+4 daily Fit Coach questions" else "+4 günlük FitKoç sorusu"),
+        1_250 to (if (en) "+5 daily Fit Coach questions" else "+5 günlük FitKoç sorusu"),
+    ) + LEAGUES.drop(1).map { (xp, name) -> xp to (if (en) "${leagueLabel(name, en)} badge" else "${leagueLabel(name, en)} rozeti") }
+    val next = milestones.firstOrNull { totalXp < it.first }
+    next?.let { (xp, label) ->
+        Text(if (en) "Next: $label" else "Sıradaki: $label", color = GameText, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(8.dp))
+        HfProgressBar((totalXp / xp.toFloat()).coerceIn(0f, 1f))
+        Spacer(Modifier.height(4.dp))
+        Text("$totalXp / $xp XP", color = GameLime, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(10.dp))
+    }
+    milestones.forEachIndexed { index, (xp, label) ->
+        val earned = totalXp >= xp
+        if (index > 0) HfDivider()
+        Row(Modifier.fillMaxWidth().padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(28.dp).background(if (earned) GameLime else GameSurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(if (earned) Icons.Default.Check else Icons.Default.Lock, null, tint = if (earned) HedefitColors.OnLime else GameTextMuted, modifier = Modifier.size(15.dp))
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(label, color = if (earned) GameText else GameText.copy(alpha = .8f), fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Text("$xp XP", color = if (earned) GameLime else GameText, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+        }
+    }
+}
+
+private val LEAGUES = listOf(0 to "Bronz Lig", 2_000 to "Gümüş Lig", 5_000 to "Altın Lig", 10_000 to "Elmas Lig", 20_000 to "Şampiyon")
+
+private fun leagueLabel(name: String, en: Boolean) = if (!en) name else when (name) {
+    "Bronz Lig" -> "Bronze League"; "Gümüş Lig" -> "Silver League"; "Altın Lig" -> "Gold League"; "Elmas Lig" -> "Diamond League"; else -> "Champion"
 }
 
 @Composable
@@ -321,10 +371,4 @@ private fun MotivationCard(message: String) = GameCard(GameLime.copy(alpha = .55
     }
 }
 
-private fun leagueFor(totalXp: Int) = when {
-    totalXp >= 20_000 -> "Şampiyon"
-    totalXp >= 10_000 -> "Elmas Lig"
-    totalXp >= 5_000 -> "Altın Lig"
-    totalXp >= 2_000 -> "Gümüş Lig"
-    else -> "Bronz Lig"
-}
+private fun leagueFor(totalXp: Int) = LEAGUES.last { totalXp >= it.first }.second

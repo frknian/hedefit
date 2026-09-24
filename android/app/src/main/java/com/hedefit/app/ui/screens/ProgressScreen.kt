@@ -62,6 +62,14 @@ import com.hedefit.app.ui.components.Sparkline
 import com.hedefit.app.ui.theme.HedefitColors
 import com.hedefit.app.ui.components.*
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import com.hedefit.app.ui.settings.MeasurementUnits
 import com.hedefit.app.data.model.DashboardData
@@ -92,8 +100,11 @@ fun ProgressScreen(
     measurementSaving: Boolean = false,
     onSaveMeasurement: (BodyMeasurementData) -> Unit = {},
     onDeleteRoute: (RouteActivityData) -> Unit = {},
+    nutritionHistory: List<com.hedefit.app.data.model.NutritionLogData> = emptyList(),
+    onLoadNutritionHistory: () -> Unit = {},
 ) {
     val en = language == "en"
+    LaunchedEffect(Unit) { onLoadNutritionHistory() }
     var range by remember { mutableStateOf("30G") }
     var showGoalEditor by remember { mutableStateOf(false) }
     var showMeasurementEditor by remember { mutableStateOf(false) }
@@ -106,36 +117,21 @@ fun ProgressScreen(
             verticalArrangement = Arrangement.spacedBy(15.dp),
         ) {
             item {
-                HfScreenHeader(if (en) "Progress" else "İlerleme", rangeLabel(range, en)) {
+                HfScreenHeader(if (en) "Progress" else "İlerleme") {
                     HfCircleButton(Icons.Default.MonitorWeight, if (en) "Add measurement" else "Ölçüm ekle", { showMeasurementEditor = true })
                 }
             }
             item { TimeRangeSelector(range, en) { range = it } }
-            if (expanded) {
-                item {
-                    Row(horizontalArrangement = Arrangement.spacedBy(18.dp), verticalAlignment = Alignment.Top) {
-                        Column(Modifier.weight(1.2f), verticalArrangement = Arrangement.spacedBy(15.dp)) {
-                            WeightChart(range, filteredData, en, unitSystem)
-                            BodyMeasurements(filteredData, en, unitSystem) { showMeasurementEditor = true }
-                        }
-                        Column(Modifier.weight(.8f), verticalArrangement = Arrangement.spacedBy(15.dp)) {
-                            ProgressMetrics(filteredData, data?.sessions.orEmpty(), weeklyWorkoutGoal, en) { showGoalEditor = true }
-                            WorkoutHistory(filteredData, en)
-                            ExercisePerformanceHistory(filteredData?.exercisePerformance.orEmpty(), en)
-                            RouteHistory(filteredData?.routeActivities.orEmpty(), en, unitSystem, onDeleteRoute)
-                            WeeklyReviewCard(filteredData, en) { showWeeklyReview = true }
-                        }
-                    }
-                }
-            } else {
-                item { WeightChart(range, filteredData, en, unitSystem) }
-                item { ProgressMetrics(filteredData, data?.sessions.orEmpty(), weeklyWorkoutGoal, en) { showGoalEditor = true } }
-                item { WorkoutHistory(filteredData, en) }
-                item { ExercisePerformanceHistory(filteredData?.exercisePerformance.orEmpty(), en) }
-                item { RouteHistory(filteredData?.routeActivities.orEmpty(), en, unitSystem, onDeleteRoute) }
-                item { BodyMeasurements(filteredData, en, unitSystem) { showMeasurementEditor = true } }
-                item { WeeklyReviewCard(filteredData, en) { showWeeklyReview = true } }
-            }
+            item { ProgressHero(filteredData, data?.sessions.orEmpty(), weeklyWorkoutGoal, en) { showGoalEditor = true } }
+            item { ActivityHeatmap(data, range, en) }
+            item { WeeklyMinutesChart(data, en) }
+            item { WeeklyCalorieBalance(data, nutritionHistory, en) }
+            item { WeightChart(range, filteredData, en, unitSystem) }
+            item { ExercisePerformanceHistory(filteredData?.exercisePerformance.orEmpty(), en) }
+            item { WorkoutHistory(filteredData, en) }
+            item { RouteHistory(filteredData?.routeActivities.orEmpty(), en, unitSystem, onDeleteRoute) }
+            item { BodyMeasurements(filteredData, en, unitSystem) { showMeasurementEditor = true } }
+            item { WeeklyReviewCard(filteredData, en) { showWeeklyReview = true } }
         }
     }
     if (showGoalEditor) WeeklyGoalDialog(weeklyWorkoutGoal, en, { showGoalEditor = false }) { onWeeklyWorkoutGoalChange(it); showGoalEditor = false }
@@ -196,10 +192,9 @@ private fun WeightChart(range: String, data: DashboardData?, en: Boolean, unitSy
                 }
                 if (change != null) HfPill("%+.1f %s".format(MeasurementUnits.weightValue(change.toDouble(), unitSystem), MeasurementUnits.weightUnit(unitSystem)), if (change <= 0) HedefitColors.Lime else HedefitColors.Warning)
             }
-            if (change == null) Text(if (en) "At least 2 measurements are needed for a trend" else "Trend için en az 2 ölçüm gerekli", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
             Sparkline(
                 if (weights.size >= 2) weights.map { MeasurementUnits.weightValue(it.toDouble(), unitSystem).toFloat() } else listOf(0f, 0f),
-                Modifier.fillMaxWidth().height(if (range == "7G") 130.dp else 190.dp),
+                Modifier.fillMaxWidth().height(if (range == "7G") 80.dp else 110.dp),
                 showGrid = true,
             )
             val dates = data?.measurements.orEmpty().map { it.date.take(10) }
@@ -211,34 +206,237 @@ private fun WeightChart(range: String, data: DashboardData?, en: Boolean, unitSy
 }
 
 @Composable
-private fun ProgressMetrics(data: DashboardData?, allSessions: List<WorkoutSessionData>, weeklyGoal: Int, en: Boolean, onEditGoal: () -> Unit) {
+private fun ProgressHero(data: DashboardData?, allSessions: List<WorkoutSessionData>, weeklyGoal: Int, en: Boolean, onEditGoal: () -> Unit) {
     val sessions = data?.sessions.orEmpty()
     val totalMinutes = sessions.sumOf { it.durationSeconds } / 60
     val totalCalories = sessions.sumOf { it.calories }
-    val plannedSessions = sessions.filter { it.manualActivityKey == null }
-    val totalPlanned = plannedSessions.sumOf { it.totalExercises }.coerceAtLeast(1)
-    val completion = (plannedSessions.sumOf { it.completedExercises } * 100 / totalPlanned).coerceIn(0, 100)
     val weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    val weeklyDone = allSessions.count { sessionDate(it) >= weekStart }
+    val weeklyDone = allSessions.map(::sessionDate).filter { it >= weekStart }.distinct().size
+    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${sessions.size}", fontSize = 44.sp, fontWeight = FontWeight.Black, color = HedefitColors.Lime)
+                    Text(if (en) "workouts" else "antrenman", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                ProgressRing((weeklyDone / weeklyGoal.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f), Modifier.size(86.dp).clickable(onClick = onEditGoal), 9.dp) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$weeklyDone/$weeklyGoal", fontWeight = FontWeight.ExtraBold)
+                        Text(if (en) "this week" else "bu hafta", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HeroMetric(if (en) "Time" else "Süre", "${totalMinutes / 60}s ${totalMinutes % 60}dk", HedefitColors.Water, Modifier.weight(1f))
+                HeroMetric("kcal", "$totalCalories", HedefitColors.Warning, Modifier.weight(1f))
+                HeroMetric(if (en) "Streak" else "Seri", "${data?.streakDays ?: 0} ${if (en) "d" else "gün"}", HedefitColors.Coral, Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroMetric(label: String, value: String, color: Color, modifier: Modifier) {
+    Column(modifier.background(color.copy(alpha = .12f), RoundedCornerShape(14.dp)).padding(vertical = 10.dp, horizontal = 10.dp)) {
+        Text(value, color = color, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun ActivityHeatmap(data: DashboardData?, range: String, en: Boolean) {
+    val today = LocalDate.now()
+    val activityDates = data?.sessions.orEmpty().map(::sessionDate) + data?.routeActivities.orEmpty().map(::routeDate)
+    val days = when (range) {
+        "7G" -> 7L
+        "30G" -> 30L
+        "90G" -> 90L
+        "1Y" -> 365L
+        else -> activityDates.filter { it != LocalDate.MIN }.minOrNull()?.let { java.time.temporal.ChronoUnit.DAYS.between(it, today) + 1 }?.coerceAtLeast(7L) ?: 30L
+    }
+    val cutoff = today.minusDays(days - 1)
+    val start = cutoff.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val weeks = (java.time.temporal.ChronoUnit.DAYS.between(start, today) / 7 + 1).toInt()
+    val counts = activityDates.filter { it >= cutoff }.groupingBy { it }.eachCount()
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            HfStatTile(if (en) "Workouts" else "Antrenman", "${sessions.size}", Modifier.weight(1f), if (en) "completed" else "tamamlandı")
-            HfStatTile(if (en) "Total time" else "Toplam süre", "${totalMinutes / 60}s ${totalMinutes % 60}dk", Modifier.weight(1f), if (sessions.isNotEmpty()) (if (en) "avg ${totalMinutes / sessions.size} min" else "ort. ${totalMinutes / sessions.size} dk") else null)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            HfStatTile(if (en) "Streak" else "Güncel seri", "${data?.streakDays ?: 0} ${if (en) "days" else "gün"}", Modifier.weight(1f), valueColor = HedefitColors.Coral)
-            HfStatTile(if (en) "Calories" else "Kalori", "$totalCalories", Modifier.weight(1f), if (en) "kcal • %$completion done" else "kcal • %$completion tamamlama", valueColor = HedefitColors.Warning)
-        }
-        HedefitCard(Modifier.fillMaxWidth(), onClick = onEditGoal, contentPadding = PaddingValues(16.dp)) {
+        HfSectionHeader(if (en) "Activity • ${rangeLabel(range, true).lowercase()}" else "Aktivite • ${rangeLabel(range, false).lowercase()}")
+        HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (range == "7G") Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (0L..6L).map(cutoff::plusDays).forEach { date ->
+                        val count = counts[date] ?: 0
+                        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(
+                                Modifier.fillMaxWidth().aspectRatio(.8f).clip(RoundedCornerShape(10.dp)).background(if (count >= 2) HedefitColors.Lime else if (count == 1) HedefitColors.Lime.copy(alpha = .55f) else HedefitColors.SurfaceSoft),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("${date.dayOfMonth}", fontWeight = FontWeight.ExtraBold, color = if (count > 0) HedefitColors.OnLime else HedefitColors.TextPrimary) }
+                            Text(date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.forLanguageTag(if (en) "en" else "tr")).take(3), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                } else if (range == "30G") Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        DayOfWeek.entries.forEach { day ->
+                            Text(day.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.forLanguageTag(if (en) "en" else "tr")).take(3), modifier = Modifier.weight(1f), fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        }
+                    }
+                    (0 until weeks).forEach { w ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            (0 until 7).forEach { d ->
+                                val date = start.plusDays(w * 7L + d)
+                                val count = counts[date] ?: 0
+                                val inRange = !date.isAfter(today) && !date.isBefore(cutoff)
+                                Box(
+                                    Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(6.dp)).background(
+                                        when {
+                                            !inRange -> Color.Transparent
+                                            count >= 2 -> HedefitColors.Lime
+                                            count == 1 -> HedefitColors.Lime.copy(alpha = .55f)
+                                            else -> HedefitColors.SurfaceSoft
+                                        },
+                                    ),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (inRange) Text("${date.dayOfMonth}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (count > 0) HedefitColors.OnLime else HedefitColors.TextSecondary)
+                                }
+                            }
+                        }
+                    }
+                } else if (range == "1Y" || range == "Tümü") Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState(), reverseScrolling = true), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    (0 until weeks).forEach { w ->
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            (0 until 7).forEach { d ->
+                                val date = start.plusDays(w * 7L + d)
+                                val count = counts[date] ?: 0
+                                Box(
+                                    Modifier.size(14.dp).clip(RoundedCornerShape(3.dp)).background(
+                                        when {
+                                            date.isAfter(today) || date.isBefore(cutoff) -> Color.Transparent
+                                            count >= 2 -> HedefitColors.Lime
+                                            count == 1 -> HedefitColors.Lime.copy(alpha = .55f)
+                                            else -> HedefitColors.SurfaceSoft
+                                        },
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                } else Row(Modifier.fillMaxWidth().height(116.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    (0 until weeks).forEach { w ->
+                        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            (0 until 7).forEach { d ->
+                                val date = start.plusDays(w * 7L + d)
+                                val count = counts[date] ?: 0
+                                Box(
+                                    Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(3.dp)).background(
+                                        when {
+                                            date.isAfter(today) || date.isBefore(cutoff) -> Color.Transparent
+                                            count >= 2 -> HedefitColors.Lime
+                                            count == 1 -> HedefitColors.Lime.copy(alpha = .55f)
+                                            else -> HedefitColors.SurfaceSoft
+                                        },
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+                Text(if (en) "${counts.size} of $days days active" else "Aktif gün: ${counts.size} / $days", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeeklyMinutesChart(data: DashboardData?, en: Boolean) {
+    val weekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val weeks = (7 downTo 0).map { weekStart.minusWeeks(it.toLong()) }
+    val minutes = weeks.map { start ->
+        val end = start.plusDays(7)
+        data?.sessions.orEmpty().filter { sessionDate(it).let { day -> day >= start && day < end } }.sumOf { it.durationSeconds } / 60 +
+            data?.routeActivities.orEmpty().filter { routeDate(it).let { day -> day >= start && day < end } }.sumOf { it.durationSeconds } / 60
+    }
+    val max = (minutes.maxOrNull() ?: 0).coerceAtLeast(1)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        HfSectionHeader(if (en) "Weekly training time" else "Haftalık antrenman süresi")
+        HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+            Row(Modifier.fillMaxWidth().height(150.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+                weeks.forEachIndexed { index, start ->
+                    val value = minutes[index]
+                    val current = index == weeks.lastIndex
+                    Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                        if (value > 0) Text("$value", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (current) HedefitColors.Lime else HedefitColors.TextPrimary)
+                        Box(
+                            Modifier.fillMaxWidth().fillMaxHeight((value / max.toFloat()).coerceAtLeast(.03f) * .72f)
+                                .clip(RoundedCornerShape(6.dp)).background(if (current) HedefitColors.Lime else HedefitColors.Lime.copy(alpha = .35f)),
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text("${start.dayOfMonth}", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Estimated daily burn: Mifflin-St Jeor BMR × 1.2 (daily life) + logged workouts/routes + steps. */
+private fun estimatedBurn(data: DashboardData, date: LocalDate): Int {
+    val profile = data.profile
+    val weight = data.measurements.lastOrNull()?.weightKg ?: profile.weightKg
+    val bmr = if (weight != null && profile.heightCm != null && profile.age != null) {
+        10 * weight + 6.25 * profile.heightCm - 5 * profile.age + if (profile.gender.contains("kad", ignoreCase = true) || profile.gender.contains("female", ignoreCase = true)) -161 else 5
+    } else null
+    val base = bmr?.let { (it * 1.2).toInt() } ?: data.nutritionGoal.calories
+    val workouts = data.sessions.filter { sessionDate(it) == date }.sumOf { it.calories }
+    val routes = data.routeActivities.filter { routeDate(it) == date }.sumOf { it.calories }
+    val steps = data.stepHistory.firstOrNull { it.localDate == date }?.steps ?: 0
+    return base + workouts + routes + (steps * 0.04).toInt()
+}
+
+@Composable
+private fun WeeklyCalorieBalance(data: DashboardData?, logs: List<com.hedefit.app.data.model.NutritionLogData>, en: Boolean) {
+    data ?: return
+    val today = LocalDate.now()
+    val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val intakeByDay = logs.groupBy { runCatching { LocalDate.parse(it.date.take(10)) }.getOrDefault(LocalDate.MIN) }.mapValues { (_, dayLogs) -> dayLogs.sumOf { it.calories } }
+    data class Week(val start: LocalDate, val intake: Int, val burned: Int, val loggedDays: Int)
+    val weeks = (7 downTo 0).map { weekStart.minusWeeks(it.toLong()) }.map { start ->
+        val loggedDays = (0L..6L).map(start::plusDays).filter { !it.isAfter(today) && (intakeByDay[it] ?: 0) > 0 }
+        Week(start, loggedDays.sumOf { intakeByDay[it] ?: 0 }, loggedDays.sumOf { estimatedBurn(data, it) }, loggedDays.size)
+    }
+    val max = weeks.maxOf { maxOf(it.intake, it.burned) }.coerceAtLeast(1)
+    val current = weeks.last()
+    val balance = current.intake - current.burned
+    fun compact(value: Int) = if (kotlin.math.abs(value) >= 1000) "%+.1fk".format(value / 1000.0).replace('.', ',') else "%+d".format(value)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        HfSectionHeader(if (en) "Weekly calorie balance" else "Haftalık kalori dengesi")
+        HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (en) "Weekly goal" else "Haftalık hedef", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
-                    Text(if (en) "Change" else "Değiştir", color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            if (current.loggedDays == 0) "—" else if (balance <= 0) (if (en) "Deficit ${"%,d".format(-balance)} kcal" else "Açık ${"%,d".format(-balance).replace(',', '.')} kcal") else if (en) "Surplus ${"%,d".format(balance)} kcal" else "Fazla ${"%,d".format(balance).replace(',', '.')} kcal",
+                            fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = if (balance <= 0) HedefitColors.Lime else HedefitColors.Warning,
+                        )
+                        Text(if (en) "This week • ${current.loggedDays} logged days" else "Bu hafta • ${current.loggedDays} kayıtlı gün", fontWeight = FontWeight.Bold)
+                    }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    repeat(weeklyGoal.coerceIn(1, 7)) { index -> Box(Modifier.weight(1f).height(10.dp).background(if (index < weeklyDone) HedefitColors.Lime else HedefitColors.SurfaceSoft, CircleShape)) }
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Box(Modifier.size(10.dp).background(HedefitColors.Lime, CircleShape)); Text(if (en) "Eaten" else "Alınan", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold) }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Box(Modifier.size(10.dp).background(HedefitColors.Coral, CircleShape)); Text(if (en) "Burned (est.)" else "Yakılan (tahmini)", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold) }
                 }
-                Text(if (en) "$weeklyDone of $weeklyGoal workouts done this week" else "Bu hafta $weeklyGoal antrenmandan $weeklyDone'i tamam", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Row(Modifier.fillMaxWidth().height(150.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
+                    weeks.forEach { week ->
+                        Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                            if (week.loggedDays > 0) Text(compact(week.intake - week.burned), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (week.intake <= week.burned) HedefitColors.Lime else HedefitColors.Warning, maxLines = 1)
+                            Row(Modifier.fillMaxWidth().fillMaxHeight(.78f), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.Bottom) {
+                                Box(Modifier.weight(1f).fillMaxHeight((week.intake / max.toFloat()).coerceAtLeast(.02f)).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)).background(HedefitColors.Lime))
+                                Box(Modifier.weight(1f).fillMaxHeight((week.burned / max.toFloat()).coerceAtLeast(.02f)).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)).background(HedefitColors.Coral))
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text("${week.start.dayOfMonth}", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
     }
@@ -308,7 +506,7 @@ private fun WorkoutHistory(data: DashboardData?, en: Boolean) {
 private fun ExercisePerformanceHistory(performances: List<WorkoutExercisePerformanceData>, en: Boolean) {
     val latestByExercise = performances.sortedByDescending { it.completedAt }.distinctBy { it.exerciseId ?: it.exerciseName }.take(6)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        HfSectionHeader(if (en) "Movement progress" else "Hareket ilerlemesi")
+        HfSectionHeader(if (en) "Personal bests" else "Kişisel rekorlar")
     HedefitCard(Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (latestByExercise.isEmpty()) Text(if (en) "Complete a movement from your plan or the exercise atlas to see its performance here." else "Programdan veya Hareket Atlası'ndan bir hareketi tamamla; set performansın burada görünür.", color = HedefitColors.TextSecondary)

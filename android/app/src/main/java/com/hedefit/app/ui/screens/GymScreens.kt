@@ -1,5 +1,7 @@
 package com.hedefit.app.ui.screens
 
+import com.hedefit.app.gym.muscleRegions
+
 import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -166,7 +168,6 @@ fun EquipmentScannerScreen(
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri") }
             Column(Modifier.weight(1f)) {
                 Text(if (en) "Scan equipment" else "Ekipman Tara", style = MaterialTheme.typography.titleLarge)
-                Text(if (en) "Keep the whole machine in frame" else "Cihazın tamamını kadrajda tut", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             }
         }
         val permissionMessage = cameraPermissionMessage(permissionGranted, permanentlyDenied, cameraAvailable)
@@ -200,7 +201,6 @@ fun EquipmentScannerScreen(
                 if (recognizing) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = HedefitColors.OnLime)
                 Text(if (recognizing) (if (en) "  Recognizing…" else "  Ekipman tanınıyor…") else (if (en) "Check recognition" else "Tanımayı Kontrol Et"))
             }
-            Text(if (en) "The frame is sent securely for analysis and is not saved." else "Kare güvenli analiz için gönderilir; cihazda veya Hedefit'te saklanmaz.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             recognitionError?.let { Text(it, color = HedefitColors.Warning, style = MaterialTheme.typography.bodySmall) }
             recognition?.let { result -> EquipmentRecognitionCard(result, en, exerciseCatalog, onDetails = { selected = it }, onAdd = { equipment ->
                 val matches = EquipmentCatalog.matchingExercises(equipment, exerciseCatalog)
@@ -407,7 +407,7 @@ fun WorkoutSummaryScreen(summary: WorkoutSummary, onDone: () -> Unit, language: 
     val en = language == "en"
     val shareText = "${summary.title} • ${summary.setCount} set • ${summary.volumeKg.compactKg()} • ${formatGymDuration(summary.durationSeconds)}"
     var previewTemplate by remember { mutableStateOf<WorkoutShareCard.Template?>(null) }
-    val previewBitmap = remember(previewTemplate) { previewTemplate?.let { WorkoutShareCard.render(summary, it) } }
+    val previewBitmap = remember(previewTemplate) { previewTemplate?.let { WorkoutShareCard.render(context, summary, it) } }
     ScreenContainer { LazyColumn(Modifier.fillMaxSize().padding(horizontal = 18.dp), contentPadding = PaddingValues(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { Row(Modifier.fillMaxWidth().height(60.dp), verticalAlignment = Alignment.CenterVertically) { Text(if (en) "Workout complete" else "Antrenman Tamamlandı", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f)); IconButton(onClick = onDone) { Icon(Icons.Default.Check, if (en) "Done" else "Tamam", tint = HedefitColors.Lime) } } }
         item { HedefitCard(Modifier.fillMaxWidth()) { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) { Text(summary.title.uppercase(), color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge); Text(java.time.LocalDate.now().toString(), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall); Text(formatGymDuration(summary.durationSeconds), style = MaterialTheme.typography.displaySmall); Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { SummaryMetric("${summary.exerciseCount}", if (en) "exercises" else "hareket"); SummaryMetric("${summary.setCount}", "set"); SummaryMetric("${summary.repetitions}", if (en) "reps" else "tekrar") }; Text("${summary.volumeKg.compactKg()} • ${summary.calories} kcal", style = MaterialTheme.typography.headlineSmall); summary.strongestExercise?.let { Text((if (en) "Strongest movement: " else "En güçlü hareket: ") + it, color = HedefitColors.TextSecondary) }; if (summary.muscleGroups.isNotEmpty()) Text((if (en) "Muscles: " else "Çalışan kaslar: ") + summary.muscleGroups.joinToString { if (en) muscleNameEn(it) else muscleNameTr(it) }, color = HedefitColors.TextSecondary) } } }
@@ -468,7 +468,6 @@ fun TrainingAnalysisSection(
                 selected = selectedMuscle?.muscle,
                 onSelect = { muscle -> selectedMuscle = analysis.muscleLoads.firstOrNull { it.muscle == muscle } },
             )
-            Text(if (en) "Tap a muscle to see its sets, volume, exercises and trend." else "Set, hacim, hareket ve trend ayrıntısı için bir kasa dokun.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             analysis.muscleLoads.filter { it.level != LoadLevel.NONE }.take(5).forEach { load ->
                 Row(Modifier.fillMaxWidth().clickable { selectedMuscle = load }.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(9.dp).background(loadColor(load.level), CircleShape))
@@ -493,40 +492,6 @@ fun TrainingAnalysisSection(
  * Canvas tüm kutuyu, görsel ise `ContentScale.Fit` ile letterbox'lanmış daha
  * küçük bir alanı kullandığından işaretler gövdenin dışına düşüyordu.
  */
-private data class AnatomicalRegion(val muscle: String, val x: Float, val y: Float, val rx: Float, val ry: Float)
-
-private val muscleRegionsFront = listOf(
-    AnatomicalRegion("neck", .312f, .152f, .028f, .020f),
-    AnatomicalRegion("front_delts", .258f, .192f, .030f, .023f), AnatomicalRegion("front_delts", .360f, .192f, .032f, .023f),
-    AnatomicalRegion("side_delts", .207f, .208f, .026f, .024f), AnatomicalRegion("side_delts", .421f, .208f, .026f, .024f),
-    AnatomicalRegion("chest", .312f, .245f, .072f, .032f),
-    AnatomicalRegion("biceps", .183f, .285f, .024f, .038f), AnatomicalRegion("biceps", .438f, .285f, .024f, .038f),
-    AnatomicalRegion("abs", .315f, .345f, .048f, .054f),
-    AnatomicalRegion("forearms", .150f, .400f, .026f, .042f), AnatomicalRegion("forearms", .462f, .400f, .026f, .042f),
-    AnatomicalRegion("abductors", .228f, .512f, .022f, .030f), AnatomicalRegion("abductors", .396f, .512f, .022f, .030f),
-    AnatomicalRegion("adductors", .285f, .548f, .022f, .038f), AnatomicalRegion("adductors", .340f, .548f, .022f, .038f),
-    AnatomicalRegion("quads", .252f, .578f, .042f, .052f), AnatomicalRegion("quads", .373f, .578f, .042f, .052f),
-    AnatomicalRegion("calves", .245f, .748f, .031f, .040f), AnatomicalRegion("calves", .377f, .748f, .031f, .040f),
-)
-
-private val muscleRegionsBack = listOf(
-    AnatomicalRegion("neck", .687f, .152f, .026f, .020f),
-    AnatomicalRegion("traps", .688f, .196f, .052f, .026f),
-    AnatomicalRegion("rear_delts", .584f, .212f, .030f, .024f), AnatomicalRegion("rear_delts", .790f, .212f, .030f, .024f),
-    AnatomicalRegion("upper_back", .689f, .272f, .068f, .030f),
-    AnatomicalRegion("triceps", .568f, .292f, .024f, .038f), AnatomicalRegion("triceps", .813f, .292f, .026f, .038f),
-    AnatomicalRegion("lats", .688f, .345f, .076f, .042f),
-    AnatomicalRegion("forearms", .542f, .400f, .026f, .042f), AnatomicalRegion("forearms", .844f, .400f, .026f, .042f),
-    AnatomicalRegion("lower_back", .687f, .437f, .048f, .030f),
-    AnatomicalRegion("glutes", .687f, .503f, .078f, .038f),
-    AnatomicalRegion("abductors", .604f, .532f, .022f, .030f), AnatomicalRegion("abductors", .772f, .532f, .022f, .030f),
-    AnatomicalRegion("adductors", .652f, .578f, .021f, .036f), AnatomicalRegion("adductors", .722f, .578f, .021f, .036f),
-    AnatomicalRegion("hamstrings", .628f, .605f, .040f, .048f), AnatomicalRegion("hamstrings", .746f, .605f, .040f, .048f),
-    AnatomicalRegion("calves", .621f, .735f, .031f, .040f), AnatomicalRegion("calves", .754f, .735f, .031f, .040f),
-)
-
-private val muscleRegions = muscleRegionsFront + muscleRegionsBack
-
 @Composable
 private fun MuscleFigure(analysis: TrainingAnalysis, modifier: Modifier, selected: String?, onSelect: (String) -> Unit) {
     val score = analysis.muscleLoads.associateBy { it.muscle }
@@ -703,7 +668,6 @@ private fun MuscleDetailSheet(load: MuscleLoad, rangeDays: Int, en: Boolean, onD
                 }
             }
             HedefitCard(Modifier.fillMaxWidth()) { Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { Text("AI COACH", color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge); Text(coach) } }
-            Text(if (en) "Values reflect the selected ${rangeDays}-day period; secondary muscles count at 0.5×." else "Değerler seçilen $rangeDays günlük dönemi gösterir; yardımcı kaslar 0,5× ağırlıkla hesaplanır.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(20.dp))
         }
     }

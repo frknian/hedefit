@@ -75,7 +75,6 @@ fun WeeklyMealPlanner(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(if (en) "Weekly meal plan" else "Haftalık öğün planı", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(if (en) "Plan meals and mark what you ate" else "Öğünlerini planla, yediklerini işaretle", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
                 IconButton(onClick = { showAdd = true }, modifier = Modifier.background(HedefitColors.Lime, CircleShape)) { Icon(Icons.Default.Add, null, tint = HedefitColors.OnLime) }
             }

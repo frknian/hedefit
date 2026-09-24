@@ -67,7 +67,6 @@ fun HfScreenHeader(
         if (onBack != null) HfCircleButton(Icons.AutoMirrored.Filled.ArrowBack, backLabel, onBack)
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.headlineMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (subtitle != null) Text(subtitle, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, content = actions)
     }
@@ -77,7 +76,7 @@ fun HfScreenHeader(
 fun HfSectionHeader(title: String, trailing: String? = null, onTrailingClick: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-        if (trailing != null) {
+        if (trailing != null && onTrailingClick != null) {
             Text(
                 trailing,
                 color = if (onTrailingClick != null) HedefitColors.Lime else HedefitColors.TextMuted,
@@ -103,7 +102,7 @@ fun HfNavRow(
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     HedefitCard(modifier.fillMaxWidth(), onClick = onClick, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
-        HfRowContent(icon, tint, title, subtitle, chevron, titleColor, trailing)
+        HfRowContent(icon, tint, title, null, chevron, titleColor, trailing)
     }
 }
 
@@ -148,10 +147,7 @@ fun HfActionTile(icon: ImageVector, tint: Color, title: String, subtitle: String
     HedefitCard(modifier, onClick = if (enabled) onClick else null, contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             HfIconBadge(icon, tint, 36.dp, 18.dp)
-            Column {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            }
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
 }

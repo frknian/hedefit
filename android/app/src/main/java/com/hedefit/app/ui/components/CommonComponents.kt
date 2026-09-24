@@ -52,6 +52,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -63,6 +64,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -117,30 +121,35 @@ fun HedefitAppFrame(
 
 @Composable
 private fun HedefitBottomBar(selected: AppDestination, onSelect: (AppDestination) -> Unit, language: String, coachName: String) {
-    Column(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh).navigationBarsPadding()) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(HedefitColors.Divider))
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(66.dp).padding(horizontal = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clip(RoundedCornerShape(30.dp))
+                .background(HedefitColors.SurfaceHigh.copy(alpha = .78f))
+                .border(1.dp, HedefitColors.TextPrimary.copy(alpha = .06f), RoundedCornerShape(30.dp))
+                .padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppDestination.primaryTabs.forEach { destination ->
                 val label = if (destination == AppDestination.Coach) coachName else destination.localizedLabel(language)
                 val active = destination == selected
-                val color = if (active) HedefitColors.Lime else HedefitColors.TextMuted
-                Column(
+                Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .selectable(selected = active, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Tab) { if (!active) onSelect(destination) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                        .selectable(selected = active, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Tab) { if (!active) onSelect(destination) }
+                        .semantics { contentDescription = label },
+                    contentAlignment = Alignment.Center,
                 ) {
                     Box(
-                        Modifier.size(width = 52.dp, height = 28.dp).background(if (active) HedefitColors.Lime.copy(alpha = .15f) else Color.Transparent, RoundedCornerShape(14.dp)),
+                        Modifier.size(44.dp).background(if (active) HedefitColors.Lime.copy(alpha = .16f) else Color.Transparent, CircleShape),
                         contentAlignment = Alignment.Center,
-                    ) { Icon(destination.icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = color) }
-                    Spacer(Modifier.height(3.dp))
-                    Text(label, color = color, fontSize = 10.5.sp, fontWeight = if (active) FontWeight.ExtraBold else FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    ) {
+                        if (destination == AppDestination.Coach) FitCoachRobotAvatar(Modifier.size(if (active) 34.dp else 30.dp).alpha(if (active) 1f else .7f))
+                        else Icon(destination.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = if (active) HedefitColors.Lime else HedefitColors.TextMuted)
+                    }
                 }
             }
         }
@@ -530,4 +539,25 @@ fun ArrowLabel(text: String, modifier: Modifier = Modifier) {
         Text(text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
         Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = HedefitColors.TextSecondary, modifier = Modifier.size(18.dp))
     }
+}
+
+@Composable
+fun HedefitTabPager(selected: AppDestination, onSelect: (AppDestination) -> Unit, content: @Composable (AppDestination) -> Unit) {
+    val tabs = AppDestination.primaryTabs
+    if (selected !in tabs) {
+        content(selected)
+        return
+    }
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(initialPage = tabs.indexOf(selected)) { tabs.size }
+    val currentOnSelect by androidx.compose.runtime.rememberUpdatedState(onSelect)
+    androidx.compose.runtime.LaunchedEffect(selected) {
+        val target = tabs.indexOf(selected)
+        if (pagerState.currentPage != target) {
+            if (kotlin.math.abs(pagerState.currentPage - target) == 1) pagerState.animateScrollToPage(target) else pagerState.scrollToPage(target)
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(pagerState) {
+        androidx.compose.runtime.snapshotFlow { pagerState.settledPage }.collect { currentOnSelect(tabs[it]) }
+    }
+    androidx.compose.foundation.pager.HorizontalPager(pagerState, Modifier.fillMaxSize(), key = { tabs[it].name }) { page -> content(tabs[page]) }
 }

@@ -126,6 +126,5 @@ private fun ActivityForm(activity: ManualActivityType, en: Boolean, weightKg: Do
         } } }
         item { OutlinedTextField(notes, { notes = it.take(500) }, modifier = Modifier.fillMaxWidth(), label = { Text(if (en) "Session notes (optional)" else "Seans notu (isteğe bağlı)") }, minLines = 3, supportingText = { Text("${notes.length}/500") }) }
         item { PrimaryButton(if (saving) (if (en) "Saving…" else "Kaydediliyor…") else if (en) "Save activity" else "Aktiviteyi kaydet", onClick = { if (!saving && minutes > 0) onSave(input) }, enabled = !saving && minutes > 0, icon = Icons.Default.CheckCircle) }
-        item { Text(if (en) "Active calories use the 2024 Compendium MET model. Distance, pace, incline and sport type improve the estimate; resting energy is excluded." else "Aktif kalori 2024 Compendium MET modeliyle hesaplanır. Mesafe, tempo, eğim ve spor detayı tahmini iyileştirir; dinlenme enerjisi dahil edilmez.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
     }
 }

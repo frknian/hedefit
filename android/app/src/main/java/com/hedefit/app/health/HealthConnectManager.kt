@@ -10,6 +10,9 @@ import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.RestingHeartRateRecord
+import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -34,6 +37,13 @@ class HealthConnectManager(private val context: Context) {
         HealthPermission.getReadPermission(WeightRecord::class),
         HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
     )
+
+    val heartPermissions = setOf(
+        HealthPermission.getReadPermission(HeartRateRecord::class),
+        HealthPermission.getReadPermission(RestingHeartRateRecord::class),
+    )
+
+    val allPermissions = permissions + heartPermissions
 
     private val client by lazy { HealthConnectClient.getOrCreate(context) }
 
@@ -85,6 +95,44 @@ class HealthConnectManager(private val context: Context) {
         )
     }
 
+    /** Which apps and physical devices wrote health data in the last [days] days. */
+    suspend fun readWearableSources(days: Long = 7): WearableSnapshot {
+        check(sdkStatus() == HealthConnectClient.SDK_AVAILABLE) { "Health Connect bu cihazda kullanılamıyor." }
+        val granted = client.permissionController.getGrantedPermissions()
+        val end = Instant.now()
+        val range = TimeRangeFilter.between(end.minus(java.time.Duration.ofDays(days)), end)
+        val origins = mutableMapOf<String, Instant>()
+        val devices = mutableMapOf<String, WearableDevice>()
+        fun note(packageName: String, time: Instant, device: Device?) {
+            if (origins[packageName]?.isAfter(time) != true) origins[packageName] = time
+            if (device != null && device.type in WEARABLE_TYPES) {
+                val label = listOfNotNull(device.manufacturer, device.model).joinToString(" ").ifBlank { null } ?: return
+                val previous = devices[label]
+                if (previous == null || previous.lastSeen.isBefore(time)) devices[label] = WearableDevice(label, device.type, packageName, time)
+            }
+        }
+        if (stepPermission in granted) client.readRecords(ReadRecordsRequest(StepsRecord::class, range, ascendingOrder = false, pageSize = 200)).records
+            .forEach { note(it.metadata.dataOrigin.packageName, it.endTime, it.metadata.device) }
+        if (HealthPermission.getReadPermission(SleepSessionRecord::class) in granted) client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, range, ascendingOrder = false, pageSize = 50)).records
+            .forEach { note(it.metadata.dataOrigin.packageName, it.endTime, it.metadata.device) }
+        var latestHeartRate: Long? = null
+        if (HealthPermission.getReadPermission(HeartRateRecord::class) in granted) {
+            val beats = client.readRecords(ReadRecordsRequest(HeartRateRecord::class, range, ascendingOrder = false, pageSize = 200)).records
+            beats.forEach { note(it.metadata.dataOrigin.packageName, it.endTime, it.metadata.device) }
+            latestHeartRate = beats.firstOrNull()?.samples?.maxByOrNull { it.time }?.beatsPerMinute
+        }
+        val resting = if (HealthPermission.getReadPermission(RestingHeartRateRecord::class) in granted)
+            client.readRecords(ReadRecordsRequest(RestingHeartRateRecord::class, range, ascendingOrder = false, pageSize = 1)).records.firstOrNull()?.beatsPerMinute
+        else null
+        return WearableSnapshot(
+            sourceLastSeen = origins,
+            devices = devices.values.sortedByDescending { it.lastSeen },
+            latestHeartRate = latestHeartRate,
+            restingHeartRate = resting,
+            heartPermissionGranted = granted.containsAll(heartPermissions),
+        )
+    }
+
     private suspend fun aggregatePreferredSteps(start: Instant, end: Instant): Int {
         val timeRange = TimeRangeFilter.between(start, end)
         val samsungSteps = client.aggregate(
@@ -107,8 +155,19 @@ class HealthConnectManager(private val context: Context) {
 
     private companion object {
         const val SAMSUNG_HEALTH_PACKAGE = "com.sec.android.app.shealth"
+        val WEARABLE_TYPES = setOf(Device.TYPE_WATCH, Device.TYPE_RING, Device.TYPE_FITNESS_BAND)
     }
 }
+
+data class WearableDevice(val label: String, val type: Int, val sourcePackage: String, val lastSeen: Instant)
+
+data class WearableSnapshot(
+    val sourceLastSeen: Map<String, Instant>,
+    val devices: List<WearableDevice>,
+    val latestHeartRate: Long?,
+    val restingHeartRate: Long?,
+    val heartPermissionGranted: Boolean,
+)
 
 internal fun preferredHealthStepCount(samsungSteps: Long?, allSteps: Long?): Int =
     (samsungSteps ?: allSteps ?: 0L).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()

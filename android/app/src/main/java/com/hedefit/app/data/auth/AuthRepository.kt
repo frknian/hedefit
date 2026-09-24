@@ -98,14 +98,24 @@ class AuthRepository(
         return parseSession(response.jsonObject()).also(::save)
     }
 
-    suspend fun signUp(email: String, password: String, legalAcceptance: RegistrationLegalAcceptance): SignUpResult {
+    suspend fun checkUsername(username: String): String {
+        val response = http.request(
+            url = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/rest/v1/rpc/hedefit_check_username",
+            method = "POST",
+            headers = authHeaders() + ("Authorization" to "Bearer ${current?.accessToken ?: BuildConfig.SUPABASE_ANON_KEY}"),
+            body = JSONObject().put("p_username", username).toString(),
+        ).requireSuccess("Kullanıcı adı kontrol edilemedi.")
+        return response.body.trim().trim('"')
+    }
+
+    suspend fun signUp(email: String, password: String, username: String, legalAcceptance: RegistrationLegalAcceptance): SignUpResult {
         legalAcceptance.requireComplete()
         val response = http.request(
             url = authUrl("signup"),
             method = "POST",
             headers = authHeaders(),
             body = JSONObject().put("email", email.trim()).put("password", password)
-                .put("data", legalAcceptancePayload()).toString(),
+                .put("data", legalAcceptancePayload().put("username", username.trim().lowercase())).toString(),
         ).requireSuccess("Kayıt oluşturulamadı.")
         val json = response.jsonObject()
         return if (json.stringOrNull("access_token") != null) {
@@ -222,7 +232,7 @@ class AuthRepository(
     private fun authUrl(path: String) = "${BuildConfig.SUPABASE_URL.trimEnd('/')}/auth/v1/$path"
     private fun authHeaders() = mapOf("apikey" to BuildConfig.SUPABASE_ANON_KEY, "Content-Type" to "application/json")
 
-    private companion object {
-        const val LEGAL_DOCUMENT_VERSION = "2026-08-25"
+    internal companion object {
+        const val LEGAL_DOCUMENT_VERSION = "2026-09-23"
     }
 }

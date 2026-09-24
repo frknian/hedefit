@@ -19,6 +19,7 @@ data class ProfileData(
     val accountStatus: String = "active",
     val avatarPath: String? = null,
     val avatarUrl: String? = null,
+    val username: String? = null,
 )
 
 data class ProfileUpdateData(
