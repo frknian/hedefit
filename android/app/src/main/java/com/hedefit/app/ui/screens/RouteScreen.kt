@@ -1,5 +1,7 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.material.icons.filled.Share
+
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -381,10 +383,11 @@ fun RouteScreen(
                     plannedRoute = null
                     section = "history"
                 })
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = { scope.launch { shareRoute(context, completed, activityTitle, story = false) } }, modifier = Modifier.weight(1f)) { Text("1:1 ${if (en) "Share" else "Paylaş"}") }
-                    TextButton(onClick = { scope.launch { shareRoute(context, completed, activityTitle, story = true) } }, modifier = Modifier.weight(1f)) { Text("9:16 Story") }
+                var sharing by remember { mutableStateOf(false) }
+                OutlinedButton(onClick = { sharing = true }, modifier = Modifier.fillMaxWidth().height(50.dp), shape = RoundedCornerShape(16.dp)) {
+                    Icon(androidx.compose.material.icons.Icons.Default.Share, null, tint = HedefitColors.Lime); Spacer(Modifier.width(8.dp)); Text(if (en) "Share card" else "Paylaşım kartı", color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold)
                 }
+                if (sharing) RouteShareSheet(completed, activityTitle, estimatedRouteCalories(completed)) { sharing = false }
             }
         }
     }
@@ -1100,39 +1103,137 @@ private fun stopRoute(context: Context, discard: Boolean = false) = context.star
     Intent(context, RouteTrackingService::class.java).setAction(if (discard) RouteTrackingService.ACTION_DISCARD else RouteTrackingService.ACTION_STOP),
 )
 
-private suspend fun shareRoute(context: Context, snapshot: RouteSnapshot, title: String, story: Boolean) {
+/** Paylaşım kartı şablonları. */
+internal enum class RouteCardTemplate { Map, Minimal, Energy }
+
+/** Rota polyline'ını verilen kutuya sığdırıp çizer (harita karosu olmadan). */
+private fun drawRouteLine(canvas: AndroidCanvas, points: List<RoutePoint>, left: Float, top: Float, right: Float, bottom: Float, color: Int, strokeWidth: Float) {
+    if (points.size < 2) return
+    val minLat = points.minOf { it.latitude }; val maxLat = points.maxOf { it.latitude }
+    val minLng = points.minOf { it.longitude }; val maxLng = points.maxOf { it.longitude }
+    val latR = (maxLat - minLat).coerceAtLeast(1e-6); val lngR = (maxLng - minLng).coerceAtLeast(1e-6)
+    val w = right - left; val h = bottom - top
+    val scale = minOf(w / lngR, h / latR)
+    val offX = left + (w - lngR * scale).toFloat() / 2f; val offY = top + (h - latR * scale).toFloat() / 2f
+    val path = android.graphics.Path()
+    points.forEachIndexed { i, p ->
+        val x = offX + ((p.longitude - minLng) * scale).toFloat(); val y = offY + ((maxLat - p.latitude) * scale).toFloat()
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    val glow = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; this.strokeWidth = strokeWidth * 2.4f; this.color = color; alpha = 60; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+    val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; this.strokeWidth = strokeWidth; this.color = color; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+    canvas.drawPath(path, glow); canvas.drawPath(path, line)
+}
+
+/**
+ * Paylaşım görselini üretir. Şablonlar: Harita (OSM karoları + karartma), Sade (koyu zemin ve
+ * parlayan rota), Enerji (vurgu renginde zemin, dev mesafe). story = 9:16, değilse 1:1.
+ */
+internal suspend fun renderRouteCard(context: Context, snapshot: RouteSnapshot, title: String, story: Boolean, template: RouteCardTemplate, calories: Int): Bitmap = withContext(Dispatchers.IO) {
     val width = 1080
     val height = if (story) 1920 else 1080
-    val file = withContext(Dispatchers.IO) {
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = AndroidCanvas(bitmap)
-        canvas.drawColor(AndroidColor.rgb(11, 13, 12))
-        val mapBottom = (height - 390).coerceAtMost(1120).toFloat()
-        drawShareMap(canvas, snapshot.points, width.toFloat(), mapBottom)
-        canvas.drawRect(0f, mapBottom, width.toFloat(), height.toFloat(), Paint().apply { color = AndroidColor.rgb(11, 13, 12) })
-        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = AndroidColor.rgb(126, 225, 80)
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = AndroidCanvas(bitmap)
+    val lime = AndroidColor.rgb(126, 225, 80)
+    val dark = AndroidColor.rgb(11, 13, 12)
+    val bold = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+    val heavy = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.NORMAL)
+    val infoTop = height - (if (story) 620 else 470)
+    when (template) {
+        RouteCardTemplate.Map -> {
+            canvas.drawColor(dark)
+            drawShareMap(canvas, snapshot.points, width.toFloat(), height.toFloat())
+            val fade = Paint().apply { shader = android.graphics.LinearGradient(0f, infoTop - 260f, 0f, height.toFloat(), AndroidColor.TRANSPARENT, AndroidColor.argb(245, 11, 13, 12), android.graphics.Shader.TileMode.CLAMP) }
+            canvas.drawRect(0f, infoTop - 260f, width.toFloat(), height.toFloat(), fade)
         }
-        textPaint.textSize = 58f
-        canvas.drawText(title.ifBlank { defaultActivityTitle(snapshot.activityType, false) }, 72f, height - 330f, textPaint)
-        textPaint.color = AndroidColor.rgb(166, 174, 169)
-        textPaint.textSize = 34f
-        canvas.drawText(com.hedefit.app.ui.i18n.tr("MESAFE", "DISTANCE"), 72f, height - 220f, textPaint); canvas.drawText(com.hedefit.app.ui.i18n.tr("SÜRE", "TIME"), 410f, height - 220f, textPaint); canvas.drawText(com.hedefit.app.ui.i18n.tr("TEMPO", "PACE"), 730f, height - 220f, textPaint)
-        textPaint.color = AndroidColor.WHITE
-        textPaint.textSize = 46f
-        canvas.drawText("%.2f km".format(snapshot.distanceMeters / 1_000.0), 72f, height - 155f, textPaint); canvas.drawText(formatDuration(snapshot.durationSeconds), 410f, height - 155f, textPaint); canvas.drawText(formatPace(snapshot.paceSecondsPerKm), 730f, height - 155f, textPaint)
-        textPaint.color = AndroidColor.rgb(126, 225, 80)
-        textPaint.typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
-        textPaint.textSize = 42f
-        canvas.drawText(com.hedefit.app.ui.i18n.tr("HEDEFİT ROTA", "HEDEFIT ROUTE"), 72f, height - 70f, textPaint)
-        val directory = File(context.cacheDir, "shared-routes").apply { mkdirs() }
-        File(directory, "hedefit-rota-${snapshot.id}.png").also { output ->
-            FileOutputStream(output).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        RouteCardTemplate.Minimal -> {
+            canvas.drawColor(dark)
+            drawRouteLine(canvas, snapshot.points, 120f, 170f, width - 120f, infoTop - 60f, lime, 16f)
+        }
+        RouteCardTemplate.Energy -> {
+            val bg = Paint().apply { shader = android.graphics.LinearGradient(0f, 0f, width.toFloat(), height.toFloat(), lime, AndroidColor.rgb(34, 139, 60), android.graphics.Shader.TileMode.CLAMP) }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bg)
+            drawRouteLine(canvas, snapshot.points, 140f, 170f, width - 140f, infoTop - 80f, AndroidColor.WHITE, 14f)
         }
     }
+    val onBg = if (template == RouteCardTemplate.Energy) AndroidColor.rgb(5, 27, 11) else AndroidColor.WHITE
+    val accent = if (template == RouteCardTemplate.Energy) AndroidColor.rgb(5, 27, 11) else lime
+    val muted = if (template == RouteCardTemplate.Energy) AndroidColor.argb(190, 5, 27, 11) else AndroidColor.rgb(166, 174, 169)
+    val p = Paint(Paint.ANTI_ALIAS_FLAG)
+    // Üst: marka ve tarih
+    p.typeface = bold; p.textSize = 38f; p.color = accent
+    canvas.drawText("HEDEFIT", 72f, 110f, p)
+    p.typeface = android.graphics.Typeface.DEFAULT; p.textSize = 32f; p.color = muted
+    val date = java.time.Instant.ofEpochMilli(snapshot.startedAt.takeIf { it > 0 } ?: System.currentTimeMillis()).atZone(java.time.ZoneId.systemDefault())
+        .format(java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale(if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr")))
+    p.textAlign = Paint.Align.RIGHT; canvas.drawText(date, width - 72f, 110f, p); p.textAlign = Paint.Align.LEFT
+    // Başlık ve dev mesafe
+    p.typeface = bold; p.textSize = 48f; p.color = onBg
+    canvas.drawText(title.ifBlank { defaultActivityTitle(snapshot.activityType, com.hedefit.app.ui.i18n.AppLang.en) }, 72f, infoTop.toFloat(), p)
+    p.typeface = heavy; p.textSize = if (story) 190f else 160f; p.color = accent
+    val km = "%.2f".format(snapshot.distanceMeters / 1_000.0)
+    canvas.drawText(km, 64f, infoTop + (if (story) 210f else 180f), p)
+    val kmWidth = p.measureText(km)
+    p.typeface = bold; p.textSize = 54f; p.color = onBg
+    canvas.drawText("km", 64f + kmWidth + 18f, infoTop + (if (story) 210f else 180f), p)
+    // İstatistikler
+    val statsY = infoTop + (if (story) 330f else 285f)
+    val stats = listOf(
+        com.hedefit.app.ui.i18n.tr("SÜRE", "TIME") to formatDuration(snapshot.durationSeconds),
+        com.hedefit.app.ui.i18n.tr("TEMPO", "PACE") to formatPace(snapshot.paceSecondsPerKm),
+        "KCAL" to "$calories",
+    )
+    val col = (width - 144f) / 3f
+    stats.forEachIndexed { i, (label, value) ->
+        val x = 72f + col * i
+        p.typeface = android.graphics.Typeface.DEFAULT; p.textSize = 30f; p.color = muted; canvas.drawText(label, x, statsY, p)
+        p.typeface = bold; p.textSize = 52f; p.color = onBg; canvas.drawText(value, x, statsY + 64f, p)
+    }
+    bitmap
+}
+
+private suspend fun shareRoute(context: Context, snapshot: RouteSnapshot, title: String, story: Boolean, template: RouteCardTemplate = RouteCardTemplate.Map, calories: Int = 0) {
+    val bitmap = renderRouteCard(context, snapshot, title, story, template, calories)
+    val file = withContext(Dispatchers.IO) {
+        val directory = File(context.cacheDir, "shared-routes").apply { mkdirs() }
+        File(directory, "hedefit-rota-${snapshot.id}.png").also { output -> FileOutputStream(output).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) } }
+    }
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
-    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("image/png").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), "Rotanı paylaş"))
+    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("image/png").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), com.hedefit.app.ui.i18n.tr("Rotanı paylaş", "Share your route")))
+}
+
+/** Paylaşım ekranı: şablon ve format seçimi, canlı önizleme. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun RouteShareSheet(snapshot: RouteSnapshot, title: String, calories: Int, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var template by remember { mutableStateOf(RouteCardTemplate.Map) }
+    var story by remember { mutableStateOf(true) }
+    var preview by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    LaunchedEffect(template, story) { preview = runCatching { renderRouteCard(context, snapshot, title, story, template, calories).asImageBitmap() }.getOrNull() }
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss, containerColor = HedefitColors.Background) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp).padding(bottom = 24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(com.hedefit.app.ui.i18n.tr("Rotanı paylaş", "Share your route"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Box(Modifier.fillMaxWidth(if (story) .62f else .9f).aspectRatio(if (story) 9f / 16f else 1f).clip(RoundedCornerShape(20.dp)).background(HedefitColors.Surface), contentAlignment = Alignment.Center) {
+                preview?.let { androidx.compose.foundation.Image(it, null, Modifier.fillMaxSize()) } ?: CircularProgressIndicator(color = HedefitColors.Lime)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(RouteCardTemplate.Map to com.hedefit.app.ui.i18n.tr("Harita", "Map"), RouteCardTemplate.Minimal to com.hedefit.app.ui.i18n.tr("Sade", "Minimal"), RouteCardTemplate.Energy to com.hedefit.app.ui.i18n.tr("Enerji", "Energy")).forEach { (t, label) ->
+                    FilterChip(template == t, { template = t }, label = { Text(label) })
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(story, { story = true }, label = { Text("Story 9:16") })
+                FilterChip(!story, { story = false }, label = { Text(com.hedefit.app.ui.i18n.tr("Kare 1:1", "Square 1:1")) })
+            }
+            Button(
+                onClick = { scope.launch { shareRoute(context, snapshot, title, story, template, calories) } },
+                modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
+            ) { Icon(androidx.compose.material.icons.Icons.Default.Share, null); Spacer(Modifier.width(8.dp)); Text(com.hedefit.app.ui.i18n.tr("Paylaş", "Share"), fontWeight = FontWeight.Bold) }
+        }
+    }
 }
 
 private fun drawShareMap(canvas: AndroidCanvas, points: List<RoutePoint>, width: Float, height: Float) {
