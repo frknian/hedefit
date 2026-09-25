@@ -786,7 +786,7 @@ private fun ExerciseRow(exercise: ExerciseUi) {
 }
 
 @Composable
-fun ActiveWorkoutScreen(
+internal fun DetailedActiveWorkoutScreen(
     onBack: () -> Unit,
     exercises: List<WorkoutExerciseData>,
     previousPerformance: Map<String, List<PreviousSetData>>,
