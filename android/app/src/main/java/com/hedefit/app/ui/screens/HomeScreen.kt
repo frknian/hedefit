@@ -152,6 +152,9 @@ fun HomeScreen(
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
     onOpenCardio: () -> Unit = {},
+    guideDone: Int = 0,
+    guideTotal: Int = 0,
+    onOpenGuide: () -> Unit = {},
     onSaveSleep: (Int, String, String?, String?) -> Unit = { _, _, _, _ -> },
     onOpenGame: () -> Unit = {},
     quickActions: List<String> = com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS,
@@ -182,6 +185,19 @@ fun HomeScreen(
             if (data == null) {
                 item { HomeDataState(loading, error, onRetry) }
                 return@LazyColumn
+            }
+            if (guideTotal > 0 && guideDone < guideTotal) item {
+                HedefitCard(Modifier.fillMaxWidth(), onClick = onOpenGuide, contentPadding = PaddingValues(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        com.hedefit.app.ui.components.ActivityRing(guideDone / guideTotal.toFloat(), HedefitColors.Lime, size = 46.dp, stroke = 5.dp) { Text("$guideDone/$guideTotal", fontSize = 11.sp, fontWeight = FontWeight.Black) }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(com.hedefit.app.ui.i18n.tr("Başlangıç görevleri", "Getting started"), fontWeight = FontWeight.ExtraBold)
+                            Text(com.hedefit.app.ui.i18n.tr("Uygulamayı yaparak öğren, kalan görevleri tamamla.", "Learn by doing — finish the remaining missions."), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text("›", color = HedefitColors.Lime, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    }
+                }
             }
             item { TodayCard(data, en, onOpenProgram) }
             item {
