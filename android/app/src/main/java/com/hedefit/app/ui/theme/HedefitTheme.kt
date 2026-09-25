@@ -26,6 +26,9 @@ object Spacing {
     val section: Dp = 32.dp
 }
 
+/** Mat vurgu rengi doygunluğu (eskisi 0.68: parlak). */
+const val ACCENT_SATURATION = 0.46f
+
 object HedefitColors {
     var Background = Color(0xFF090A0C)
     var Surface = Color(0xFF12151B)
@@ -48,8 +51,8 @@ object HedefitColors {
 
     fun applyTheme(dark: Boolean, accentHue: Float) {
         val hue = ((accentHue % 360f) + 360f) % 360f
-        Lime = Color.hsl(hue, .68f, if (dark) .58f else .46f)
-        LimeDark = Color.hsl(hue, .72f, if (dark) .42f else .36f)
+        Lime = Color.hsl(hue, ACCENT_SATURATION, if (dark) .58f else .46f)
+        LimeDark = Color.hsl(hue, ACCENT_SATURATION + .04f, if (dark) .42f else .36f)
         OnLime = if (Lime.luminance() > .45f) Color(0xFF051B0B) else Color.White
         Background = if (dark) Color(0xFF090A0C) else Color(0xFFF4F6F8)
         Surface = if (dark) Color(0xFF12151B) else Color.White

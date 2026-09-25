@@ -1,5 +1,7 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.material.icons.filled.DarkMode
+
 import androidx.compose.foundation.horizontalScroll
 
 import androidx.compose.material.icons.filled.Check
@@ -212,21 +214,27 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsSwitchRow(Icons.Default.LightMode, if (en) "Light theme" else "Beyaz tema", if (en) "Bright, high-contrast appearance" else "Açık ve yüksek kontrastlı görünüm", !preferences.darkTheme, HedefitColors.Sleep) {
-                            onPreferencesChange(preferences.copy(darkTheme = !it))
+                        // Tema ve dil: tek dokunuşla değişen iki minimal buton.
+                        Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            MinimalToggle(
+                                icon = if (preferences.darkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
+                                label = if (preferences.darkTheme) com.hedefit.app.ui.i18n.tr("Koyu tema", "Dark theme") else com.hedefit.app.ui.i18n.tr("Açık tema", "Light theme"),
+                                modifier = Modifier.weight(1f),
+                            ) { onPreferencesChange(preferences.copy(darkTheme = !preferences.darkTheme)) }
+                            MinimalToggle(
+                                icon = Icons.Default.Language,
+                                label = if (preferences.language == "tr") "Türkçe" else "English",
+                                modifier = Modifier.weight(1f),
+                            ) { onPreferencesChange(preferences.copy(language = if (preferences.language == "tr") "en" else "tr")) }
                         }
                         CardDivider()
                         AccentColorPicker(preferences.accentHue, en) { hue ->
                             onPreferencesChange(preferences.copy(accentHue = hue))
                         }
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Language, if (en) "Language" else "Dil", if (preferences.language == "tr") "Türkçe" else "English", tint = HedefitColors.Water, onClick = {
-                            onPreferencesChange(preferences.copy(language = if (preferences.language == "tr") "en" else "tr"))
-                        })
+                        SettingsRowContent(Icons.Default.Straighten, if (en) "Measurement units" else "Ölçü birimleri", if (preferences.unitSystem == "imperial") "Imperial • lb, in, mi, fl oz" else "${if (en) "Metric" else "Metrik"} • kg, cm, km, ml", onClick = { showUnits = true }, tint = HedefitColors.Lime)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Straighten, if (en) "Measurement units" else "Ölçü birimleri", if (preferences.unitSystem == "imperial") "Imperial • lb, in, mi, fl oz" else "${if (en) "Metric" else "Metrik"} • kg, cm, km, ml", onClick = { showUnits = true }, tint = HedefitColors.Warning)
-                        CardDivider()
-                        SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", "", onOpenNotifications, HedefitColors.Coral)
+                        SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", "", onOpenNotifications, HedefitColors.Lime)
                         CardDivider()
                         SettingsRowContent(Icons.Default.School, if (en) "Getting started guide" else "Başlangıç rehberi", "", onReplayGuide, HedefitColors.Lime)
                         CardDivider()
@@ -250,9 +258,9 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
-                        SettingsRowContent(Icons.Default.Star, if (en) "Rate the app" else "Uygulamayı puanla", "", onRateApp, HedefitColors.Warning)
+                        SettingsRowContent(Icons.Default.Star, if (en) "Rate the app" else "Uygulamayı puanla", "", onRateApp, HedefitColors.Lime)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Share, if (en) "Share the app" else "Uygulamayı paylaş", "", { showShare = true }, HedefitColors.Water)
+                        SettingsRowContent(Icons.Default.Share, if (en) "Share the app" else "Uygulamayı paylaş", "", { showShare = true }, HedefitColors.Lime)
                     }
                 }
             }
@@ -262,9 +270,9 @@ fun ProfileSettingsScreen(
                     Column {
                         SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", "", onSignOut, HedefitColors.TextSecondary)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", "", onClick = { showFreeze = true }, tint = HedefitColors.Water)
+                        SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", "", onClick = { showFreeze = true }, tint = HedefitColors.Lime)
                         CardDivider()
-                        SettingsRowContent(Icons.Default.Refresh, if (en) "Reset progress" else "İlerlemeyi sıfırla", "", onClick = { showReset = true }, tint = HedefitColors.Coral, danger = true)
+                        SettingsRowContent(Icons.Default.Refresh, if (en) "Reset progress" else "İlerlemeyi sıfırla", "", onClick = { showReset = true }, tint = HedefitColors.Lime, danger = true)
                         CardDivider()
                         SettingsRowContent(Icons.Default.DeleteForever, if (en) "Delete account permanently" else "Hesabı kalıcı sil", "", { showDelete = true }, HedefitColors.Coral, danger = true)
                     }
@@ -308,14 +316,14 @@ private fun AccentColorPicker(hue: Float, en: Boolean, onHueChange: (Float) -> U
             }
         }
         // Temel renkler: tema aynı ton hesabıyla (applyTheme) açık/koyu için ayarlanır.
-        // Sarı, pembe, mor, turuncu, yeşil, mavi, kırmızı, turkuaz, camgöbeği, lacivert, açık yeşil, eflatun
-        val presets = listOf(50f, 330f, 275f, 28f, 106f, 210f, 0f, 170f, 190f, 232f, 82f, 300f)
+        // Ton sırasıyla (renk tekerleği): kırmızı → turuncu → sarı → yeşiller → maviler → mor → pembe. Mat tonlar.
+        val presets = listOf(0f, 22f, 42f, 72f, 106f, 145f, 172f, 195f, 215f, 240f, 275f, 325f)
         Row(Modifier.fillMaxWidth().padding(top = 8.dp).horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             presets.forEach { preset ->
                 val selected = kotlin.math.abs(hue - preset) < 3f
                 Box(
                     Modifier.size(36.dp).clip(CircleShape)
-                        .background(Color.hsl(preset, .68f, if (HedefitColors.isLight) .46f else .58f))
+                        .background(Color.hsl(preset, com.hedefit.app.ui.theme.ACCENT_SATURATION, if (HedefitColors.isLight) .46f else .58f))
                         .border(if (selected) 3.dp else 0.dp, HedefitColors.TextPrimary, CircleShape)
                         .clickable { onHueChange(preset) },
                     contentAlignment = Alignment.Center,
@@ -426,6 +434,18 @@ fun UtilityHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
     }
 }
 
+@Composable
+private fun MinimalToggle(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Row(
+        modifier.height(48.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(HedefitColors.SurfaceHigh).clickable(onClick = onClick).padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center,
+    ) {
+        Icon(icon, null, tint = HedefitColors.Lime, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, fontWeight = FontWeight.Bold, color = HedefitColors.TextPrimary)
+    }
+}
+
 @Composable private fun SettingsSectionTitle(text: String) = HfSectionHeader(text)
 
 @Composable private fun ProfileField(label: String, value: String, onChange: (String) -> Unit, keyboardType: KeyboardType) {
@@ -472,7 +492,7 @@ fun UtilityHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
 }
 
 @Composable private fun ConfirmDialog(title: String, body: String, action: String, busy: Boolean, en: Boolean, onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Text(body) }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } }, confirmButton = { TextButton(enabled = !busy, onClick = onConfirm) { Text(if (busy) (if (en) "Processing…" else "İşleniyor…") else action, color = HedefitColors.Coral) } })
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Text(body) }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } }, confirmButton = { TextButton(enabled = !busy, onClick = onConfirm) { Text(if (busy) (if (en) "Processing…" else "İşleniyor…") else action, color = HedefitColors.Lime) } })
 }
 
 @Composable private fun DeleteAccountDialog(accountEmail: String, busy: Boolean, en: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
@@ -489,6 +509,6 @@ fun UtilityHeader(title: String, onBack: () -> Unit, subtitle: String? = null) {
             OutlinedTextField(phrase, { phrase = it }, label = { Text(if (en) "Type DELETE MY ACCOUNT" else "HESABIMI SİL yaz") }, singleLine = true, visualTransformation = PasswordVisualTransformation())
         } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
-        confirmButton = { TextButton(enabled = ready && !busy, onClick = { onConfirm(email) }) { Text(if (busy) (if (en) "Deleting…" else "Siliniyor…") else if (en) "Delete permanently" else "Kalıcı olarak sil", color = HedefitColors.Coral) } },
+        confirmButton = { TextButton(enabled = ready && !busy, onClick = { onConfirm(email) }) { Text(if (busy) (if (en) "Deleting…" else "Siliniyor…") else if (en) "Delete permanently" else "Kalıcı olarak sil", color = HedefitColors.Lime) } },
     )
 }

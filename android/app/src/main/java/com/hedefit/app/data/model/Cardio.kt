@@ -231,7 +231,7 @@ private val cardioEn = mapOf(
     "Yoğunluk (kcal/dk)" to "Intensity (kcal/min)",
     "1 dakikadan kısa seanslar kaydedilmez." to "Sessions shorter than 1 minute are not saved.",
     "Kaydediliyor…" to "Saving…",
-    "Kaydet ve kaloriye ekle" to "Save & add calories",
+    "Kaydet ve kaloriye ekle" to "Save & add calories", "Kaydet" to "Save",
     "Kaydetmeden çıkılsın mı?" to "Leave without saving?",
     "Bu seansın kalorisi günlük hesabına eklenmez." to "This session's calories won't be added to your day.",
     "Çık" to "Leave",

@@ -181,6 +181,7 @@ class MainActivity : ComponentActivity() {
                 var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
                 var googleCredentialBusy by remember { mutableStateOf(false) }
                 var offerCardioFinisher by remember { mutableStateOf(false) }
+                val dailyStreak = remember { com.hedefit.app.ui.components.DailyStreak.touch(this@MainActivity) }
                 // Zorunlu başlangıç rehberi: görev ekranı ziyaret edildiğinde (denendi) ya da iş gerçekten
                 // yapıldığında tamamlanır; 6/6 olana kadar ana ekrana her dönüşte rehber yeniden açılır.
                 val guidePrefs = remember { this@MainActivity.getSharedPreferences("hedefit-guide", android.content.Context.MODE_PRIVATE) }
@@ -600,6 +601,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenWearables = { utilityPage = UtilityPage.Wearables },
                                 onOpenCardio = { utilityPage = UtilityPage.Cardio },
+                                dailyStreak = dailyStreak,
                                 quickActions = preferences.homeQuickActions,
                                 onQuickActionsChange = { updatePreferences(preferences.copy(homeQuickActions = it)) },
                             )

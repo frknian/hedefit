@@ -17,7 +17,7 @@ import com.hedefit.app.ui.theme.HedefitColors
  * çizilir; [color] figür ve makine, vurgu rengi hareketli parçalar içindir.
  */
 @Composable
-fun CardioMachineIcon(machineKey: String, modifier: Modifier, color: Color = HedefitColors.TextPrimary, accent: Color = HedefitColors.Coral) {
+fun CardioMachineIcon(machineKey: String, modifier: Modifier, color: Color = HedefitColors.TextPrimary, accent: Color = HedefitColors.Lime) {
     Canvas(modifier) {
         val u = size.minDimension / 24f
         fun p(x: Float, y: Float) = Offset(x * u, y * u)

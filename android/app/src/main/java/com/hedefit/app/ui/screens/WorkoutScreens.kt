@@ -351,18 +351,18 @@ fun WorkoutPlanScreen(
             item { HfSectionHeader(if (en) "Tools" else "Araçlar") }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    HfActionTile(androidx.compose.material.icons.Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Coral, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower • live speed & incline" else "Koşu bandı, bisiklet, kürek • canlı hız ve eğim", onOpenCardio, Modifier.fillMaxWidth())
+                    HfActionTile(androidx.compose.material.icons.Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Lime, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower • live speed & incline" else "Koşu bandı, bisiklet, kürek • canlı hız ve eğim", onOpenCardio, Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.MenuBook, HedefitColors.Lime, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary, Modifier.weight(1f).fillMaxHeight())
-                        HfActionTile(Icons.Default.AutoAwesome, HedefitColors.Warning, if (en) "New program" else "Program oluştur", if (en) "AI, templates or custom" else "AI, şablon veya kendin", { page = "hub" }, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.AutoAwesome, HedefitColors.Lime, if (en) "New program" else "Program oluştur", if (en) "AI, templates or custom" else "AI, şablon veya kendin", { page = "hub" }, Modifier.weight(1f).fillMaxHeight())
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
-                        HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Coral, if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Muscles you trained" else "Çalışan kasların", { page = "muscles" }, Modifier.weight(1f).fillMaxHeight())
-                        HfActionTile(Icons.Default.Route, HedefitColors.Sleep, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Muscles you trained" else "Çalışan kasların", { page = "muscles" }, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
-                        HfActionTile(Icons.Default.Add, HedefitColors.Water, if (en) "Log activity" else "Antrenman ekle", if (en) "Sport, distance, pace" else "Spor, mesafe, tempo", onOpenActivityLog, Modifier.weight(1f).fillMaxHeight())
-                        HfActionTile(Icons.Default.CameraAlt, HedefitColors.TextSecondary, if (en) "Scan equipment" else "Ekipman tara", if (en) "Recognise with camera" else "Kamerayla tanı", onOpenScanner, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.Add, HedefitColors.Lime, if (en) "Log activity" else "Antrenman ekle", if (en) "Sport, distance, pace" else "Spor, mesafe, tempo", onOpenActivityLog, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.CameraAlt, HedefitColors.Lime, if (en) "Scan equipment" else "Ekipman tara", if (en) "Recognise with camera" else "Kamerayla tanı", onOpenScanner, Modifier.weight(1f).fillMaxHeight())
                     }
                 }
             }

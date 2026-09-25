@@ -152,6 +152,7 @@ fun HomeScreen(
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
     onOpenCardio: () -> Unit = {},
+    dailyStreak: Int = 1,
     guideDone: Int = 0,
     guideTotal: Int = 0,
     onOpenGuide: () -> Unit = {},
@@ -174,7 +175,7 @@ fun HomeScreen(
                     name = com.hedefit.app.ui.i18n.localizedDisplayName(data?.profile?.displayName),
                     avatarUrl = data?.profile?.avatarUrl,
                     avatarPreview = avatarPreview,
-                    streak = data?.streakDays ?: 0,
+                    streak = dailyStreak,
                     activeToday = data?.sessions?.any { it.completedAt.startsWith(LocalDate.now().toString()) } ?: true,
                     onOpenProfile = onOpenProfile,
                     onOpenCalendar = onOpenCalendar,
@@ -285,21 +286,21 @@ private fun quickActionCatalog(
     onOpenCurlGame: () -> Unit,
 ): Map<String, QuickAction> = linkedMapOf(
     "nutrition" to QuickAction(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition),
-    "route" to QuickAction(Icons.Default.Route, HedefitColors.Water, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
-    "sleep" to QuickAction(Icons.Default.Bedtime, HedefitColors.Sleep, if (en) "Log sleep" else "Uyku gir", if (data.sleepMinutes > 0) (if (en) "Last night: ${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m" else "Dün gece: ${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk") else if (en) "Not logged yet" else "Henüz girilmedi", onSleep),
-    "coach" to QuickAction(Icons.Default.AutoAwesome, HedefitColors.Warning, if (en) "Ask Fit Coach" else "FitKoç'a sor", if (en) "Training and nutrition" else "Antrenman ve beslenme", onOpenCoach),
+    "route" to QuickAction(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
+    "sleep" to QuickAction(Icons.Default.Bedtime, HedefitColors.Lime, if (en) "Log sleep" else "Uyku gir", if (data.sleepMinutes > 0) (if (en) "Last night: ${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m" else "Dün gece: ${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk") else if (en) "Not logged yet" else "Henüz girilmedi", onSleep),
+    "coach" to QuickAction(Icons.Default.AutoAwesome, HedefitColors.Lime, if (en) "Ask Fit Coach" else "FitKoç'a sor", if (en) "Training and nutrition" else "Antrenman ve beslenme", onOpenCoach),
     "workout" to QuickAction(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Start workout" else "Antrenmanı başlat", if (en) "Jump into today's plan" else "Bugünün planına atla", { onOpenProgram(data.workoutPrograms.firstOrNull { it.isActive }?.id) }),
-    "goal" to QuickAction(Icons.Default.Flag, HedefitColors.Coral, if (en) "Goal journey" else "Hedef yolculuğu", if (en) "Weight pace" else "Kilo & tempo", onOpenGoal),
-    "atlas" to QuickAction(Icons.Default.MenuBook, HedefitColors.Sleep, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary),
-    "water" to QuickAction(Icons.Default.LocalDrink, HedefitColors.Water, if (en) "Add water" else "Su ekle", "", { onMetric("water") }),
-    "steps" to QuickAction(Icons.Default.DirectionsWalk, HedefitColors.Water, if (en) "Steps" else "Adımlarım", "", { onMetric("steps") }),
-    "calories" to QuickAction(Icons.Default.LocalFireDepartment, HedefitColors.Coral, if (en) "Calories" else "Kalori özeti", "", { onMetric("calories") }),
+    "goal" to QuickAction(Icons.Default.Flag, HedefitColors.Lime, if (en) "Goal journey" else "Hedef yolculuğu", if (en) "Weight pace" else "Kilo & tempo", onOpenGoal),
+    "atlas" to QuickAction(Icons.Default.MenuBook, HedefitColors.Lime, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary),
+    "water" to QuickAction(Icons.Default.LocalDrink, HedefitColors.Lime, if (en) "Add water" else "Su ekle", "", { onMetric("water") }),
+    "steps" to QuickAction(Icons.Default.DirectionsWalk, HedefitColors.Lime, if (en) "Steps" else "Adımlarım", "", { onMetric("steps") }),
+    "calories" to QuickAction(Icons.Default.LocalFireDepartment, HedefitColors.Lime, if (en) "Calories" else "Kalori özeti", "", { onMetric("calories") }),
     "calendar" to QuickAction(Icons.Default.CalendarMonth, HedefitColors.Lime, if (en) "Workout calendar" else "Antrenman takvimi", "", onOpenCalendar),
-    "activity" to QuickAction(Icons.Default.Add, HedefitColors.Warning, if (en) "Log activity" else "Aktivite ekle", "", onOpenActivityLog),
-    "progress" to QuickAction(Icons.Default.Insights, HedefitColors.Sleep, if (en) "Progress" else "İlerleme", "", onOpenProgress),
+    "activity" to QuickAction(Icons.Default.Add, HedefitColors.Lime, if (en) "Log activity" else "Aktivite ekle", "", onOpenActivityLog),
+    "progress" to QuickAction(Icons.Default.Insights, HedefitColors.Lime, if (en) "Progress" else "İlerleme", "", onOpenProgress),
     "watch" to QuickAction(Icons.Default.Watch, HedefitColors.Lime, if (en) "Smart watch" else "Akıllı saat", "", onOpenWearables),
-    "rewards" to QuickAction(Icons.Default.EmojiEvents, HedefitColors.Warning, if (en) "Rewards" else "Ödüller", "", onOpenRewards),
-    "cardio" to QuickAction(Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Coral, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower" else "Koşu bandı, bisiklet, kürek", onOpenCardio),
+    "rewards" to QuickAction(Icons.Default.EmojiEvents, HedefitColors.Lime, if (en) "Rewards" else "Ödüller", "", onOpenRewards),
+    "cardio" to QuickAction(Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Lime, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower" else "Koşu bandı, bisiklet, kürek", onOpenCardio),
     "curlgame" to QuickAction(Icons.Default.SportsEsports, HedefitColors.Lime, if (en) "Game" else "Oyun", if (en) "Train your athlete" else "Sporcunu çalıştır", onOpenCurlGame),
 )
 
@@ -351,15 +352,8 @@ private fun HomeHeader(
         title = if (en) "Hi, $name" else "Merhaba, $name",
         subtitle = (if (en) "Today • " else "Bugün • ") + date,
     ) {
-        // Seri alevi: seri büyüdükçe alev büyür; akşam 18'den sonra bugün hâlâ aktif değilse sönükleşir.
-        if (streak > 0) Row(
-            Modifier.clip(RoundedCornerShape(50)).clickable(onClickLabel = if (en) "Streak" else "Seri", onClick = onOpenGame).padding(horizontal = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            com.hedefit.app.ui.components.StreakFlame(streak, atRisk = !activeToday && java.time.LocalTime.now().hour >= 18)
-            Text("$streak", fontWeight = FontWeight.Black, color = HedefitColors.TextPrimary)
-        }
-        HfCircleButton(Icons.Default.EmojiEvents, if (en) "Rewards, $streak day streak" else "Ödüller, $streak günlük seri", onOpenGame)
+        // Seri ve ödüller tek butonda: kupa + alev; seri her gün uygulamaya girildikçe artar.
+        com.hedefit.app.ui.components.StreakTrophyButton(streak, onOpenGame)
         HfCircleButton(Icons.Default.CalendarMonth, if (en) "Workout calendar" else "Antrenman takvimi", onOpenCalendar)
         HomeAvatar(avatarUrl, avatarPreview, name, Modifier.size(44.dp).clip(CircleShape).clickable(onClickLabel = if (en) "Profile and settings" else "Profil ve ayarlar", onClick = onOpenProfile))
     }
