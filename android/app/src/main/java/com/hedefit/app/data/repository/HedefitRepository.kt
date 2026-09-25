@@ -76,7 +76,7 @@ class HedefitRepository(
 
     fun routePayload(snapshot: RouteSnapshot, activityType: String, title: String): JSONObject {
         val points = JSONArray().also { array -> snapshot.points.forEach { point -> array.put(JSONObject().put("lat", point.latitude).put("lng", point.longitude).put("alt", point.altitude).put("time", point.recordedAt).put("accuracy", point.accuracyMeters).put("speed", point.speedMetersPerSecond ?: JSONObject.NULL).put("bearing", point.bearingDegrees ?: JSONObject.NULL)) } }
-        val calories = ((snapshot.distanceMeters / 1_000.0) * when (activityType) { "Bisiklet" -> 28.0; "Koşu", "Trail Koşusu" -> 62.0; else -> 45.0 }).toInt().coerceAtLeast(0)
+        val calories = ((snapshot.distanceMeters / 1_000.0) * when (activityType) { "Bisiklet" -> 28.0; "Kayak" -> 35.0; "Koşu", "Trail Koşusu" -> 62.0; else -> 45.0 }).toInt().coerceAtLeast(0)
         return JSONObject()
             .put("id", snapshot.id).put("activity_type", activityType)
             .put("title", title.trim().take(80))

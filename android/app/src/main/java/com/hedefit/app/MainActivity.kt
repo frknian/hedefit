@@ -378,6 +378,12 @@ class MainActivity : ComponentActivity() {
                         chatBusy = uiState.chatBusy,
                         onSendChatMessage = { msg, ctx -> mainViewModel.sendChat(msg, preferences.language, ctx) },
                         onExecuteCoachAction = mainViewModel::executeCoachAction,
+                        onSkip = { postpone ->
+                            val program = uiState.dashboard?.workoutPrograms?.firstOrNull { it.isActive }
+                            mainViewModel.skipTodayWorkout(postpone, program?.id, program?.name, preferences.language)
+                            activeWorkout = false
+                            activeWorkoutExercises = null
+                        },
                     )
                 } else if (workoutSummary != null) {
                     WorkoutSummaryScreen(requireNotNull(workoutSummary), onDone = {

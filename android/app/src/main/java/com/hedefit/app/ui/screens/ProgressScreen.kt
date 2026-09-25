@@ -614,6 +614,7 @@ private fun RoutePolylinePreview(route: RouteActivityData, modifier: Modifier) {
 private fun routeActivityLabel(type: String, en: Boolean) = when (type.lowercase()) {
     "run", "running", "koşu" -> if (en) "Run" else "Koşu"
     "ride", "cycling", "bisiklet" -> if (en) "Ride" else "Bisiklet"
+    "ski", "skiing", "kayak" -> if (en) "Ski" else "Kayak"
     else -> if (en) "Walk" else "Yürüyüş"
 }
 

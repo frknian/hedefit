@@ -216,6 +216,7 @@ private val cardioEn = mapOf(
     "Kilitle" to "Lock",
     "Duraklat" to "Pause",
     "Devam" to "Resume",
+    "Devam ediyor" to "In progress", "Duraklatıldı" to "Paused", "SÜRE" to "TIME", "Hafif" to "Light", "Orta" to "Moderate", "Yüksek" to "High", "ort. kcal/dk" to "avg kcal/min", "Grafik için en az 30 saniye gerekir." to "The chart needs at least 30 seconds.",
     "Bitir" to "Finish",
     "🔒 Açmak için uzun bas" to "🔒 Long-press to unlock",
     "Seans bitsin mi?" to "End session?",

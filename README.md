@@ -1,7 +1,22 @@
 # Hedefit
 
-Bu depo Hedefit mobil uygulamasının backend servislerini ve native Android
-istemcisini içerir. Önceki web arayüzü ve Capacitor kabukları kaldırılmıştır.
+Hedefit; antrenman, kardiyo/rota, beslenme, hedef ve görev takibini tek yerde
+toplayan bir fitness uygulamasıdır. Bu depo backend servislerini, native Android
+(Kotlin + Jetpack Compose) ve iOS (SwiftUI) istemcilerini içerir.
+
+## Öne çıkanlar
+
+- **Fit Koç**: bulut modelleri ve cihaz üstü (on-device) yerel AI ile sohbet,
+  program üretimi ve besin çıkarımı
+- **Antrenman**: hazır programlar, detaylı ve hızlı (dokun-bitir) set modu,
+  takvim, spor salonu analitiği ve kas haritası
+- **Kardiyo ve Rota**: tam ekran kardiyo, rota planlama, arka planda takip ve
+  paylaşım kartları; koşu, yürüyüş, doğa yürüyüşü, trail, bisiklet ve kayak
+- **Hedef yolculuğu**: kanıta dayalı tempo seçenekleri, su/protein/adım
+  hedefleri ve kaynaklar
+- **Görevler ve başarımlar**: XP, seri (streak) ve başlangıç rehberi görevleri
+- **Diğer**: misafir modu, plan katmanları, ana ekran widget'ları, akıllı
+  saat eşleştirme, Türkçe/İngilizce arayüz
 
 ## İçerik
 
@@ -11,7 +26,10 @@ istemcisini içerir. Önceki web arayüzü ve Capacitor kabukları kaldırılmı
 - `db`: Supabase şeması ve migrasyonlar
 - `data`: egzersiz kataloğu (RepDB tabanlı, bkz. `data/RepDB_ATTRIBUTION.md`)
 - `public/exercise-images`: mobil istemciye sunulan egzersiz görselleri
+- `supabase/migrations`: güncel Supabase migrasyonları
+- `scripts`, `tests`: içe aktarma/ML araçları ve testler
 - `android`: Kotlin ve Jetpack Compose ile geliştirilen native Android uygulaması
+- `ios`: SwiftUI iOS uygulaması ve widget'ları (bkz. `ios/README.md`)
 
 ## Egzersiz veritabanı
 
@@ -66,6 +84,18 @@ cd android
 
 Android istemcisinin ayrıntılı çalıştırma ve mimari notları için
 `android/README.md` dosyasına bak.
+
+## iOS
+
+`ios/Config.xcconfig.example` dosyasını `ios/Config.xcconfig` olarak kopyalayıp
+değerleri doldur, ardından `ios/Hedefit.xcodeproj` projesini Xcode ile aç.
+Ayrıntılar için `ios/README.md`.
+
+## Veritabanı migrasyonları
+
+Yeni özellikler `supabase/migrations` altındaki migrasyonlara bağlıdır; örneğin
+rota kayak aktivitesi için `20260925140000_route_activity_ski.sql`. Dağıtımdan
+önce bekleyen migrasyonları uygula.
 
 ## Görevler, başarımlar ve beslenme hedefleri
 

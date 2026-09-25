@@ -338,21 +338,53 @@ private fun CardioLive(
     BackHandler { if (locked) Unit else confirmExit = true }
 
     Box(Modifier.fillMaxSize().background(HedefitColors.Background)) {
-        // Yerleşim (tüm makineler): üstte makine + kilit, süre, (varsa) program ve oyun;
-        // ortada canlı ayarlar; en altta Duraklat / Bitir.
+        // Yerleşim (tüm makineler): üstte makine + kilit; ortada süre halkası ve canlı değerler;
+        // (varsa) program ve oyun; altta ayar kartları; en altta Duraklat / Bitir.
         Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = 18.dp)) {
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                com.hedefit.app.ui.components.CardioMachineIcon(machine.key, Modifier.size(28.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(ct(machine.title), color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                TextButton(onClick = { locked = true }) { Icon(Icons.Default.Lock, null, Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text(ct("Kilitle")) }
+                Box(Modifier.size(40.dp).clip(CircleShape).background(HedefitColors.Lime.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
+                    com.hedefit.app.ui.components.CardioMachineIcon(machine.key, Modifier.size(24.dp))
+                }
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(ct(machine.title), color = HedefitColors.TextPrimary, fontWeight = FontWeight.Black)
+                    Text(if (running) ct("Devam ediyor") else ct("Duraklatıldı"), color = if (running) HedefitColors.Lime else HedefitColors.Warning, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+                Surface(onClick = { locked = true }, shape = RoundedCornerShape(50), color = HedefitColors.Surface) {
+                    Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Lock, null, Modifier.size(16.dp), tint = HedefitColors.Lime); Spacer(Modifier.width(6.dp))
+                        Text(ct("Kilitle"), color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                }
             }
-            // Büyük saat
-            Text(formatClock(elapsed), color = HedefitColors.TextPrimary, fontSize = 64.sp, fontWeight = FontWeight.Black, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                LiveStat("${kcal.roundToInt()}", ct("kcal (tahmini)"), HedefitColors.Lime)
-                if (machine.tracksDistance) LiveStat("%.2f".format(distance), ct("km"), HedefitColors.TextPrimary)
-                LiveStat("%.1f".format(rate.activeKcalPerMinute), ct("kcal/dk"), HedefitColors.TextPrimary)
+
+            // Süre halkası: programda toplam ilerleme, serbestte her dakika dolan halka.
+            val ringProgress = preset?.let { (elapsed.toFloat() / it.totalSeconds).coerceIn(0f, 1f) } ?: ((elapsed % 60) / 60f)
+            val ringAnim by animateFloatAsState(ringProgress, label = "ring")
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                val ring = minOf(maxWidth * .78f, maxHeight * .96f)
+                if (ring > 90.dp) {
+                    val track = HedefitColors.Surface; val accent = HedefitColors.Lime
+                    Box(Modifier.size(ring), contentAlignment = Alignment.Center) {
+                        Canvas(Modifier.fillMaxSize()) {
+                            val w = 14.dp.toPx()
+                            val inset = androidx.compose.ui.geometry.Size(size.width - w, size.height - w)
+                            drawArc(track, 0f, 360f, false, Offset(w / 2, w / 2), inset, style = Stroke(w))
+                            drawArc(accent, -90f, 360f * ringAnim, false, Offset(w / 2, w / 2), inset, style = Stroke(w, cap = StrokeCap.Round))
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(ct("SÜRE"), color = HedefitColors.TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
+                            Text(formatClock(elapsed), color = HedefitColors.TextPrimary, fontSize = (ring.value / 4.2f).coerceIn(36f, 68f).sp, fontWeight = FontWeight.Black)
+                            IntensityChip(rate.activeKcalPerMinute)
+                        }
+                    }
+                } else Text(formatClock(elapsed), color = HedefitColors.TextPrimary, fontSize = 48.sp, fontWeight = FontWeight.Black)
+            }
+
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                StatTile("${kcal.roundToInt()}", ct("kcal (tahmini)"), HedefitColors.Lime, Modifier.weight(1f))
+                if (machine.tracksDistance) StatTile("%.2f".format(distance), ct("km"), HedefitColors.TextPrimary, Modifier.weight(1f))
+                StatTile("%.1f".format(rate.activeKcalPerMinute), ct("kcal/dk"), HedefitColors.TextPrimary, Modifier.weight(1f))
             }
 
             // Program bölümü
@@ -360,7 +392,7 @@ private fun CardioLive(
                 val seg = preset.segments[segmentIndex]
                 val segStart = segmentEnd - seg.seconds
                 val segProgress by animateFloatAsState(((elapsed - segStart).toFloat() / seg.seconds).coerceIn(0f, 1f), label = "segment")
-                Column(Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(18.dp)).background(HedefitColors.Surface).padding(14.dp)) {
+                Column(Modifier.fillMaxWidth().padding(top = 10.dp).clip(RoundedCornerShape(18.dp)).background(HedefitColors.Surface).padding(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(ct(seg.label), color = HedefitColors.Lime, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
                         Text("${segmentIndex + 1}/${preset.segments.size} • ${formatClock((segmentEnd - elapsed).coerceAtLeast(0))}", color = HedefitColors.TextSecondary)
@@ -374,26 +406,23 @@ private fun CardioLive(
             // Oyun paneli
             if (game) GamePanel(machine, progressMetric, elapsed, ghost, score, challengeText, challengeHeld)
 
-            // Canlı ayarlar: kalan alanın ortasında
-            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val middleH = maxHeight
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = middleH).padding(vertical = 8.dp), verticalArrangement = Arrangement.Center) {
-            machine.controls.forEach { control ->
-                val value = values[control.key] ?: control.default
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(20.dp)).background(HedefitColors.Surface).padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    BigStepButton(Icons.Default.Remove) { values[control.key] = (value - control.step).coerceAtLeast(control.min); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
-                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        val shown = control.labels?.getOrNull(value.toInt())?.let(::ct) ?: formatValue(value, control.step)
-                        Text(shown, color = HedefitColors.TextPrimary, fontSize = if (control.labels != null) 24.sp else 34.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
-                        Text(if (control.unit.isBlank()) ct(control.label) else "${ct(control.label)} (${ct(control.unit)})", color = HedefitColors.TextSecondary, fontSize = 12.sp)
+            // Canlı ayarlar: yan yana dikey kartlar (+ üstte, − altta).
+            Column(Modifier.fillMaxWidth().padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                machine.controls.chunked(2).forEach { rowControls ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        rowControls.forEach { control ->
+                            val value = values[control.key] ?: control.default
+                            ControlCard(
+                                value = control.labels?.getOrNull(value.toInt())?.let(::ct) ?: formatValue(value, control.step),
+                                label = if (control.unit.isBlank()) ct(control.label) else "${ct(control.label)} (${ct(control.unit)})",
+                                isLabel = control.labels != null,
+                                modifier = Modifier.weight(1f),
+                                onMinus = { values[control.key] = (value - control.step).coerceAtLeast(control.min); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                                onPlus = { values[control.key] = (value + control.step).coerceAtMost(control.max); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                            )
+                        }
                     }
-                    BigStepButton(Icons.Default.Add) { values[control.key] = (value + control.step).coerceAtMost(control.max); haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
                 }
-            }
-            }
             }
 
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -437,18 +466,48 @@ private fun CardioLive(
     )
 }
 
+/** Yoğunluk bölgesi (aktif kcal/dk): <5 hafif, <10 orta, üstü yüksek. */
+private fun intensityZone(kcalPerMin: Double) = when {
+    kcalPerMin < 5 -> 0
+    kcalPerMin < 10 -> 1
+    else -> 2
+}
+
 @Composable
-private fun LiveStat(value: String, label: String, color: androidx.compose.ui.graphics.Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, color = color, fontSize = 26.sp, fontWeight = FontWeight.Black)
-        Text(label, color = HedefitColors.TextMuted, fontSize = 11.sp)
+private fun IntensityChip(kcalPerMin: Double) {
+    val zone = intensityZone(kcalPerMin)
+    val label = listOf(ct("Hafif"), ct("Orta"), ct("Yüksek"))[zone]
+    Row(Modifier.padding(top = 6.dp).clip(RoundedCornerShape(50)).background(HedefitColors.Lime.copy(alpha = .14f)).padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { i -> Box(Modifier.padding(end = 3.dp).size(width = 10.dp, height = 6.dp).clip(RoundedCornerShape(50)).background(if (i <= zone) HedefitColors.Lime else HedefitColors.Divider)) }
+        Spacer(Modifier.width(5.dp))
+        Text(label, color = HedefitColors.Lime, fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun BigStepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Box(Modifier.size(64.dp).clip(CircleShape).background(HedefitColors.SurfaceHigh).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
-        Icon(icon, null, tint = HedefitColors.TextPrimary, modifier = Modifier.size(30.dp))
+private fun StatTile(value: String, label: String, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    Column(modifier.clip(RoundedCornerShape(18.dp)).background(HedefitColors.Surface).padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, color = color, fontSize = 24.sp, fontWeight = FontWeight.Black, maxLines = 1)
+        Text(label, color = HedefitColors.TextMuted, fontSize = 11.sp, maxLines = 1)
+    }
+}
+
+@Composable
+private fun ControlCard(value: String, label: String, isLabel: Boolean, modifier: Modifier, onMinus: () -> Unit, onPlus: () -> Unit) {
+    Row(modifier.clip(RoundedCornerShape(20.dp)).background(HedefitColors.Surface).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        StepButton(Icons.Default.Remove, onMinus)
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(value, color = HedefitColors.TextPrimary, fontSize = if (isLabel) 16.sp else 26.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, maxLines = 1)
+            Text(label, color = HedefitColors.TextSecondary, fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 1)
+        }
+        StepButton(Icons.Default.Add, onPlus)
+    }
+}
+
+@Composable
+private fun StepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Box(Modifier.size(48.dp).clip(CircleShape).background(HedefitColors.Lime.copy(alpha = .16f)).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Icon(icon, null, tint = HedefitColors.Lime, modifier = Modifier.size(24.dp))
     }
 }
 
@@ -498,24 +557,48 @@ private fun CardioSummary(summary: CardioStage.Summary, saving: Boolean, onDisca
     var confirmDiscard by remember { mutableStateOf(false) }
     BackHandler { confirmDiscard = true }
     Box(Modifier.fillMaxSize().background(HedefitColors.Background)) {
-        // Tam ekran: üstte başlık, ortada kalori / süre / km ve yoğunluk, en altta iki buton.
-        Column(Modifier.fillMaxSize().systemBarsPadding().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            com.hedefit.app.ui.components.CardioMachineIcon(summary.machine.key, Modifier.size(64.dp), accent = HedefitColors.Lime)
-            Text(if (summary.newRecord && summary.firstSession) ct("İlk rekorun kaydedildi! 🎉") else if (summary.newRecord) ct("Yeni rekor! 🏆") else ct("Kardiyo tamam!"), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = HedefitColors.TextPrimary, modifier = Modifier.padding(top = 8.dp))
-            summary.presetTitle?.let { Text(ct(it), color = HedefitColors.TextSecondary) }
-            Column(Modifier.weight(1f).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                CountUpText(summary.kcal, suffix = " kcal", color = HedefitColors.Lime, fontSizeSp = 56)
-                Text(ct("Günlük kalori hedefine eklenecek (tahmini)"), color = HedefitColors.TextMuted, fontSize = 12.sp)
-                Spacer(Modifier.height(18.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    LiveStat(formatClock(summary.seconds), ct("süre"), HedefitColors.TextPrimary)
-                    if (summary.machine.tracksDistance) LiveStat("%.2f".format(summary.distanceKm), ct("km"), HedefitColors.TextPrimary)
-                    if (summary.gameScore > 0) LiveStat("${summary.gameScore}", ct("oyun puanı"), HedefitColors.TextPrimary)
+        // Tam ekran: üstte başlık; ortada kalori halkası, süre / km / ortalama kutuları ve
+        // yoğunluk grafiği; en altta Kaydetmeden çık / Kaydet.
+        val avgRate = if (summary.seconds > 0) summary.kcal * 60.0 / summary.seconds else 0.0
+        Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(52.dp).clip(CircleShape).background(HedefitColors.Lime.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
+                    com.hedefit.app.ui.components.CardioMachineIcon(summary.machine.key, Modifier.size(30.dp), accent = HedefitColors.Lime)
                 }
-                if (summary.samples.size >= 3) {
-                    Column(Modifier.fillMaxWidth().padding(top = 18.dp).clip(RoundedCornerShape(18.dp)).background(HedefitColors.Surface).padding(14.dp)) {
-                        Text(ct("Yoğunluk (kcal/dk)"), color = HedefitColors.TextSecondary, fontSize = 12.sp)
-                        val points = summary.samples.map { it.kcalPerMin }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(if (summary.newRecord && summary.firstSession) ct("İlk rekorun kaydedildi! 🎉") else if (summary.newRecord) ct("Yeni rekor! 🏆") else ct("Kardiyo tamam!"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = HedefitColors.TextPrimary)
+                    Text(summary.presetTitle?.let(::ct) ?: ct(summary.machine.title), color = HedefitColors.TextSecondary)
+                }
+            }
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)) {
+                Box(Modifier.padding(top = 12.dp).size(200.dp), contentAlignment = Alignment.Center) {
+                    val track = HedefitColors.Surface; val accent = HedefitColors.Lime
+                    val sweep by animateFloatAsState((summary.seconds / 1800f).coerceIn(.04f, 1f), label = "summaryRing")
+                    Canvas(Modifier.fillMaxSize()) {
+                        val w = 14.dp.toPx(); val sz = androidx.compose.ui.geometry.Size(size.width - w, size.height - w)
+                        drawArc(track, 0f, 360f, false, Offset(w / 2, w / 2), sz, style = Stroke(w))
+                        drawArc(accent, -90f, 360f * sweep, false, Offset(w / 2, w / 2), sz, style = Stroke(w, cap = StrokeCap.Round))
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CountUpText(summary.kcal, suffix = "", color = HedefitColors.Lime, fontSizeSp = 52)
+                        Text(ct("kcal (tahmini)"), color = HedefitColors.TextMuted, fontSize = 12.sp)
+                    }
+                }
+                Text(ct("Günlük kalori hedefine eklenecek (tahmini)"), color = HedefitColors.TextMuted, fontSize = 12.sp, textAlign = TextAlign.Center)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StatTile(formatClock(summary.seconds), ct("süre"), HedefitColors.TextPrimary, Modifier.weight(1f))
+                    if (summary.machine.tracksDistance) StatTile("%.2f".format(summary.distanceKm), ct("km"), HedefitColors.TextPrimary, Modifier.weight(1f))
+                    StatTile("%.1f".format(avgRate), ct("ort. kcal/dk"), HedefitColors.TextPrimary, Modifier.weight(1f))
+                    if (summary.gameScore > 0) StatTile("${summary.gameScore}", ct("oyun puanı"), HedefitColors.Warning, Modifier.weight(1f))
+                }
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(HedefitColors.Surface).padding(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(ct("Yoğunluk (kcal/dk)"), color = HedefitColors.TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        IntensityChip(avgRate)
+                    }
+                    val points = summary.samples.map { it.kcalPerMin }
+                    if (points.size >= 3) {
                         val max = (points.maxOrNull() ?: 1.0).coerceAtLeast(1.0)
                         val lineColor = HedefitColors.Lime
                         Canvas(Modifier.fillMaxWidth().height(110.dp).padding(top = 8.dp)) {
@@ -525,14 +608,16 @@ private fun CardioSummary(summary: CardioStage.Summary, saving: Boolean, onDisca
                                 val y = size.height - (p / max * size.height * .9).toFloat()
                                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
                             }
+                            val fill = Path().apply { addPath(path); lineTo(size.width, size.height); lineTo(0f, size.height); close() }
+                            drawPath(fill, lineColor.copy(alpha = .15f))
                             drawPath(path, lineColor, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
                             drawCircle(lineColor, 4.dp.toPx(), Offset(size.width, size.height - (points.last() / max * size.height * .9).toFloat()))
                         }
-                    }
+                    } else Text(ct("Grafik için en az 30 saniye gerekir."), color = HedefitColors.TextMuted, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp))
                 }
-                if (summary.seconds < 60) Text(ct("1 dakikadan kısa seanslar kaydedilmez."), color = HedefitColors.Warning, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp))
+                if (summary.seconds < 60) Text(ct("1 dakikadan kısa seanslar kaydedilmez."), color = HedefitColors.Warning, fontSize = 12.sp)
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = { confirmDiscard = true },
                     modifier = Modifier.weight(1f).height(58.dp), shape = RoundedCornerShape(18.dp),

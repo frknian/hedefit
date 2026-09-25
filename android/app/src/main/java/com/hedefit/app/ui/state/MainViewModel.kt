@@ -793,7 +793,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             distanceMeters = snapshot.distanceMeters,
             averagePaceSecondsPerKm = snapshot.paceSecondsPerKm,
             averageSpeedKmh = snapshot.averageSpeedKmh,
-            calories = ((snapshot.distanceMeters / 1_000.0) * if (activityType == "Bisiklet") 28 else if (activityType.contains("Koş")) 62 else 45).toInt(),
+            calories = ((snapshot.distanceMeters / 1_000.0) * if (activityType == "Bisiklet") 28 else if (activityType == "Kayak") 35 else if (activityType.contains("Koş")) 62 else 45).toInt(),
             routePoints = snapshot.points.map { com.hedefit.app.data.model.ActivityRoutePointData(it.latitude, it.longitude, it.recordedAt, it.accuracyMeters, it.altitude) },
         )
         fun showInHistory(message: String) = _state.update { current -> current.copy(
@@ -841,6 +841,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun scheduleWorkout(date: java.time.LocalDate, time: String, originalDate: String? = null, programId: String? = null, programName: String? = null) = viewModelScope.launch {
         runCatching { repository.scheduleWorkout(date, time, originalDate = originalDate, programId = programId, programName = programName) }
             .onSuccess { entry -> _state.update { current -> current.copy(dashboard = current.dashboard?.copy(schedule = current.dashboard.schedule.filterNot { it.date == entry.date } + entry), transientMessage = "Antrenman takvime kaydedildi.") } }
+            .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+    }
+
+    /**
+     * Set yapılmadan bitirilen antrenman. Ertele: bugün "deferred", takvimde bugünden sonraki
+     * ilk boş gün aynı saatte "planned" olur. Pas geç: bugün "rest" (kaçırıldı sayılmaz).
+     */
+    fun skipTodayWorkout(postpone: Boolean, programId: String?, programName: String?, locale: String = "tr") = viewModelScope.launch {
+        val en = locale == "en"
+        val today = java.time.LocalDate.now()
+        val schedule = _state.value.dashboard?.schedule.orEmpty()
+        val time = schedule.firstOrNull { it.date == today.toString() }?.time?.takeIf { it.isNotBlank() } ?: "19:00"
+        runCatching {
+            val entries = mutableListOf(repository.scheduleWorkout(today, time, status = if (postpone) "deferred" else "rest", programId = programId, programName = programName))
+            if (postpone) {
+                val taken = schedule.map { it.date }.toSet()
+                val next = generateSequence(today.plusDays(1)) { it.plusDays(1) }.take(60).first { it.toString() !in taken }
+                entries += repository.scheduleWorkout(next, time, originalDate = today.toString(), programId = programId, programName = programName)
+            }
+            entries
+        }.onSuccess { entries -> _state.update { current -> current.copy(
+                dashboard = current.dashboard?.let { data -> data.copy(schedule = data.schedule.filterNot { s -> entries.any { it.date == s.date } } + entries) },
+                transientMessage = if (postpone) {
+                    val d = java.time.LocalDate.parse(entries.last().date)
+                    val label = d.format(java.time.format.DateTimeFormatter.ofPattern("d MMMM EEEE", if (en) java.util.Locale.US else java.util.Locale("tr", "TR")))
+                    if (en) "Workout moved to $label." else "Antrenman $label gününe eklendi."
+                } else if (en) "Skipped today's workout." else "Bugünkü antrenman pas geçildi.",
+            ) } }
             .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
     }
 

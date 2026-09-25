@@ -801,6 +801,7 @@ internal fun DetailedActiveWorkoutScreen(
     chatBusy: Boolean = false,
     onSendChatMessage: (String, WorkoutCoachContext?) -> Unit = { _, _ -> },
     onExecuteCoachAction: (CoachActionData) -> Unit = {},
+    onSkip: (postpone: Boolean) -> Unit = {},
 ) {
     val en = language == "en"
     val context = LocalContext.current
@@ -1033,12 +1034,12 @@ internal fun DetailedActiveWorkoutScreen(
         restNotifier.cancel()
         onFinish(duration, (duration / 60 * 7).coerceAtLeast(60), completedSetStates.mapNotNull(::savedWorkoutSet), feedback)
     }
-    if (showNoSetsWarning) AlertDialog(
-        onDismissRequest = { showNoSetsWarning = false },
-        title = { Text(if (en) "No completed sets" else "Tamamlanan set yok") },
-        text = { Text(if (en) "Complete at least one set before finishing the workout." else "Antrenmanı bitirmeden önce en az bir set tamamla.") },
-        confirmButton = { TextButton(onClick = { showNoSetsWarning = false }) { Text(if (en) "Continue workout" else "Antrenmana devam et", color = HedefitColors.Lime) } },
-    )
+    if (showNoSetsWarning) SkipWorkoutDialog(onDismiss = { showNoSetsWarning = false }) { postpone ->
+        showNoSetsWarning = false
+        sessionStore.clear()
+        restNotifier.cancel()
+        onSkip(postpone)
+    }
     if (!prepared) WarmupDialog(en) { prepared = true }
     if (showFinishConfirmation) AlertDialog(
         onDismissRequest = { showFinishConfirmation = false },

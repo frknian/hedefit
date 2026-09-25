@@ -61,6 +61,7 @@ object RoutePlanner {
         "Trail Koşusu" -> 7.5
         "Doğa Yürüyüşü" -> 4.5
         "Bisiklet" -> 18.0
+        "Kayak" -> 20.0
         else -> 5.0
     }
 

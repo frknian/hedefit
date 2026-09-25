@@ -9,8 +9,8 @@ import kotlin.math.roundToInt
  * değiştirilirken kaynakla birlikte güncellenmeli.
  */
 enum class GoalPace(val lossFraction: Double, val gainFraction: Double) {
-    // Kilo verme: haftada vücut ağırlığının %0,5–1'i kas kaybını en aza indirir (Helms 2014).
-    // Kilo alma: haftada %0,25–0,5 kas kazanımını yağ artışına göre en iyi dengeler (Iraki 2019).
+    // Kilo verme: haftada vücut ağırlığının %0,5–1'i kas kaybını en aza indirir (Frontiers Endocrinol 2025).
+    // Kilo alma: haftada %0,25–0,5 kas kazanımını yağ artışına göre en iyi dengeler (Clin Nutr 2024).
     Slow(0.005, 0.0025),
     Steady(0.0075, 0.00375),
     Fast(0.010, 0.005),
@@ -18,8 +18,8 @@ enum class GoalPace(val lossFraction: Double, val gainFraction: Double) {
 
 object GoalScience {
     const val KCAL_PER_KG = 7_700
-    /** Paluch 2022: ölüm riskindeki azalma yetişkinlerde 8–10 bin adımda plato yapar. */
-    const val STEP_TARGET = 8_000
+    /** Ding 2025 (Lancet Public Health): ~7.000 adım klinik olarak anlamlı fayda sağlar. */
+    const val STEP_TARGET = 7_000
 
     /** Haftalık değişim (kg, işaretsiz). Tavan: vücut ağırlığının %1'i; alt sınır 0,1 kg. */
     fun weeklyRateKg(currentKg: Double, targetKg: Double, pace: GoalPace): Double {
@@ -59,9 +59,10 @@ object GoalScience {
 data class GoalSource(val claim: String, val claimEn: String, val citation: String, val url: String)
 
 val GOAL_SOURCES = listOf(
-    GoalSource("Kilo verme hızı: haftada vücut ağırlığının %0,5–1'i", "Weight loss: 0.5–1% of body weight per week", "Helms et al., JISSN 2014", "https://pubmed.ncbi.nlm.nih.gov/24864135/"),
-    GoalSource("Kilo alma hızı: haftada %0,25–0,5", "Weight gain: 0.25–0.5% of body weight per week", "Iraki et al., Sports 2019", "https://pubmed.ncbi.nlm.nih.gov/31247944/"),
-    GoalSource("Su: toplam 2,0 L (kadın) / 2,5 L (erkek), yiyecekler dahil", "Water: 2.0 L (women) / 2.5 L (men) total, incl. food", "EFSA, EFSA Journal 2010", "https://efsa.onlinelibrary.wiley.com/doi/10.2903/j.efsa.2010.1459"),
-    GoalSource("Protein: kazanım ~1,6 g/kg'da plato (üst güven 2,2 g/kg)", "Protein: gains plateau ~1.6 g/kg (upper CI 2.2 g/kg)", "Morton et al., BJSM 2018", "https://pubmed.ncbi.nlm.nih.gov/28698222/"),
-    GoalSource("Adım: fayda 8–10 bin adımda plato yapar", "Steps: benefit plateaus at 8–10k steps", "Paluch et al., Lancet Public Health 2022", "https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(21)00302-9/fulltext"),
+    GoalSource("Kilo verirken direnç antrenmanı yağ kaybını artırır, kası korur", "Resistance training during weight loss boosts fat loss and preserves muscle", "Frontiers in Endocrinology, 2025", "https://www.frontiersin.org/journals/endocrinology/articles/10.3389/fendo.2025.1725500/full"),
+    GoalSource("Yağ kaybı: egzersiz türlerinin karşılaştırması (meta-analiz)", "Fat loss: comparison of exercise modes (meta-analysis)", "JISSN, 2025", "https://doi.org/10.1080/15502783.2025.2507949"),
+    GoalSource("Kalori fazlası büyüdükçe protein birikimi artar, yağ da artar", "A larger surplus increases protein accretion, and fat too", "Clinical Nutrition, 2024 (RCT)", "https://www.sciencedirect.com/science/article/pii/S0261561424003467"),
+    GoalSource("Kalori açığında protein alımı ve yağsız kütle (doz-yanıt)", "Protein intake and fat-free mass in a deficit (dose-response)", "Strength & Conditioning Journal, 2025", "https://journals.lww.com/nsca-scj/fulltext/9900/effect_of_dietary_protein_on_fat_free_mass_in.179.aspx"),
+    GoalSource("Su alımı değişikliklerini test eden klinik çalışmalar (sistematik derleme)", "Clinical trials changing daily water intake (systematic review)", "JAMA Network Open, 2024", "https://pubmed.ncbi.nlm.nih.gov/39585691/"),
+    GoalSource("Adım: günde ~7.000 adım anlamlı sağlık faydası sağlar", "Steps: ~7,000 a day gives meaningful health benefits", "Ding et al., Lancet Public Health 2025", "https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(25)00164-1/fulltext"),
 )

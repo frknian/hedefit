@@ -59,6 +59,19 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Terrain
+import androidx.compose.material.icons.filled.Hiking
+import androidx.compose.material.icons.filled.DownhillSkiing
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
@@ -288,32 +301,65 @@ fun RouteScreen(
             plannedRoute != null && section == "new" -> RouteMap(requireNotNull(plannedRoute).points, Modifier.fillMaxSize(), en, snapshot.points.lastOrNull())
         }
         Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().systemBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(Modifier.fillMaxWidth().background(HedefitColors.Background.copy(alpha = .88f), RoundedCornerShape(22.dp)).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(22.dp)).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 HfCircleButton(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri", if (snapshot.tracking) ({ showExitConfirmation = true }) else onBack)
                 Spacer(Modifier.width(12.dp)); Column { Text(com.hedefit.app.ui.i18n.tr("Hedefit Rota", "Hedefit Route"), color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold); Text(when { snapshot.tracking && snapshot.points.isEmpty() -> if (en) "Acquiring precise GPS signal…" else "Hassas GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PREPARING_GPS -> if (en) "Searching for GPS…" else "GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PAUSED -> if (en) "Paused" else "Duraklatıldı"; sessionStatus == ActivitySessionStatus.ACTIVE -> if (en) "Recording in background" else "Arka planda kaydediliyor"; sessionStatus == ActivitySessionStatus.COMPLETED -> if (en) "Ready to save" else "Kaydetmeye hazır"; else -> if (en) "GPS activity" else "GPS aktivitesi" }, color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall) }
             }
-            if (!activityInProgress && finished == null) RouteSections(section, en) { section = it }
+            if (!activityInProgress && finished == null && plannedRoute == null) RouteSections(section, en) { section = it }
             if (section == "new" || activityInProgress || finished != null) {
-                permissionMessage?.let { Text(it, color = HedefitColors.Warning, style = MaterialTheme.typography.bodySmall, modifier = Modifier.background(Color.Black.copy(alpha = .7f), RoundedCornerShape(10.dp)).padding(10.dp)) }
-                routeMessage?.let { Text(it, color = HedefitColors.Warning, style = MaterialTheme.typography.bodySmall, modifier = Modifier.background(Color.Black.copy(alpha = .7f), RoundedCornerShape(10.dp)).padding(10.dp)) }
+                permissionMessage?.let { RouteNotice(it, warning = true) }
+                routeMessage?.let { RouteNotice(it, warning = plannedRoute == null) }
             }
         }
         if (!activityInProgress && finished == null && section == "new" && plannedRoute == null) {
+            // Boş durum: aktivite kartları (2 sütun) + rota planlama kartı.
             Column(
-                Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 24.dp).offset(y = (-24).dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 16.dp).offset(y = (-10).dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                HfIconBadge(Icons.Default.Route, HedefitColors.Lime, 56.dp, 28.dp, 18.dp)
-                Text(if (en) "Choose an activity" else "Aktiviteni seç", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                Spacer(Modifier.height(4.dp))
-                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Koşu" to (if (en) "Run" else "Koşu"), "Yürüyüş" to (if (en) "Walk" else "Yürüyüş"), "Trail Koşusu" to (if (en) "Trail run" else "Trail koşusu"), "Doğa Yürüyüşü" to (if (en) "Hike" else "Doğa yürüyüşü"), "Bisiklet" to (if (en) "Ride" else "Bisiklet")).forEach { (key, label) ->
-                        HfChip(label, activityType == key, { activityType = key })
+                Text(if (en) "Choose an activity" else "Aktiviteni seç", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(start = 4.dp))
+                val activities = listOf(
+                    Triple("Koşu", Icons.AutoMirrored.Filled.DirectionsRun, if (en) "Run" else "Koşu"),
+                    Triple("Yürüyüş", Icons.AutoMirrored.Filled.DirectionsWalk, if (en) "Walk" else "Yürüyüş"),
+                    Triple("Trail Koşusu", Icons.Default.Terrain, if (en) "Trail run" else "Trail koşusu"),
+                    Triple("Doğa Yürüyüşü", Icons.Default.Hiking, if (en) "Hike" else "Doğa yürüyüşü"),
+                    Triple("Bisiklet", Icons.AutoMirrored.Filled.DirectionsBike, if (en) "Ride" else "Bisiklet"),
+                    Triple("Kayak", Icons.Default.DownhillSkiing, if (en) "Ski" else "Kayak"),
+                )
+                activities.chunked(2).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { (key, icon, label) ->
+                            val on = activityType == key
+                            Row(
+                                Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                                    .background(if (on) HedefitColors.Lime else HedefitColors.Surface)
+                                    .clickable { activityType = key }.padding(horizontal = 14.dp, vertical = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(Modifier.size(36.dp).background(if (on) HedefitColors.OnLime.copy(alpha = .12f) else HedefitColors.Lime.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
+                                    Icon(icon, null, Modifier.size(20.dp), tint = if (on) HedefitColors.OnLime else HedefitColors.Lime)
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Text(label, color = if (on) HedefitColors.OnLime else HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
-                Spacer(Modifier.height(4.dp))
-                OutlineAction(if (en) "Plan a route" else "Rota planla", onClick = { showPlanner = true }, icon = Icons.Default.Navigation)
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 4.dp).clip(RoundedCornerShape(20.dp)).background(HedefitColors.Surface)
+                        .border(1.dp, HedefitColors.Lime.copy(alpha = .45f), RoundedCornerShape(20.dp))
+                        .clickable { showPlanner = true }.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    HfIconBadge(Icons.Default.Route, HedefitColors.Lime, 44.dp, 22.dp, 14.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(if (en) "Plan a route" else "Rota planla", color = HedefitColors.TextPrimary, fontWeight = FontWeight.Black)
+                        Text(if (en) "Loop by time or distance, or A → B" else "Süreye/mesafeye göre dönüşlü ya da A → B", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    }
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = HedefitColors.Lime)
+                }
             }
         }
         if (planBusy) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .72f)), contentAlignment = Alignment.Center) {
@@ -325,19 +371,23 @@ fun RouteScreen(
         if (section == "new" || activityInProgress || finished != null) Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)).background(HedefitColors.Surface).navigationBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.align(Alignment.CenterHorizontally).width(42.dp).height(4.dp).background(HedefitColors.Divider, RoundedCornerShape(4.dp)))
             if (activityInProgress) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                plannedRoute?.let { RouteNavigationCard(it, snapshot.points.lastOrNull(), en, unitSystem) }
+                Row(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(18.dp)).padding(vertical = 12.dp)) {
                     RouteMetric(if (en) "DISTANCE" else com.hedefit.app.ui.i18n.tr("MESAFE", "DISTANCE"), MeasurementUnits.formatDistance(visibleSnapshot.distanceMeters, unitSystem), Modifier.weight(1f))
                     RouteMetric(if (en) "TIME" else com.hedefit.app.ui.i18n.tr("SÜRE", "TIME"), formatDuration(visibleSnapshot.durationSeconds), Modifier.weight(1f))
-                    RouteMetric(if (activityType == "Bisiklet") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else com.hedefit.app.ui.i18n.tr("TEMPO", "PACE")), if (activityType == "Bisiklet") "%.1f km/sa".format(visibleSnapshot.currentSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem), Modifier.weight(1f))
+                    RouteMetric(if (activityType == "Bisiklet" || activityType == "Kayak") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else com.hedefit.app.ui.i18n.tr("TEMPO", "PACE")), if (activityType == "Bisiklet" || activityType == "Kayak") "%.1f km/sa".format(visibleSnapshot.currentSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem), Modifier.weight(1f))
                 }
-                plannedRoute?.let { RouteNavigationCard(it, snapshot.points.lastOrNull(), en, unitSystem) }
-            } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            } else if (finished == null && plannedRoute == null) Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.MyLocation, null, Modifier.size(16.dp), tint = HedefitColors.Lime)
+                Spacer(Modifier.width(8.dp))
+                Text(if (en) "Recording continues in the background; screen can be off." else "Kayıt arka planda sürer; ekranı kapatabilirsin.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            } else Row(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(18.dp)).padding(vertical = 12.dp)) {
                 val plan = plannedRoute.takeIf { finished == null }
                 RouteMetric(if (en) "DISTANCE" else com.hedefit.app.ui.i18n.tr("MESAFE", "DISTANCE"), MeasurementUnits.formatDistance(plan?.distanceMeters ?: visibleSnapshot.distanceMeters, unitSystem), Modifier.weight(1f))
                 RouteMetric(if (en) "TIME" else com.hedefit.app.ui.i18n.tr("SÜRE", "TIME"), formatDuration(plan?.estimatedDurationSeconds ?: visibleSnapshot.durationSeconds), Modifier.weight(1f))
                 RouteMetric(
-                    if (plan != null) (if (en) "TARGET" else "HEDEF") else if (activityType == "Bisiklet") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else com.hedefit.app.ui.i18n.tr("TEMPO", "PACE")),
-                    if (plan != null) MeasurementUnits.formatDistance(plan.requestedDistanceMeters, unitSystem) else if (activityType == "Bisiklet") "%.1f km/sa".format(visibleSnapshot.averageSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem),
+                    if (plan != null) (if (en) "TARGET" else "HEDEF") else if (activityType == "Bisiklet" || activityType == "Kayak") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else com.hedefit.app.ui.i18n.tr("TEMPO", "PACE")),
+                    if (plan != null) MeasurementUnits.formatDistance(plan.requestedDistanceMeters, unitSystem) else if (activityType == "Bisiklet" || activityType == "Kayak") "%.1f km/sa".format(visibleSnapshot.averageSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem),
                     Modifier.weight(1f),
                 )
             }
@@ -346,13 +396,13 @@ fun RouteScreen(
                 snapshot = store.pause()
                 sessionStatus = ActivitySessionStatus.PAUSED
             }, icon = Icons.Default.Stop)
-            else if (snapshot.tracking && snapshot.paused) {
-                PrimaryButton(if (en) "Continue" else "Devam Et", onClick = {
+            else if (snapshot.tracking && snapshot.paused) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(Modifier.weight(1f)) { OutlineAction(if (en) "Finish" else "Bitir", onClick = { showFinishConfirmation = true }) }
+                Box(Modifier.weight(1f)) { PrimaryButton(if (en) "Continue" else "Devam Et", onClick = {
                     context.startService(Intent(context, RouteTrackingService::class.java).setAction(RouteTrackingService.ACTION_RESUME))
                     snapshot = store.resume()
                     sessionStatus = ActivitySessionStatus.ACTIVE
-                }, icon = Icons.Default.DirectionsRun)
-                OutlineAction(if (en) "Finish activity" else "Aktiviteyi Bitir", onClick = { showFinishConfirmation = true })
+                }, icon = Icons.Default.DirectionsRun) }
             }
             else if (finished == null) PrimaryButton(if (plannedRoute != null) (if (en) "Start planned route" else "Planlı Rotayı Başlat") else (if (en) "Start GPS Recording" else "GPS Kaydını Başlat"), onClick = {
                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -367,8 +417,12 @@ fun RouteScreen(
                 }
             }, icon = Icons.Default.DirectionsRun)
             if (!activityInProgress && finished == null && plannedRoute != null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { plannedRoute = null; routeMessage = null }, modifier = Modifier.weight(1f)) { Text(if (en) "Clear plan" else "Planı temizle", color = HedefitColors.Coral) }
-                TextButton(onClick = { showPlanner = true }, modifier = Modifier.weight(1f)) { Text(if (en) "Change target" else "Hedefi değiştir", color = HedefitColors.Lime) }
+                Surface(onClick = { plannedRoute = null; routeMessage = null }, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(14.dp), color = HedefitColors.SurfaceHigh) {
+                    Box(contentAlignment = Alignment.Center) { Text(if (en) "Clear plan" else "Planı temizle", color = HedefitColors.Coral, fontWeight = FontWeight.Bold) }
+                }
+                Surface(onClick = { showPlanner = true }, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(14.dp), color = HedefitColors.SurfaceHigh) {
+                    Box(contentAlignment = Alignment.Center) { Text(if (en) "Change target" else "Hedefi değiştir", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) }
+                }
             }
             finished?.let { completed ->
                 Text(if (en) "Route completed" else "Rotayı tamamladın", color = HedefitColors.Lime, style = MaterialTheme.typography.titleLarge)
@@ -491,119 +545,157 @@ private fun RoutePlannerDialog(
     val parsed = value.replace(',', '.').toDoubleOrNull()
     val validGoal = parsed != null && if (goalType == "time") parsed in 10.0..240.0 else parsed in .5..50.0
     val valid = if (planType == "point_to_point") destination != null else validGoal
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (en) "Plan your route" else "Rotanı planla") },
-        text = { Column(
-            // Küçük ekranlarda taşmaya karşı kaydırılabilir; yüksekliği diyalogun
-            // kendi sınırı belirler (sabit bir tavan, içeriği gereksiz yere kesiyordu).
-            Modifier.verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(routeActivityLabel(activityType, en), color = HedefitColors.Lime, style = MaterialTheme.typography.titleMedium)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RoutePlanModeTile(
-                    icon = Icons.Default.Autorenew,
-                    title = if (en) "Loop" else "Dönüşlü",
-                    subtitle = if (en) "Ends where you start" else "Başladığın yerde biter",
-                    selected = planType == "loop",
-                    modifier = Modifier.weight(1f),
-                ) { planType = "loop" }
-                RoutePlanModeTile(
-                    icon = Icons.AutoMirrored.Filled.TrendingFlat,
-                    title = "A → B",
-                    subtitle = if (en) "Ends elsewhere" else "Başka noktada biter",
-                    selected = planType == "point_to_point",
-                    modifier = Modifier.weight(1f),
-                ) { planType = "point_to_point" }
-            }
-            RoutePointRow(
-                icon = Icons.Default.MyLocation,
-                label = if (en) "Start" else "Başlangıç",
-                value = start?.let { coordinateLabel(it) } ?: if (en) "My current location" else "Mevcut konumum",
-                isPlaceholder = start == null,
-            ) {
-                TextButton(onClick = onUseCurrentStart, contentPadding = PaddingValues(horizontal = 10.dp)) { Text(if (en) "Use current" else "Konumum") }
-                TextButton(onClick = onPickStart, contentPadding = PaddingValues(horizontal = 10.dp)) { Text(if (en) "On map" else "Haritadan") }
-            }
-            if (planType == "point_to_point") {
-                RoutePointRow(
-                    icon = Icons.Default.Flag,
-                    label = if (en) "Destination" else "Varış",
-                    value = destination?.let { coordinateLabel(it) } ?: if (en) "Not selected yet" else "Henüz seçilmedi",
-                    isPlaceholder = destination == null,
-                ) {
-                    TextButton(onClick = onPickDestination, contentPadding = PaddingValues(horizontal = 10.dp)) { Text(if (en) "Choose on map" else "Haritadan seç") }
+    // Tam ekran planlayıcı: üstte başlık, ortada tür seçimi + başlangıç/varış zaman çizelgesi
+    // + hedef (büyük değer, −/+ ve hızlı seçimler), en altta tek büyük "Rota oluştur".
+    val step = if (goalType == "time") 5.0 else .5
+    val range = if (goalType == "time") 10.0..240.0 else .5..50.0
+    val unit = if (goalType == "time") (if (en) "min" else "dk") else "km"
+    fun fmt(v: Double) = if (goalType == "time" || v % 1.0 == 0.0) v.toInt().toString() else "%.1f".format(Locale.US, v)
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(Modifier.fillMaxSize().background(HedefitColors.Background).systemBarsPadding()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onDismiss, enabled = !busy) { Icon(Icons.Default.Close, null, tint = HedefitColors.TextPrimary) }
+                Column(Modifier.weight(1f).padding(start = 4.dp)) {
+                    Text(if (en) "Plan your route" else "Rotanı planla", color = HedefitColors.TextPrimary, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge)
+                    Text(routeActivityLabel(activityType, en), color = HedefitColors.Lime, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                 }
-            } else {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    RoutePlanModeTile(
-                        icon = Icons.Default.Schedule,
-                        title = if (en) "Duration" else "Süre",
-                        subtitle = if (en) "10-240 min" else "10-240 dk",
-                        selected = goalType == "time",
-                        modifier = Modifier.weight(1f),
-                    ) { goalType = "time" }
-                    RoutePlanModeTile(
-                        icon = Icons.Default.Straighten,
-                        title = if (en) "Distance" else "Mesafe",
-                        subtitle = if (en) "0.5-50 km" else "0,5-50 km",
-                        selected = goalType == "distance",
-                        modifier = Modifier.weight(1f),
-                    ) { goalType = "distance" }
+            }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                // Tür: tek parça segment
+                RouteSegmented(
+                    listOf("loop" to (Icons.Default.Autorenew to (if (en) "Loop" else "Dönüşlü")), "point_to_point" to (Icons.Default.Flag to "A → B")),
+                    planType,
+                ) { planType = it }
+                Text(
+                    if (planType == "loop") (if (en) "Ends where you start" else "Başladığın yerde biter") else (if (en) "Ends at another point" else "Başka bir noktada biter"),
+                    color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall,
+                )
+
+                // Başlangıç → varış zaman çizelgesi
+                Column(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(22.dp)).padding(16.dp)) {
+                    RouteStop(
+                        icon = Icons.Default.MyLocation, label = if (en) "Start" else "Başlangıç",
+                        value = start?.let { coordinateLabel(it) } ?: if (en) "My current location" else "Mevcut konumum",
+                        showLine = planType == "point_to_point",
+                    ) {
+                        RouteChip(if (en) "My location" else "Konumum", Icons.Default.MyLocation, onUseCurrentStart)
+                        RouteChip(if (en) "On map" else "Haritadan", Icons.Default.Map, onPickStart)
+                    }
+                    if (planType == "point_to_point") RouteStop(
+                        icon = Icons.Default.Flag, label = if (en) "Destination" else "Varış",
+                        value = destination?.let { coordinateLabel(it) } ?: if (en) "Not selected yet" else "Henüz seçilmedi",
+                        showLine = false, highlight = destination == null,
+                    ) { RouteChip(if (en) "Choose on map" else "Haritadan seç", Icons.Default.Map, onPickDestination) }
                 }
-                // Hızlı seçim: en sık kullanılan hedefler, yazmadan tek dokunuşla.
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    val presets = if (goalType == "time") listOf("20", "30", "45", "60") else listOf("3", "5", "10", "21")
-                    val unit = if (goalType == "time") (if (en) "dk" else "dk") else "km"
-                    presets.forEach { preset ->
-                        val selected = value == preset
-                        Box(
-                            Modifier.weight(1f)
-                                .background(if (selected) HedefitColors.Lime.copy(alpha = .18f) else HedefitColors.SurfaceHigh, RoundedCornerShape(10.dp))
-                                .clickable { value = preset }.padding(vertical = 9.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                "$preset $unit",
-                                color = if (selected) HedefitColors.Lime else HedefitColors.TextSecondary,
-                                style = MaterialTheme.typography.labelLarge,
-                            )
+
+                if (planType == "loop") {
+                    Text(if (en) "GOAL" else "HEDEF", color = HedefitColors.TextMuted, fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelMedium)
+                    RouteSegmented(
+                        listOf("time" to (Icons.Default.Schedule to (if (en) "Duration" else "Süre")), "distance" to (Icons.Default.Straighten to (if (en) "Distance" else "Mesafe"))),
+                        goalType,
+                    ) { goalType = it }
+                    Column(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(22.dp)).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RouteStepButton(Icons.Default.Remove) { value = fmt(((parsed ?: range.start) - step).coerceIn(range)) }
+                            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.Bottom) {
+                                Text(value.ifBlank { "0" }, color = HedefitColors.TextPrimary, fontSize = 52.sp, fontWeight = FontWeight.Black)
+                                Text(" $unit", color = HedefitColors.TextSecondary, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
+                            }
+                            RouteStepButton(Icons.Default.Add) { value = fmt(((parsed ?: range.start) + step).coerceIn(range)) }
                         }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            val presets = if (goalType == "time") listOf("20", "30", "45", "60") else listOf("3", "5", "10", "21")
+                            presets.forEach { preset ->
+                                val selected = value == preset
+                                Box(
+                                    Modifier.weight(1f).clip(RoundedCornerShape(50))
+                                        .background(if (selected) HedefitColors.Lime else HedefitColors.SurfaceHigh)
+                                        .clickable { value = preset }.padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("$preset $unit", color = if (selected) HedefitColors.OnLime else HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge) }
+                            }
+                        }
+                        Text(if (goalType == "time") (if (en) "10–240 min" else "10–240 dk arası") else (if (en) "0.5–50 km" else "0,5–50 km arası"), color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall)
                     }
                 }
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { value = it.take(5) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text(if (goalType == "time") (if (en) "Minutes" else "Dakika") else (if (en) "Kilometers" else "Kilometre")) },
-                    suffix = { Text(if (goalType == "time") (if (en) "min" else "dk") else "km") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    isError = parsed != null && !valid,
-                    supportingText = if (parsed != null && !valid) ({
-                        Text(
-                            if (goalType == "time") (if (en) "Enter a value between 10 and 240 minutes." else "10 ile 240 dakika arasında bir değer gir.")
-                            else (if (en) "Enter a value between 0.5 and 50 km." else "0,5 ile 50 km arasında bir değer gir."),
-                            color = HedefitColors.Coral,
-                        )
-                    }) else null,
+                RoutePlannerHint(
+                    if (planType == "loop") {
+                        if (en) "Loops back to your start; distance may vary." else "Başlangıcına dönen parkur; mesafe biraz değişebilir."
+                    } else if (en) "A route between your two points." else "İki nokta arasında rota oluşturulur.",
+                    if (en) "Points go to the open BRouter service." else "Noktalar açık BRouter servisine gönderilir.",
                 )
             }
-            RoutePlannerHint(
-                if (planType == "loop") {
-                    if (en) "Loops back to your start; distance may vary." else "Başlangıcına dönen parkur; mesafe biraz değişebilir."
-                } else if (en) "A route between your two points." else "İki nokta arasında rota oluşturulur.",
-                if (en) "Points go to the open BRouter service." else "Noktalar açık BRouter servisine gönderilir.",
-            )
-        } },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(if (en) "Cancel" else "Vazgeç") } },
-        confirmButton = { Button(
-            onClick = { onPlan(RoutePlanRequest(activityType, goalType, if (planType == "loop") requireNotNull(parsed) else 0.0, planType)) },
-            enabled = valid && !busy,
-            colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
-        ) { Text(if (busy) (if (en) "Planning…" else "Planlanıyor…") else (if (en) "Create route" else "Rota oluştur")) } },
-    )
+            Button(
+                onClick = { onPlan(RoutePlanRequest(activityType, goalType, if (planType == "loop") requireNotNull(parsed) else 0.0, planType)) },
+                enabled = valid && !busy,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp).height(58.dp), shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
+            ) {
+                if (busy) { CircularProgressIndicator(Modifier.size(18.dp), color = HedefitColors.OnLime, strokeWidth = 2.dp); Spacer(Modifier.width(10.dp)) }
+                Text(
+                    if (busy) (if (en) "Planning…" else "Planlanıyor…")
+                    else if (planType == "point_to_point" && destination == null) (if (en) "Choose a destination" else "Önce varış noktası seç")
+                    else (if (en) "Create route" else "Rota oluştur"),
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RouteSegmented(options: List<Pair<String, Pair<androidx.compose.ui.graphics.vector.ImageVector, String>>>, selected: String, onSelect: (String) -> Unit) {
+    Row(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(50)).padding(4.dp)) {
+        options.forEach { (key, iconLabel) ->
+            val on = key == selected
+            Row(
+                Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (on) HedefitColors.Lime else androidx.compose.ui.graphics.Color.Transparent)
+                    .clickable { onSelect(key) }.padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(iconLabel.first, null, Modifier.size(18.dp), tint = if (on) HedefitColors.OnLime else HedefitColors.TextSecondary)
+                Spacer(Modifier.width(6.dp))
+                Text(iconLabel.second, color = if (on) HedefitColors.OnLime else HedefitColors.TextSecondary, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RouteStop(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, showLine: Boolean, highlight: Boolean = false, actions: @Composable RowScope.() -> Unit) {
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.size(36.dp).background(HedefitColors.Lime.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(18.dp), tint = HedefitColors.Lime)
+            }
+            if (showLine) Box(Modifier.width(2.dp).weight(1f).background(HedefitColors.Lime.copy(alpha = .35f)))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f).padding(bottom = if (showLine) 18.dp else 0.dp)) {
+            Text(label, color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium)
+            Text(value, color = if (highlight) HedefitColors.Warning else HedefitColors.TextPrimary, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), content = actions)
+        }
+    }
+}
+
+@Composable
+private fun RouteChip(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(50)).background(HedefitColors.SurfaceHigh).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, Modifier.size(15.dp), tint = HedefitColors.Lime)
+        Spacer(Modifier.width(6.dp))
+        Text(text, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun RouteStepButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Box(Modifier.size(52.dp).clip(CircleShape).background(HedefitColors.Lime.copy(alpha = .16f)).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+        Icon(icon, null, tint = HedefitColors.Lime, modifier = Modifier.size(26.dp))
+    }
 }
 
 /** İkon + başlık + tek satır açıklamadan oluşan seçilebilir kutu; kullanıcının
@@ -806,17 +898,17 @@ private suspend fun geocodeRouteLocation(context: Context, query: String): Route
 @Composable
 private fun RouteSections(selected: String, en: Boolean, onSelect: (String) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().background(Color.Black.copy(alpha = .68f), RoundedCornerShape(14.dp)).padding(4.dp),
+        Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(50)).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         listOf("new" to (if (en) "New activity" else "Yeni aktivite"), "history" to (if (en) "Completed" else "Yapılanlar")).forEach { (key, label) ->
             val active = selected == key
             Box(
-                Modifier.weight(1f).background(if (active) HedefitColors.Lime else Color.Transparent, RoundedCornerShape(11.dp))
-                    .clickable { onSelect(key) }.padding(vertical = 9.dp),
+                Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (active) HedefitColors.Lime else Color.Transparent)
+                    .clickable { onSelect(key) }.padding(vertical = 11.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, color = if (active) HedefitColors.OnLime else Color.White, style = MaterialTheme.typography.labelLarge)
+                Text(label, color = if (active) HedefitColors.OnLime else HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -932,6 +1024,7 @@ private fun routeActivityLabel(type: String, en: Boolean): String = when (type.l
     "trail run", "trail_running", "trail koşusu" -> if (en) "Trail run" else "Trail Koşusu"
     "hike", "hiking", "doğa yürüyüşü" -> if (en) "Hike" else "Doğa Yürüyüşü"
     "ride", "cycling", "bisiklet" -> if (en) "Ride" else "Bisiklet"
+    "ski", "skiing", "kayak" -> if (en) "Ski" else "Kayak"
     else -> if (en) "Walk" else "Yürüyüş"
 }
 
@@ -940,6 +1033,7 @@ private fun routeActivityEmoji(type: String): String = when (type.lowercase(Loca
     "trail run", "trail_running", "trail koşusu" -> "⛰️"
     "hike", "hiking", "doğa yürüyüşü" -> "🥾"
     "ride", "cycling", "bisiklet" -> "🚴"
+    "ski", "skiing", "kayak" -> "⛷️"
     else -> "🚶"
 }
 
@@ -1025,24 +1119,36 @@ private fun RouteNavigationCard(route: PlannedRoute, position: RoutePoint?, en: 
         progress.offRoute -> if (en) "Off route • recalculating" else "Rotadan çıktın • yeniden hesaplanıyor"
         else -> progress.nextManeuver?.let { RoutePlanner.instructionFor(it.type, en) } ?: if (en) "Continue on the route" else "Rotada devam et"
     }
-    HedefitCard(Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.size(38.dp).background(Color(0xFF4C9AFF).copy(alpha = .18f), CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.DirectionsRun, null, tint = Color(0xFF75B3FF)) }
+    // Navigasyon: büyük talimat + manevraya mesafe; altında ilerleme çubuğu ve özet.
+    Column(Modifier.fillMaxWidth().background(HedefitColors.Lime.copy(alpha = .12f), RoundedCornerShape(18.dp)).padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.size(44.dp).background(HedefitColors.Lime, CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.Navigation, null, tint = HedefitColors.OnLime) }
             Column(Modifier.weight(1f)) {
-                Text(instruction, style = MaterialTheme.typography.titleSmall)
-                Text(progress.nextManeuver?.streetName?.takeIf(String::isNotBlank) ?: if (en) "Planned route" else "Planlanan rota", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text(instruction, color = HedefitColors.TextPrimary, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(progress.nextManeuver?.streetName?.takeIf(String::isNotBlank) ?: if (en) "Planned route" else "Planlanan rota", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text(MeasurementUnits.formatDistance(if (joiningRoute) remaining else progress.distanceToManeuverMeters, unitSystem), color = HedefitColors.Lime, style = MaterialTheme.typography.titleMedium)
+            Text(MeasurementUnits.formatDistance(if (joiningRoute) remaining else progress.distanceToManeuverMeters, unitSystem), color = HedefitColors.Lime, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge)
         }
         if (!joiningRoute) {
-            Spacer(Modifier.height(8.dp))
-            Text(if (en) "${MeasurementUnits.formatDistance(progress.traveledMeters, unitSystem)} completed • ${MeasurementUnits.formatDistance(remaining, unitSystem)} remaining • ${progress.completionPercent}%" else "${MeasurementUnits.formatDistance(progress.traveledMeters, unitSystem)} tamamlandı • ${MeasurementUnits.formatDistance(remaining, unitSystem)} kaldı • %${progress.completionPercent}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-            LinearProgressIndicator(progress = { progress.completionPercent / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), color = HedefitColors.Lime, trackColor = HedefitColors.SurfaceSoft)
+            LinearProgressIndicator(progress = { progress.completionPercent / 100f }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50)), color = HedefitColors.Lime, trackColor = HedefitColors.SurfaceHigh, strokeCap = androidx.compose.ui.graphics.StrokeCap.Round)
+            Row {
+                Text(if (en) "${MeasurementUnits.formatDistance(progress.traveledMeters, unitSystem)} done" else "${MeasurementUnits.formatDistance(progress.traveledMeters, unitSystem)} tamamlandı", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                Text(if (en) "${MeasurementUnits.formatDistance(remaining, unitSystem)} left • ${progress.completionPercent}%" else "${MeasurementUnits.formatDistance(remaining, unitSystem)} kaldı • %${progress.completionPercent}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }
 
-@Composable private fun RouteMetric(label: String, value: String, modifier: Modifier) = HedefitCard(modifier) { Column { Text(label, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall); Text(value, color = HedefitColors.Lime, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium) } }
+@Composable
+private fun RouteNotice(text: String, warning: Boolean) {
+    Row(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(16.dp)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(if (warning) Icons.Outlined.Info else Icons.Default.Route, null, Modifier.size(18.dp), tint = if (warning) HedefitColors.Warning else HedefitColors.Lime)
+        Spacer(Modifier.width(10.dp))
+        Text(text, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable private fun RouteMetric(label: String, value: String, modifier: Modifier) = Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) { Text(label, color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold); Text(value, color = HedefitColors.TextPrimary, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge, maxLines = 1) }
 
 private fun mapCoordinate(point: RoutePoint, zoom: Int = 16): MapCoordinate {
     val tileCount = 1 shl zoom
@@ -1299,9 +1405,9 @@ private fun drawMinimalRoute(canvas: AndroidCanvas, points: List<RoutePoint>, pa
 private fun defaultActivityTitle(activityType: String, en: Boolean): String {
     val hour = java.time.LocalTime.now().hour
     val period = when { hour < 12 -> if (en) "Morning" else "Sabah"; hour < 18 -> if (en) "Afternoon" else "Öğleden Sonra"; else -> if (en) "Evening" else "Akşam" }
-    val type = when (activityType) { "Koşu" -> if (en) "Run" else "Koşusu"; "Trail Koşusu" -> if (en) "Trail Run" else "Trail Koşusu"; "Bisiklet" -> if (en) "Ride" else "Bisikleti"; "Doğa Yürüyüşü" -> if (en) "Hike" else "Doğa Yürüyüşü"; else -> if (en) "Walk" else "Yürüyüşü" }
+    val type = when (activityType) { "Koşu" -> if (en) "Run" else "Koşusu"; "Trail Koşusu" -> if (en) "Trail Run" else "Trail Koşusu"; "Bisiklet" -> if (en) "Ride" else "Bisikleti"; "Kayak" -> if (en) "Ski" else "Kayağı"; "Doğa Yürüyüşü" -> if (en) "Hike" else "Doğa Yürüyüşü"; else -> if (en) "Walk" else "Yürüyüşü" }
     return "$period $type"
 }
 
 private fun estimatedRouteCalories(snapshot: RouteSnapshot): Int =
-    ((snapshot.distanceMeters / 1_000.0) * when (snapshot.activityType) { "Bisiklet" -> 28.0; "Koşu", "Trail Koşusu" -> 62.0; else -> 45.0 }).roundToInt().coerceAtLeast(0)
+    ((snapshot.distanceMeters / 1_000.0) * when (snapshot.activityType) { "Bisiklet" -> 28.0; "Kayak" -> 35.0; "Koşu", "Trail Koşusu" -> 62.0; else -> 45.0 }).roundToInt().coerceAtLeast(0)

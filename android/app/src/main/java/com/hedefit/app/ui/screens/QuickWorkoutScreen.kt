@@ -68,18 +68,19 @@ fun ActiveWorkoutScreen(
     chatBusy: Boolean = false,
     onSendChatMessage: (String, WorkoutCoachContext?) -> Unit = { _, _ -> },
     onExecuteCoachAction: (CoachActionData) -> Unit = {},
+    onSkip: (postpone: Boolean) -> Unit = {},
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(MODE_PREFS, Context.MODE_PRIVATE) }
     var quick by remember { mutableStateOf(prefs.getBoolean("quick", true)) }
     fun setQuick(value: Boolean) { quick = value; prefs.edit().putBoolean("quick", value).apply() }
     if (quick) {
-        QuickWorkoutScreen(exercises, saving, onBack, onFinish, onDetailed = { setQuick(false) })
+        QuickWorkoutScreen(exercises, saving, onBack, onFinish, onDetailed = { setQuick(false) }, onSkip = onSkip)
     } else {
         Box(Modifier.fillMaxSize()) {
             DetailedActiveWorkoutScreen(
                 onBack, exercises, previousPerformance, saving, language, onFinish, onRequestReplacementCandidate,
-                onApplyReplacementCandidate, replacementCandidate, replacementBusy, chatMessages, chatBusy, onSendChatMessage, onExecuteCoachAction,
+                onApplyReplacementCandidate, replacementCandidate, replacementBusy, chatMessages, chatBusy, onSendChatMessage, onExecuteCoachAction, onSkip,
             )
             Surface(
                 onClick = { setQuick(true) },
@@ -100,6 +101,7 @@ private fun QuickWorkoutScreen(
     onBack: () -> Unit,
     onFinish: (Int, Int, List<WorkoutSetInput>, WorkoutFeedbackData) -> Unit,
     onDetailed: () -> Unit,
+    onSkip: (postpone: Boolean) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     // done[exerciseIndex] = tamamlanan set sayısı
@@ -108,6 +110,7 @@ private fun QuickWorkoutScreen(
     var rest by remember { mutableIntStateOf(0) }
     var confirmFinish by remember { mutableStateOf(false) }
     var confirmExit by remember { mutableStateOf(false) }
+    var showSkip by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { while (true) { delay(1000); elapsed++; if (rest > 0) rest-- } }
     val totalSets = exercises.sumOf { it.sets }
     val doneSets = done.sum()
@@ -174,7 +177,7 @@ private fun QuickWorkoutScreen(
             }
         }
         Button(
-            onClick = { confirmFinish = true }, enabled = !saving && doneSets > 0,
+            onClick = { if (doneSets > 0) confirmFinish = true else showSkip = true }, enabled = !saving,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp).height(56.dp), shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
         ) { Text(if (saving) tr("Kaydediliyor…", "Saving…") else tr("Antrenmanı bitir", "Finish workout"), fontWeight = FontWeight.Bold) }
@@ -205,6 +208,7 @@ private fun QuickWorkoutScreen(
             dismissButton = { TextButton(onClick = { confirmFinish = false }) { Text(tr("Devam et", "Keep going")) } },
         )
     }
+    if (showSkip) SkipWorkoutDialog(onDismiss = { showSkip = false }) { postpone -> showSkip = false; onSkip(postpone) }
     if (confirmExit) AlertDialog(
         onDismissRequest = { confirmExit = false },
         title = { Text(tr("Antrenmandan çıkılsın mı?", "Leave the workout?")) },
@@ -212,4 +216,39 @@ private fun QuickWorkoutScreen(
         confirmButton = { TextButton(onClick = { confirmExit = false; onBack() }) { Text(tr("Çık", "Leave"), color = HedefitColors.Coral) } },
         dismissButton = { TextButton(onClick = { confirmExit = false }) { Text(tr("Vazgeç", "Cancel")) } },
     )
+}
+
+/**
+ * Hiç set yapılmadan bitirme: antrenmanı bir sonraki boş güne ertele ya da bugün için
+ * tamamen pas geç. İkisi de takvime işlenir; seri ve istatistikler etkilenmez.
+ */
+@Composable
+internal fun SkipWorkoutDialog(onDismiss: () -> Unit, onChoose: (postpone: Boolean) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr("Hiç set yapmadın", "No sets done yet")) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(tr("Bugün olmuyorsa sorun değil. Ne yapalım?", "Not today? No problem. What should we do?"), color = HedefitColors.TextSecondary)
+                SkipOption("📅", tr("Başka güne ertele", "Move to another day"), tr("Takvimde sıradaki boş güne otomatik eklenir.", "Added automatically to the next free day."), HedefitColors.Lime) { onChoose(true) }
+                SkipOption("⏭️", tr("Tamamen pas geç", "Skip entirely"), tr("Bugün dinlenme günü olarak işaretlenir.", "Today is marked as a rest day."), HedefitColors.TextSecondary) { onChoose(false) }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Antrenmana devam et", "Keep training"), color = HedefitColors.Lime) } },
+    )
+}
+
+@Composable
+private fun SkipOption(emoji: String, title: String, body: String, accent: androidx.compose.ui.graphics.Color, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(HedefitColors.SurfaceHigh).clickable(onClick = onClick).padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(emoji, fontSize = 22.sp)
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = accent, fontWeight = FontWeight.Bold)
+            Text(body, color = HedefitColors.TextMuted, fontSize = 12.sp)
+        }
+    }
 }

@@ -121,6 +121,7 @@ fun acceptedRouteSegmentMeters(last: RoutePoint, next: RoutePoint, activityType:
     val maximumSpeedKmh = when (activityType) {
         "Yürüyüş" -> 15.0
         "Bisiklet" -> 100.0
+        "Kayak" -> 130.0
         else -> 30.0
     }
     return distance.takeIf { it / elapsedSeconds * 3.6 <= maximumSpeedKmh }
