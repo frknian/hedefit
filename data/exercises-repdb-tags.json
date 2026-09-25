@@ -1,0 +1,3023 @@
+{
+  "ab-wheel-rollout": [
+    "core_focus"
+  ],
+  "air-bike": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "archer-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "archer-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "arnold-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "assisted-dips": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "assisted-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "back-extension": [
+    "leg_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "back-lever": [],
+  "ball-leg-curl": [
+    "leg_day"
+  ],
+  "ball-pike": [
+    "core_focus"
+  ],
+  "band-assisted-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "band-pull-apart": [
+    "pull_day",
+    "shoulder_safe"
+  ],
+  "banded-adductor-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-ankle-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-calf-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-chest-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-clamshell": [
+    "leg_day",
+    "warm_up"
+  ],
+  "banded-figure-4-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-fire-hydrant": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "banded-glute-bridge": [
+    "leg_day"
+  ],
+  "banded-good-morning": [
+    "pull_day",
+    "leg_day"
+  ],
+  "banded-hamstring-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-hip-thrust": [
+    "leg_day",
+    "glute_focus",
+    "requires_bench"
+  ],
+  "banded-it-band-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-kneeling-hip-thrust": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "banded-lat-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-lateral-walk": [
+    "leg_day",
+    "warm_up"
+  ],
+  "banded-rear-delt-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-romanian-deadlift": [
+    "pull_day",
+    "leg_day"
+  ],
+  "banded-seated-hip-abduction": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "banded-shoulder-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "banded-squat": [
+    "leg_day"
+  ],
+  "banded-standing-curl": [
+    "arm_day",
+    "pull_day"
+  ],
+  "banded-standing-hip-abduction": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "banded-standing-hip-adduction": [
+    "leg_day"
+  ],
+  "banded-sumo-walk": [
+    "leg_day",
+    "glute_focus",
+    "warm_up"
+  ],
+  "banded-terminal-knee-extension": [
+    "leg_day",
+    "rehab"
+  ],
+  "banded-triceps-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "barbell-ab-rollout": [
+    "core",
+    "lower_back_safe"
+  ],
+  "barbell-calf-raise": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "barbell-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "barbell-front-raise": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "barbell-glute-bridge": [
+    "leg_day",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "barbell-lunge": [
+    "knee_safe"
+  ],
+  "barbell-overhead-extension": [
+    "arm_day",
+    "push_day"
+  ],
+  "barbell-preacher-curl": [
+    "arm_day",
+    "pull_day"
+  ],
+  "barbell-pullover": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "barbell-rear-delt-row": [
+    "pull_day"
+  ],
+  "barbell-reverse-lunge": [
+    "knee_safe"
+  ],
+  "barbell-row": [
+    "pull_day",
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "barbell-wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "battle-rope-double-slam": [
+    "full_body",
+    "conditioning"
+  ],
+  "battle-ropes": [
+    "full_body",
+    "conditioning"
+  ],
+  "bear-crawl": [
+    "full_body",
+    "conditioning",
+    "core",
+    "bodyweight"
+  ],
+  "behind-the-back-barbell-shrug": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "behind-the-neck-lat-pulldown": [
+    "pull_day"
+  ],
+  "behind-the-neck-press": [
+    "knee_safe"
+  ],
+  "behind-the-neck-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "bench-adductor-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-ankle-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-bulgarian-split-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-calf-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-chest-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-childs-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-couch-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-dips": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "bench-figure-4-glute-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-hamstring-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-lat-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "bench-leg-pull-in": [
+    "core",
+    "calisthenics",
+    "requires_bench"
+  ],
+  "bench-press": [
+    "powerlifting",
+    "push_day",
+    "big_three",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "bench-pull": [
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "bent-arm-barbell-pullover": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "bent-arm-ez-bar-pullover": [
+    "pull_day",
+    "requires_bench"
+  ],
+  "bent-over-db-row": [
+    "pull_day",
+    "back_day"
+  ],
+  "bent-over-ez-bar-row": [
+    "pull_day",
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "bicep-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "bicycle-crunch": [
+    "core",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "bird-dog": [
+    "core",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "bird-dog-hold": [
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "boat-pose": [
+    "core",
+    "calisthenics"
+  ],
+  "bodyweight-calf-raise": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "bodyweight-good-morning": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "bodyweight-lateral-raise": [
+    "shoulder_focus",
+    "push_day"
+  ],
+  "bodyweight-overhead-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "bodyweight-reverse-lunge": [
+    "leg_day",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "bodyweight-squat": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "bow-pose": [
+    "calisthenics"
+  ],
+  "box-jump": [
+    "leg_day",
+    "conditioning"
+  ],
+  "box-squat": [
+    "knee_safe"
+  ],
+  "bulgarian-split-squat": [
+    "leg_day",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "requires_bench"
+  ],
+  "burpees": [
+    "full_body",
+    "conditioning"
+  ],
+  "butterfly-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "cable-bent-over-row": [
+    "pull_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "cable-chest-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "cable-crunch": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "cable-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "cable-external-rotation": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "cable-fly": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "cable-front-raise": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "cable-hammer-curl": [
+    "arm_day",
+    "pull_day"
+  ],
+  "cable-kickback": [
+    "arm_day",
+    "push_day"
+  ],
+  "cable-lateral-raise": [
+    "shoulder_focus",
+    "push_day"
+  ],
+  "cable-pallof-press": [
+    "core",
+    "core_focus",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "cable-tricep-kickback": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "cable-upright-row": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "cable-wrist-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "camel-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "captains-chair-knee-raise": [
+    "core_focus"
+  ],
+  "captains-chair-leg-raise": [
+    "core_focus"
+  ],
+  "cat-cow": [
+    "mobility",
+    "stretching"
+  ],
+  "cat-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "chair-pose": [
+    "calisthenics"
+  ],
+  "cheat-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "chest-press-machine": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "chest-supported-db-row": [
+    "pull_day",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "chest-supported-dumbbell-shrug": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "chest-supported-kettlebell-row": [
+    "pull_day",
+    "requires_bench"
+  ],
+  "chest-supported-smith-machine-row": [
+    "pull_day",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "childs-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "chin-tuck-hold": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "chin-ups": [
+    "calisthenics",
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "clamshells": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "clamshells-hold": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "clap-push-ups": [
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "clean": [],
+  "clean-and-jerk": [],
+  "close-grip-barbell-curl": [
+    "pull_day",
+    "arm_day"
+  ],
+  "close-grip-bench-press": [
+    "arm_day",
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "close-grip-db-bench-press": [
+    "arm_day",
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "close-grip-ez-bar-bench-press": [
+    "arm_day",
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "close-grip-ez-bar-curl": [
+    "arm_day",
+    "pull_day"
+  ],
+  "close-grip-incline-bench": [
+    "arm_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "close-grip-lat-pulldown": [
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "close-grip-pull-ups": [
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "close-grip-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "close-stance-leg-press": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "cobra-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "cocoons": [
+    "core",
+    "calisthenics"
+  ],
+  "concentration-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "cossack-squat": [],
+  "cow-face-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "crab-dips": [
+    "calisthenics"
+  ],
+  "crescent-lunge": [
+    "calisthenics"
+  ],
+  "cross-body-crunch": [
+    "core",
+    "calisthenics"
+  ],
+  "cross-body-hammer-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "cross-body-shoulder-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "crow-pose": [
+    "calisthenics"
+  ],
+  "crunches": [
+    "core",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "dancer-pose": [
+    "calisthenics"
+  ],
+  "db-bench-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "db-fly": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "db-kickstand-deadlift": [
+    "leg_day",
+    "pull_day"
+  ],
+  "db-lunge": [
+    "leg_day",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "db-overhead-carry": [
+    "shoulder_focus",
+    "shoulder_stability",
+    "core",
+    "full_body"
+  ],
+  "db-pullover": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "db-reverse-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "db-reverse-wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "db-shrug": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "db-skull-crusher": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "db-somersault-squat": [
+    "leg_day"
+  ],
+  "db-squat": [
+    "leg_day"
+  ],
+  "db-sumo-squat": [
+    "leg_day",
+    "glute_focus",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "db-svend-press": [
+    "push_day",
+    "chest_focus"
+  ],
+  "dead-bug": [
+    "core",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "dead-bug-hold": [
+    "core",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "dead-hang": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "deadlift": [
+    "powerlifting",
+    "pull_day",
+    "big_three",
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "decline-bench-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "decline-bench-press-barbell": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "decline-bench-press-ez-bar": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "decline-crunch": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "decline-db-fly": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "decline-push-up": [
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "deficit-deadlift": [
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "deficit-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "diamond-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "dips": [
+    "push_day",
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "dolphin-pose": [
+    "calisthenics"
+  ],
+  "donkey-calf-raise": [
+    "leg_day",
+    "calf_focus"
+  ],
+  "doorway-chest-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "double-db-kickstand-deadlift": [
+    "leg_day",
+    "pull_day"
+  ],
+  "double-db-overhead-carry": [
+    "shoulder_focus",
+    "shoulder_stability",
+    "core",
+    "full_body"
+  ],
+  "double-kettlebell-bicep-curl": [
+    "arm_day",
+    "pull_day"
+  ],
+  "double-kettlebell-clean": [],
+  "double-kettlebell-clean-and-press": [
+    "push_day"
+  ],
+  "double-kettlebell-dead-clean": [],
+  "double-kettlebell-dead-split-snatch": [],
+  "double-kettlebell-jerk": [],
+  "double-kettlebell-overhead-carry": [
+    "shoulder_focus",
+    "shoulder_stability",
+    "core",
+    "full_body"
+  ],
+  "double-kettlebell-overhead-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "double-kettlebell-push-press": [
+    "push_day"
+  ],
+  "double-kettlebell-rear-delt-row": [
+    "pull_day",
+    "shoulder_focus",
+    "knee_safe",
+    "no_axial_load"
+  ],
+  "double-kettlebell-row": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "double-kettlebell-split-jerk": [],
+  "double-kettlebell-swing-snatch": [],
+  "downward-dog": [
+    "mobility",
+    "stretching"
+  ],
+  "downward-dog-knee-tuck": [
+    "core",
+    "calisthenics"
+  ],
+  "downward-dog-pedal": [
+    "mobility",
+    "stretching"
+  ],
+  "downward-dog-to-knee-drive": [
+    "core",
+    "calisthenics"
+  ],
+  "downward-dog-to-low-lunge": [
+    "mobility",
+    "stretching"
+  ],
+  "downward-dog-to-plank": [
+    "calisthenics"
+  ],
+  "downward-dog-to-upward-dog": [
+    "calisthenics"
+  ],
+  "drag-curl": [
+    "pull_day",
+    "arm_day"
+  ],
+  "dragon-flag": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "dumbbell-bench-pull": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "dumbbell-calf-raise": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "dumbbell-deadlift": [
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "dumbbell-face-pull": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "dumbbell-farmers-walk": [
+    "full_body",
+    "grip_focus"
+  ],
+  "dumbbell-floor-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "dumbbell-front-raise": [
+    "push_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "dumbbell-front-squat": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "dumbbell-hip-thrust": [
+    "leg_day",
+    "glute_focus",
+    "requires_bench"
+  ],
+  "dumbbell-pistol-squat": [
+    "leg_day"
+  ],
+  "dumbbell-push-press": [
+    "shoulder_focus",
+    "push_day"
+  ],
+  "dumbbell-reverse-fly": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "dumbbell-romanian-deadlift": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "dumbbell-shoulder-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "dumbbell-side-bend": [
+    "core_focus"
+  ],
+  "dumbbell-snatch": [],
+  "dumbbell-split-squat": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "dumbbell-tricep-extension": [
+    "arm_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "dumbbell-upright-row": [
+    "shoulder_focus",
+    "pull_day"
+  ],
+  "dumbbell-windmill": [
+    "core_focus",
+    "shoulder_stability"
+  ],
+  "dumbbell-wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "eagle-pose": [
+    "calisthenics"
+  ],
+  "easy-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "elliptical-trainer": [
+    "full_body",
+    "conditioning",
+    "no_axial_load",
+    "knee_safe",
+    "lower_back_safe"
+  ],
+  "extended-side-angle": [
+    "calisthenics"
+  ],
+  "ez-bar-bench-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "ez-bar-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "ez-bar-front-raise": [
+    "push_day"
+  ],
+  "ez-bar-lying-tricep-extension": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "ez-bar-overhead-extension": [
+    "arm_day",
+    "push_day"
+  ],
+  "ez-bar-pullover": [
+    "pull_day",
+    "push_day",
+    "requires_bench"
+  ],
+  "ez-bar-reverse-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "ez-bar-reverse-grip-row": [
+    "pull_day"
+  ],
+  "ez-bar-romanian-deadlift": [
+    "leg_day",
+    "pull_day"
+  ],
+  "ez-bar-shrug": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "ez-bar-spider-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "ez-bar-upright-row": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "ez-bar-wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "face-pull": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "fish-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "floor-ez-bar-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "floor-kettlebell-pullover": [
+    "pull_day"
+  ],
+  "floor-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "flutter-kicks": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "front-lever": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "front-squat": [
+    "leg_day"
+  ],
+  "garland-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "glute-bridge": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "glute-bridge-hold": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "glute-kickback": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "glute-kickback-hold": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "goblet-squat": [
+    "leg_day",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "good-morning": [
+    "leg_day",
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "hack-squat": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "hack-squat-calf-raise": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "half-kneeling-hip-flexor-rock": [
+    "mobility",
+    "stretching"
+  ],
+  "half-moon-pose": [
+    "core",
+    "calisthenics"
+  ],
+  "hammer-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "handstand-push-ups": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "hang-clean": [],
+  "hang-power-clean": [],
+  "hanging-knee-raise": [
+    "core_focus"
+  ],
+  "hanging-leg-raise": [
+    "core",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "hanging-pike": [
+    "core",
+    "calisthenics"
+  ],
+  "happy-baby": [
+    "mobility",
+    "stretching"
+  ],
+  "head-to-knee-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "heel-elevated-squat": [
+    "leg_day"
+  ],
+  "heel-to-toe-walk": [
+    "warm_up",
+    "rehab",
+    "bodyweight",
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "hero-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "hex-bar-deadlift": [
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "high-foot-leg-press": [
+    "leg_day",
+    "glute_focus",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "high-knees": [
+    "full_body",
+    "warm_up"
+  ],
+  "high-plank": [
+    "core",
+    "calisthenics",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "hip-abduction": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "hip-adduction": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "hip-thrust": [
+    "leg_day",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "requires_bench"
+  ],
+  "hollow-body-hold": [
+    "core_focus",
+    "calisthenics"
+  ],
+  "horizontal-leg-press": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "human-flag": [
+    "calisthenics",
+    "core",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "incline-bench-ez-bar-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "incline-bench-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "incline-db-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "incline-db-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "incline-dumbbell-fly": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "incline-hammer-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "incline-push-ups": [
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "incline-treadmill-walk": [
+    "full_body",
+    "conditioning",
+    "warm_up",
+    "knee_safe",
+    "lower_back_safe"
+  ],
+  "inverted-row": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "isometric-neck-side": [
+    "shoulder_safe"
+  ],
+  "jackknife-sit-up": [
+    "core",
+    "calisthenics"
+  ],
+  "jefferson-curl": [],
+  "jump-rope": [
+    "full_body",
+    "warm_up",
+    "conditioning"
+  ],
+  "jump-squat": [
+    "leg_day",
+    "conditioning"
+  ],
+  "jumping-jacks": [
+    "full_body",
+    "warm_up"
+  ],
+  "kettlebell-bulgarian-split-squat": [
+    "leg_day"
+  ],
+  "kettlebell-close-grip-floor-press": [
+    "push_day",
+    "arm_day"
+  ],
+  "kettlebell-concentration-curl": [],
+  "kettlebell-deadlift": [
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "kettlebell-farmers-walk": [
+    "knee_safe"
+  ],
+  "kettlebell-floor-press": [
+    "push_day"
+  ],
+  "kettlebell-goblet-lunge": [
+    "leg_day"
+  ],
+  "kettlebell-halo": [
+    "shoulder_safe"
+  ],
+  "kettlebell-hammer-curl": [
+    "arm_day",
+    "pull_day"
+  ],
+  "kettlebell-hip-thrust": [
+    "leg_day",
+    "glute_focus",
+    "requires_bench"
+  ],
+  "kettlebell-kickstand-deadlift": [
+    "leg_day",
+    "pull_day"
+  ],
+  "kettlebell-lunge-press": [
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "kettlebell-offset-reverse-lunge-and-press": [
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "kettlebell-overhead-carry": [
+    "shoulder_focus",
+    "shoulder_stability",
+    "core",
+    "full_body"
+  ],
+  "kettlebell-overhead-tricep-extension": [
+    "arm_day",
+    "push_day"
+  ],
+  "kettlebell-pistol-squat": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "kettlebell-pullover": [
+    "pull_day",
+    "requires_bench"
+  ],
+  "kettlebell-reverse-lunge": [
+    "leg_day"
+  ],
+  "kettlebell-reverse-wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "kettlebell-rotational-lunge": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "kettlebell-russian-twist": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "kettlebell-shrug": [
+    "pull_day"
+  ],
+  "kettlebell-single-leg-deadlift": [
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "kettlebell-skull-crusher": [
+    "arm_day",
+    "push_day",
+    "requires_bench"
+  ],
+  "kettlebell-squat": [
+    "leg_day",
+    "glute_focus",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "kettlebell-sumo-deadlift": [
+    "leg_day",
+    "pull_day"
+  ],
+  "kettlebell-sumo-high-pull": [],
+  "kettlebell-svend-press": [
+    "push_day",
+    "chest_focus"
+  ],
+  "kettlebell-swing": [
+    "leg_day",
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "kettlebell-swing-clean": [],
+  "kettlebell-turkish-get-ups": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "kettlebell-windmills": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "kettlebell-wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "knee-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "knee-to-chest-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "kneeling-cable-row": [
+    "pull_day",
+    "lower_back_safe"
+  ],
+  "kneeling-hip-flexor-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "kneeling-wrist-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "l-sit": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "landmine-press": [
+    "shoulder_focus",
+    "push_day"
+  ],
+  "lat-pulldown": [
+    "pull_day",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "lateral-raise": [
+    "push_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "leg-curl": [
+    "leg_day",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "leg-extension": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "leg-press": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "legs-up-the-wall": [
+    "mobility",
+    "stretching"
+  ],
+  "lizard-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "locust-pose": [
+    "calisthenics"
+  ],
+  "low-lunge": [
+    "mobility",
+    "stretching"
+  ],
+  "low-lunge-to-half-split": [
+    "mobility",
+    "stretching"
+  ],
+  "lunge": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "lying-leg-raise": [
+    "core_focus"
+  ],
+  "lying-tricep-extension": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "machine-back-extension": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "machine-bicep-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "machine-calf-raise": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "machine-chest-fly": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "machine-preacher-curl": [
+    "arm_day"
+  ],
+  "machine-seated-crunch": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "machine-shoulder-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "machine-triceps-extension": [
+    "arm_day",
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "medicine-ball-slam": [
+    "core"
+  ],
+  "mountain-climbers": [
+    "core",
+    "cardio",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "mountain-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "muscle-snatch": [],
+  "muscle-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "neck-side-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "negative-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "neutral-grip-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "nordic-hamstring-curl": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "ohp": [
+    "push_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "one-arm-dumbbell-push-press": [
+    "push_day"
+  ],
+  "one-arm-dumbbell-swing": [
+    "full_body",
+    "ballistic"
+  ],
+  "one-arm-kettlebell-bicep-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "one-arm-kettlebell-bottoms-up-press": [
+    "push_day",
+    "shoulder_safe"
+  ],
+  "one-arm-kettlebell-floor-glute-bridge-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "one-arm-kettlebell-floor-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "one-arm-kettlebell-front-squat": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "one-arm-kettlebell-push-press": [
+    "knee_safe"
+  ],
+  "one-arm-kettlebell-row": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "one-arm-kettlebell-shoulder-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "one-arm-kettlebell-swing": [
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "one-arm-kettlebell-tricep-kickback": [
+    "arm_day",
+    "push_day"
+  ],
+  "one-arm-landmine-press": [
+    "shoulder_focus",
+    "push_day"
+  ],
+  "one-arm-lat-pulldown": [
+    "pull_day",
+    "back_focus"
+  ],
+  "one-arm-single-leg-dumbbell-romanian-deadlift": [
+    "leg_day",
+    "core"
+  ],
+  "one-arm-single-leg-kettlebell-romanian-deadlift": [
+    "leg_day",
+    "core"
+  ],
+  "overhead-squat": [],
+  "overhead-tricep-extension": [
+    "arm_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "overhead-triceps-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "pause-deadlift": [
+    "powerlifting",
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "pause-pull-up": [
+    "calisthenics",
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "pause-squat": [
+    "knee_safe"
+  ],
+  "paused-bench-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "paused-incline-bench-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "paused-ohp": [
+    "push_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "pec-deck": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "pendlay-row": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "pigeon-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "pike-push-ups": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "pilates-kneeling-side-kick": [
+    "calisthenics"
+  ],
+  "pilates-leg-pull-back": [
+    "core",
+    "calisthenics"
+  ],
+  "pilates-leg-pull-front": [
+    "core",
+    "calisthenics"
+  ],
+  "pilates-roll-down": [
+    "mobility",
+    "stretching"
+  ],
+  "pilates-roll-over": [
+    "core",
+    "calisthenics"
+  ],
+  "pilates-saw": [
+    "mobility",
+    "stretching"
+  ],
+  "pilates-side-bend": [
+    "core",
+    "calisthenics"
+  ],
+  "pilates-spine-stretch-forward": [
+    "mobility",
+    "stretching"
+  ],
+  "pilates-spine-twist": [
+    "mobility",
+    "stretching"
+  ],
+  "pistol-squat": [
+    "leg_day",
+    "calisthenics"
+  ],
+  "planche": [
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "plank": [
+    "core",
+    "calisthenics",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "plate-loaded-donkey-calf-raise": [
+    "leg_day",
+    "calf_focus",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "plate-loaded-glute-drive": [
+    "leg_day",
+    "glute_focus",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "plate-loaded-lateral-raise": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "plate-loaded-shrug": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "plate-pinch": [],
+  "plate-pullover": [
+    "pull_day",
+    "push_day",
+    "requires_bench"
+  ],
+  "plow-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "plyo-lunge": [
+    "leg_day",
+    "conditioning"
+  ],
+  "plyo-push-up": [
+    "push_day",
+    "calisthenics"
+  ],
+  "preacher-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "preacher-hammer-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "pseudo-planche-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "pull-up": [
+    "pull_day",
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "puppy-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "push-jerk": [],
+  "push-press": [
+    "push_day",
+    "knee_safe"
+  ],
+  "push-up": [
+    "push_day",
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "pyramid-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "rack-pull": [
+    "pull_day",
+    "back_focus"
+  ],
+  "rear-delt-fly": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "reverse-crunches": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "reverse-curl": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "reverse-grip-bent-over-row": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "reverse-grip-lat-pulldown": [
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "reverse-lunge": [
+    "leg_day",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "reverse-nordic-curl": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "reverse-plank": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "reverse-plank-dips": [
+    "calisthenics"
+  ],
+  "reverse-tabletop-hip-pulses": [
+    "calisthenics"
+  ],
+  "reverse-tabletop-hold": [
+    "core",
+    "calisthenics"
+  ],
+  "revolved-chair-pose": [
+    "core",
+    "calisthenics"
+  ],
+  "revolved-crescent-lunge": [
+    "core",
+    "calisthenics"
+  ],
+  "ring-dead-hang": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "ring-dips": [
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "ring-face-pull": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "ring-muscle-up": [
+    "pull_day",
+    "calisthenics"
+  ],
+  "ring-push-up": [
+    "push_day",
+    "calisthenics"
+  ],
+  "ring-row": [
+    "pull_day",
+    "calisthenics"
+  ],
+  "rings-inverted-row": [
+    "pull_day",
+    "calisthenics"
+  ],
+  "romanian-deadlift": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "rope-climb": [
+    "calisthenics"
+  ],
+  "rowing-machine": [
+    "full_body",
+    "conditioning",
+    "no_axial_load"
+  ],
+  "running": [
+    "full_body",
+    "conditioning"
+  ],
+  "russian-twist": [
+    "core",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "savasana": [
+    "mobility",
+    "stretching"
+  ],
+  "scapular-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "scissor-kicks": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "seated-barbell-overhead-press": [
+    "push_day",
+    "requires_bench"
+  ],
+  "seated-cable-row": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "seated-calf-raise": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "seated-db-press": [
+    "push_day",
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "requires_bench"
+  ],
+  "seated-dumbbell-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "seated-dumbbell-lateral-raise": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "requires_bench"
+  ],
+  "seated-dumbbell-tricep-extension": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "seated-forward-fold": [
+    "mobility",
+    "stretching"
+  ],
+  "seated-leg-curl": [
+    "leg_day"
+  ],
+  "seated-smith-machine-shoulder-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "seated-spinal-twist": [
+    "mobility",
+    "stretching"
+  ],
+  "seated-straddle-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "shrug": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "side-lunge": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "side-lying-hip-abduction": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "side-lying-hip-abduction-hold": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "side-lying-hip-adduction": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "side-lying-hip-adduction-hold": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "side-lying-lateral-raise": [
+    "shoulder_focus",
+    "push_day",
+    "requires_bench"
+  ],
+  "side-plank": [
+    "core",
+    "calisthenics",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "side-plank-leg-lift": [
+    "core",
+    "calisthenics",
+    "glute_focus",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "side-plank-leg-lift-hold": [
+    "core",
+    "calisthenics",
+    "glute_focus",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "single-arm-chest-supported-dumbbell-row": [
+    "pull_day",
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "single-arm-db-row": [
+    "pull_day",
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "requires_bench"
+  ],
+  "single-arm-dumbbell-overhead-tricep-extension": [
+    "arm_day"
+  ],
+  "single-arm-hammer-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "single-arm-machine-shoulder-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "single-arm-plate-loaded-lateral-raise": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "single-arm-tricep-pushdown": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "single-db-svend-press": [
+    "push_day",
+    "chest_focus"
+  ],
+  "single-leg-calf-raise": [
+    "leg_day",
+    "calf_focus"
+  ],
+  "single-leg-extension": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "single-leg-glute-bridge": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "single-leg-glute-bridge-hold": [
+    "leg_day",
+    "glute_focus"
+  ],
+  "single-leg-lying-leg-curl": [
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "single-leg-press": [
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "single-leg-romanian-deadlift": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "sit-ups": [
+    "core",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "skull-crusher": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "sled-row": [
+    "pull_day"
+  ],
+  "smith-machine-bench-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "smith-machine-bent-over-row": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "smith-machine-bulgarian-split": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe",
+    "requires_bench"
+  ],
+  "smith-machine-calf-raise": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "smith-machine-decline-bench-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "smith-machine-front-squat": [
+    "leg_day"
+  ],
+  "smith-machine-good-morning": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "smith-machine-hip-thrust": [
+    "leg_day",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "requires_bench"
+  ],
+  "smith-machine-incline-bench-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "smith-machine-rdl": [
+    "leg_day"
+  ],
+  "smith-machine-reverse-grip-bent-over-row": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "smith-machine-reverse-lunge": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "smith-machine-shoulder-press": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "smith-machine-shrug": [
+    "knee_safe",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "smith-machine-split-squat": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "smith-machine-squat": [],
+  "smith-machine-upright-row": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "snatch": [],
+  "sphinx-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "spider-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "split-jerk": [],
+  "split-squat": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "spoto-press": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe",
+    "requires_bench"
+  ],
+  "squat": [
+    "powerlifting",
+    "leg_day",
+    "big_three"
+  ],
+  "stability-ball-hip-bridge": [
+    "leg_day",
+    "lower_back_safe"
+  ],
+  "stability-ball-knee-tuck": [
+    "core"
+  ],
+  "stability-ball-push-up": [
+    "push_day",
+    "calisthenics",
+    "core"
+  ],
+  "stability-ball-push-up-hands-on-ball": [
+    "push_day",
+    "calisthenics",
+    "core"
+  ],
+  "stability-ball-wall-squat": [
+    "leg_day"
+  ],
+  "stair-climber": [
+    "conditioning",
+    "leg_day",
+    "glute_focus"
+  ],
+  "standing-calf-raise": [
+    "leg_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "standing-calf-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "standing-forward-fold": [
+    "mobility",
+    "stretching"
+  ],
+  "standing-forward-fold-to-half-lift": [
+    "mobility",
+    "stretching"
+  ],
+  "standing-quad-stretch": [
+    "mobility",
+    "stretching"
+  ],
+  "standing-side-bend": [
+    "mobility",
+    "stretching"
+  ],
+  "standing-side-bend-flow": [
+    "mobility",
+    "stretching"
+  ],
+  "standing-split": [
+    "mobility",
+    "stretching"
+  ],
+  "stationary-bike": [
+    "conditioning",
+    "leg_day",
+    "no_axial_load",
+    "knee_safe",
+    "lower_back_safe"
+  ],
+  "step-ups": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe",
+    "requires_bench"
+  ],
+  "stiff-leg-deadlift": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "straight-arm-pulldown": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "straight-bar-cable-front-raise": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "straight-bar-dips": [
+    "push_day",
+    "calisthenics",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "strict-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "suitcase-carry": [
+    "core",
+    "core_focus",
+    "grip_focus",
+    "full_body"
+  ],
+  "sumo-deadlift": [
+    "powerlifting",
+    "leg_day",
+    "shoulder_safe",
+    "knee_safe"
+  ],
+  "sumo-squat": [],
+  "superman": [
+    "core",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "supine-spinal-twist": [
+    "mobility",
+    "stretching"
+  ],
+  "supine-windshield-wipers": [
+    "core",
+    "calisthenics"
+  ],
+  "supported-shoulderstand": [
+    "core",
+    "calisthenics"
+  ],
+  "svend-press": [
+    "push_day"
+  ],
+  "t-bar-row": [
+    "knee_safe",
+    "shoulder_safe"
+  ],
+  "thoracic-bridge": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "thread-the-needle": [
+    "mobility",
+    "stretching"
+  ],
+  "thread-the-needle-flow": [
+    "mobility",
+    "stretching"
+  ],
+  "three-legged-dog": [
+    "calisthenics"
+  ],
+  "thruster": [
+    "knee_safe"
+  ],
+  "toes-to-bar": [
+    "core_focus",
+    "calisthenics"
+  ],
+  "treadmill-running": [
+    "full_body",
+    "conditioning"
+  ],
+  "tree-pose": [
+    "calisthenics"
+  ],
+  "triangle-pose": [
+    "mobility",
+    "stretching"
+  ],
+  "tricep-kickback": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "tricep-pushdown": [
+    "arm_day",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "trx-bicep-curl": [
+    "arm_day",
+    "pull_day",
+    "calisthenics"
+  ],
+  "trx-chest-press": [
+    "push_day",
+    "calisthenics"
+  ],
+  "trx-face-pull": [
+    "pull_day",
+    "calisthenics",
+    "shoulder_stability"
+  ],
+  "trx-hamstring-curl": [
+    "leg_day",
+    "calisthenics"
+  ],
+  "trx-lunge": [
+    "leg_day",
+    "calisthenics"
+  ],
+  "trx-pistol-squat": [
+    "leg_day",
+    "calisthenics"
+  ],
+  "trx-plank": [
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "trx-row": [
+    "pull_day",
+    "calisthenics"
+  ],
+  "trx-side-plank": [
+    "lower_back_safe",
+    "knee_safe",
+    "no_axial_load",
+    "shoulder_safe"
+  ],
+  "trx-squat": [
+    "leg_day",
+    "calisthenics"
+  ],
+  "trx-tricep-extension": [
+    "arm_day",
+    "push_day",
+    "calisthenics"
+  ],
+  "trx-y-fly": [
+    "pull_day",
+    "calisthenics",
+    "shoulder_stability"
+  ],
+  "upright-row": [
+    "knee_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "upward-dog": [
+    "mobility",
+    "stretching"
+  ],
+  "v-bar-lat-pulldown": [
+    "pull_day",
+    "shoulder_safe",
+    "lower_back_safe"
+  ],
+  "v-bar-tricep-pushdown": [
+    "arm_day"
+  ],
+  "v-sit": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "v-ups": [
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "walking": [
+    "full_body",
+    "warm_up",
+    "knee_safe",
+    "lower_back_safe"
+  ],
+  "walking-lunge": [
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "wall-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "wall-sit": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "warrior-one": [
+    "calisthenics"
+  ],
+  "warrior-three": [
+    "calisthenics"
+  ],
+  "warrior-two": [
+    "calisthenics"
+  ],
+  "weighted-dips": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "weighted-pull-up": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "weighted-wall-crunch": [
+    "core",
+    "lower_back_safe",
+    "knee_safe",
+    "shoulder_safe",
+    "no_axial_load"
+  ],
+  "wide-grip-bench-press": [
+    "push_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "requires_bench"
+  ],
+  "wide-grip-pull-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe"
+  ],
+  "wide-grip-push-ups": [
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "wide-grip-seated-cable-row": [
+    "pull_day",
+    "knee_safe",
+    "no_axial_load",
+    "lower_back_safe",
+    "shoulder_safe"
+  ],
+  "wide-legged-forward-fold": [
+    "mobility",
+    "stretching"
+  ],
+  "wide-stance-leg-press": [
+    "leg_day",
+    "lower_back_safe",
+    "shoulder_safe",
+    "no_axial_load",
+    "knee_safe"
+  ],
+  "wrist-curl": [
+    "arm_day",
+    "grip_focus"
+  ],
+  "wrist-roller": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ],
+  "zottman-curl": [
+    "knee_safe",
+    "shoulder_safe",
+    "lower_back_safe",
+    "no_axial_load"
+  ]
+}

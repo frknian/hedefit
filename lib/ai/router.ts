@@ -2,29 +2,23 @@
 //
 // Zincir kuralı:
 //
-//   yerel uygun mu? → yerel sağlayıcı
-//         ↓ hata / uygun değil
 //   uzak sağlayıcı
 //         ↓ hata
-//   AiAllProvidersFailedError  → çağıran taraf kullanıcıya nazik bir mesaj gösterir
+//   deterministik güvenli yedek
 //
 // Ham sağlayıcı hatası ASLA kullanıcıya ulaşmaz; teknik ayrıntı yalnızca
 // telemetriye (sınıflandırılmış olarak) gider.
 //
-// MALİYET: yerel sağlayıcı ücretsiz ve ağsızdır. Bir istek yerelde
-// cevaplanabiliyorsa uzak sağlayıcıya HİÇ gitmez — göçün maliyet hedefi
-// tam olarak budur.
 
 import { AiAllProvidersFailedError, AiUnsupportedRequestError } from "./errors.ts";
-import { LocalGenerationCancelledError } from "./providers/on-device.ts";
 import { providerRegistry } from "./providers/registry.ts";
 import { classifyError, consoleEventSink, createEvent, type AiEventSink } from "./telemetry.ts";
 import type { AIProvider, AiObjectRequest, AiObjectResponse, AiRequest, AiResponse } from "./types.ts";
 
-export type RoutingMode = "auto" | "local" | "remote";
+export type RoutingMode = "auto" | "remote";
 
 export type RoutingPolicy = {
-  /** "auto" = yerel öncelikli, "local" = yalnız yerel, "remote" = yalnız uzak. */
+  /** "auto" ve "remote" bulut OpenAI sağlayıcısını kullanır. */
   mode?: RoutingMode;
   sink?: AiEventSink;
 };
@@ -33,17 +27,12 @@ export type RoutingPolicy = {
  * Varsayılan yönlendirme modu, `AI_ROUTING_MODE` ile işletmeci tarafından
  * ezilebilir. Kullanılan senaryolar:
  *
- *   local  — sağlayıcı kotası dolduğunda/olay anında ücretli çağrıyı tamamen
- *            kesip uygulamayı güvenli şablon yanıtlarla ayakta tutmak
- *   remote — yerel katmanı devre dışı bırakıp yalnız modeli ölçmek
+ *   remote — yalnız bulut sağlayıcısını kullan
  *
- * Kullanıcıya dönük bir "Yerel AI" anahtarı BİLEREK eklenmedi: cihaz üstü
- * çalışma zamanı henüz yok (bkz. lib/ai/capability.ts), dolayısıyla böyle bir
- * anahtar var olmayan bir yeteneği vaat ederdi.
  */
 function defaultMode(): RoutingMode | undefined {
   const mode = process.env.AI_ROUTING_MODE;
-  return mode === "local" || mode === "remote" || mode === "auto" ? mode : undefined;
+  return mode === "remote" || mode === "auto" ? mode : undefined;
 }
 
 /** Sağlayıcı bu kategoriyi normal sırada işleyebilir mi? */
@@ -58,15 +47,13 @@ function supportsAsLastResort(provider: AIProvider, request: AiRequest): boolean
 }
 
 function allowedByMode(provider: AIProvider, mode: RoutingPolicy["mode"]): boolean {
-  if (mode === "local") return provider.kind === "local";
   if (mode === "remote") return provider.kind === "remote";
   return true;
 }
 
 /**
  * İstek için denenecek sağlayıcı zinciri. `needsObject` true ise
- * `generateObject` uygulamayan sağlayıcılar (ör. deterministik yerel) elenir —
- * şema gerektiren bir işi yapamayan sağlayıcıyı denemek boşuna gecikmedir.
+ * `generateObject` uygulamayan sağlayıcılar şema gerektiren işlerde elenir.
  */
 export async function selectProviders(request: AiRequest, policy: RoutingPolicy = {}, needsObject = false): Promise<AIProvider[]> {
   const preferred: AIProvider[] = [];
@@ -108,7 +95,6 @@ async function runChain<TResponse extends { provider: string; model: string; lat
         latencyMs: response.latencyMs,
         inputTokens: response.usage?.inputTokens,
         outputTokens: response.usage?.outputTokens,
-        ...(provider.kind === "local" && provider.id !== "local-deterministic" ? { runtime: "litert-lm" as const } : {}),
       }));
       return { ...response, fallbackUsed };
     } catch (error) {
@@ -129,8 +115,11 @@ async function runChain<TResponse extends { provider: string; model: string; lat
       // ücretli bir uzak çağrı başlatmak hem parayı boşa harcar hem de
       // kullanıcının açıkça istemediği bir işi yapar. Bu yüzden iptal, zinciri
       // olduğu yerde bitirir; sonraki sağlayıcı DENENMEZ.
-      if (error instanceof LocalGenerationCancelledError) throw error;
-      if (request.abortSignal?.aborted) break;
+      // AbortSignal.timeout() da `aborted` olur; ancak bu kullanıcı iptali
+      // değildir. Bulut sağlayıcının süresi dolduğunda deterministik yerel
+      // koça geçmeliyiz. Yalnız gerçek AbortError kullanıcı iptali sayılır.
+      const abortReasonName = (request.abortSignal?.reason as { name?: unknown } | undefined)?.name;
+      if (request.abortSignal?.aborted && abortReasonName !== "TimeoutError") break;
     }
   }
   throw new AiAllProvidersFailedError(failures);

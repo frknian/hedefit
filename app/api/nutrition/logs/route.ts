@@ -11,9 +11,15 @@ export async function GET(request: Request) {
   if (!limited.ok) return tooManyRequests(limited.retryAfterSeconds);
   const client = nutritionUserClient(request);
   if (!client) return Response.json({ error: "Beslenme günlüğü yapılandırılmamış." }, { status: 503 });
-  const date = new URL(request.url).searchParams.get("date");
-  let query = client.from("food_entries").select("*").eq("user_id", auth.user.id).order("consumed_at", { ascending: false }).limit(100);
-  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) query = query.eq("logged_date", date);
+  const params = new URL(request.url).searchParams;
+  const isDate = (value: string | null): value is string => !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const date = params.get("date");
+  const from = params.get("from");
+  const to = params.get("to");
+  const ranged = isDate(from) && isDate(to) && from <= to;
+  let query = client.from("food_entries").select("*").eq("user_id", auth.user.id).order("consumed_at", { ascending: false }).limit(ranged ? 1000 : 100);
+  if (isDate(date)) query = query.eq("logged_date", date);
+  else if (ranged) query = query.gte("logged_date", from).lte("logged_date", to);
   const { data, error } = await query;
   if (error) {
     console.error("[nutrition-logs] read failed", error.code);

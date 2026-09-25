@@ -5,10 +5,9 @@
 //   providerRegistry.register(openAiProvider);
 //
 // Hedefit'in geri kalanında hiçbir dosya değişmez. Sıra önemlidir: router
-// zinciri bu sırayla dener, `local` olanlar `remote` olanlardan önce gelir.
+// zinciri bu sırayla dener.
 
 import { deterministicLocalProvider } from "./deterministic-local.ts";
-import { onDeviceProvider } from "./on-device.ts";
 import { openAiCompatibleProvider } from "./openai-compatible.ts";
 import type { AIProvider } from "../types.ts";
 
@@ -31,16 +30,8 @@ class ProviderRegistry {
     return this.#providers.find((provider) => provider.id === id);
   }
 
-  /**
-   * Yerel sağlayıcılar önce. Aynı türde olanlar KAYIT SIRASINI korur —
-   * bu yüzden gerçek cihaz üstü LLM, deterministik şablon sağlayıcısından
-   * önce kaydedilir (bkz. DEFAULT_PROVIDERS).
-   */
   list(): AIProvider[] {
-    return [
-      ...this.#providers.filter((provider) => provider.kind === "local"),
-      ...this.#providers.filter((provider) => provider.kind === "remote"),
-    ];
+    return [...this.#providers];
   }
 
   reset(providers: AIProvider[] = DEFAULT_PROVIDERS): this {
@@ -49,15 +40,8 @@ class ProviderRegistry {
   }
 }
 
-// SIRA ÖNEMLİ:
-//   1. onDeviceProvider          — gerçek cihaz üstü LLM (varsa)
-//   2. openAiCompatibleProvider  — uzak sağlayıcı
-//   3. deterministicLocalProvider — her koşulda çalışan güvenli son çare
-//
-// Deterministik sağlayıcı `local` türünde olduğu için listede uzak
-// sağlayıcıdan önce görünür; ama serbest sohbette yalnız son çare
-// kategorilerine sahiptir, bu yüzden router onu ZİNCİRİN SONUNA koyar
-// (bkz. lib/ai/router.ts selectProviders).
-const DEFAULT_PROVIDERS: AIProvider[] = [onDeviceProvider, deterministicLocalProvider, openAiCompatibleProvider];
+// The deterministic provider is marked as last-resort for conversation, so
+// the router tries OpenAI first and uses it only when cloud coaching fails.
+const DEFAULT_PROVIDERS: AIProvider[] = [openAiCompatibleProvider, deterministicLocalProvider];
 
 export const providerRegistry = new ProviderRegistry().reset();

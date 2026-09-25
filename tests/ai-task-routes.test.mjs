@@ -4,7 +4,7 @@ import { providerRegistry } from "../lib/ai/providers/registry.ts";
 import { generateCoachObject, generateCoachTaskText } from "../lib/ai/coach.ts";
 import { nutritionGaps } from "../lib/nutrition-advice.ts";
 import { loadMemories } from "../lib/ai/memory.ts";
-import { authorizedRequest, withSupabaseAuthEnv, withUsageMock } from "./helpers/auth.mjs";
+import { authorizedRequest, TEST_USER_ID, withSupabaseAuthEnv, withUsageMock } from "./helpers/auth.mjs";
 
 const SILENT = { sink: () => {} };
 
@@ -88,10 +88,14 @@ test("görev üretimi sağlayıcı hatasında açık hata verir; rota yerel yede
   }));
 });
 
-test("şema gerektiren görevde deterministik yerel sağlayıcı zincire GİRMEZ", async () => {
-  // Yerel sağlayıcı serbest şema üretemez; denenmesi boşuna gecikme olurdu.
-  const { deterministicLocalProvider } = await import("../lib/ai/providers/deterministic-local.ts");
-  providerRegistry.reset([deterministicLocalProvider, echoProvider()]);
+test("şema gerektiren görevde nesne üretmeyen sağlayıcı zincire GİRMEZ", async () => {
+  const textOnlyProvider = {
+    id: "text-only",
+    kind: "local",
+    isAvailable: async () => true,
+    generateText: async () => ({ text: "yerel", provider: "text-only", model: "test", latencyMs: 1 }),
+  };
+  providerRegistry.reset([textOnlyProvider, echoProvider()]);
   const result = await generateCoachObject({
     schema: {}, category: "complex_reasoning", facts: {}, domainRules: "k", prompt: "p", policy: SILENT,
   });
@@ -230,7 +234,7 @@ test("weekly-review: AI başarısızsa yerel değerlendirmeye düşer ve hak iad
     assert.equal(response.status, 200);
     assert.equal(payload.source, "local");
     assert.ok(payload.review.headline, "kart boş kalmamalı");
-    assert.deepEqual(refunds, [{ p_feature: "weekly_review", p_amount: 1 }], "hizmet alınmadıysa hak iade edilmeli");
+    assert.deepEqual(refunds, [{ p_user_id: TEST_USER_ID, p_feature: "weekly_review" }], "hizmet alınmadıysa hak iade edilmeli");
   });
 });
 
@@ -311,6 +315,6 @@ test("nutrition/advice: AI başarısızsa yerel öneri döner ve hak iade edilir
     const payload = await response.json();
     assert.equal(payload.source, "fallback");
     assert.ok(payload.advice.length > 0);
-    assert.deepEqual(refunds, [{ p_feature: "nutrition_advice", p_amount: 1 }]);
+    assert.deepEqual(refunds, [{ p_user_id: TEST_USER_ID, p_feature: "nutrition_advice" }]);
   });
 });
