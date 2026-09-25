@@ -172,7 +172,7 @@ fun RouteScreen(
                 routeMessage = if (en) {
                     "${MeasurementUnits.formatDistance(plan.distanceMeters, unitSystem)} ${if (plan.isLoop) "loop" else "route"} was planned. Check crossings and surface conditions before starting."
                 } else {
-                    "${MeasurementUnits.formatDistance(plan.distanceMeters, unitSystem)} ${if (plan.isLoop) "dönüşlü rota" else "rota"} hazır. Başlamadan önce geçişleri ve zemin koşullarını kontrol et."
+                    com.hedefit.app.ui.i18n.tr("${MeasurementUnits.formatDistance(plan.distanceMeters, unitSystem)} ${if (plan.isLoop) "dönüşlü rota" else "rota"} hazır. Başlamadan önce geçişleri ve zemin koşullarını kontrol et.", "${MeasurementUnits.formatDistance(plan.distanceMeters, unitSystem)} ${if (plan.isLoop) "loop route" else "route"} ready. Check crossings and surface before you start.")
                 }
             }.onFailure { error ->
                 routeMessage = error.message ?: if (en) "A route could not be planned for this location." else "Bu konum için rota planlanamadı."
@@ -685,7 +685,7 @@ private fun RoutePlannerHint(text: String, privacyNote: String) {
 private suspend fun currentRouteLocation(context: Context): RoutePoint {
     val locationManager = context.getSystemService(LocationManager::class.java)
     if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-        error("GPS kapalı. Konum servislerini açıp tekrar dene.")
+        error(com.hedefit.app.ui.i18n.tr("GPS kapalı. Konum servislerini açıp tekrar dene.", "GPS is off. Turn on location services and try again."))
     }
     return suspendCancellableCoroutine { continuation ->
     val cancellation = CancellationTokenSource()
@@ -695,8 +695,8 @@ private suspend fun currentRouteLocation(context: Context): RoutePoint {
         .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellation.token)
         .addOnSuccessListener { location ->
             if (!continuation.isActive) return@addOnSuccessListener
-            if (location == null) continuation.resumeWithException(IllegalStateException("Konum alınamadı; GPS'i açıp tekrar dene."))
-            else if (System.currentTimeMillis() - location.time > 15_000L) continuation.resumeWithException(IllegalStateException("Konum güncel değil; açık alanda tekrar dene."))
+            if (location == null) continuation.resumeWithException(IllegalStateException(com.hedefit.app.ui.i18n.tr("Konum alınamadı; GPS'i açıp tekrar dene.", "Couldn't get location; turn on GPS and try again.")))
+            else if (System.currentTimeMillis() - location.time > 15_000L) continuation.resumeWithException(IllegalStateException(com.hedefit.app.ui.i18n.tr("Konum güncel değil; açık alanda tekrar dene.", "Location is stale; try again in an open area.")))
             else if (!location.hasAccuracy() || location.accuracy > 25f) continuation.resumeWithException(IllegalStateException(com.hedefit.app.ui.i18n.tr("GPS doğruluğu düşük (${location.accuracy.roundToInt()} m). Açık alanda tekrar dene.", "GPS accuracy is low (${location.accuracy.roundToInt()} m). Try again in an open area.")))
             else continuation.resume(RoutePoint(location.latitude, location.longitude, location.altitude, location.time, location.accuracy.toDouble(), location.speed.takeIf { location.hasSpeed() }?.toDouble(), location.bearing.takeIf { location.hasBearing() }?.toDouble()))
         }
@@ -799,7 +799,7 @@ private fun LocationPickerMap(center: RoutePoint, selected: RoutePoint, modifier
 
 private suspend fun geocodeRouteLocation(context: Context, query: String): RoutePoint = withContext(Dispatchers.IO) {
     val result = Geocoder(context, Locale.getDefault()).getFromLocationName(query, 1)?.firstOrNull()
-        ?: error("Konum bulunamadı. Adresi veya yer adını kontrol et.")
+        ?: error(com.hedefit.app.ui.i18n.tr("Konum bulunamadı. Adresi veya yer adını kontrol et.", "Location not found. Check the address or place name."))
     RoutePoint(result.latitude, result.longitude, 0.0, System.currentTimeMillis(), displayName = result.getAddressLine(0) ?: result.featureName.orEmpty())
 }
 

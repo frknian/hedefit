@@ -1,5 +1,7 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
+
 import androidx.compose.material.icons.filled.Check
 
 import androidx.compose.foundation.background
@@ -308,8 +310,8 @@ private fun AccentColorPicker(hue: Float, en: Boolean, onHueChange: (Float) -> U
         // Temel renkler: tema aynı ton hesabıyla (applyTheme) açık/koyu için ayarlanır.
         // Sarı, pembe, mor, turuncu, yeşil, mavi, kırmızı, turkuaz, camgöbeği, lacivert, açık yeşil, eflatun
         val presets = listOf(50f, 330f, 275f, 28f, 106f, 210f, 0f, 170f, 190f, 232f, 82f, 300f)
-        presets.chunked(6).forEach { row -> Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            row.forEach { preset ->
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp).horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            presets.forEach { preset ->
                 val selected = kotlin.math.abs(hue - preset) < 3f
                 Box(
                     Modifier.size(36.dp).clip(CircleShape)
@@ -319,7 +321,7 @@ private fun AccentColorPicker(hue: Float, en: Boolean, onHueChange: (Float) -> U
                     contentAlignment = Alignment.Center,
                 ) { if (selected) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(18.dp)) }
             }
-        } }
+        }
     }
 }
 
@@ -351,7 +353,7 @@ private fun prepareAvatar(context: android.content.Context, uri: Uri): ByteArray
         }
     } else {
         context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
-            ?: error("Görsel açılamadı")
+            ?: error(com.hedefit.app.ui.i18n.tr("Görsel açılamadı", "Couldn't open the image"))
     }
     val side = minOf(source.width, source.height)
     val square = Bitmap.createBitmap(source, (source.width - side) / 2, (source.height - side) / 2, side, side)

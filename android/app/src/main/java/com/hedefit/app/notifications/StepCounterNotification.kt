@@ -71,10 +71,12 @@ object StepCounterNotification {
             setShowBadge(false)
             description = "Günlük adım ve hedef ilerlemesi"
         })
+        // Bildirim uygulama kapalıyken de üretilir: dili doğrudan kayıtlı tercihten oku.
+        val en = context.getSharedPreferences("hedefit_preferences", Context.MODE_PRIVATE).getString("language", "tr") == "en"
         val stepsText = "%,d".format(safeSteps).replace(',', '.')
         val remaining = (safeGoal - safeSteps).coerceAtLeast(0)
         val remainingText = "%,d".format(remaining).replace(',', '.')
-        val content = "$stepsText adım | $remainingText kaldı | $safeCalories kcal"
+        val content = if (en) "$stepsText steps | $remainingText left | $safeCalories kcal" else "$stepsText adım | $remainingText kaldı | $safeCalories kcal"
         val open = PendingIntent.getActivity(context, 1210, Intent(context, com.hedefit.app.MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val walk = PendingIntent.getActivity(context, 1211, Intent(context, com.hedefit.app.MainActivity::class.java).putExtra("open_route", true), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -86,8 +88,8 @@ object StepCounterNotification {
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
             .setContentIntent(open)
-            .addAction(R.drawable.ic_notification_running, "Yürüyüş Başlat", walk)
-            .addAction(R.drawable.ic_notification_running, "Hedefit'i Aç", open)
+            .addAction(R.drawable.ic_notification_running, if (en) "Start walk" else "Yürüyüş Başlat", walk)
+            .addAction(R.drawable.ic_notification_running, if (en) "Open Hedefit" else "Hedefit'i Aç", open)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setSortKey("00_steps")

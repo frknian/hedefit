@@ -30,11 +30,11 @@ private data class WidgetOption(val key: String, val labelTr: String, val labelE
 private val PRIMARY = listOf(
     WidgetOption("steps", "Adım", "Steps", "6.842"), WidgetOption("calories", "Aktif kalori", "Active calories", "312 kcal"),
     WidgetOption("water", "Su", "Water", "1,6 L"), WidgetOption("protein", "Protein", "Protein", "84 g"),
-    WidgetOption("distance", "Mesafe", "Distance", "4,8 km"), WidgetOption("active_time", "Aktif süre", "Active time", "46 dk"),
-    WidgetOption("weight", "Kilo", "Weight", "78,0 kg"), WidgetOption("workout", "Antrenman", "Workout", "Göğüs günü"),
+    WidgetOption("distance", "Mesafe", "Distance", "4,8 km"), WidgetOption("active_time", "Aktif süre", "Active time", "46 min"),
+    WidgetOption("weight", "Kilo", "Weight", "78,0 kg"), WidgetOption("workout", "Antrenman", "Workout", "Push day"),
 )
 private val SECONDARY = listOf(
-    WidgetOption("remaining_steps", "Kalan adım", "Steps left", "1.158 kaldı"), WidgetOption("calories", "Aktif kalori", "Active calories", "312 kcal"),
+    WidgetOption("remaining_steps", "Kalan adım", "Steps left", "1,158 left"), WidgetOption("calories", "Aktif kalori", "Active calories", "312 kcal"),
     WidgetOption("distance", "Mesafe", "Distance", "4,8 km"), WidgetOption("water", "Su", "Water", "1,6 L"),
     WidgetOption("protein", "Protein", "Protein", "84 g"), WidgetOption("pace", "Tempo", "Pace", "6'12\"/km"),
 )
