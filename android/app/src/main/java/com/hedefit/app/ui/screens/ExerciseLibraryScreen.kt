@@ -1,5 +1,8 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.ui.draw.alpha
+import androidx.compose.material.icons.filled.Lock
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -37,7 +40,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }) {
+fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
     val en = language == "en"
     var query by remember { mutableStateOf("") }
     var muscle by remember { mutableStateOf("") }
@@ -66,7 +69,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                 if (loading) (if (en) "Loading…" else "Yükleniyor…") else if (en) "${items.size} movements" else "${items.size} hareket",
                 onBack = onBack,
                 backLabel = if (en) "Back" else "Geri",
-            ) { HfCircleButton(Icons.Default.Add, if (en) "Custom movement" else "Özel hareket", { showCustom = true }) }
+            ) { HfCircleButton(Icons.Default.Add, if (en) "Custom movement" else com.hedefit.app.ui.i18n.tr("Özel hareket", "Custom exercise"), { showCustom = true }) }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     query,
@@ -108,7 +111,8 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(items, key = { it.id }) { item ->
                 val isPicked = selectedForProgram.any { it.id == item.id }
-                HedefitCard(Modifier.fillMaxWidth(), onClick = { selected = item }, contentPadding = PaddingValues(12.dp)) {
+                val locked = isLocked(item)
+                HedefitCard(Modifier.fillMaxWidth().alpha(if (locked) .55f else 1f), onClick = { if (locked) onLocked(item) else selected = item }, contentPadding = PaddingValues(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         ExerciseMedia(item.imageUrls.firstOrNull(), item.name, Modifier.size(64.dp).clip(RoundedCornerShape(14.dp)))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -120,11 +124,11 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                             Text(listOf(item.level, item.equipment.ifBlank { if (en) "No equipment" else "Ekipmansız" }).filter(String::isNotBlank).joinToString(" • "), color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelMedium, maxLines = 1)
                         }
                         IconButton(
-                            onClick = { selectedForProgram = if (isPicked) selectedForProgram.filterNot { it.id == item.id } else selectedForProgram + item },
+                            onClick = { if (locked) onLocked(item) else selectedForProgram = if (isPicked) selectedForProgram.filterNot { it.id == item.id } else selectedForProgram + item },
                             modifier = Modifier.size(40.dp).background(if (isPicked) HedefitColors.Lime else HedefitColors.SurfaceHigh, CircleShape),
                         ) {
                             Icon(
-                                if (isPicked) Icons.Default.Check else Icons.Default.Add,
+                                if (locked) Icons.Default.Lock else if (isPicked) Icons.Default.Check else Icons.Default.Add,
                                 if (isPicked) (if (en) "Remove ${item.name} from selection" else "${item.name} seçimden çıkar") else (if (en) "Select ${item.name} for a new program" else "${item.name} yeni program için seç"),
                                 tint = if (isPicked) HedefitColors.OnLime else HedefitColors.TextPrimary,
                                 modifier = Modifier.size(18.dp),
@@ -201,7 +205,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                 )
                 OutlinedTextField(programName, { programName = it }, label = { Text(if (en) "Program name" else "Program adı") }, singleLine = true)
             } },
-            dismissButton = { TextButton(onClick = { showNameDialog = false }) { Text(if (en) "Cancel" else "Vazgeç") } },
+            dismissButton = { TextButton(onClick = { showNameDialog = false }) { Text(if (en) "Cancel" else com.hedefit.app.ui.i18n.tr("Vazgeç", "Cancel")) } },
             confirmButton = {
                 Button(
                     enabled = programName.trim().length >= 2,
@@ -314,14 +318,14 @@ private fun CustomExerciseDialog(onDismiss: () -> Unit, onCreate: (ExerciseCatal
     var instruction by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Özel hareket") },
+        title = { Text(com.hedefit.app.ui.i18n.tr("Özel hareket", "Custom exercise")) },
         text = { Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-            OutlinedTextField(name, { name = it }, label = { Text("Hareket adı") }, singleLine = true)
+            OutlinedTextField(name, { name = it }, label = { Text(com.hedefit.app.ui.i18n.tr("Hareket adı", "Exercise name")) }, singleLine = true)
             OutlinedTextField(muscle, { muscle = it }, label = { Text("Kas grubu") }, singleLine = true)
             OutlinedTextField(equipment, { equipment = it }, label = { Text("Ekipman") }, singleLine = true)
             OutlinedTextField(instruction, { instruction = it }, label = { Text("Uygulama notu") })
         } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Vazgeç") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(com.hedefit.app.ui.i18n.tr("Vazgeç", "Cancel")) } },
         confirmButton = { Button(enabled = name.trim().length >= 2, onClick = { onCreate(ExerciseCatalogData("custom-${UUID.randomUUID()}", name.trim(), "custom", equipment.trim(), listOf(muscle.trim().ifBlank { "Tüm Vücut" }), listOf(instruction.trim()).filter(String::isNotBlank), "custom", emptyList())) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text("Programa ekle") } },
     )
 }

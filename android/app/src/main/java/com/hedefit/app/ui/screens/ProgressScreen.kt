@@ -468,7 +468,7 @@ private fun WorkoutHistory(data: DashboardData?, en: Boolean) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (sessions.isEmpty()) Text(if (en) "Completed workouts will appear here." else "Tamamladığın antrenmanlar burada tarihleriyle görünecek.", color = HedefitColors.TextSecondary)
             sessions.forEach { session ->
-                val manualActivity = session.manualActivityKey?.let { key -> manualActivityTypes.firstOrNull { it.key == key } }
+                val manualActivity = com.hedefit.app.data.model.activityTypeFor(session.manualActivityKey)
                 val sessionPerformance = data?.exercisePerformance.orEmpty().filter { it.sessionId == session.id }
                 val sessionSets = sessionPerformance.flatMap { it.sets }
                 val sessionVolume = sessionSets.sumOf { set -> com.hedefit.app.gym.setVolume(set.weightKg, set.reps) }
@@ -592,7 +592,7 @@ private fun RouteHistory(routes: List<RouteActivityData>, en: Boolean, unitSyste
 private fun RoutePolylinePreview(route: RouteActivityData, modifier: Modifier) {
     val points = route.routePoints
     Box(modifier.background(HedefitColors.SurfaceHigh, RoundedCornerShape(18.dp)), contentAlignment = Alignment.Center) {
-        if (points.size < 2) Text("Rota önizlemesi bulunmuyor", color = HedefitColors.TextSecondary)
+        if (points.size < 2) Text(com.hedefit.app.ui.i18n.tr("Rota önizlemesi bulunmuyor", "No route preview"), color = HedefitColors.TextSecondary)
         else Canvas(Modifier.fillMaxSize().padding(18.dp)) {
             val minLat = points.minOf { it.latitude }; val maxLat = points.maxOf { it.latitude }
             val minLng = points.minOf { it.longitude }; val maxLng = points.maxOf { it.longitude }

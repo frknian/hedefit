@@ -15,6 +15,8 @@ import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +43,9 @@ import com.hedefit.app.ui.screens.ProgressScreen
 import com.hedefit.app.ui.screens.WorkoutPlanScreen
 import com.hedefit.app.ui.screens.ProfileSettingsScreen
 import com.hedefit.app.ui.screens.ProfileQuestionnaireScreen
+import com.hedefit.app.ui.state.limits
+import com.hedefit.app.ui.i18n.withLocalizedExercises
+import com.hedefit.app.ui.state.canUseExercise
 import com.hedefit.app.ui.screens.NotificationCalendarScreen
 import com.hedefit.app.ui.screens.FrozenAccountScreen
 import com.hedefit.app.ui.screens.WorkoutCalendarScreen
@@ -73,7 +78,10 @@ import com.hedefit.app.gym.ActiveWorkoutStore
 import com.hedefit.app.gym.WorkoutSummary
 import com.hedefit.app.gym.detectPersonalRecord
 
-private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables }
+private fun coreQuestionsAnswered(answers: List<String>) =
+    com.hedefit.app.ui.screens.CORE_QUESTION_INDICES.all { answers.getOrNull(it)?.isNotBlank() == true }
+
+private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio }
 
 /** Programdaki Türkçe bölge adını atlasın birincil kas filtresine çevirir. */
 private fun replacementMuscle(area: String): String {
@@ -106,6 +114,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         mainViewModel.syncHealthIfConnected()
+        // Misafir e-posta bağladıysa, doğrulama bağlantısından dönüşte hesabı kalıcı say.
+        mainViewModel.refreshGuestStatus()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,6 +129,7 @@ class MainActivity : ComponentActivity() {
             val adMobManager = remember { AdMobManager(this@MainActivity) }
             val activeWorkoutStore = remember { ActiveWorkoutStore(this@MainActivity) }
             var preferences by remember { mutableStateOf(preferencesStore.read()) }
+            com.hedefit.app.ui.i18n.AppLang.en = preferences.language == "en"
             var adsAllowed by remember { mutableStateOf(false) }
 
             fun updatePreferences(next: com.hedefit.app.ui.settings.AppPreferences) {
@@ -145,7 +156,12 @@ class MainActivity : ComponentActivity() {
                 mainViewModel.onActivityRecognitionPermissionChanged()
             }
             HedefitTheme(darkTheme = preferences.darkTheme, accentHue = preferences.accentHue) {
-                val uiState by mainViewModel.state.collectAsState()
+                val rawUiState by mainViewModel.state.collectAsState()
+                // Hareket adları ekranda uygulama dilinde gösterilir (kayıtlı veri değişmez).
+                LaunchedEffect(rawUiState.dashboard != null) { mainViewModel.ensureExerciseNames() }
+                val uiState = remember(rawUiState, preferences.language) {
+                    rawUiState.dashboard?.let { rawUiState.copy(dashboard = it.withLocalizedExercises(rawUiState.exerciseNames)) } ?: rawUiState
+                }
                 var selected by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_workout", false) == true -> AppDestination.Workout; intent?.getBooleanExtra("open_nutrition", false) == true -> AppDestination.Nutrition; else -> AppDestination.Home }) }
                 val tabHistory = remember { mutableStateListOf<AppDestination>() }
                 var lastTab by remember { mutableStateOf(selected) }
@@ -163,6 +179,18 @@ class MainActivity : ComponentActivity() {
                 var workoutSummary by remember { mutableStateOf<WorkoutSummary?>(null) }
                 var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
                 var googleCredentialBusy by remember { mutableStateOf(false) }
+                var offerCardioFinisher by remember { mutableStateOf(false) }
+                // Kutlamalar sırayla gösterilir: antrenman → seviye → rozet.
+                val celebrationQueue = remember { mutableStateListOf<com.hedefit.app.ui.components.CelebrationEvent>() }
+                var floatingXp by remember { mutableStateOf<Pair<Int, Long>?>(null) }
+                val gamificationSnapshot = remember(uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl, preferences.weeklyWorkoutGoal, preferences.language) {
+                    uiState.dashboard?.let { com.hedefit.app.ui.components.gamificationSnapshotOf(it, preferences.stepGoal, preferences.waterGoalMl, preferences.weeklyWorkoutGoal) }
+                }
+                com.hedefit.app.ui.components.CelebrationWatcher(
+                    snapshot = gamificationSnapshot,
+                    onCelebrate = { celebrationQueue.add(it) },
+                    onQuestCompleted = { xp -> floatingXp = xp to System.nanoTime() },
+                )
                 var showWelcomeGuide by remember { mutableStateOf(!preferences.welcomeGuideSeen) }
                 var openMealComposer by remember { mutableStateOf(false) }
                 var healthAutoSynced by rememberSaveable { mutableStateOf(false) }
@@ -171,14 +199,23 @@ class MainActivity : ComponentActivity() {
                 val googleSignIn = remember { GoogleSignInManager(this@MainActivity) }
                 val lifecycleOwner = LocalLifecycleOwner.current
 
-                LaunchedEffect(uiState.dashboard?.profile?.id) {
+                // Sıra: önce yaş/boy/kilo (PersonalDetails penceresi), ardından 7 soruluk test, en son tanıtım.
+                val detailsComplete = uiState.dashboard?.profile?.let { it.heightCm != null && it.weightKg != null && it.age != null } == true
+                LaunchedEffect(uiState.dashboard?.profile?.id, detailsComplete) {
                     val profile = uiState.dashboard?.profile ?: return@LaunchedEffect
-                    // İlk program yalnız hızlı başlangıç cevaplarıyla değil, 15 soruluk
-                    // profil değerlendirmesiyle hazırlanır. Böylece Atlas seçimleri
-                    // ekipman, sakatlık, süre ve hedefin tamamına dayanır.
-                    if (profile.historyAnswers.count { it.isNotBlank() } < 15) utilityPage = UtilityPage.Questionnaire
+                    if (!detailsComplete) return@LaunchedEffect
+                    // İlk program 7 belirleyici soruyla hazırlanır: hedef, seviye, gün,
+                    // süre, ortam, ekipman ve sakatlık. Eksikse test otomatik açılır.
+                    if (!coreQuestionsAnswered(profile.historyAnswers)) utilityPage = UtilityPage.Questionnaire
                 }
                 LaunchedEffect(Unit) { mainViewModel.checkHealthConnect() }
+                // Sekme geçişi reklamı (seyrek): her 6 sekme değişiminde bir aday olur;
+                // AdMobManager ayrıca günde en fazla 3 ve arada en az 10 dakika şartı koyar.
+                var tabSwitches by rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+                LaunchedEffect(selected) {
+                    tabSwitches++
+                    if (tabSwitches > 1 && (tabSwitches - 1) % 6 == 0 && uiState.limits().interstitialAds) adMobManager.showAtNaturalTransition(true)
+                }
                 LaunchedEffect(lifecycleOwner, uiState.dashboard?.profile?.id) {
                     lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                         while (isActive) {
@@ -187,8 +224,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                LaunchedEffect(uiState.healthConnected, uiState.stepSource) {
-                    if (!uiState.healthConnected && uiState.stepSource == StepSource.UNAVAILABLE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !activityRecognitionAsked) {
+                // Adım izni ilk açılışta değil, kullanıcı testi bitirip tanıtımı gördükten
+                // sonra ana ekrandayken istenir: güven oluşmadan izin istemek reddi artırır.
+                val onboardingDone = uiState.auth is AuthState.SignedIn && uiState.dashboard != null && utilityPage == UtilityPage.Main &&
+                    preferences.welcomeGuideSeen && coreQuestionsAnswered(uiState.dashboard?.profile?.historyAnswers.orEmpty())
+                LaunchedEffect(uiState.healthConnected, uiState.stepSource, onboardingDone) {
+                    if (onboardingDone && !uiState.healthConnected && uiState.stepSource == StepSource.UNAVAILABLE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !activityRecognitionAsked) {
                         activityRecognitionAsked = true
                         this@MainActivity.getSharedPreferences("hedefit-step-permission", android.content.Context.MODE_PRIVATE).edit().putBoolean("activity_recognition_asked", true).apply()
                         activityRecognitionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
@@ -246,6 +287,7 @@ class MainActivity : ComponentActivity() {
                         onSignUp = mainViewModel::signUp,
                         onCheckUsername = mainViewModel::checkUsername,
                         onClearMessage = mainViewModel::clearAuthMessage,
+                        onStartAsGuest = mainViewModel::startAsGuest,
                         onGoogleSignIn = { legalAcceptance ->
                             if (!googleCredentialBusy && !uiState.authBusy) scope.launch {
                                 googleCredentialBusy = true
@@ -254,7 +296,7 @@ class MainActivity : ComponentActivity() {
                                         mainViewModel.signInWithGoogle(credential.idToken, credential.rawNonce, legalAcceptance)
                                     }
                                     .onFailure { error ->
-                                        mainViewModel.reportAuthError(error.message ?: "Google ile giriş yapılamadı.")
+                                        mainViewModel.reportAuthError(error.message ?: com.hedefit.app.ui.i18n.tr("Google ile giriş yapılamadı.", "Google sign-in failed."))
                                     }
                                 googleCredentialBusy = false
                             }
@@ -281,11 +323,27 @@ class MainActivity : ComponentActivity() {
                             val history = uiState.dashboard?.exercisePerformance.orEmpty()
                             val prs = sets.groupBy { it.exerciseId }.mapNotNull { (_, exerciseSets) -> detectPersonalRecord(exerciseSets.first().exerciseName, exerciseSets, history) }
                             val areas = (activeWorkoutExercises ?: uiState.dashboard?.workouts.orEmpty()).associate { it.id to it.area }
-                            workoutSummary = WorkoutSummary(uiState.dashboard?.workoutPrograms?.firstOrNull { it.isActive }?.name ?: "Antrenman", seconds, calories, sets, prs, areas)
+                            workoutSummary = WorkoutSummary(uiState.dashboard?.workoutPrograms?.firstOrNull { it.isActive }.let { com.hedefit.app.ui.i18n.localizedProgramName(it?.name, it?.source) }, seconds, calories, sets, prs, areas)
+                            // Antrenman bitişi kutlaması. Seri: bugün henüz aktif değilse bu antrenmanla bir artar.
+                            val snap = gamificationSnapshot
+                            val todayActive = snap?.habitWeek?.firstOrNull { it.today }?.active == true
+                            val streak = (snap?.streakDays ?: 0) + if (todayActive) 0 else 1
+                            val xpGain = 40.coerceAtMost(((snap?.dailyXpCap ?: 100) - (snap?.dailyQuests?.filter { it.completed }?.sumOf { it.xp } ?: 0)).coerceAtLeast(0))
+                            celebrationQueue.add(0, com.hedefit.app.ui.components.CelebrationEvent(
+                                kind = com.hedefit.app.ui.components.CelebrationKind.Workout,
+                                title = if (prs.isNotEmpty()) "Yeni rekor! 🏆" else com.hedefit.app.ui.i18n.tr("Antrenman tamam!", "Workout done!"),
+                                subtitle = if (prs.isNotEmpty()) prs.joinToString { it.exerciseName } + com.hedefit.app.ui.i18n.tr(" için kişisel rekor kırdın.", ": new personal record.") else com.hedefit.app.ui.i18n.tr("${sets.size} set, ${seconds / 60} dakika. Bugün kendine söz verdin ve tuttun.", "${sets.size} sets, ${seconds / 60} minutes. You made yourself a promise and kept it."),
+                                xpGained = xpGain,
+                                levelProgressFrom = snap?.level?.progress ?: 0f,
+                                levelProgressTo = snap?.level?.let { ((it.currentXp + xpGain).toFloat() / it.nextLevelXp.coerceAtLeast(1)).coerceAtMost(1f) } ?: 0f,
+                                level = snap?.level?.level,
+                                streakDays = streak,
+                                emoji = if (prs.isNotEmpty()) "🏆" else "💪",
+                            ))
                             mainViewModel.completeDetailedWorkout(seconds, calories, sets, feedback, activeWorkoutExercises)
                             activeWorkout = false
                             activeWorkoutExercises = null
-                            adMobManager.showAtNaturalTransition(uiState.dashboard?.profile?.isPremium != true)
+                            adMobManager.showAtNaturalTransition(uiState.limits().interstitialAds)
                         },
                         onRequestReplacementCandidate = { id, reason, area, cb ->
                             mainViewModel.requestExerciseReplacement(id, reason, activeWorkoutExercises ?: uiState.dashboard?.workouts.orEmpty(), discomfortArea = area, locale = preferences.language, onComplete = cb)
@@ -301,6 +359,7 @@ class MainActivity : ComponentActivity() {
                 } else if (workoutSummary != null) {
                     WorkoutSummaryScreen(requireNotNull(workoutSummary), onDone = {
                         workoutSummary = null
+                        if (com.hedefit.app.ui.screens.cardioFinisherEnabled(this@MainActivity)) offerCardioFinisher = true
                         com.hedefit.app.growth.AppGrowth.maybeRequestReview(this@MainActivity, uiState.dashboard?.sessions?.size ?: 0)
                     }, language = preferences.language)
                 } else if (utilityPage != UtilityPage.Main && uiState.dashboard != null) {
@@ -321,11 +380,13 @@ class MainActivity : ComponentActivity() {
                             onBack = { utilityPage = UtilityPage.Main },
                             onPreferencesChange = ::updatePreferences,
                             onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
+                            isGuest = uiState.isGuest,
+                            onSaveAccount = { mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.Manual) },
                             onOpenNotifications = { utilityPage = UtilityPage.Notifications },
                             onOpenWearables = { utilityPage = UtilityPage.Wearables },
                             onAddShortcut = { type ->
                                 val accepted = if (type.startsWith("widget_")) HedefitShortcuts.requestWidget(this@MainActivity, type) else HedefitShortcuts.request(this@MainActivity, type)
-                                if (!accepted) Toast.makeText(this@MainActivity, "Bu başlatıcı ana ekrana eklemeyi desteklemiyor.", Toast.LENGTH_LONG).show()
+                                if (!accepted) Toast.makeText(this@MainActivity, com.hedefit.app.ui.i18n.tr("Bu başlatıcı ana ekrana eklemeyi desteklemiyor.", "This launcher doesn't support adding to the home screen."), Toast.LENGTH_LONG).show()
                             },
                             onConnectHealth = {
                                 if (uiState.healthConnected) mainViewModel.syncHealthConnect()
@@ -381,6 +442,8 @@ class MainActivity : ComponentActivity() {
                             onBack = { utilityPage = UtilityPage.Main },
                             onSearch = { search, muscle, equipment, level, environment, muscleRole, force, mechanic, category -> mainViewModel.loadExerciseLibrary(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, preferences.language) },
                             onUse = mainViewModel::useExerciseFromLibrary,
+                            isLocked = { item -> !uiState.limits().canUseExercise(item) },
+                            onLocked = { item -> mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.Exercise) { it.canUseExercise(item) } },
                             onStart = { item ->
                                 val exercise = com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, item.primaryMuscles.firstOrNull() ?: "Tüm Vücut", 3, "8–12", 75)
                                 activeWorkoutExercises = listOf(exercise)
@@ -400,7 +463,7 @@ class MainActivity : ComponentActivity() {
                             onBack = { utilityPage = UtilityPage.Main },
                             onCompleted = { snapshot, activityType, title ->
                                 mainViewModel.saveRoute(snapshot, activityType, title)
-                                adMobManager.showAtNaturalTransition(uiState.dashboard?.profile?.isPremium != true)
+                                adMobManager.showAtNaturalTransition(uiState.limits().interstitialAds)
                             },
                             routes = dashboard.routeActivities,
                             onDeleteRoute = mainViewModel::deleteRoute,
@@ -466,6 +529,16 @@ class MainActivity : ComponentActivity() {
                             onBack = { utilityPage = UtilityPage.Main },
                             onSave = { input -> mainViewModel.recordManualActivity(input, preferences.language) { utilityPage = UtilityPage.Main } },
                         )
+                        UtilityPage.Cardio -> com.hedefit.app.ui.screens.CardioScreen(
+                            weightKg = dashboard.profile.weightKg,
+                            saving = uiState.workoutSaving,
+                            programsUnlocked = uiState.limits().cardioPrograms,
+                            gameUnlocked = uiState.limits().cardioGame,
+                            onLockedPrograms = { mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.CardioPrograms) { it.cardioPrograms } },
+                            onLockedGame = { mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.CardioGame) { it.cardioGame } },
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onSave = { machine, seconds, kcal, summary -> mainViewModel.recordCardioSession(machine, seconds, kcal, summary) { utilityPage = UtilityPage.Main } },
+                        )
                         UtilityPage.Main -> Unit
                     }
                 } else {
@@ -495,7 +568,7 @@ class MainActivity : ComponentActivity() {
                                 onAddWater = mainViewModel::addWater,
                                 language = preferences.language,
                                 stepSource = uiState.stepSource,
-                                showAds = adsAllowed && uiState.dashboard?.profile?.isPremium != true,
+                                showAds = adsAllowed && uiState.limits().bannerAds,
                                 onOpenCoach = { selected = AppDestination.Coach },
                                 onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onSaveSleep = mainViewModel::saveSleep,
@@ -503,6 +576,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenProgress = { selected = AppDestination.Progress },
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenWearables = { utilityPage = UtilityPage.Wearables },
+                                onOpenCardio = { utilityPage = UtilityPage.Cardio },
                                 quickActions = preferences.homeQuickActions,
                                 onQuickActionsChange = { updatePreferences(preferences.copy(homeQuickActions = it)) },
                             )
@@ -510,6 +584,7 @@ class MainActivity : ComponentActivity() {
                                 if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
                             }, hasActiveWorkout = activeWorkoutStore.hasRecoverable(), onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
+                                onOpenCardio = { utilityPage = UtilityPage.Cardio },
                                 onOpenRoute = { utilityPage = UtilityPage.Route },
                                 onGenerateRegional = { muscle, label, connected -> mainViewModel.generateRegionalPlan(muscle, label, connected, preferences.language) },
                                 onLoadRegional = { muscle -> mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", category = "strength", locale = preferences.language) },
@@ -648,7 +723,8 @@ class MainActivity : ComponentActivity() {
                         } }
                     }
                 }
-                if (showWelcomeGuide && uiState.auth is AuthState.SignedIn && uiState.dashboard != null) WelcomeGuideDialog(
+                // Tanıtım, soru testi bittikten sonra ana ekranda gösterilir.
+                if (showWelcomeGuide && uiState.auth is AuthState.SignedIn && uiState.dashboard != null && utilityPage == UtilityPage.Main && coreQuestionsAnswered(uiState.dashboard?.profile?.historyAnswers.orEmpty()) && uiState.dashboard?.profile?.heightCm != null && uiState.dashboard?.profile?.weightKg != null) WelcomeGuideDialog(
                     language = preferences.language,
                     coachName = preferences.coachName.ifBlank { if (preferences.language == "en") "Fit Coach" else "FitKoç" },
                     onAction = { action ->
@@ -674,16 +750,16 @@ class MainActivity : ComponentActivity() {
                     },
                 )
                 val userProfile = uiState.dashboard?.profile
-                if (uiState.auth is AuthState.SignedIn && userProfile != null && userProfile.username.isNullOrBlank() && userProfile.heightCm != null && userProfile.weightKg != null && userProfile.age != null) {
+                if (uiState.auth is AuthState.SignedIn && !uiState.isGuest && userProfile != null && userProfile.username.isNullOrBlank() && userProfile.heightCm != null && userProfile.weightKg != null && userProfile.age != null) {
                     com.hedefit.app.ui.screens.UsernameSetupDialog(onCheck = mainViewModel::checkUsername, onSave = mainViewModel::saveUsername)
                 }
-                if (uiState.auth is AuthState.SignedIn && userProfile != null && (userProfile.heightCm == null || userProfile.weightKg == null || userProfile.age == null)) {
-                    PersonalDetailsOnboardingDialog(
+                if (uiState.auth is AuthState.SignedIn && utilityPage == UtilityPage.Main && userProfile != null && (userProfile.heightCm == null || userProfile.weightKg == null || userProfile.age == null)) {
+                    com.hedefit.app.ui.screens.BodyProfileScreen(
                         initialAge = userProfile.age,
                         initialGender = userProfile.gender,
                         initialHeightCm = userProfile.heightCm,
                         initialWeightKg = userProfile.weightKg,
-                        isSaving = uiState.profileSaving,
+                        saving = uiState.profileSaving,
                         onSave = { age, gender, heightCm, weightKg ->
                             mainViewModel.saveProfile(
                                 com.hedefit.app.data.model.ProfileUpdateData(
@@ -701,8 +777,53 @@ class MainActivity : ComponentActivity() {
                                 )
                             )
                         },
-                        language = preferences.language,
                     )
+                }
+
+                if (offerCardioFinisher) androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { offerCardioFinisher = false },
+                    title = { androidx.compose.material3.Text(com.hedefit.app.ui.i18n.tr("Kardiyoyla bitirelim mi? 🏃", "Finish with some cardio? 🏃")) },
+                    text = { androidx.compose.material3.Text(com.hedefit.app.ui.i18n.tr("Kuvvet antrenmanından sonra 10-15 dakika hafif kardiyo toparlanmaya ve yakıma katkı sağlar.", "10-15 minutes of light cardio after strength training helps recovery and burn.")) },
+                    confirmButton = { androidx.compose.material3.TextButton(onClick = { offerCardioFinisher = false; utilityPage = UtilityPage.Cardio }) { androidx.compose.material3.Text(com.hedefit.app.ui.i18n.tr("Kardiyoya geç", "Go to cardio")) } },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { offerCardioFinisher = false }) { androidx.compose.material3.Text(com.hedefit.app.ui.i18n.tr("Bugün değil", "Not today")) } },
+                )
+                // Günlük görev kapanınca ekranın üstünden süzülen +XP.
+                floatingXp?.let { (xp, key) ->
+                    Box(Modifier.fillMaxSize().padding(top = 96.dp), contentAlignment = Alignment.TopCenter) {
+                        com.hedefit.app.ui.components.FloatingXp(xp, key)
+                    }
+                }
+                com.hedefit.app.ui.components.CelebrationOverlay(
+                    event = celebrationQueue.firstOrNull(),
+                    onDismiss = {
+                        val shown = celebrationQueue.removeFirstOrNull()
+                        // İlk antrenmandan sonra misafire hesabını kaydetmeyi öner: emek verdiği an.
+                        if (shown?.kind == com.hedefit.app.ui.components.CelebrationKind.Workout && celebrationQueue.isEmpty()) {
+                            mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.WorkoutCompleted)
+                        }
+                    },
+                )
+                uiState.saveAccountPrompt?.let { trigger ->
+                    com.hedefit.app.ui.screens.SaveAccountSheet(
+                        trigger = trigger,
+                        busy = uiState.saveAccountBusy || googleCredentialBusy,
+                        message = uiState.saveAccountMessage,
+                        onGoogle = {
+                            if (!googleCredentialBusy) scope.launch {
+                                googleCredentialBusy = true
+                                runCatching { googleSignIn.requestCredential() }
+                                    .onSuccess { credential -> mainViewModel.linkGuestGoogle(credential.idToken, credential.rawNonce) }
+                                    .onFailure { error -> bannerMessage = error.message ?: com.hedefit.app.ui.i18n.tr("Google hesabı bağlanamadı.", "Couldn't link the Google account.") }
+                                googleCredentialBusy = false
+                            }
+                        },
+                        onEmail = mainViewModel::linkGuestEmail,
+                        onDismiss = mainViewModel::dismissSaveAccountPrompt,
+                        lockedFeature = uiState.lockedFeature,
+                    )
+                }
+                if (uiState.saveAccountPrompt == null) uiState.lockedFeature?.let { feature ->
+                    com.hedefit.app.ui.screens.PremiumLockSheet(feature, onDismiss = mainViewModel::dismissLockedFeature)
                 }
 
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {

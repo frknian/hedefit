@@ -175,7 +175,7 @@ fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeigh
                         GoalDetailRow(if (en) "Carbs / Fat" else "Karb / Yağ", "${data.nutritionGoal.carbs} g / ${data.nutritionGoal.fat} g")
                         GoalDetailRow(if (en) "Steps" else "Adım", "%,d".format(stepGoal).replace(',', '.'))
                         GoalDetailRow(if (en) "Water" else "Su", MeasurementUnits.formatWater(waterGoalMl, unitSystem))
-                        GoalDetailRow(if (en) "Goal type" else "Hedef türü", data.profile.goal.ifBlank { "—" })
+                        GoalDetailRow(if (en) "Goal type" else "Hedef türü", data.profile.goal.substringBefore(" | ").let { g -> when (g) { "Kilo verme" -> com.hedefit.app.ui.i18n.tr("Kilo verme", "Lose weight"); "Kilo alma" -> com.hedefit.app.ui.i18n.tr("Kilo alma", "Gain weight"); "Kas kazanma", "Kas alma" -> com.hedefit.app.ui.i18n.tr("Kas kazanma", "Build muscle"); "Formu koruma" -> com.hedefit.app.ui.i18n.tr("Formu koruma", "Stay in shape"); else -> g.ifBlank { "—" } } })
                     }
                 }
             }

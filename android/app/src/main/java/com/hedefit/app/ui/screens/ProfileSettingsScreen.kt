@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -83,6 +84,8 @@ fun ProfileSettingsScreen(
     onRateApp: () -> Unit = {},
     onShareApp: (String) -> Unit = {},
     defaultShareMessage: String = "",
+    isGuest: Boolean = false,
+    onSaveAccount: () -> Unit = {},
 ) {
     val en = preferences.language == "en"
     var showShare by remember { mutableStateOf(false) }
@@ -133,12 +136,24 @@ fun ProfileSettingsScreen(
                                 ) { Icon(Icons.Default.AddAPhoto, if (en) "Change profile photo" else "Profil fotoğrafını değiştir", tint = HedefitColors.OnLime, modifier = Modifier.size(15.dp)) }
                             }
                             Column(Modifier.weight(1f)) {
-                                Text(name.ifBlank { if (en) "Athlete" else "Sporcu" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                                Text(com.hedefit.app.ui.i18n.localizedDisplayName(name), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
                                 Text(email, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                                 if (avatarUploading) Text(if (en) "Uploading photo…" else "Fotoğraf yükleniyor…", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium)
                             }
                         }
                         avatarError?.let { Text(it, color = HedefitColors.Coral, style = MaterialTheme.typography.bodySmall) }
+                    }
+                }
+            }
+            if (isGuest) item {
+                Surface(onClick = onSaveAccount, color = HedefitColors.Lime.copy(alpha = .14f), shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth()) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("🛡️", fontSize = 26.sp)
+                        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                            Text(if (en) "Save your account" else "Hesabını kaydet", color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(if (en) "You're a guest. Save to keep your progress on any device." else "Misafir olarak kullanıyorsun. İlerlemen kaybolmasın diye hesabını kaydet.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text("›", color = HedefitColors.Lime, fontSize = 26.sp)
                     }
                 }
             }
@@ -172,7 +187,7 @@ fun ProfileSettingsScreen(
                 }
             }
             item {
-                SettingsRow(Icons.Default.Tune, if (en) "Refresh your goal and program" else "Hedef ve programını yenile", if (en) "Answer the 15 questions again" else "15 soruyu yeniden cevapla", onOpenQuestionnaire)
+                SettingsRow(Icons.Default.Tune, if (en) "Refresh your goal and program" else "Hedef ve programını yenile", if (en) "Answer the 7 questions again" else "7 soruyu yeniden cevapla", onOpenQuestionnaire)
             }
             item { SettingsSectionTitle(if (en) "Application" else "Uygulama") }
             item {
@@ -356,7 +371,7 @@ private fun ShortcutSettingsDialog(en: Boolean, onDismiss: () -> Unit, onSelect:
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { Text(if (en) "Shortcuts" else "Kısayollar", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium) }
             listOf(
-                Triple("route", "Hedefit Rota", Icons.Default.Route),
+                Triple("route", com.hedefit.app.ui.i18n.tr("Hedefit Rota", "Hedefit Route"), Icons.Default.Route),
                 Triple("workout", if (en) "Workout" else "Antrenman", Icons.Default.FitnessCenter),
                 Triple("activity", if (en) "Log a sport" else "Spor aktivitesi ekle", Icons.Default.Add),
                 Triple("nutrition", if (en) "Add meal" else "Öğün ekle", Icons.Default.Restaurant),

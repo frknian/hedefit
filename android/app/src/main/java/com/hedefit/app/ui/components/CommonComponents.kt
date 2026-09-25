@@ -85,7 +85,7 @@ val CardRadius = 22.dp
 fun FitCoachRobotAvatar(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.fit_coach_robot),
-        contentDescription = "Fit Koç spor robotu",
+        contentDescription = com.hedefit.app.ui.i18n.tr("Fit Koç spor robotu", "Fit Coach robot"),
         modifier = modifier,
         contentScale = ContentScale.Fit,
     )
@@ -389,11 +389,20 @@ fun ProgressRing(
     color: Color = HedefitColors.Lime,
     center: @Composable BoxScope.() -> Unit,
 ) {
+    // Açılışta 0'dan dolarak gelir, sonraki değişimlerde de yumuşakça ilerler.
+    val started = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { started.value = true }
+    val reduced = rememberReducedMotion()
+    val animated = androidx.compose.animation.core.animateFloatAsState(
+        if (started.value) progress.coerceIn(0f, 1f) else 0f,
+        androidx.compose.animation.core.tween(if (reduced) 0 else 900),
+        label = "progressRing",
+    ).value
     Box(modifier, contentAlignment = Alignment.Center) {
         val track = HedefitColors.SurfaceSoft
         Canvas(Modifier.fillMaxSize()) {
             drawArc(track, -90f, 360f, false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
-            drawArc(color, -90f, 360f * progress.coerceIn(0f, 1f), false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
+            drawArc(color, -90f, 360f * animated, false, style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round))
         }
         center()
     }
@@ -440,6 +449,10 @@ fun Sparkline(
     color: Color = HedefitColors.Lime,
     showGrid: Boolean = false,
 ) {
+    // Çizgi soldan sağa çizilerek gelir; veri değişince yeniden çizilir.
+    val reduced = rememberReducedMotion()
+    val draw = androidx.compose.runtime.remember(values) { androidx.compose.animation.core.Animatable(if (reduced) 1f else 0f) }
+    androidx.compose.runtime.LaunchedEffect(values) { draw.animateTo(1f, androidx.compose.animation.core.tween(1000)) }
     Canvas(modifier) {
         if (showGrid) {
             repeat(4) { index ->
@@ -457,7 +470,11 @@ fun Sparkline(
             val y = size.height - ((value - min) / range) * (size.height * .8f) - size.height * .1f
             if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
         }
-        drawPath(path, color, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+        val measure = androidx.compose.ui.graphics.PathMeasure().apply { setPath(path, false) }
+        val partial = Path()
+        measure.getSegment(0f, measure.length * draw.value, partial, true)
+        drawPath(partial, color, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+        if (draw.value < 1f) return@Canvas
         val last = values.last()
         val y = size.height - ((last - min) / range) * (size.height * .8f) - size.height * .1f
         drawCircle(color, 5.dp.toPx(), Offset(size.width, y))

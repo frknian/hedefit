@@ -1,5 +1,6 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import android.app.Activity
 import android.content.Context
 import android.os.Build
@@ -183,6 +184,7 @@ fun WorkoutPlanScreen(
     onOpenScanner: () -> Unit,
     onOpenLibrary: () -> Unit,
     onOpenActivityLog: () -> Unit,
+    onOpenCardio: () -> Unit = {},
     onOpenRoute: () -> Unit,
     onGenerateRegional: (String, String, Pair<String, String>?) -> Unit,
     onLoadRegional: (String) -> Unit,
@@ -348,6 +350,7 @@ fun WorkoutPlanScreen(
             item { HfSectionHeader(if (en) "Tools" else "Araçlar") }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    HfActionTile(androidx.compose.material.icons.Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Coral, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower • live speed & incline" else "Koşu bandı, bisiklet, kürek • canlı hız ve eğim", onOpenCardio, Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.MenuBook, HedefitColors.Lime, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary, Modifier.weight(1f).fillMaxHeight())
                         HfActionTile(Icons.Default.AutoAwesome, HedefitColors.Warning, if (en) "New program" else "Program oluştur", if (en) "AI, templates or custom" else "AI, şablon veya kendin", { page = "hub" }, Modifier.weight(1f).fillMaxHeight())
@@ -485,7 +488,7 @@ fun WorkoutPlanScreen(
 }
 
 private fun programDisplayName(program: WorkoutProgramData, en: Boolean) =
-    if (program.source == "assessment") (if (en) "Fit Coach Program" else "Fit Koç Programı") else program.name
+    com.hedefit.app.ui.i18n.localizedProgramName(program.name, program.source)
 
 @Composable
 private fun EditableProgramRow(
@@ -536,7 +539,7 @@ private fun WorkoutExerciseEditorDialog(exercise: WorkoutExerciseData, en: Boole
     val restError = if (submitted) validateWorkoutRest(rest) else null
     AlertDialog(onDismissRequest = onDismiss, title = { Text(exercise.name) }, text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedTextField(sets, { sets = it.filter(Char::isDigit).take(2) }, label = { Text(if (en) "Sets" else "Set") }, singleLine = true, isError = setsError != null, supportingText = setsError?.let { ({ Text(if (en) "Sets must be between 1 and 10." else it) }) })
-        OutlinedTextField(reps, { reps = it.take(12) }, label = { Text(if (en) "Reps" else "Tekrar") }, singleLine = true, isError = repsError != null, supportingText = repsError?.let { ({ Text(if (en) "Enter a repetition target." else it) }) })
+        OutlinedTextField(reps, { reps = it.take(12) }, label = { Text(if (en) "Reps" else com.hedefit.app.ui.i18n.tr("Tekrar", "Reps")) }, singleLine = true, isError = repsError != null, supportingText = repsError?.let { ({ Text(if (en) "Enter a repetition target." else it) }) })
         OutlinedTextField(rest, { rest = it.filter(Char::isDigit).take(3) }, label = { Text(if (en) "Rest (seconds)" else "Dinlenme (saniye)") }, singleLine = true, isError = restError != null, supportingText = restError?.let { ({ Text(if (en) "Rest must be between 15 and 300 seconds." else it) }) })
         OutlinedTextField(targetWeight, { targetWeight = it.filter { char -> char.isDigit() || char == '.' || char == ',' }.take(7) }, label = { Text(if (en) "Target weight (kg)" else "Hedef ağırlık (kg)") }, singleLine = true)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -550,7 +553,7 @@ private fun WorkoutExerciseEditorDialog(exercise: WorkoutExerciseData, en: Boole
         if (validateWorkoutSets(sets) == null && validateWorkoutReps(reps) == null && validateWorkoutRest(rest) == null) {
             onSave(exercise.copy(sets = requireNotNull(sets.toIntOrNull()), reps = reps.trim(), restSeconds = requireNotNull(rest.toIntOrNull()), targetWeightKg = targetWeight.replace(',', '.').toDoubleOrNull()?.takeIf { it in 0.0..1_000.0 }))
         }
-    }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (en) "Save" else "Kaydet") } })
+    }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (en) "Save" else com.hedefit.app.ui.i18n.tr("Kaydet", "Save")) } })
 }
 
 @Composable
@@ -1053,7 +1056,7 @@ private fun ActiveTopBar(onBack: () -> Unit, onFinish: () -> Unit, paused: Boole
     Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Minimize" else "Küçült") }
         Column(Modifier.weight(1f)) { Text(if (en) "Active Workout" else "Aktif Antrenman", style = MaterialTheme.typography.titleLarge); Text(formatWorkoutClock(elapsedSeconds), color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium) }
-        IconButton(onClick = onPause) { Icon(if (paused) Icons.Default.PlayArrow else Icons.Default.Pause, if (paused) (if (en) "Resume" else "Devam et") else (if (en) "Pause" else "Duraklat"), tint = HedefitColors.Lime) }
+        IconButton(onClick = onPause) { Icon(if (paused) Icons.Default.PlayArrow else Icons.Default.Pause, if (paused) (if (en) "Resume" else "Devam et") else (if (en) "Pause" else com.hedefit.app.ui.i18n.tr("Duraklat", "Pause")), tint = HedefitColors.Lime) }
         TextButton(onClick = onFinish) { Text(if (en) "Finish" else "Bitir", color = HedefitColors.Coral) }
     }
 }
@@ -1072,7 +1075,7 @@ private fun ActiveWorkoutHero(currentSet: Int, exercise: WorkoutExerciseData?, m
             )
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(HedefitColors.Background.copy(alpha = .18f), Color.Transparent, HedefitColors.Background.copy(alpha = .94f)))))
             Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
-                Text(exercise?.name ?: "Program yüklenemedi", style = MaterialTheme.typography.headlineLarge)
+                Text(exercise?.name ?: com.hedefit.app.ui.i18n.tr("Program yüklenemedi", "Program couldn't load"), style = MaterialTheme.typography.headlineLarge)
                 Text("$currentSet / ${exercise?.sets ?: 4} set", color = HedefitColors.Lime, style = MaterialTheme.typography.headlineSmall)
             }
         }
@@ -1114,14 +1117,14 @@ private fun ActiveControls(
 ) {
     var showPlateCalculator by remember { mutableStateOf(false) }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Hareket ${exerciseIndex + 1}/$exerciseCount • Set $currentSet/$totalSets", color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge)
+        Text(com.hedefit.app.ui.i18n.tr("Hareket ${exerciseIndex + 1}/$exerciseCount • Set $currentSet/$totalSets", "Exercise ${exerciseIndex + 1}/$exerciseCount • Set $currentSet/$totalSets"), color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge)
         if (previous.isNotEmpty()) {
             val old = previous.getOrNull(currentSet - 1) ?: previous.last()
             HedefitCard(Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Whatshot, null, tint = HedefitColors.Warning)
                     Spacer(Modifier.width(9.dp))
-                    Text("Önceki: ${old.weightKg?.let { "${it.toInt()} kg" } ?: "vücut ağırlığı"} × ${old.reps ?: "—"} • RPE ${old.rpe ?: "—"}", color = HedefitColors.TextSecondary)
+                    Text(com.hedefit.app.ui.i18n.tr("Önceki: ", "Previous: ") + "${old.weightKg?.let { "${it.toInt()} kg" } ?: com.hedefit.app.ui.i18n.tr("vücut ağırlığı", "bodyweight")} × ${old.reps ?: "—"} • RPE ${old.rpe ?: "—"}", color = HedefitColors.TextSecondary)
                 }
             }
             progressiveOverloadTip(old, currentSet)?.let { tip ->
@@ -1132,21 +1135,21 @@ private fun ActiveControls(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Whatshot, null, tint = HedefitColors.Lime)
                 Spacer(Modifier.width(9.dp))
-                Text("Yeni kişisel rekor! Son set önceki performansını geçti.", color = HedefitColors.Lime, fontWeight = FontWeight.Bold)
+                Text(com.hedefit.app.ui.i18n.tr("Yeni kişisel rekor! Son set önceki performansını geçti.", "New personal record! Your last set beat your previous best."), color = HedefitColors.Lime, fontWeight = FontWeight.Bold)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            CounterCard("$weight kg", "Ağırlık", Modifier.weight(1f), { onWeight(-5) }, { onWeight(5) })
-            CounterCard("$reps tekrar", "Tekrar", Modifier.weight(1f), { onReps(-1) }, { onReps(1) })
+            CounterCard("$weight kg", com.hedefit.app.ui.i18n.tr("Ağırlık", "Weight"), Modifier.weight(1f), { onWeight(-5) }, { onWeight(5) })
+            CounterCard(com.hedefit.app.ui.i18n.tr("$reps tekrar", "$reps reps"), com.hedefit.app.ui.i18n.tr("Tekrar", "Reps"), Modifier.weight(1f), { onReps(-1) }, { onReps(1) })
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(listOf("warmup" to "Isınma", "normal" to "Normal", "superset" to "Süper", "dropset" to "Drop", "failure" to "Tükeniş")) { (value, label) ->
+            items(listOf("warmup" to com.hedefit.app.ui.i18n.tr("Isınma", "Warm-up"), "normal" to "Normal", "superset" to com.hedefit.app.ui.i18n.tr("Süper", "Superset"), "dropset" to "Drop", "failure" to com.hedefit.app.ui.i18n.tr("Tükeniş", "Failure"))) { (value, label) ->
                 FilterChip(selected = setType == value, onClick = { onSetType(value) }, label = { Text(label, style = MaterialTheme.typography.labelMedium) })
             }
         }
         HedefitCard(Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row { Text("Efor (RPE)", Modifier.weight(1f)); Text("$rpe/10", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) }
+                Row { Text(com.hedefit.app.ui.i18n.tr("Efor (RPE)", "Effort (RPE)"), Modifier.weight(1f)); Text("$rpe/10", color = HedefitColors.Lime, fontWeight = FontWeight.Bold) }
                 Slider(value = rpe.toFloat(), onValueChange = { onRpe(it.toInt()) }, valueRange = 1f..10f, steps = 8)
             }
         }
@@ -1154,15 +1157,15 @@ private fun ActiveControls(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 ProgressRing(restSeconds / 180f, Modifier.size(110.dp), 8.dp) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Dinlenme", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        Text(com.hedefit.app.ui.i18n.tr("Dinlenme", "Rest"), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                         Text("%02d:%02d".format(restSeconds / 60, restSeconds % 60), style = MaterialTheme.typography.headlineMedium)
                     }
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Akıllı süre: hareketin zorluğu ve RPE'ye göre ayarlandı.", color = HedefitColors.TextSecondary)
+                    Text(com.hedefit.app.ui.i18n.tr("Akıllı süre: hareketin zorluğu ve RPE'ye göre ayarlandı.", "Smart timer: set from the exercise difficulty and RPE."), color = HedefitColors.TextSecondary)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         TextButton(onClick = onAddRest) { Text("+30 sn") }
-                        TextButton(onClick = onToggleRest) { Text(if (restTimerPaused) "Devam" else "Duraklat") }
+                        TextButton(onClick = onToggleRest) { Text(if (restTimerPaused) "Devam" else com.hedefit.app.ui.i18n.tr("Duraklat", "Pause")) }
                     }
                     OutlineAction("Sonraki Set / Atla", onRest)
                 }
@@ -1171,7 +1174,7 @@ private fun ActiveControls(
         HedefitCard(Modifier.fillMaxWidth()) {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Kronometre", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    Text(com.hedefit.app.ui.i18n.tr("Kronometre", "Stopwatch"), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Text("%02d:%02d".format(timerSeconds / 60, timerSeconds % 60), color = HedefitColors.Lime, style = MaterialTheme.typography.headlineSmall)
                 }
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -1180,23 +1183,23 @@ private fun ActiveControls(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlineAction(if (timerRunning) "Duraklat" else "Başlat", onToggleTimer, modifier = Modifier.weight(1f))
-                    OutlineAction("Sıfırla", { onTimer(0) }, modifier = Modifier.weight(1f))
+                    OutlineAction(if (timerRunning) com.hedefit.app.ui.i18n.tr("Duraklat", "Pause") else com.hedefit.app.ui.i18n.tr("Başlat", "Start"), onToggleTimer, modifier = Modifier.weight(1f))
+                    OutlineAction(com.hedefit.app.ui.i18n.tr("Sıfırla", "Reset"), { onTimer(0) }, modifier = Modifier.weight(1f))
                 }
             }
         }
-        OutlinedTextField(note, onNote, label = { Text("Set notu (isteğe bağlı)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-        if (weight >= 15) OutlineAction("Plaka Hesaplayıcı", onClick = { showPlateCalculator = true })
-        PrimaryButton(if (saving) "Kaydediliyor…" else if (currentSet >= totalSets && exerciseIndex >= exerciseCount - 1) "Antrenmanı Değerlendir" else "Seti Tamamla", if (saving || restSeconds > 0) ({}) else onComplete, icon = Icons.Default.Check)
+        OutlinedTextField(note, onNote, label = { Text(com.hedefit.app.ui.i18n.tr("Set notu (isteğe bağlı)", "Set note (optional)")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        if (weight >= 15) OutlineAction(com.hedefit.app.ui.i18n.tr("Plaka Hesaplayıcı", "Plate Calculator"), onClick = { showPlateCalculator = true })
+        PrimaryButton(if (saving) com.hedefit.app.ui.i18n.tr("Kaydediliyor…", "Saving…") else if (currentSet >= totalSets && exerciseIndex >= exerciseCount - 1) com.hedefit.app.ui.i18n.tr("Antrenmanı Değerlendir", "Review Workout") else com.hedefit.app.ui.i18n.tr("Seti Tamamla", "Complete Set"), if (saving || restSeconds > 0) ({}) else onComplete, icon = Icons.Default.Check)
         HedefitCard(Modifier.fillMaxWidth(), onClick = onSkipExercise) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.SkipNext, null, tint = HedefitColors.Lime)
                 Spacer(Modifier.width(10.dp))
-                Text("Hareketi atla", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                Text(com.hedefit.app.ui.i18n.tr("Hareketi atla", "Skip exercise"), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
             }
         }
         SecondaryButton(
-            text = "Hareketi Değiştir",
+            text = com.hedefit.app.ui.i18n.tr("Hareketi Değiştir", "Swap Exercise"),
             onClick = onOpenReplacement,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -1233,13 +1236,13 @@ private fun PlateCalculatorDialog(targetWeight: Int, onDismiss: () -> Unit) {
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Plaka Hesaplayıcı") },
+        title = { Text(com.hedefit.app.ui.i18n.tr("Plaka Hesaplayıcı", "Plate Calculator")) },
         text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Hedef: $targetWeight kg", color = HedefitColors.Lime, style = MaterialTheme.typography.titleLarge)
+            Text(com.hedefit.app.ui.i18n.tr("Hedef: $targetWeight kg", "Target: $targetWeight kg"), color = HedefitColors.Lime, style = MaterialTheme.typography.titleLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf(15, 20).forEach { value -> FilterChip(barWeight == value, { barWeight = value }, label = { Text("$value kg bar") }) } }
-            Text(if (plates.isEmpty()) "Yalnızca barı kullan." else "Her tarafa: ${plates.joinToString(" + ") { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }} kg", color = HedefitColors.TextSecondary)
+            Text(if (plates.isEmpty()) com.hedefit.app.ui.i18n.tr("Yalnızca barı kullan.", "Use the bar only.") else com.hedefit.app.ui.i18n.tr("Her tarafa: ", "Each side: ") + "${plates.joinToString(" + ") { if (it % 1.0 == 0.0) it.toInt().toString() else it.toString() }} kg", color = HedefitColors.TextSecondary)
         } },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Tamam", color = HedefitColors.Lime) } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(com.hedefit.app.ui.i18n.tr("Tamam", "OK"), color = HedefitColors.Lime) } },
     )
 }
 
@@ -1256,18 +1259,18 @@ private fun WorkoutFeedbackDialog(saving: Boolean, onDismiss: () -> Unit, onConf
     var note by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Antrenman nasıldı?") },
+        title = { Text(com.hedefit.app.ui.i18n.tr("Antrenman nasıldı?", "How was the workout?")) },
         text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Fit Koç sonraki planını bu geri bildirime göre düzenler. Bitirdikten sonra 3–5 dk hafif soğuma ve esneme yap.", color = HedefitColors.TextSecondary)
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) { listOf("Kolay", "Uygun", "Zor").forEach { value -> FilterChip(difficulty == value, { difficulty = value }, label = { Text(value) }) } }
+            Text(com.hedefit.app.ui.i18n.tr("Fit Koç sonraki planını bu geri bildirime göre düzenler. Bitirdikten sonra 3–5 dk hafif soğuma ve esneme yap.", "Fit Coach adjusts your next plan based on this feedback. Finish with 3–5 min of light cool-down and stretching."), color = HedefitColors.TextSecondary)
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) { listOf("Kolay", "Uygun", "Zor").forEach { value -> FilterChip(difficulty == value, { difficulty = value }, label = { Text(when (value) { "Kolay" -> com.hedefit.app.ui.i18n.tr("Kolay", "Easy"); "Zor" -> com.hedefit.app.ui.i18n.tr("Zor", "Hard"); else -> com.hedefit.app.ui.i18n.tr("Uygun", "Just right") }) }) } }
             Text("Yorgunluk: $fatigue/5")
             Slider(fatigue.toFloat(), { fatigue = it.toInt() }, valueRange = 1f..5f, steps = 3)
-            Text("Ağrı / hassasiyet")
-            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) { listOf("Yok", "Bel", "Diz", "Omuz").forEach { value -> FilterChip(pain == value, { pain = value }, label = { Text(value) }) } }
-            OutlinedTextField(note, { note = it }, label = { Text("Koça not") }, modifier = Modifier.fillMaxWidth())
+            Text(com.hedefit.app.ui.i18n.tr("Ağrı / hassasiyet", "Pain / tenderness"))
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) { listOf("Yok", "Bel", "Diz", "Omuz").forEach { value -> FilterChip(pain == value, { pain = value }, label = { Text(when (value) { "Kolay" -> com.hedefit.app.ui.i18n.tr("Kolay", "Easy"); "Zor" -> com.hedefit.app.ui.i18n.tr("Zor", "Hard"); else -> com.hedefit.app.ui.i18n.tr("Uygun", "Just right") }) }) } }
+            OutlinedTextField(note, { note = it }, label = { Text(com.hedefit.app.ui.i18n.tr("Koça not", "Note to coach")) }, modifier = Modifier.fillMaxWidth())
         } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Geri dön") } },
-        confirmButton = { Button(enabled = !saving, onClick = { onConfirm(WorkoutFeedbackData(difficulty, fatigue, listOf(pain), note)) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (saving) "Kaydediliyor…" else "Bitir ve uyarla") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(com.hedefit.app.ui.i18n.tr("Geri dön", "Go back")) } },
+        confirmButton = { Button(enabled = !saving, onClick = { onConfirm(WorkoutFeedbackData(difficulty, fatigue, listOf(pain), note)) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text(if (saving) com.hedefit.app.ui.i18n.tr("Kaydediliyor…", "Saving…") else "Bitir ve uyarla") } },
     )
 }
 
@@ -1306,9 +1309,9 @@ private fun progressiveOverloadTip(previous: PreviousSetData, currentSet: Int): 
     val weight = previous.weightKg ?: return null
     val reps = previous.reps ?: return null
     return when {
-        reps >= 12 && (previous.rpe ?: 8) <= 8 -> "Yük önerisi: $weight kg yerine ${if (weight >= 50) weight + 2.5 else weight + 1.25} kg ile 8–10 dene."
-        reps < 12 -> "Yük önerisi: $weight kg ile ${reps + 1} tekrar hedefle."
-        else -> "Yük önerisi: $weight kg ile formu koruyarak tekrar et."
+        reps >= 12 && (previous.rpe ?: 8) <= 8 -> com.hedefit.app.ui.i18n.tr("Yük önerisi: $weight kg yerine ${if (weight >= 50) weight + 2.5 else weight + 1.25} kg ile 8–10 dene.", "Load tip: try ${if (weight >= 50) weight + 2.5 else weight + 1.25} kg instead of $weight kg for 8–10 reps.")
+        reps < 12 -> com.hedefit.app.ui.i18n.tr("Yük önerisi: $weight kg ile ${reps + 1} tekrar hedefle.", "Load tip: aim for ${reps + 1} reps at $weight kg.")
+        else -> com.hedefit.app.ui.i18n.tr("Yük önerisi: $weight kg ile formu koruyarak tekrar et.", "Load tip: repeat $weight kg with good form.")
     }
 }
 
@@ -1318,9 +1321,9 @@ private fun CounterCard(value: String, label: String, modifier: Modifier, onMinu
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(9.dp)) {
             Text(value, style = MaterialTheme.typography.headlineSmall)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                RoundControl(Icons.Default.Remove, "Azalt", onMinus)
+                RoundControl(Icons.Default.Remove, com.hedefit.app.ui.i18n.tr("Azalt", "Decrease"), onMinus)
                 Text(label, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                RoundControl(Icons.Default.Add, "Artır", onPlus)
+                RoundControl(Icons.Default.Add, com.hedefit.app.ui.i18n.tr("Artır", "Increase"), onPlus)
             }
         }
     }

@@ -28,6 +28,7 @@ import com.hedefit.app.data.model.PreviousSetData
 import com.hedefit.app.data.model.WorkoutExercisePerformanceData
 import com.hedefit.app.data.model.WorkoutSetPerformanceData
 import com.hedefit.app.data.model.ManualActivityInput
+import com.hedefit.app.data.model.cardioMachines
 import com.hedefit.app.data.model.manualActivityTypes
 import com.hedefit.app.data.model.DailyReadinessInput
 import com.hedefit.app.data.model.ReadinessAdaptationData
@@ -371,6 +372,30 @@ class HedefitRepository(
             .put("pain_areas", JSONArray())
             .put("feedback_note", safeNote.takeIf(String::isNotBlank) ?: JSONObject.NULL))
         return WorkoutSessionData(id, now, duration * 60, safeCalories, 0, 1, null, manualActivityKey = activity.key)
+    }
+
+    /** Kardiyo seansı: manuel aktivitelerle aynı tabloya activity:cardio_<makine> etiketiyle yazılır. */
+    suspend fun recordCardioSession(machineKey: String, durationSeconds: Int, calories: Int, summary: String): WorkoutSessionData {
+        require(cardioMachines.any { it.key == machineKey }) { "Geçersiz kardiyo makinesi." }
+        val duration = durationSeconds.coerceIn(60, 6 * 3600)
+        val safeCalories = calories.coerceIn(1, 5_000)
+        val id = UUID.randomUUID().toString()
+        val now = Instant.now().toString()
+        val key = "cardio_$machineKey"
+        rest.insert("workout_sessions", JSONObject()
+            .put("id", id)
+            .put("user_id", requireNotNull(auth.userId()))
+            .put("completed_at", now)
+            .put("duration_seconds", duration)
+            .put("calories", safeCalories)
+            .put("completed_exercises", 1)
+            .put("total_exercises", 1)
+            .put("exercise_names", JSONArray(listOf("activity:$key")))
+            .put("difficulty", "Uygun")
+            .put("fatigue", JSONObject.NULL)
+            .put("pain_areas", JSONArray())
+            .put("feedback_note", summary.trim().take(500).ifBlank { null } ?: JSONObject.NULL))
+        return WorkoutSessionData(id, now, duration, safeCalories, 1, 1, null, manualActivityKey = key)
     }
 
     suspend fun syncHealth(snapshot: HealthSnapshot) {
@@ -1130,6 +1155,7 @@ class HedefitRepository(
         heightCm = json?.doubleOrNull("height_cm"),
         goal = rawGoal.substringBefore(" | "),
         isPremium = json?.optBoolean("is_premium") == true,
+        planTier = json?.optString("plan_tier")?.takeIf { it in setOf("free", "plus", "pro") } ?: if (json?.optBoolean("is_premium") == true) "pro" else "free",
         age = json?.intOrNull("age"),
         gender = json?.stringOrNull("gender") ?: "",
         environment = json?.stringOrNull("environment") ?: "Evde",

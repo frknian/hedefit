@@ -188,7 +188,7 @@ fun EquipmentScannerScreen(
                     if (recognizing) return@launch
                     recognizing = true; recognition = null; recognitionError = null
                     runCatching {
-                        val capture = imageCapture ?: throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, "Kamera henüz hazır değil.")
+                        val capture = imageCapture ?: throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, com.hedefit.app.ui.i18n.tr("Kamera henüz hazır değil.", "Camera isn't ready yet."))
                         recognitionService.recognize(captureEquipmentFrame(context, capture))
                     }.onSuccess { recognition = it }
                         .onFailure { recognitionError = equipmentErrorMessage(it, en) }
@@ -284,7 +284,7 @@ private suspend fun captureEquipmentFrame(context: Context, capture: ImageCaptur
     }
     return withContext(Dispatchers.Default) {
         val decoded = BitmapFactory.decodeByteArray(encoded, 0, encoded.size)
-            ?: throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, "Kamera karesi işlenemedi.")
+            ?: throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, com.hedefit.app.ui.i18n.tr("Kamera karesi işlenemedi.", "Couldn't process the camera frame."))
         val oriented = if (rotation == 0) decoded else Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, Matrix().apply { postRotate(rotation.toFloat()) }, true).also { decoded.recycle() }
         val longest = maxOf(oriented.width, oriented.height)
         val scaled = if (longest <= 1280) oriented else {
@@ -292,7 +292,7 @@ private suspend fun captureEquipmentFrame(context: Context, capture: ImageCaptur
             Bitmap.createScaledBitmap(oriented, (oriented.width * ratio).toInt(), (oriented.height * ratio).toInt(), true).also { oriented.recycle() }
         }
         ByteArrayOutputStream().use { output ->
-            if (!scaled.compress(Bitmap.CompressFormat.JPEG, 82, output)) throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, "Fotoğraf sıkıştırılamadı.")
+            if (!scaled.compress(Bitmap.CompressFormat.JPEG, 82, output)) throw EquipmentRecognitionException(EquipmentRecognitionError.INVALID_IMAGE, com.hedefit.app.ui.i18n.tr("Fotoğraf sıkıştırılamadı.", "Couldn't compress the photo."))
             scaled.recycle()
             output.toByteArray()
         }
@@ -500,7 +500,7 @@ private fun MuscleFigure(analysis: TrainingAnalysis, modifier: Modifier, selecte
             Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
                 Image(
                     painter = painterResource(R.drawable.muscle_anatomy),
-                    contentDescription = if (selected != null) "Kas anatomisi, seçili bölge: ${muscleNameTr(selected)}" else "Ön ve arka kas anatomisi",
+                    contentDescription = if (selected != null) "Kas anatomisi, seçili bölge: ${muscleNameTr(selected)}" else com.hedefit.app.ui.i18n.tr("Ön ve arka kas anatomisi", "Front and back muscle anatomy"),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit,
                     colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(.12f) }),
@@ -562,13 +562,13 @@ private fun MuscleFigure(analysis: TrainingAnalysis, modifier: Modifier, selecte
                     }
                 }
                 Text(
-                    "ÖN",
+                    com.hedefit.app.ui.i18n.tr("ÖN", "FRONT"),
                     color = HedefitColors.TextSecondary,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.align(Alignment.TopStart).padding(start = 22.dp, top = 4.dp),
                 )
                 Text(
-                    "ARKA",
+                    com.hedefit.app.ui.i18n.tr("ARKA", "BACK"),
                     color = HedefitColors.TextSecondary,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.align(Alignment.TopEnd).padding(end = 22.dp, top = 4.dp),
@@ -583,11 +583,11 @@ private fun MuscleFigure(analysis: TrainingAnalysis, modifier: Modifier, selecte
 private fun MuscleLoadLegend() {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
         listOf(
-            LoadLevel.NONE to "Çalışılmadı",
-            LoadLevel.LOW to "Az",
-            LoadLevel.BALANCED to "Dengeli",
-            LoadLevel.HIGH to "Yoğun",
-            LoadLevel.OVERLOAD to "Aşırı",
+            LoadLevel.NONE to com.hedefit.app.ui.i18n.tr("Çalışılmadı", "None"),
+            LoadLevel.LOW to com.hedefit.app.ui.i18n.tr("Az", "Low"),
+            LoadLevel.BALANCED to com.hedefit.app.ui.i18n.tr("Dengeli", "Balanced"),
+            LoadLevel.HIGH to com.hedefit.app.ui.i18n.tr("Yoğun", "High"),
+            LoadLevel.OVERLOAD to com.hedefit.app.ui.i18n.tr("Aşırı", "Overload"),
         ).forEach { (level, label) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Box(Modifier.size(8.dp).background(loadColor(level), CircleShape))

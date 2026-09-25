@@ -288,7 +288,7 @@ fun RouteScreen(
         Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().systemBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth().background(HedefitColors.Background.copy(alpha = .88f), RoundedCornerShape(22.dp)).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 HfCircleButton(Icons.AutoMirrored.Filled.ArrowBack, if (en) "Back" else "Geri", if (snapshot.tracking) ({ showExitConfirmation = true }) else onBack)
-                Spacer(Modifier.width(12.dp)); Column { Text("Hedefit Rota", color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold); Text(when { snapshot.tracking && snapshot.points.isEmpty() -> if (en) "Acquiring precise GPS signal…" else "Hassas GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PREPARING_GPS -> if (en) "Searching for GPS…" else "GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PAUSED -> if (en) "Paused" else "Duraklatıldı"; sessionStatus == ActivitySessionStatus.ACTIVE -> if (en) "Recording in background" else "Arka planda kaydediliyor"; sessionStatus == ActivitySessionStatus.COMPLETED -> if (en) "Ready to save" else "Kaydetmeye hazır"; else -> if (en) "GPS activity" else "GPS aktivitesi" }, color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall) }
+                Spacer(Modifier.width(12.dp)); Column { Text(com.hedefit.app.ui.i18n.tr("Hedefit Rota", "Hedefit Route"), color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold); Text(when { snapshot.tracking && snapshot.points.isEmpty() -> if (en) "Acquiring precise GPS signal…" else "Hassas GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PREPARING_GPS -> if (en) "Searching for GPS…" else "GPS sinyali aranıyor…"; sessionStatus == ActivitySessionStatus.PAUSED -> if (en) "Paused" else "Duraklatıldı"; sessionStatus == ActivitySessionStatus.ACTIVE -> if (en) "Recording in background" else "Arka planda kaydediliyor"; sessionStatus == ActivitySessionStatus.COMPLETED -> if (en) "Ready to save" else "Kaydetmeye hazır"; else -> if (en) "GPS activity" else "GPS aktivitesi" }, color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall) }
             }
             if (!activityInProgress && finished == null) RouteSections(section, en) { section = it }
             if (section == "new" || activityInProgress || finished != null) {
@@ -324,17 +324,17 @@ fun RouteScreen(
             Box(Modifier.align(Alignment.CenterHorizontally).width(42.dp).height(4.dp).background(HedefitColors.Divider, RoundedCornerShape(4.dp)))
             if (activityInProgress) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    RouteMetric(if (en) "DISTANCE" else "MESAFE", MeasurementUnits.formatDistance(visibleSnapshot.distanceMeters, unitSystem), Modifier.weight(1f))
-                    RouteMetric(if (en) "TIME" else "SÜRE", formatDuration(visibleSnapshot.durationSeconds), Modifier.weight(1f))
-                    RouteMetric(if (activityType == "Bisiklet") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else "TEMPO"), if (activityType == "Bisiklet") "%.1f km/sa".format(visibleSnapshot.currentSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem), Modifier.weight(1f))
+                    RouteMetric(if (en) "DISTANCE" else com.hedefit.app.ui.i18n.tr("MESAFE", "DISTANCE"), MeasurementUnits.formatDistance(visibleSnapshot.distanceMeters, unitSystem), Modifier.weight(1f))
+                    RouteMetric(if (en) "TIME" else com.hedefit.app.ui.i18n.tr("SÜRE", "TIME"), formatDuration(visibleSnapshot.durationSeconds), Modifier.weight(1f))
+                    RouteMetric(if (activityType == "Bisiklet") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else com.hedefit.app.ui.i18n.tr("TEMPO", "PACE")), if (activityType == "Bisiklet") "%.1f km/sa".format(visibleSnapshot.currentSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem), Modifier.weight(1f))
                 }
                 plannedRoute?.let { RouteNavigationCard(it, snapshot.points.lastOrNull(), en, unitSystem) }
             } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val plan = plannedRoute.takeIf { finished == null }
-                RouteMetric(if (en) "DISTANCE" else "MESAFE", MeasurementUnits.formatDistance(plan?.distanceMeters ?: visibleSnapshot.distanceMeters, unitSystem), Modifier.weight(1f))
-                RouteMetric(if (en) "TIME" else "SÜRE", formatDuration(plan?.estimatedDurationSeconds ?: visibleSnapshot.durationSeconds), Modifier.weight(1f))
+                RouteMetric(if (en) "DISTANCE" else com.hedefit.app.ui.i18n.tr("MESAFE", "DISTANCE"), MeasurementUnits.formatDistance(plan?.distanceMeters ?: visibleSnapshot.distanceMeters, unitSystem), Modifier.weight(1f))
+                RouteMetric(if (en) "TIME" else com.hedefit.app.ui.i18n.tr("SÜRE", "TIME"), formatDuration(plan?.estimatedDurationSeconds ?: visibleSnapshot.durationSeconds), Modifier.weight(1f))
                 RouteMetric(
-                    if (plan != null) (if (en) "TARGET" else "HEDEF") else if (activityType == "Bisiklet") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else "TEMPO"),
+                    if (plan != null) (if (en) "TARGET" else "HEDEF") else if (activityType == "Bisiklet") (if (en) "SPEED" else "HIZ") else (if (en) "PACE" else com.hedefit.app.ui.i18n.tr("TEMPO", "PACE")),
                     if (plan != null) MeasurementUnits.formatDistance(plan.requestedDistanceMeters, unitSystem) else if (activityType == "Bisiklet") "%.1f km/sa".format(visibleSnapshot.averageSpeedKmh) else MeasurementUnits.formatPace(visibleSnapshot.displayPaceSecondsPerKm, unitSystem),
                     Modifier.weight(1f),
                 )
@@ -694,7 +694,7 @@ private suspend fun currentRouteLocation(context: Context): RoutePoint {
             if (!continuation.isActive) return@addOnSuccessListener
             if (location == null) continuation.resumeWithException(IllegalStateException("Konum alınamadı; GPS'i açıp tekrar dene."))
             else if (System.currentTimeMillis() - location.time > 15_000L) continuation.resumeWithException(IllegalStateException("Konum güncel değil; açık alanda tekrar dene."))
-            else if (!location.hasAccuracy() || location.accuracy > 25f) continuation.resumeWithException(IllegalStateException("GPS doğruluğu düşük (${location.accuracy.roundToInt()} m). Açık alanda tekrar dene."))
+            else if (!location.hasAccuracy() || location.accuracy > 25f) continuation.resumeWithException(IllegalStateException(com.hedefit.app.ui.i18n.tr("GPS doğruluğu düşük (${location.accuracy.roundToInt()} m). Açık alanda tekrar dene.", "GPS accuracy is low (${location.accuracy.roundToInt()} m). Try again in an open area.")))
             else continuation.resume(RoutePoint(location.latitude, location.longitude, location.altitude, location.time, location.accuracy.toDouble(), location.speed.takeIf { location.hasSpeed() }?.toDouble(), location.bearing.takeIf { location.hasBearing() }?.toDouble()))
         }
         .addOnFailureListener { error -> if (continuation.isActive) continuation.resumeWithException(error) }
@@ -1118,14 +1118,14 @@ private suspend fun shareRoute(context: Context, snapshot: RouteSnapshot, title:
         canvas.drawText(title.ifBlank { defaultActivityTitle(snapshot.activityType, false) }, 72f, height - 330f, textPaint)
         textPaint.color = AndroidColor.rgb(166, 174, 169)
         textPaint.textSize = 34f
-        canvas.drawText("MESAFE", 72f, height - 220f, textPaint); canvas.drawText("SÜRE", 410f, height - 220f, textPaint); canvas.drawText("TEMPO", 730f, height - 220f, textPaint)
+        canvas.drawText(com.hedefit.app.ui.i18n.tr("MESAFE", "DISTANCE"), 72f, height - 220f, textPaint); canvas.drawText(com.hedefit.app.ui.i18n.tr("SÜRE", "TIME"), 410f, height - 220f, textPaint); canvas.drawText(com.hedefit.app.ui.i18n.tr("TEMPO", "PACE"), 730f, height - 220f, textPaint)
         textPaint.color = AndroidColor.WHITE
         textPaint.textSize = 46f
         canvas.drawText("%.2f km".format(snapshot.distanceMeters / 1_000.0), 72f, height - 155f, textPaint); canvas.drawText(formatDuration(snapshot.durationSeconds), 410f, height - 155f, textPaint); canvas.drawText(formatPace(snapshot.paceSecondsPerKm), 730f, height - 155f, textPaint)
         textPaint.color = AndroidColor.rgb(126, 225, 80)
         textPaint.typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
         textPaint.textSize = 42f
-        canvas.drawText("HEDEFİT ROTA", 72f, height - 70f, textPaint)
+        canvas.drawText(com.hedefit.app.ui.i18n.tr("HEDEFİT ROTA", "HEDEFIT ROUTE"), 72f, height - 70f, textPaint)
         val directory = File(context.cacheDir, "shared-routes").apply { mkdirs() }
         File(directory, "hedefit-rota-${snapshot.id}.png").also { output ->
             FileOutputStream(output).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }

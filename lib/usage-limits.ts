@@ -13,8 +13,22 @@ export type PlanTier = "free" | "plus" | "pro";
 const DAILY_LIMITS = {
   free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5, plan: 1, memory: 2 },
   plus: { chat: 20, photo: 3, text_nutrition: 15, weekly_review: 1, nutrition_advice: 12, plan: 3, memory: 10 },
-  pro: { chat: 50, photo: 8, text_nutrition: 40, weekly_review: 2, nutrition_advice: 30, plan: 6, memory: 25 },
+  pro: { chat: 25, photo: 8, text_nutrition: 40, weekly_review: 2, nutrition_advice: 30, plan: 6, memory: 25 },
 } as const satisfies Record<PlanTier, Record<UsageFeature, number>>;
+
+// Misafir (anonim) oturumlar ücretsiz katmandan da dar kotayla çalışır; hesabını
+// kaydedince ücretsiz katmana geçer. Android'deki Entitlements.kt ile uyumlu tutun.
+const GUEST_LIMITS: Record<UsageFeature, number> = { chat: 3, photo: 1, text_nutrition: 2, weekly_review: 0, nutrition_advice: 2, plan: 1, memory: 1 };
+
+/** JWT zaten authenticateRequest'te doğrulandı; burada yalnız is_anonymous iddiası okunur. */
+function isGuestToken(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload?.is_anonymous === true;
+  } catch {
+    return false;
+  }
+}
 
 const OUTPUT_TOKEN_LIMITS: Record<UsageFeature, Record<PlanTier, number>> = {
   chat: { free: 420, plus: 560, pro: 700 }, photo: { free: 1100, plus: 1400, pro: 1800 },
@@ -64,7 +78,7 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
 
   let { data, error } = await client.rpc("check_and_consume_usage_tiered", {
     p_feature: feature,
-    p_free_limit: DAILY_LIMITS.free[feature],
+    p_free_limit: isGuestToken(token) ? GUEST_LIMITS[feature] : DAILY_LIMITS.free[feature],
     p_plus_limit: DAILY_LIMITS.plus[feature],
     p_pro_limit: DAILY_LIMITS.pro[feature],
   }).single();
@@ -89,7 +103,7 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
   }
 
   if (error && isMissingInfrastructure(error)) {
-    return legacyCheckAndConsumeUsage(client, feature, userId);
+    return legacyCheckAndConsumeUsage(client, feature, userId, isGuestToken(token));
   }
   if (error || !data) {
     console.error("[usage-limits] check_and_consume_usage rpc failed", error?.code);
@@ -127,6 +141,7 @@ async function legacyCheckAndConsumeUsage(
   client: SupabaseClient,
   feature: UsageFeature,
   userId: string,
+  guest = false,
 ): Promise<UsageCheckResult | { error: Response }> {
   const { data: profile, error: profileError } = await client.from("profiles").select("is_premium,plan_tier").eq("id", userId).maybeSingle();
   if (profileError && !isMissingInfrastructure(profileError)) {
@@ -137,7 +152,7 @@ async function legacyCheckAndConsumeUsage(
   const isPremium = Boolean(profile?.is_premium);
   const planTier: PlanTier = profile?.plan_tier === "plus" || profile?.plan_tier === "pro" ? profile.plan_tier : (isPremium ? "pro" : "free");
   // Eski sayaç integer limit bekler; tier kotası burada sonlu sayıya çevrilir.
-  const configuredLimit = DAILY_LIMITS[planTier][feature];
+  const configuredLimit = guest && planTier === "free" ? GUEST_LIMITS[feature] : DAILY_LIMITS[planTier][feature];
   const limit = configuredLimit;
 
   let { data, error } = await client.rpc("increment_usage_counter", { p_feature: feature, p_limit: limit }).single();

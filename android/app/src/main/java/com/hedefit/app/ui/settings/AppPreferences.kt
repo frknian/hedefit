@@ -20,7 +20,7 @@ data class AppPreferences(
     val homeQuickActions: List<String> = DEFAULT_QUICK_ACTIONS,
 ) {
     companion object {
-        val DEFAULT_QUICK_ACTIONS = listOf("nutrition", "route", "sleep", "coach", "atlas")
+        val DEFAULT_QUICK_ACTIONS = listOf("nutrition", "cardio", "route", "sleep", "coach", "atlas", "curlgame")
     }
 }
 
@@ -43,8 +43,11 @@ class AppPreferencesStore(context: Context) {
         unitSystem = preferences.getString("unit_system", "metric").let { if (it == "imperial") "imperial" else "metric" },
         accentHue = preferences.getFloat("accent_hue", 106f).coerceIn(0f, 360f),
         welcomeGuideSeen = preferences.getBoolean("welcome_guide_seen", false),
+        // Kardiyo ve dambıl oyunu sonradan eklendi: kayıtlı listesi olanlara bir kez eklenir.
         homeQuickActions = preferences.getString("home_quick_actions", null)
-            ?.split(',')?.filter(String::isNotBlank)?.takeIf { it.isNotEmpty() } ?: AppPreferences.DEFAULT_QUICK_ACTIONS,
+            ?.split(',')?.filter(String::isNotBlank)?.takeIf { it.isNotEmpty() }
+            ?.let { saved -> if (preferences.getBoolean("quick_actions_cardio_added_v2", false)) saved else (saved + listOf("cardio", "curlgame")).distinct().also { preferences.edit().putString("home_quick_actions", it.joinToString(",")).putBoolean("quick_actions_cardio_added_v2", true).apply() } }
+            ?: AppPreferences.DEFAULT_QUICK_ACTIONS,
     )
 
     fun write(value: AppPreferences) {

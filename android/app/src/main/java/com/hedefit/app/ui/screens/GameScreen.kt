@@ -1,5 +1,10 @@
 package com.hedefit.app.ui.screens
 
+import com.hedefit.app.ui.components.staggeredEntrance
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.border
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -90,7 +95,7 @@ fun GameScreen(
     onBack: (() -> Unit)? = null,
 ) {
     val en = language == "en"
-    val snapshot = remember(data, stepGoal, waterGoalMl, weeklyActivityGoal) {
+    val snapshot = remember(data, stepGoal, waterGoalMl, weeklyActivityGoal, language) {
         data?.let {
             GamificationEngine.snapshot(
                 GamificationInput(
@@ -195,7 +200,7 @@ private fun GameCard(border: Color = GameInk.copy(alpha = .45f), content: @Compo
 @Composable
 private fun HeroCard(snapshot: GamificationSnapshot, en: Boolean) = GameCard {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        ProgressRing(snapshot.level.progress, Modifier.size(88.dp), 9.dp, color = GameHeat) {
+        com.hedefit.app.ui.components.ActivityRing(snapshot.level.progress, GameHeat, size = 88.dp, stroke = 9.dp) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("${snapshot.level.level}", color = GameText, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
                 Text(if (en) "level" else "seviye", color = GameTextMuted, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
@@ -203,10 +208,10 @@ private fun HeroCard(snapshot: GamificationSnapshot, en: Boolean) = GameCard {
         }
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("${snapshot.level.currentXp} XP", color = GameText, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+            com.hedefit.app.ui.components.CountUpText(snapshot.level.currentXp, suffix = " XP", color = GameText, fontSizeSp = 22)
             Text(if (en) "${(snapshot.level.nextLevelXp - snapshot.level.currentXp).coerceAtLeast(0)} XP to level ${snapshot.level.level + 1}" else "Seviye ${snapshot.level.level + 1} için ${(snapshot.level.nextLevelXp - snapshot.level.currentXp).coerceAtLeast(0)} XP kaldı", color = GameTextMuted, style = MaterialTheme.typography.bodySmall)
             Row(Modifier.background(HedefitColors.Coral.copy(alpha = .15f), CircleShape).padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                Icon(Icons.Default.LocalFireDepartment, null, tint = HedefitColors.Coral, modifier = Modifier.size(14.dp))
+                com.hedefit.app.ui.components.StreakFlame(snapshot.streakDays, atRisk = snapshot.habitWeek.firstOrNull { it.today }?.active != true && java.time.LocalTime.now().hour >= 18)
                 Text(if (en) "${snapshot.streakDays} day streak" else "${snapshot.streakDays} günlük seri", color = HedefitColors.Coral, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
             }
         }
@@ -233,13 +238,13 @@ private fun HeroCard(snapshot: GamificationSnapshot, en: Boolean) = GameCard {
 @Composable
 private fun HabitCard(days: List<HabitDay>) = GameCard {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        days.forEach { HabitDayColumn(it, Modifier.weight(1f)) }
+        days.forEachIndexed { i, day -> HabitDayColumn(day, Modifier.weight(1f).staggeredEntrance("habit", i)) }
     }
 }
 
 @Composable
 private fun HabitDayColumn(day: HabitDay, modifier: Modifier = Modifier) {
-    val locale = Locale.forLanguageTag("tr-TR")
+    val locale = Locale.forLanguageTag(if (com.hedefit.app.ui.i18n.AppLang.en) "en-US" else "tr-TR")
     val label = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale).uppercase(locale).take(3)
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         if (day.today) Box(Modifier.size(7.dp).background(GameLime, CircleShape)) else Spacer(Modifier.height(7.dp))
@@ -263,7 +268,12 @@ private fun QuestCard(snapshot: GamificationSnapshot) = GameCard {
     snapshot.dailyQuests.forEachIndexed { index, quest ->
         if (index > 0) HfDivider()
         Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(28.dp).background(if (quest.completed) GameLime else GameSurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
+            val checkScale by androidx.compose.animation.core.animateFloatAsState(
+                if (quest.completed) 1f else .85f,
+                androidx.compose.animation.core.spring(dampingRatio = .4f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
+                label = "questCheck",
+            )
+            Box(Modifier.size(28.dp).scale(checkScale).background(if (quest.completed) GameLime else GameSurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
                 Icon(if (quest.completed) Icons.Default.Check else Icons.Outlined.RadioButtonUnchecked, null, tint = if (quest.completed) HedefitColors.OnLime else GameTextMuted, modifier = Modifier.size(16.dp))
             }
             Spacer(Modifier.width(12.dp))
@@ -281,8 +291,12 @@ private fun ChallengeCard(snapshot: GamificationSnapshot) = GameCard(GameHeat.co
             Text("${"%.1f".format(snapshot.challenge.progress)} / ${snapshot.challenge.target.toInt()} km", color = GameTextMuted, fontWeight = FontWeight.Bold)
         }
         Box(Modifier.size(70.dp), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(progress = { (snapshot.challenge.progress / snapshot.challenge.target).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxSize(), color = GameHeat, trackColor = HedefitColors.SurfaceSoft, strokeWidth = 7.dp)
-            Text("${"%.1f".format(snapshot.challenge.progress)}", color = GameHeat, fontWeight = FontWeight.Black, fontSize = 12.sp)
+            com.hedefit.app.ui.components.ActivityRing((snapshot.challenge.progress / snapshot.challenge.target).toFloat(), GameHeat, size = 70.dp, stroke = 7.dp) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(if (snapshot.challenge.completed) "🏁" else "🚶", fontSize = 16.sp)
+                    Text("${"%.1f".format(snapshot.challenge.progress)}", color = GameHeat, fontWeight = FontWeight.Black, fontSize = 11.sp)
+                }
+            }
         }
     }
 }
@@ -350,13 +364,29 @@ private fun leagueLabel(name: String, en: Boolean) = if (!en) name else when (na
 @Composable
 private fun AchievementBadge(item: Achievement, modifier: Modifier, onClick: () -> Unit) {
     val unlocked = item.unlockedAt != null
+    val reduced = com.hedefit.app.ui.components.rememberReducedMotion()
+    // Açılmış rozetler ekrana girerken ters yüzden çevrilerek açılır.
+    val flip = remember(item.id, unlocked) { androidx.compose.animation.core.Animatable(if (unlocked && !reduced) 180f else 0f) }
+    LaunchedEffect(item.id, unlocked) { if (flip.value != 0f) flip.animateTo(0f, androidx.compose.animation.core.tween(650)) }
+    val rarityColor = when (item.rarity) {
+        com.hedefit.app.gamification.AchievementRarity.COMMON -> GameLime
+        com.hedefit.app.gamification.AchievementRarity.RARE -> HedefitColors.Water
+        com.hedefit.app.gamification.AchievementRarity.EPIC -> HedefitColors.Sleep
+    }
     Column(
         modifier.clip(RoundedCornerShape(14.dp)).clickable(onClickLabel = item.title, onClick = onClick).padding(vertical = 4.dp).alpha(if (unlocked) 1f else .5f),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.size(52.dp).background(if (unlocked) GameLime.copy(alpha = .15f) else GameSurfaceHigh, RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
-            Icon(if (unlocked) Icons.Default.EmojiEvents else Icons.Default.Lock, null, tint = if (unlocked) GameLime else GameTextMuted, modifier = Modifier.size(24.dp))
+        Box(
+            Modifier.size(52.dp)
+                .graphicsLayer { rotationY = flip.value; cameraDistance = 12f * density }
+                .background(if (unlocked) rarityColor.copy(alpha = .18f) else GameSurfaceHigh, RoundedCornerShape(16.dp))
+                .then(if (unlocked) Modifier.border(1.5.dp, rarityColor.copy(alpha = .6f), RoundedCornerShape(16.dp)) else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            val faceUp = flip.value < 90f
+            Icon(if (unlocked && faceUp) Icons.Default.EmojiEvents else Icons.Default.Lock, null, tint = if (unlocked && faceUp) rarityColor else GameTextMuted, modifier = Modifier.size(24.dp))
         }
         Text(item.title, color = GameTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis)
     }

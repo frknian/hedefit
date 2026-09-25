@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.time.Instant
 
-data class AuthUser(val id: String, val email: String, val emailVerified: Boolean)
+data class AuthUser(val id: String, val email: String, val emailVerified: Boolean, val isAnonymous: Boolean = false)
 
 data class RegistrationLegalAcceptance(
     val kvkkNoticeAccepted: Boolean,
@@ -33,7 +33,7 @@ data class AuthSession(
         .put("accessToken", accessToken)
         .put("refreshToken", refreshToken)
         .put("expiresAt", expiresAtEpochSeconds)
-        .put("user", JSONObject().put("id", user.id).put("email", user.email).put("verified", user.emailVerified))
+        .put("user", JSONObject().put("id", user.id).put("email", user.email).put("verified", user.emailVerified).put("anonymous", user.isAnonymous))
 
     companion object {
         fun fromJson(json: JSONObject): AuthSession {
@@ -42,7 +42,7 @@ data class AuthSession(
                 accessToken = json.getString("accessToken"),
                 refreshToken = json.getString("refreshToken"),
                 expiresAtEpochSeconds = json.getLong("expiresAt"),
-                user = AuthUser(user.getString("id"), user.optString("email"), user.optBoolean("verified")),
+                user = AuthUser(user.getString("id"), user.optString("email"), user.optBoolean("verified"), user.optBoolean("anonymous")),
             )
         }
     }
@@ -82,9 +82,14 @@ class AuthRepository(
         return runCatching {
             val token = validAccessToken()
             AuthState.SignedIn(requireNotNull(current).copy(accessToken = token))
-        }.getOrElse {
-            clearLocalSession()
-            AuthState.SignedOut
+        }.getOrElse { error ->
+            // Yalnızca sunucu yenileme jetonunu açıkça reddederse oturumu sil. Ağ hatası,
+            // zaman aşımı ya da yarıda kalan bir yenileme oturumu silmemeli: misafir
+            // hesaplarda e-posta olmadığından silinen oturum geri getirilemez.
+            if (error is com.hedefit.app.data.network.ApiException && error.status in setOf(400, 401, 403)) {
+                clearLocalSession()
+                AuthState.SignedOut
+            } else AuthState.SignedIn(saved)
         }
     }
 
@@ -96,6 +101,56 @@ class AuthRepository(
             body = JSONObject().put("email", email.trim()).put("password", password).toString(),
         ).requireSuccess("Giriş yapılamadı.")
         return parseSession(response.jsonObject()).also(::save)
+    }
+
+    /**
+     * Üye olmadan dene: Supabase anonim oturumu açar. Kullanıcı gerçek bir user_id alır,
+     * böylece tablolar ve RLS kuralları olduğu gibi çalışır. Sonradan [linkEmail] veya
+     * [linkGoogle] ile aynı hesap kalıcı hale getirilir; veriler kaybolmaz.
+     * Supabase panelinde Authentication → Sign In / Providers → "Allow anonymous sign-ins" açık olmalı.
+     */
+    suspend fun signInAsGuest(legalAcceptance: RegistrationLegalAcceptance): AuthSession {
+        legalAcceptance.requireComplete()
+        val response = http.request(
+            url = authUrl("signup"),
+            method = "POST",
+            headers = authHeaders(),
+            body = JSONObject().put("data", legalAcceptancePayload().put("guest", true)).toString(),
+        ).requireSuccess("Misafir oturumu açılamadı.")
+        return parseSession(response.jsonObject()).also(::save)
+    }
+
+    /** Misafir hesaba e-posta/parola bağlar. Supabase doğrulama e-postası gönderir; doğrulanınca hesap kalıcı olur. */
+    suspend fun linkEmail(email: String, password: String, username: String) {
+        http.request(
+            url = authUrl("user"),
+            method = "PUT",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+            body = JSONObject().put("email", email.trim()).put("password", password)
+                .put("data", JSONObject().put("username", username.trim().lowercase())).toString(),
+        ).requireSuccess("Hesap kaydedilemedi.")
+    }
+
+    /** Misafir hesaba Google kimliği bağlar; aynı user_id korunur. */
+    suspend fun linkGoogle(idToken: String, nonce: String): AuthSession {
+        val response = http.request(
+            url = authUrl("token?grant_type=id_token"),
+            method = "POST",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+            body = JSONObject()
+                .put("provider", "google")
+                .put("id_token", idToken)
+                .put("nonce", nonce)
+                .put("link_identity", true)
+                .toString(),
+        ).requireSuccess("Google hesabı bağlanamadı.")
+        return parseSession(response.jsonObject()).also(::save)
+    }
+
+    /** E-posta doğrulandıktan sonra oturumu yenileyip misafir bayrağını günceller. */
+    suspend fun refreshSession(): AuthSession {
+        validAccessToken(forceRefresh = true)
+        return requireNotNull(current)
     }
 
     suspend fun checkUsername(username: String): String {
@@ -224,8 +279,9 @@ class AuthRepository(
             id = userJson.getString("id"),
             email = userJson.optString("email"),
             emailVerified = userJson.stringOrNull("email_confirmed_at") != null || providerVerified,
+            isAnonymous = userJson.optBoolean("is_anonymous"),
         )
-        if (!user.emailVerified) error("E-posta adresini doğruladıktan sonra giriş yapabilirsin.")
+        if (!user.emailVerified && !user.isAnonymous) error("E-posta adresini doğruladıktan sonra giriş yapabilirsin.")
         return AuthSession(access, refresh, System.currentTimeMillis() / 1000 + expiresIn, user)
     }
 

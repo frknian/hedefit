@@ -20,6 +20,8 @@ data class ProfileData(
     val avatarPath: String? = null,
     val avatarUrl: String? = null,
     val username: String? = null,
+    /** Sunucudaki profiles.plan_tier: free | plus | pro (pro = uygulamadaki Premium). */
+    val planTier: String = "free",
 )
 
 data class ProfileUpdateData(

@@ -1,5 +1,9 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.material.icons.filled.SportsEsports
+
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+
 import androidx.compose.foundation.verticalScroll
 
 import androidx.compose.foundation.Image
@@ -147,6 +151,7 @@ fun HomeScreen(
     onOpenProgress: () -> Unit = {},
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
+    onOpenCardio: () -> Unit = {},
     onSaveSleep: (Int, String, String?, String?) -> Unit = { _, _, _, _ -> },
     onOpenGame: () -> Unit = {},
     quickActions: List<String> = com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS,
@@ -163,10 +168,11 @@ fun HomeScreen(
         ) {
             item {
                 HomeHeader(
-                    name = data?.profile?.displayName ?: if (en) "Athlete" else "Sporcu",
+                    name = com.hedefit.app.ui.i18n.localizedDisplayName(data?.profile?.displayName),
                     avatarUrl = data?.profile?.avatarUrl,
                     avatarPreview = avatarPreview,
                     streak = data?.streakDays ?: 0,
+                    activeToday = data?.sessions?.any { it.completedAt.startsWith(LocalDate.now().toString()) } ?: true,
                     onOpenProfile = onOpenProfile,
                     onOpenCalendar = onOpenCalendar,
                     onOpenGame = onOpenGame,
@@ -201,7 +207,7 @@ fun HomeScreen(
             }
             item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler", if (en) "Customize" else "Özelleştir") { editingQuickActions = true } }
             item {
-                val catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables)
+                val catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" })
                 val active = quickActions.mapNotNull(catalog::get).ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS.mapNotNull(catalog::get) }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     active.chunked(2).forEach { row ->
@@ -222,11 +228,19 @@ fun HomeScreen(
         "steps" -> StepDetailDialog(data?.steps ?: 0, stepGoal, data?.stepHistory.orEmpty(), en, { metricDialog = null }, { onStepGoalChange(it); metricDialog = null })
         "calories" -> CalorieDetailDialog(data, en, stepSource) { metricDialog = null }
         "water" -> WaterAddDialog(data?.waterMl ?: 0, waterGoalMl, en, unitSystem, { metricDialog = null }, onWaterGoalChange) { onAddWater(it); metricDialog = null }
+        "curlgame" -> androidx.compose.ui.window.Dialog(onDismissRequest = { metricDialog = null }, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+            Box(Modifier.fillMaxSize().background(HedefitColors.Background).padding(16.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    com.hedefit.app.ui.components.CurlGame(status = if (en) com.hedefit.app.ui.i18n.tr("Keep curling! Tap anywhere on the card.", "Keep curling! Tap anywhere on the card.") else com.hedefit.app.ui.i18n.tr("Kaldırmaya devam! Karta dokundukça tekrar sayılır.", "Keep lifting! Every tap on the card counts a rep."))
+                    TextButton(onClick = { metricDialog = null }) { Text(if (en) "Close" else "Kapat", color = HedefitColors.TextSecondary) }
+                }
+            }
+        }
         "sleep" -> SleepDetailDialog(data?.sleepMinutes ?: 0, en, { metricDialog = null }) { mins, q, bed, wake -> onSaveSleep(mins, q, bed, wake); metricDialog = null }
     }
     if (editingQuickActions && data != null) QuickActionPickerDialog(
         en = en,
-        catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}),
+        catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}),
         selected = quickActions.ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS },
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
@@ -251,6 +265,8 @@ private fun quickActionCatalog(
     onOpenActivityLog: () -> Unit,
     onMetric: (String) -> Unit,
     onOpenWearables: () -> Unit,
+    onOpenCardio: () -> Unit,
+    onOpenCurlGame: () -> Unit,
 ): Map<String, QuickAction> = linkedMapOf(
     "nutrition" to QuickAction(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition),
     "route" to QuickAction(Icons.Default.Route, HedefitColors.Water, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
@@ -267,6 +283,8 @@ private fun quickActionCatalog(
     "progress" to QuickAction(Icons.Default.Insights, HedefitColors.Sleep, if (en) "Progress" else "İlerleme", "", onOpenProgress),
     "watch" to QuickAction(Icons.Default.Watch, HedefitColors.Lime, if (en) "Smart watch" else "Akıllı saat", "", onOpenWearables),
     "rewards" to QuickAction(Icons.Default.EmojiEvents, HedefitColors.Warning, if (en) "Rewards" else "Ödüller", "", onOpenRewards),
+    "cardio" to QuickAction(Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Coral, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower" else "Koşu bandı, bisiklet, kürek", onOpenCardio),
+    "curlgame" to QuickAction(Icons.Default.SportsEsports, HedefitColors.Lime, if (en) "Dumbbell game" else "Dambıl oyunu", if (en) "Tap and curl" else "Dokun, kaldır, kaslan", onOpenCurlGame),
 )
 
 @Composable
@@ -304,6 +322,7 @@ private fun HomeHeader(
     avatarUrl: String?,
     avatarPreview: ByteArray?,
     streak: Int,
+    activeToday: Boolean = true,
     onOpenProfile: () -> Unit,
     onOpenCalendar: () -> Unit,
     onOpenGame: () -> Unit,
@@ -316,6 +335,14 @@ private fun HomeHeader(
         title = if (en) "Hi, $name" else "Merhaba, $name",
         subtitle = (if (en) "Today • " else "Bugün • ") + date,
     ) {
+        // Seri alevi: seri büyüdükçe alev büyür; akşam 18'den sonra bugün hâlâ aktif değilse sönükleşir.
+        if (streak > 0) Row(
+            Modifier.clip(RoundedCornerShape(50)).clickable(onClickLabel = if (en) "Streak" else "Seri", onClick = onOpenGame).padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            com.hedefit.app.ui.components.StreakFlame(streak, atRisk = !activeToday && java.time.LocalTime.now().hour >= 18)
+            Text("$streak", fontWeight = FontWeight.Black, color = HedefitColors.TextPrimary)
+        }
         HfCircleButton(Icons.Default.EmojiEvents, if (en) "Rewards, $streak day streak" else "Ödüller, $streak günlük seri", onOpenGame)
         HfCircleButton(Icons.Default.CalendarMonth, if (en) "Workout calendar" else "Antrenman takvimi", onOpenCalendar)
         HomeAvatar(avatarUrl, avatarPreview, name, Modifier.size(44.dp).clip(CircleShape).clickable(onClickLabel = if (en) "Profile and settings" else "Profil ve ayarlar", onClick = onOpenProfile))
@@ -343,14 +370,14 @@ private fun TodayCard(
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    program?.name ?: if (en) "Create your workout plan" else "Antrenman planını oluştur",
+                    program?.let { com.hedefit.app.ui.i18n.localizedProgramName(it.name, it.source) } ?: if (en) "Create your workout plan" else "Antrenman planını oluştur",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (areas.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { areas.forEach { HfTag(it) } }
+            if (areas.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { areas.forEach { HfTag(com.hedefit.app.ui.i18n.localizedArea(it)) } }
             HfPrimaryButton(
                 text = if (exerciseCount > 0) (if (en) "Start workout" else "Antrenmanı başlat") else if (en) "Create a plan" else "Plan oluştur",
                 onClick = { onOpenProgram(program?.id) },
@@ -394,10 +421,18 @@ private fun BalanceRing(label: String, value: String, target: String, progress: 
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            ProgressRing(progress.coerceIn(0f, 1f), Modifier.size(70.dp), 7.dp, color = color) {
+            // Açılışta dolarak gelir; hedef tamamlanınca halka "kapanır", hafifçe büyür ve titreşim verir.
+            val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+            val closed = progress >= 1f
+            var wasClosed by remember { mutableStateOf(closed) }
+            LaunchedEffect(closed) {
+                if (closed && !wasClosed) haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                wasClosed = closed
+            }
+            com.hedefit.app.ui.components.ActivityRing(progress, color, size = 70.dp, stroke = 7.dp) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(value, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
-                    Text(target, fontSize = 9.sp, color = HedefitColors.TextMuted, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(if (closed) "✓" else target, fontSize = if (closed) 12.sp else 9.sp, color = if (closed) color else HedefitColors.TextMuted, fontWeight = FontWeight.SemiBold, maxLines = 1)
                 }
             }
         }
@@ -468,7 +503,7 @@ private fun HomePrograms(
                             Spacer(Modifier.width(8.dp))
                             Text(if (en) "PROGRAM" else "PROGRAM", color = HedefitColors.Lime, style = MaterialTheme.typography.labelSmall)
                         }
-                        Text(program.name, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+                        Text(com.hedefit.app.ui.i18n.localizedProgramName(program.name, program.source), maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }
@@ -481,7 +516,7 @@ private fun HomePrograms(
             if (data.workoutPrograms.isEmpty()) Text(if (en) "Create a program from the Workout tab first." else "Önce Antrenman sekmesinden bir program oluştur.", color = HedefitColors.TextSecondary)
             data.workoutPrograms.forEach { program ->
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) { Text(program.name); Text(if (en) "${program.exercises.size} exercises" else "${program.exercises.size} hareket", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
+                    Column(Modifier.weight(1f)) { Text(com.hedefit.app.ui.i18n.localizedProgramName(program.name, program.source)); Text(if (en) "${program.exercises.size} exercises" else "${program.exercises.size} hareket", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
                     androidx.compose.material3.Checkbox(checked = program.showOnHome, onCheckedChange = { onVisibilityChange(program, it) })
                 }
             }
@@ -657,8 +692,8 @@ private fun WaterAddDialog(currentMl: Int, goalMl: Int, en: Boolean, unitSystem:
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocalDrink, null, tint = HedefitColors.Water, modifier = Modifier.size(28.dp))
-                    Spacer(Modifier.width(10.dp))
+                    com.hedefit.app.ui.components.WaterGlass(currentMl / goalMl.coerceAtLeast(1).toFloat(), Modifier.width(38.dp).height(52.dp))
+                    Spacer(Modifier.width(12.dp))
                     Column {
                         Text(MeasurementUnits.formatWater(currentMl, unitSystem), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
                         Text(if (en) "of ${MeasurementUnits.formatWater(goalMl, unitSystem)} target" else "/ ${MeasurementUnits.formatWater(goalMl, unitSystem)} hedef", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
@@ -737,7 +772,7 @@ private fun SleepDetailDialog(
                     )
                 } else {
                     HfChipRow {
-                        listOf((6 to 0) to "6s", (7 to 0) to "7s", (7 to 30) to "7.5s", (8 to 0) to "8s", (8 to 30) to "8.5s").forEach { (pair, label) ->
+                        listOf(6 to 0, 7 to 0, 7 to 30, 8 to 0, 8 to 30).map { it to "${if (it.second == 0) "${it.first}" else "${it.first}.5"}${com.hedefit.app.ui.i18n.tr("s", "h")}" }.forEach { (pair, label) ->
                             val (h, m) = pair
                             HfChip(label, hours == h && minutes == m, { hours = h; minutes = m })
                         }
@@ -913,11 +948,36 @@ private fun RecoveryCard(data: DashboardData) {
 
 @Composable
 private fun HomeDataState(loading: Boolean, error: String?, onRetry: () -> Unit) {
-    HedefitCard(Modifier.fillMaxWidth()) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth().padding(vertical = 28.dp)) {
-            if (loading) CircularProgressIndicator(color = HedefitColors.Lime)
-            Text(if (loading) "Verilerin yükleniyor…" else error ?: "Henüz veri bulunamadı.", color = HedefitColors.TextSecondary)
-            if (!loading) PrimaryButton("Tekrar Dene", onRetry, Modifier.fillMaxWidth(.7f))
+    // Veri yokken bekleme ekranı yerine mini oyun. Hata olursa arka planda 8 sn'de
+    // bir kendiliğinden yeniden dener; veri gelince bu kart kaybolur ve ana ekran açılır.
+    val currentLoading by androidx.compose.runtime.rememberUpdatedState(loading)
+    val currentError by androidx.compose.runtime.rememberUpdatedState(error)
+    val currentRetry by androidx.compose.runtime.rememberUpdatedState(onRetry)
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(8_000)
+            if (!currentLoading && currentError != null) currentRetry()
         }
+    }
+    val status = when {
+        loading -> com.hedefit.app.ui.i18n.tr("Verilerin hazırlanıyor… Hazır olunca ekran kendiliğinden açılacak.", "Preparing your data… The app opens by itself when it's ready.")
+        error != null -> com.hedefit.app.ui.i18n.tr("Bağlantıda küçük bir sorun var, tekrar deniyoruz. Sen kaldırmaya devam et 💪", "Small connection hiccup, retrying. Keep lifting 💪")
+        else -> com.hedefit.app.ui.i18n.tr("Henüz veri yok, tekrar deniyoruz.", "No data yet, retrying.")
+    }
+    // Oyun yalnız uzun beklemelerde: yükleme 4 sn'yi geçerse ya da hata varsa açılır.
+    var longWait by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { kotlinx.coroutines.delay(4_000); longWait = true }
+    if (!longWait && error == null) {
+        HedefitCard(Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth().padding(vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                CircularProgressIndicator(color = HedefitColors.Lime)
+                Text(com.hedefit.app.ui.i18n.tr("Verilerin yükleniyor…", "Loading your data…"), color = HedefitColors.TextSecondary)
+            }
+        }
+        return
+    }
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        com.hedefit.app.ui.components.CurlGame(status = status, statusIsError = error != null)
+        if (!loading) TextButton(onClick = onRetry) { Text(com.hedefit.app.ui.i18n.tr("Şimdi tekrar dene", "Retry now"), color = HedefitColors.TextSecondary) }
     }
 }

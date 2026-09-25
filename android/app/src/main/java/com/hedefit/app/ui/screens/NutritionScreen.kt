@@ -228,6 +228,7 @@ fun NutritionScreen(
                     goal = data?.nutritionGoal ?: NutritionGoalData(),
                     trainingDay = isTrainingDay(data, selectedDate),
                     activeCalories = if (canLog) data?.activeCalories ?: 0 else 0,
+                    loggedActivityCalories = if (canLog) data?.sessions.orEmpty().filter { s -> s.manualActivityKey != null && runCatching { java.time.Instant.parse(s.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == selectedDate }.getOrDefault(false) }.sumOf { it.calories } else 0,
                     waterMl = if (canLog) data?.waterMl else null,
                     waterGoalMl = waterGoalMl,
                     onAddWater = onAddWater,
@@ -438,6 +439,8 @@ private fun DailySummaryCard(
     trainingDay: Boolean,
     activeCalories: Int,
     waterMl: Int?,
+    /** Bugün kaydedilen kardiyo ve manuel aktivitelerin kalorisi; spor günü bonusunun üstüne eklenir. */
+    loggedActivityCalories: Int = 0,
     waterGoalMl: Int,
     onAddWater: (Int) -> Unit,
     onWaterGoalChange: (Int) -> Unit,
@@ -448,7 +451,8 @@ private fun DailySummaryCard(
     val carbs = logs.sumOf { it.carbs }
     val fat = logs.sumOf { it.fat }
     val activityBonus = activeCalories.coerceIn(0, 600)
-    val bonus = maxOf(activityBonus, if (trainingDay) TRAINING_DAY_KCAL else 0)
+    val activityExtra = loggedActivityCalories.coerceIn(0, 600)
+    val bonus = (maxOf(activityBonus, if (trainingDay) TRAINING_DAY_KCAL else 0) + activityExtra).coerceAtMost(800)
     val target = (goal.calories + bonus).coerceAtLeast(1)
     val over = consumed > target
     HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
@@ -470,7 +474,8 @@ private fun DailySummaryCard(
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.background(accent.copy(alpha = .15f), CircleShape).padding(horizontal = 12.dp, vertical = 6.dp),
                     )
-                    if (trainingDay) HfPill(if (en) "Training day +$bonus kcal" else "Spor günü +$bonus kcal", HedefitColors.Warning)
+                    if (trainingDay) HfPill(if (en) "Training day +${bonus - activityExtra} kcal" else "Spor günü +${bonus - activityExtra} kcal", HedefitColors.Warning)
+                    if (activityExtra > 0) HfPill(if (en) "Cardio & activity +$activityExtra kcal" else "Kardiyo/aktivite +$activityExtra kcal", HedefitColors.Coral)
                     else if (bonus > 0) HfPill(if (en) "Activity +$bonus kcal" else "Aktivite +$bonus kcal", HedefitColors.Water)
                 }
             }
@@ -549,7 +554,7 @@ private fun ExpandableRow(icon: ImageVector, tint: Color, title: String, subtitl
                     Text(title, style = MaterialTheme.typography.titleMedium)
                     Text(subtitle, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                 }
-                Icon(if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, if (expanded) "Daralt" else "Genişlet", tint = HedefitColors.TextMuted)
+                Icon(if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, if (expanded) com.hedefit.app.ui.i18n.tr("Daralt", "Collapse") else com.hedefit.app.ui.i18n.tr("Genişlet", "Expand"), tint = HedefitColors.TextMuted)
             }
         }
         if (expanded) content()
@@ -1210,7 +1215,7 @@ private fun FoodSearchDialog(results: List<FoodSearchData>, searching: Boolean, 
             selected?.let { food ->
                 HedefitCard {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row { Text(food.name, Modifier.weight(1f), fontWeight = FontWeight.Bold); if (food.verified) Icon(Icons.Default.Verified, "Doğrulanmış", tint = HedefitColors.Lime) }
+                        Row { Text(food.name, Modifier.weight(1f), fontWeight = FontWeight.Bold); if (food.verified) Icon(Icons.Default.Verified, com.hedefit.app.ui.i18n.tr("Doğrulanmış", "Verified"), tint = HedefitColors.Lime) }
                         Text("${food.calories} kcal • P ${food.protein.toInt()} • K ${food.carbs.toInt()} • Y ${food.fat.toInt()} • Lif ${food.fiber.toInt()}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                         val gramsError = if (addAttempted) validateFoodGrams(grams) else null
                         OutlinedTextField(

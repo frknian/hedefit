@@ -48,18 +48,18 @@ fun FitCoachContextSheet(
     val quickQuestions = remember(workoutContext) {
         if (workoutContext?.exerciseName != null) {
             listOf(
-                "Bu harekette zorlanıyorum, ne yapabilirim?",
-                "Bu hareket nereyi çalıştırır?",
-                "Doğru form ve nefes nasıl olmalı?",
-                "Daha kolay bir alternatifi var mı?",
-                "Dinlenme süresi kaç saniye olmalı?",
+                com.hedefit.app.ui.i18n.tr("Bu harekette zorlanıyorum, ne yapabilirim?", "I'm struggling with this exercise, what can I do?"),
+                com.hedefit.app.ui.i18n.tr("Bu hareket nereyi çalıştırır?", "What does this exercise work?"),
+                com.hedefit.app.ui.i18n.tr("Doğru form ve nefes nasıl olmalı?", "What's the right form and breathing?"),
+                com.hedefit.app.ui.i18n.tr("Daha kolay bir alternatifi var mı?", "Is there an easier alternative?"),
+                com.hedefit.app.ui.i18n.tr("Dinlenme süresi kaç saniye olmalı?", "How many seconds should I rest?"),
             )
         } else {
             listOf(
-                "Bugünkü antrenmanı 20 dakikaya sığdırabilir miyiz?",
-                "Bugün çok yorgunum, antrenmanı nasıl hafifletebilirim?",
+                com.hedefit.app.ui.i18n.tr("Bugünkü antrenmanı 20 dakikaya sığdırabilir miyiz?", "Can we fit today's workout into 20 minutes?"),
+                com.hedefit.app.ui.i18n.tr("Bugün çok yorgunum, antrenmanı nasıl hafifletebilirim?", "I'm very tired today, how can I lighten the workout?"),
                 "Toparlanma durumumu kontrol et",
-                "Kaslarımda hafif hamlık var, devam etmeli miyim?",
+                com.hedefit.app.ui.i18n.tr("Kaslarımda hafif hamlık var, devam etmeli miyim?", "My muscles are a bit sore, should I continue?"),
             )
         }
     }
@@ -299,7 +299,7 @@ fun FitCoachContextSheet(
                 ) {
                     Icon(
                         Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Gönder",
+                        contentDescription = com.hedefit.app.ui.i18n.tr("Gönder", "Send"),
                         tint = if (inputText.isNotBlank() && !isBusy) HedefitColors.OnLime else HedefitColors.TextSecondary,
                         modifier = Modifier.size(18.dp),
                     )

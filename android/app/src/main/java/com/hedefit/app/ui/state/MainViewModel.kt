@@ -122,7 +122,20 @@ data class MainUiState(
     val planAdaptationBusy: Boolean = false,
     val planAdaptationResult: WorkoutAdaptationResultData? = null,
     val activeCoachContext: WorkoutCoachContext? = null,
-)
+    /** Misafir hesabı kalıcı hale getirme teklifinin gösterileceği bağlam (null = gizli). */
+    val saveAccountPrompt: SaveAccountTrigger? = null,
+    val saveAccountBusy: Boolean = false,
+    val saveAccountMessage: String? = null,
+    /** Kilide takılan özellik: misafirde kayıt teklifi, ücretside premium teklifi gösterilir. */
+    val lockedFeature: LockedFeature? = null,
+    /** Hareket adlarının TR/EN karşılıkları (katalogdan, bir kez yüklenir). */
+    val exerciseNames: com.hedefit.app.ui.i18n.ExerciseNameIndex = com.hedefit.app.ui.i18n.ExerciseNameIndex.Empty,
+) {
+    val isGuest: Boolean get() = (auth as? AuthState.SignedIn)?.session?.user?.isAnonymous == true
+}
+
+/** Misafire kayıt teklifinin çıktığı an; metin buna göre kişiselleşir. */
+enum class SaveAccountTrigger { WorkoutCompleted, CoachLimit, Sync, Manual, Limit }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val http = JsonHttpClient()
@@ -198,6 +211,77 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         onSignedIn(authRepository.signInWithGoogle(idToken, nonce, legalAcceptance))
     }
 
+    /** Üye olmadan dene: anonim oturum açar ve normal akışa geçer. */
+    fun startAsGuest(legalAcceptance: RegistrationLegalAcceptance) = authAction {
+        onSignedIn(authRepository.signInAsGuest(legalAcceptance))
+    }
+
+    fun showSaveAccountPrompt(trigger: SaveAccountTrigger) {
+        if (!_state.value.isGuest) return
+        _state.update { it.copy(saveAccountPrompt = trigger, saveAccountMessage = null) }
+    }
+
+    fun dismissSaveAccountPrompt() {
+        _state.update { it.copy(saveAccountPrompt = null, saveAccountMessage = null, saveAccountBusy = false, lockedFeature = null) }
+    }
+
+    fun dismissLockedFeature() {
+        _state.update { it.copy(lockedFeature = null) }
+    }
+
+    /**
+     * Katman kontrolü. İzin yoksa uygun teklifi açar ve false döner:
+     * misafire hesap kaydetme, ücretsiz kullanıcıya premium.
+     */
+    fun requireEntitlement(feature: LockedFeature, allowed: (TierLimits) -> Boolean): Boolean {
+        val current = _state.value
+        if (allowed(current.limits())) return true
+        _state.update {
+            if (it.isGuest) it.copy(saveAccountPrompt = SaveAccountTrigger.Limit, lockedFeature = feature, saveAccountMessage = null)
+            else it.copy(lockedFeature = feature)
+        }
+        return false
+    }
+
+    private fun canAddMeals(count: Int = 1): Boolean = requireEntitlement(LockedFeature.MealLogs) { limits ->
+        (_state.value.dashboard?.todayMealLogCount() ?: 0) + count <= limits.dailyMealLogs
+    }
+
+    private fun canCreateCustomProgram(): Boolean = requireEntitlement(LockedFeature.CustomProgram) { limits ->
+        (_state.value.dashboard?.workoutPrograms?.count { it.source == "custom" } ?: 0) < limits.customPrograms
+    }
+
+    fun linkGuestEmail(email: String, password: String, username: String) {
+        if (_state.value.saveAccountBusy) return
+        viewModelScope.launch {
+            _state.update { it.copy(saveAccountBusy = true, saveAccountMessage = null) }
+            runCatching { authRepository.linkEmail(email, password, username) }
+                .onSuccess { _state.update { it.copy(saveAccountBusy = false, saveAccountMessage = com.hedefit.app.ui.i18n.tr("Doğrulama bağlantısını $email adresine gönderdik. Onayladığında hesabın kalıcı olur; verilerin korunur.", "We sent a verification link to $email. Once you confirm, your account is permanent and your data is kept.")) } }
+                .onFailure { error -> _state.update { it.copy(saveAccountBusy = false, saveAccountMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun linkGuestGoogle(idToken: String, nonce: String) {
+        if (_state.value.saveAccountBusy) return
+        viewModelScope.launch {
+            _state.update { it.copy(saveAccountBusy = true, saveAccountMessage = null) }
+            runCatching { authRepository.linkGoogle(idToken, nonce) }
+                .onSuccess { session -> _state.update { it.copy(auth = AuthState.SignedIn(session), saveAccountBusy = false, saveAccountPrompt = null, transientMessage = com.hedefit.app.ui.i18n.tr("Hesabın kaydedildi. Tüm ilerlemen güvende.", "Account saved. All your progress is safe.")) } }
+                .onFailure { error -> _state.update { it.copy(saveAccountBusy = false, saveAccountMessage = friendlyError(error)) } }
+        }
+    }
+
+    /** E-posta doğrulamasından sonra uygulamaya dönüldüğünde misafir bayrağını tazeler. */
+    fun refreshGuestStatus() {
+        if (!_state.value.isGuest) return
+        viewModelScope.launch {
+            runCatching { authRepository.refreshSession() }.onSuccess { session ->
+                if (!session.user.isAnonymous) _state.update { it.copy(auth = AuthState.SignedIn(session), saveAccountPrompt = null, transientMessage = com.hedefit.app.ui.i18n.tr("Hesabın doğrulandı ve kaydedildi.", "Your account is verified and saved.")) }
+                else _state.update { it.copy(auth = AuthState.SignedIn(session)) }
+            }
+        }
+    }
+
     fun reportAuthError(message: String) {
         _state.update { it.copy(authBusy = false, authMessage = message) }
     }
@@ -227,9 +311,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             dataLoading = false,
                             dataError = null,
                             chatMessages = current.chatMessages.ifEmpty {
-                                listOf(ChatMessageState("Merhaba ${dashboard.profile.displayName}! Antrenman, beslenme veya ilerlemen hakkında bana bir şey sorabilirsin.", false))
+                                listOf(ChatMessageState(com.hedefit.app.ui.i18n.tr("Merhaba ${com.hedefit.app.ui.i18n.localizedDisplayName(dashboard.profile.displayName)}! Antrenman, beslenme veya ilerlemen hakkında bana bir şey sorabilirsin.", "Hi ${com.hedefit.app.ui.i18n.localizedDisplayName(dashboard.profile.displayName)}! Ask me anything about training, nutrition or your progress."), false))
                             },
-                            chatUsageLimit = current.chatUsageLimit ?: if (dashboard.profile.isPremium) 25 else 5,
+                            chatUsageLimit = current.chatUsageLimit ?: current.copy(dashboard = dashboard).limits().dailyCoachQuestions,
                         )
                     }
                     // The server snapshot is historical data only. Immediately
@@ -274,6 +358,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val nutritionMonthsInFlight = mutableSetOf<YearMonth>()
 
     fun loadNutritionDate(date: LocalDate) {
+        if (!requireEntitlement(LockedFeature.History) { java.time.temporal.ChronoUnit.DAYS.between(date, LocalDate.now()) < it.historyDays }) return
         val today = LocalDate.now()
         if (date > today) return
         nutritionDateJob?.cancel()
@@ -371,6 +456,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         workoutSaving = false,
                         dashboard = current.dashboard?.copy(sessions = listOf(session) + current.dashboard.sessions),
                         transientMessage = if (language == "en") "${activity.titleEn} saved: $calories kcal burned." else "${activity.titleTr} kaydedildi: $calories kcal yakıldı.",
+                    ) }
+                    onSaved()
+                }
+                .onFailure { error -> _state.update { it.copy(workoutSaving = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun recordCardioSession(machineKey: String, durationSeconds: Int, calories: Int, summary: String, onSaved: () -> Unit) {
+        if (_state.value.workoutSaving) return
+        if (durationSeconds < 60) { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Kaydetmek için en az 1 dakika kardiyo yapmalısın.", "Do at least 1 minute of cardio to save.")) }; return }
+        viewModelScope.launch {
+            _state.update { it.copy(workoutSaving = true) }
+            runCatching { repository.recordCardioSession(machineKey, durationSeconds, calories, summary) }
+                .onSuccess { session ->
+                    _state.update { current -> current.copy(
+                        workoutSaving = false,
+                        dashboard = current.dashboard?.copy(sessions = listOf(session) + current.dashboard.sessions),
+                        transientMessage = com.hedefit.app.ui.i18n.tr("Kardiyo kaydedildi: ${session.calories} kcal günlük hesabına eklendi.", "Cardio saved: ${session.calories} kcal added to your day."),
                     ) }
                     onSaved()
                 }
@@ -487,12 +590,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun analyzeNutritionPhoto(jpegBytes: ByteArray) {
+        if (!canAddMeals()) return
         if (_state.value.photoNutritionBusy) return
         viewModelScope.launch {
             _state.update { it.copy(photoNutritionBusy = true, photoNutritionResults = emptyList()) }
             runCatching { repository.analyzeNutritionPhoto(jpegBytes) }
                 .onSuccess { results -> _state.update { it.copy(photoNutritionBusy = false, photoNutritionResults = results) } }
-                .onFailure { error -> _state.update { it.copy(photoNutritionBusy = false, transientMessage = friendlyError(error)) } }
+                .onFailure { error ->
+                    val message = friendlyError(error)
+                    _state.update { it.copy(photoNutritionBusy = false, transientMessage = message) }
+                    // Sunucu günlük fotoğraf kotasını aştıysa uygun teklifi göster.
+                    if (message.contains("limit", true) || message.contains("hak", true)) requireEntitlement(LockedFeature.PhotoMeal) { false }
+                }
         }
     }
 
@@ -501,6 +610,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     suspend fun recognizeEquipment(jpegBytes: ByteArray) = repository.recognizeEquipment(jpegBytes)
 
     fun savePhotoNutrition(items: List<com.hedefit.app.data.model.NutritionEstimateData>, meal: String) {
+        if (!canAddMeals(items.size.coerceAtLeast(1))) return
         if (_state.value.nutritionBusy || items.isEmpty()) return
         viewModelScope.launch {
             _state.update { it.copy(nutritionBusy = true) }
@@ -518,6 +628,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addCatalogFood(food: FoodSearchData, grams: Double, meal: String) {
+        if (!canAddMeals()) return
         if (_state.value.nutritionBusy) return
         viewModelScope.launch {
             _state.update { it.copy(nutritionBusy = true) }
@@ -585,12 +696,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun repeatFavorite(favorite: FavoriteMealData) = viewModelScope.launch {
+        if (!canAddMeals()) return@launch
         _state.update { it.copy(nutritionBusy = true) }
         runCatching { repository.repeatFavorite(favorite) }.onSuccess { log -> _state.update { current -> current.copy(nutritionBusy = false, dashboard = current.dashboard?.copy(nutritionLogs = listOf(log) + current.dashboard.nutritionLogs), nutritionViewingLogs = if (current.nutritionViewingDate == LocalDate.now()) listOf(log) + current.nutritionViewingLogs else current.nutritionViewingLogs, nutritionHistory = listOf(log) + current.nutritionHistory, transientMessage = "Favori öğün tekrar eklendi.") } }
             .onFailure { error -> _state.update { it.copy(nutritionBusy = false, transientMessage = friendlyError(error)) } }
     }
 
     fun addMealPlanItem(food: com.hedefit.app.data.model.FoodSearchData, grams: Double, date: LocalDate, mealType: String) = viewModelScope.launch {
+        if (!requireEntitlement(LockedFeature.MealPlanner) { it.mealPlanner }) return@launch
         if (_state.value.nutritionBusy) return@launch
         _state.update { it.copy(nutritionBusy = true) }
         runCatching { repository.addMealPlanItem(food, grams, date, mealType) }
@@ -668,6 +781,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun saveRoute(snapshot: RouteSnapshot, activityType: String, title: String) = viewModelScope.launch {
+        if (!requireEntitlement(LockedFeature.Route) { it.routeSaving }) return@launch
         val route = RouteActivityData(
             id = snapshot.id,
             activityType = activityType,
@@ -755,6 +869,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
     }
 
+    private var exerciseNamesLoading = false
+
+    /** Katalogu TR ve EN çekip kimlik → (TR, EN) ad eşlemesini kurar; başarılı olunca tekrar çekmez. */
+    fun ensureExerciseNames() {
+        if (exerciseNamesLoading || _state.value.exerciseNames.byId.isNotEmpty() || _state.value.dashboard == null) return
+        exerciseNamesLoading = true
+        viewModelScope.launch {
+            runCatching {
+                val trItems = repository.loadExerciseCatalog(locale = "tr")
+                val enById = repository.loadExerciseCatalog(locale = "en").associate { it.id to it.name }
+                val byId = trItems.mapNotNull { item -> enById[item.id]?.let { en -> item.id to (item.name to en) } }.toMap()
+                val byName = byId.values.flatMap { pair -> listOf(pair.first.lowercase() to pair, pair.second.lowercase() to pair) }.toMap()
+                com.hedefit.app.ui.i18n.ExerciseNameIndex(byId, byName)
+            }.onSuccess { index -> _state.update { it.copy(exerciseNames = index) } }
+            exerciseNamesLoading = false
+        }
+    }
+
     fun loadExerciseLibrary(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr") {
         viewModelScope.launch {
             _state.update { it.copy(exerciseLibraryBusy = true) }
@@ -770,6 +902,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun useExerciseFromLibrary(item: ExerciseCatalogData) {
+        if (!requireEntitlement(LockedFeature.Exercise) { it.canUseExercise(item) }) return
         val dashboard = _state.value.dashboard ?: return
         val current = dashboard.workouts.toMutableList()
         val replacement = com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, item.primaryMuscles.firstOrNull() ?: "Tüm Vücut", 3, "8–12", 75)
@@ -786,6 +919,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createProgramFromExercises(name: String, exercises: List<ExerciseCatalogData>, locale: String = "tr") {
+        if (!canCreateCustomProgram()) return
         if (_state.value.planGenerating || exercises.isEmpty()) return
         val en = locale == "en"
         viewModelScope.launch {
@@ -831,6 +965,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createCustomProgram(draft: CustomProgramDraft, locale: String = "tr", onComplete: () -> Unit = {}) {
+        if (!canCreateCustomProgram()) return
         viewModelScope.launch {
             runCatching { repository.saveProgram(draft.name.ifBlank { if (locale == "en") "My Program" else "Programım" }, "custom", "", emptyList(), trainingDays = draft.trainingDays) }
                 .onSuccess { program -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workouts = emptyList(), workoutPrograms = withActiveProgram(data.workoutPrograms, program)) }, transientMessage = if (locale == "en") "Custom program created." else "Kendi programın oluşturuldu.") }; onComplete() }
@@ -839,6 +974,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun copyProgram(program: WorkoutProgramData) {
+        if (!canCreateCustomProgram()) return
         viewModelScope.launch {
             runCatching { repository.saveProgram("${program.name} Kopyası", "custom", program.focusArea, program.exercises, trainingDays = program.trainingDays) }
                 .onSuccess { copy -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data -> data.copy(workouts = copy.exercises, workoutPrograms = withActiveProgram(data.workoutPrograms, copy)) }, transientMessage = "Program kopyalandı ve aktif edildi.") } }
@@ -998,6 +1134,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * atlanır; ana bölge programı yine de oluşturulur.
      */
     fun generateRegionalPlan(muscle: String, label: String, connected: Pair<String, String>? = null, locale: String = "tr") {
+        if (!requireEntitlement(LockedFeature.RegionalPlan) { it.regionalPlans }) return
         if (_state.value.planGenerating) return
         viewModelScope.launch {
             _state.update { it.copy(planGenerating = true) }
@@ -1115,6 +1252,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addNutritionWithAi(food: String, grams: Double, meal: String) {
+        if (!canAddMeals()) return
         if (_state.value.nutritionBusy) return
         if (looksLikeWholeMeal(food)) {
             viewModelScope.launch {
@@ -1163,10 +1301,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             chatUsageLimit = reply.limit ?: it.chatUsageLimit,
                         )
                     }
+                    val now = _state.value
+                    if (now.isGuest && now.chatUsageLimit != null && (now.chatUsageUsed ?: 0) >= now.chatUsageLimit) showSaveAccountPrompt(SaveAccountTrigger.CoachLimit)
                 }
                 .onFailure { error ->
                     val message = friendlyError(error)
                     _state.update { it.copy(chatBusy = false, chatMessages = it.chatMessages + ChatMessageState("Fit Koç şu anda yanıtı tamamlayamadı: $message", false), transientMessage = message) }
+                    if (_state.value.isGuest && (message.contains("limit", true) || message.contains("hak", true))) showSaveAccountPrompt(SaveAccountTrigger.CoachLimit)
                 }
         }
     }
