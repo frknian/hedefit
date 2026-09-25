@@ -64,10 +64,13 @@ fun WelcomeGuideDialog(
     completed: Set<GuideAction> = emptySet(),
     onAction: (GuideAction) -> Unit,
     onDismiss: () -> Unit,
+    onSkip: (GuideAction) -> Unit = {},
+    mandatory: Boolean = false,
 ) {
     val list = missions(coachName)
     val done = list.count { it.action in completed }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    val allDone = done == list.size
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnBackPress = !mandatory || allDone, dismissOnClickOutside = false)) {
         Column(Modifier.fillMaxSize().background(HedefitColors.Background).systemBarsPadding()) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -99,13 +102,17 @@ fun WelcomeGuideDialog(
                         }
                         if (!isDone) Text(mission.cta, color = mission.tint, fontWeight = FontWeight.Black, fontSize = 13.sp, modifier = Modifier.padding(start = 8.dp))
                     }
+                    // Saati olmayanlar ya da Health Connect'i desteklemeyen cihazlar rehberde takılmasın.
+                    if (!isDone && mission.action == GuideAction.HealthConnect) TextButton(onClick = { onSkip(mission.action) }, modifier = Modifier.align(Alignment.End)) {
+                        Text(tr("Saatim yok, atla", "No watch, skip"), color = HedefitColors.TextMuted, fontSize = 13.sp)
+                    }
                 }
             }
             Button(
-                onClick = onDismiss,
+                onClick = onDismiss, enabled = allDone || !mandatory,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp).height(54.dp), shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = if (done == list.size) HedefitColors.Lime else HedefitColors.SurfaceHigh, contentColor = if (done == list.size) HedefitColors.OnLime else HedefitColors.TextPrimary),
-            ) { Text(if (done == list.size) tr("Hepsi tamam! 🎉", "All done! 🎉") else tr("Sonra devam ederim", "I'll continue later"), fontWeight = FontWeight.Bold) }
+            ) { Text(if (done == list.size) tr("Hepsi tamam! 🎉", "All done! 🎉") else if (mandatory) tr("Devam etmek için görevleri tamamla (${done}/${list.size})", "Finish the missions to continue (${done}/${list.size})") else tr("Kapat", "Close"), fontWeight = FontWeight.Bold) }
         }
     }
 }

@@ -181,10 +181,19 @@ class MainActivity : ComponentActivity() {
                 var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
                 var googleCredentialBusy by remember { mutableStateOf(false) }
                 var offerCardioFinisher by remember { mutableStateOf(false) }
-                // Başlangıç görevleri kullanıcının gerçekten yaptığı işlere göre tamamlanır.
+                // Zorunlu başlangıç rehberi: görev ekranı ziyaret edildiğinde (denendi) ya da iş gerçekten
+                // yapıldığında tamamlanır; 6/6 olana kadar ana ekrana her dönüşte rehber yeniden açılır.
+                val guidePrefs = remember { this@MainActivity.getSharedPreferences("hedefit-guide", android.content.Context.MODE_PRIVATE) }
+                var guideTried by remember { mutableStateOf(guidePrefs.getStringSet("tried", emptySet()).orEmpty().toSet()) }
+                var activeMission by rememberSaveable { mutableStateOf<String?>(null) }
+                fun markTried(action: com.hedefit.app.ui.screens.GuideAction) {
+                    guideTried = guideTried + action.name
+                    guidePrefs.edit().putStringSet("tried", guideTried).apply()
+                }
                 val guideCompleted = run {
                     val data = uiState.dashboard
                     buildSet {
+                        com.hedefit.app.ui.screens.GuideAction.entries.filter { it.name in guideTried }.forEach { add(it) }
                         if (data?.sessions.orEmpty().any { it.manualActivityKey == null }) add(com.hedefit.app.ui.screens.GuideAction.Workout)
                         if (data?.nutritionLogs.orEmpty().isNotEmpty()) add(com.hedefit.app.ui.screens.GuideAction.Nutrition)
                         if (data?.sessions.orEmpty().any { it.manualActivityKey?.startsWith("cardio_") == true }) add(com.hedefit.app.ui.screens.GuideAction.Cardio)
@@ -591,9 +600,6 @@ class MainActivity : ComponentActivity() {
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenWearables = { utilityPage = UtilityPage.Wearables },
                                 onOpenCardio = { utilityPage = UtilityPage.Cardio },
-                                guideDone = if (preferences.welcomeGuideSeen) guideCompleted.size else 0,
-                                guideTotal = if (preferences.welcomeGuideSeen) com.hedefit.app.ui.screens.GuideAction.entries.size else 0,
-                                onOpenGuide = { showWelcomeGuide = true },
                                 quickActions = preferences.homeQuickActions,
                                 onQuickActionsChange = { updatePreferences(preferences.copy(homeQuickActions = it)) },
                             )
@@ -742,17 +748,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 // Tanıtım, soru testi bittikten sonra ana ekranda gösterilir.
-                if (showWelcomeGuide && uiState.auth is AuthState.SignedIn && uiState.dashboard != null && utilityPage == UtilityPage.Main && coreQuestionsAnswered(uiState.dashboard?.profile?.historyAnswers.orEmpty()) && uiState.dashboard?.profile?.heightCm != null && uiState.dashboard?.profile?.weightKg != null) WelcomeGuideDialog(
+                // Görevden ana ekrana dönünce rehberi yeniden aç.
+                LaunchedEffect(activeMission, selected, utilityPage, activeWorkout) {
+                    if (activeMission != null && selected == AppDestination.Home && utilityPage == UtilityPage.Main && !activeWorkout) activeMission = null
+                }
+                if ((showWelcomeGuide || !preferences.welcomeGuideSeen) && activeMission == null && uiState.auth is AuthState.SignedIn && uiState.dashboard != null && utilityPage == UtilityPage.Main && coreQuestionsAnswered(uiState.dashboard?.profile?.historyAnswers.orEmpty()) && uiState.dashboard?.profile?.heightCm != null && uiState.dashboard?.profile?.weightKg != null) WelcomeGuideDialog(
                     language = preferences.language,
                     coachName = preferences.coachName.ifBlank { if (preferences.language == "en") "Fit Coach" else "FitKoç" },
                     completed = guideCompleted,
                     onAction = { action ->
+                        markTried(action)
                         if (action == com.hedefit.app.ui.screens.GuideAction.HealthConnect) {
                             if (uiState.healthConnected) mainViewModel.syncHealthConnect()
                             else healthPermissionLauncher.launch(healthConnectManager.permissions)
                         } else {
-                            showWelcomeGuide = false
-                            updatePreferences(preferences.copy(welcomeGuideSeen = true))
+                            activeMission = action.name
                             utilityPage = UtilityPage.Main
                             when (action) {
                                 com.hedefit.app.ui.screens.GuideAction.Workout -> selected = AppDestination.Workout
@@ -764,10 +774,15 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     },
+                    onSkip = { action -> markTried(action) },
                     onDismiss = {
-                        showWelcomeGuide = false
-                        updatePreferences(preferences.copy(welcomeGuideSeen = true))
+                        // Yalnız 6/6 olunca kapanır (zorunlu); ayarlardan yeniden izlemede her zaman kapanabilir.
+                        if (guideCompleted.size == com.hedefit.app.ui.screens.GuideAction.entries.size || preferences.welcomeGuideSeen) {
+                            showWelcomeGuide = false
+                            updatePreferences(preferences.copy(welcomeGuideSeen = true))
+                        }
                     },
+                    mandatory = !preferences.welcomeGuideSeen,
                 )
                 val userProfile = uiState.dashboard?.profile
                 if (uiState.auth is AuthState.SignedIn && !uiState.isGuest && userProfile != null && userProfile.username.isNullOrBlank() && userProfile.heightCm != null && userProfile.weightKg != null && userProfile.age != null) {
