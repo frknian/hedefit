@@ -31,7 +31,10 @@ class SecureSessionStore(context: Context) {
         val wrapper = JSONObject()
             .put("iv", Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
             .put("data", Base64.encodeToString(encrypted, Base64.NO_WRAP))
-        preferences.edit().putString(KEY_PAYLOAD, wrapper.toString()).apply()
+        // commit(): Supabase yenileme jetonunu tek kullanımlık olarak döndürür. Yeni jeton diske
+        // yazılmadan süreç ölürse eskisi geçersiz kaldığı için oturum (misafirde hesap) kaybolur;
+        // bu yüzden kayıt eşzamanlı yapılır.
+        preferences.edit().putString(KEY_PAYLOAD, wrapper.toString()).commit()
     }
 
     fun clear() {

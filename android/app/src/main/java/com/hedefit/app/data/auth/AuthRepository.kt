@@ -232,13 +232,17 @@ class AuthRepository(
         val session = current ?: store.read()?.also { current = it } ?: error("Oturum bulunamadı.")
         val now = System.currentTimeMillis() / 1000
         if (!forceRefresh && session.expiresAtEpochSeconds - now > 90) return@withLock session.accessToken
-        val response = http.request(
-            url = authUrl("token?grant_type=refresh_token"),
-            method = "POST",
-            headers = authHeaders(),
-            body = JSONObject().put("refresh_token", session.refreshToken).toString(),
-        ).requireSuccess("Oturum yenilenemedi.")
-        parseSession(response.jsonObject()).also(::save).accessToken
+        // İstek gönderildikten sonra iptal edilirse sunucu jetonu döndürmüş ama biz kaydetmemiş
+        // oluruz; NonCancellable ile istek ve kayıt birlikte tamamlanır.
+        withContext(kotlinx.coroutines.NonCancellable) {
+            val response = http.request(
+                url = authUrl("token?grant_type=refresh_token"),
+                method = "POST",
+                headers = authHeaders(),
+                body = JSONObject().put("refresh_token", session.refreshToken).toString(),
+            ).requireSuccess("Oturum yenilenemedi.")
+            parseSession(response.jsonObject()).also(::save).accessToken
+        }
     }
 
     suspend fun signOut() {
