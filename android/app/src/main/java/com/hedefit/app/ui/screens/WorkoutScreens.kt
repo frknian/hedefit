@@ -191,6 +191,7 @@ fun WorkoutPlanScreen(
     onGenerateQuickWorkout: (List<Pair<String, String>>, Int, String, String, List<String>, String) -> Unit,
     onCreateOwnPlan: (CustomProgramDraft) -> Unit,
     onAddPushPullTemplate: (String) -> Unit,
+    onPreviewTemplate: (String) -> Pair<String, List<WorkoutExerciseData>>? = { null },
     onSelectProgram: (WorkoutProgramData) -> Unit,
     onRemoveProgram: (WorkoutProgramData) -> Unit,
     onCopyProgram: (WorkoutProgramData) -> Unit,
@@ -269,7 +270,7 @@ fun WorkoutPlanScreen(
             "hub" -> ProgramCreateHub(padding, en, onBack = back, onOpen = { page = it }, onOpenRegional = { showRegional = true })
             "quick" -> QuickWorkoutPage(padding, en, generating, onBack = back) { regions, duration, fatigue, environment, owned, level -> onGenerateQuickWorkout(regions, duration, fatigue, environment, owned, level); page = null }
             "ai" -> AiProgramPage(padding, en, profile, generating, onBack = back, onEditPreferences = onOpenQuestionnaire) { onGeneratePlan(); page = null }
-            "ready" -> ReadyProgramsPage(padding, en, generating, onBack = back) { key -> onAddPushPullTemplate(key); page = null }
+            "ready" -> ReadyProgramsPage(padding, en, generating, onBack = back, onAdd = { key -> onAddPushPullTemplate(key); page = null }, preview = onPreviewTemplate)
             "custom" -> CustomProgramPage(padding, en, onBack = back) { draft -> onCreateOwnPlan(draft); page = null }
             "muscles" -> ScreenContainer(padding) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1502,29 +1503,78 @@ private fun AiProgramPage(padding: PaddingValues, en: Boolean, profile: ProfileD
 }
 
 private fun readyTemplates(en: Boolean) = listOf(
-    Triple("push_a", if (en) "Push A • Chest focus" else "İtiş A • Göğüs odaklı", "push"),
-    Triple("push_b", if (en) "Push B • Shoulder focus" else "İtiş B • Omuz odaklı", "push"),
-    Triple("pull_a", if (en) "Pull A • Back width" else "Çekiş A • Sırt genişliği", "pull"),
-    Triple("pull_b", if (en) "Pull B • Back thickness" else "Çekiş B • Sırt kalınlığı", "pull"),
-    Triple("leg_a", if (en) "Legs A • Quad focus" else "Bacak A • Ön bacak odaklı", "legs"),
-    Triple("leg_b", if (en) "Legs B • Hamstring & glute focus" else "Bacak B • Arka bacak & kalça odaklı", "legs"),
-    Triple("full_a", if (en) "Full Body A • Strength basics" else "Tüm Vücut A • Temel kuvvet", "full"),
-    Triple("full_b", if (en) "Full Body B • Deadlift focus" else "Tüm Vücut B • Yerden kaldırış odaklı", "full"),
+    Triple("push_a", com.hedefit.app.ui.state.readyProgramTitle("push_a", en), "push"),
+    Triple("push_b", com.hedefit.app.ui.state.readyProgramTitle("push_b", en), "push"),
+    Triple("pull_a", com.hedefit.app.ui.state.readyProgramTitle("pull_a", en), "pull"),
+    Triple("pull_b", com.hedefit.app.ui.state.readyProgramTitle("pull_b", en), "pull"),
+    Triple("leg_a", com.hedefit.app.ui.state.readyProgramTitle("leg_a", en), "legs"),
+    Triple("leg_b", com.hedefit.app.ui.state.readyProgramTitle("leg_b", en), "legs"),
+    Triple("full_a", com.hedefit.app.ui.state.readyProgramTitle("full_a", en), "full"),
+    Triple("full_b", com.hedefit.app.ui.state.readyProgramTitle("full_b", en), "full"),
 )
 
+/** Tahmini süre: her set ~45 sn çalışma + dinlenme, üstüne 8 dk ısınma. */
+private fun estimatedMinutes(exercises: List<WorkoutExerciseData>) =
+    (exercises.sumOf { it.sets * (45 + it.restSeconds) } / 60) + 8
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun ReadyProgramsPage(padding: PaddingValues, en: Boolean, busy: Boolean, onBack: () -> Unit, onAdd: (String) -> Unit) {
+private fun ReadyProgramsPage(padding: PaddingValues, en: Boolean, busy: Boolean, onBack: () -> Unit, onAdd: (String) -> Unit, preview: (String) -> Pair<String, List<WorkoutExerciseData>>? = { null }) {
     var filter by rememberSaveable { mutableStateOf("all") }
+    var previewKey by rememberSaveable { mutableStateOf<String?>(null) }
     val filters = listOf("all" to (if (en) "All" else "Tümü"), "push" to (if (en) "Push" else "İtiş"), "pull" to (if (en) "Pull" else "Çekiş"), "legs" to (if (en) "Legs" else "Bacak"), "full" to (if (en) "Full body" else "Tüm vücut"))
     val templates = readyTemplates(en).filter { filter == "all" || it.third == filter }
     ScreenContainer(padding) {
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { HfScreenHeader(if (en) "Ready programs" else "Hazır programlar", if (en) "${readyTemplates(en).size} templates" else "${readyTemplates(en).size} şablon", onBack = onBack) }
+            item { HfScreenHeader(if (en) "Ready programs" else "Hazır programlar", if (en) "${readyTemplates(en).size} templates • tap to preview" else "${readyTemplates(en).size} şablon • önizlemek için dokun", onBack = onBack) }
             item { HfChipRow { filters.forEach { (key, label) -> HfChip(label, filter == key, { filter = key }) } } }
             items(templates, key = { it.first }) { (key, title, group) ->
                 val tint = when (group) { "push" -> HedefitColors.Lime; "pull" -> HedefitColors.Water; "legs" -> HedefitColors.Warning; else -> HedefitColors.Sleep }
-                HfNavRow(Icons.Default.FitnessCenter, tint, title, filters.first { it.first == group }.second, onClick = if (busy) null else ({ onAdd(key) }), chevron = false) {
-                    Box(Modifier.size(36.dp).background(HedefitColors.SurfaceHigh, CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.Add, if (en) "Add $title" else "$title ekle", tint = HedefitColors.TextPrimary, modifier = Modifier.size(18.dp)) }
+                val exercises = remember(key, en) { preview(key)?.second.orEmpty() }
+                HedefitCard(Modifier.fillMaxWidth(), onClick = { previewKey = key }, contentPadding = PaddingValues(14.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(40.dp).background(tint.copy(alpha = .16f), CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.FitnessCenter, null, tint = tint, modifier = Modifier.size(20.dp)) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                                if (exercises.isNotEmpty()) Text(if (en) "${exercises.size} exercises • ~${estimatedMinutes(exercises)} min • ${filters.first { it.first == group }.second}" else "${exercises.size} hareket • ~${estimatedMinutes(exercises)} dk • ${filters.first { it.first == group }.second}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                            }
+                            Icon(Icons.Default.KeyboardArrowRight, null, tint = HedefitColors.TextMuted)
+                        }
+                        if (exercises.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            exercises.take(5).forEach { ex -> ExerciseMedia(com.hedefit.app.ui.components.workoutExerciseImagePaths(ex.id, ex.name), ex.name, Modifier.size(46.dp).clip(RoundedCornerShape(10.dp))) }
+                        }
+                        if (exercises.isNotEmpty()) Text(exercises.map { it.area }.distinct().joinToString(" • "), color = tint, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+    previewKey?.let { key ->
+        val data = remember(key, en) { preview(key) }
+        androidx.compose.material3.ModalBottomSheet(onDismissRequest = { previewKey = null }, containerColor = HedefitColors.Background) {
+            LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 18.dp), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item {
+                    Text(data?.first ?: readyTemplates(en).first { it.first == key }.second, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    data?.second?.let { list -> Text(if (en) "${list.size} exercises • ~${estimatedMinutes(list)} min • ${list.sumOf { it.sets }} sets" else "${list.size} hareket • ~${estimatedMinutes(list)} dk • ${list.sumOf { it.sets }} set", color = HedefitColors.TextSecondary) }
+                }
+                items(data?.second.orEmpty(), key = { it.id }) { ex ->
+                    Row(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(16.dp)).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        ExerciseMedia(com.hedefit.app.ui.components.workoutExerciseImagePaths(ex.id, ex.name), ex.name, Modifier.size(58.dp).clip(RoundedCornerShape(12.dp)))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(ex.name, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Text(ex.area, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("${ex.sets} × ${ex.reps}", fontWeight = FontWeight.ExtraBold, color = HedefitColors.Lime)
+                            Text(if (en) "${ex.restSeconds}s rest" else "${ex.restSeconds} sn dinlenme", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+                item {
+                    HfPrimaryButton(if (busy) (if (en) "Adding…" else "Ekleniyor…") else if (en) "Add to my programs" else "Programlarıma ekle", { previewKey = null; onAdd(key) }, Modifier.fillMaxWidth().padding(top = 6.dp), Icons.Default.Add, enabled = !busy)
                 }
             }
         }

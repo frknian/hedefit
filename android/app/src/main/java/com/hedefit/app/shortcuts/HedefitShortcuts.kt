@@ -29,7 +29,12 @@ object HedefitShortcuts {
             "custom" -> CustomWidget::class.java
             else -> return false
         }
-        return manager.requestPinAppWidget(ComponentName(context, provider), null, null)
+        // Özel widget: eklendiği an bekleyen ayarı yeni widget kimliğine yaz.
+        val callback = if (provider == CustomWidget::class.java) android.app.PendingIntent.getBroadcast(
+            context, 4410, android.content.Intent(context, com.hedefit.app.widgets.CustomWidgetPinnedReceiver::class.java),
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE,
+        ) else null
+        return manager.requestPinAppWidget(ComponentName(context, provider), null, callback)
     }
 
     fun request(context: Context, type: String): Boolean {

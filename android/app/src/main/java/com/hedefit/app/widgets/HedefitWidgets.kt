@@ -83,7 +83,15 @@ object CustomWidgetConfigStore {
         return CustomWidgetConfig(p.getString("$id-primary", "steps").orEmpty(), p.getString("$id-secondary", "calories").orEmpty(), p.getString("$id-action", "open").orEmpty(), p.getString("$id-theme", "minimal").orEmpty())
     }
     fun write(context: Context, id: Int, config: CustomWidgetConfig) { context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().putString("$id-primary", config.primary).putString("$id-secondary", config.secondary).putString("$id-action", config.action).putString("$id-theme", config.theme).apply() }
-    fun delete(context: Context, id: Int) { context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().remove("$id-primary").remove("$id-secondary").remove("$id-action").remove("$id-theme").apply() }
+    /** Uygulama içinde oluşturulan, henüz ana ekrana eklenmemiş özel widget ayarı. */
+    fun writePending(context: Context, config: CustomWidgetConfig) = write(context, PENDING_ID, config)
+    fun takePending(context: Context): CustomWidgetConfig? {
+        val p = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
+        if (!p.contains("$PENDING_ID-primary")) return null
+        return read(context, PENDING_ID).also { delete(context, PENDING_ID) }
+    }
+    private const val PENDING_ID = -1
+        fun delete(context: Context, id: Int) { context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit().remove("$id-primary").remove("$id-secondary").remove("$id-action").remove("$id-theme").apply() }
 }
 
 object HedefitWidgets {

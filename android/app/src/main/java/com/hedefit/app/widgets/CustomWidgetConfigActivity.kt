@@ -20,6 +20,12 @@ class CustomWidgetConfigActivity : Activity() {
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         setResult(RESULT_CANCELED)
         if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) { finish(); return }
+        // Uygulama içinde (Ayarlar → Ana ekran widget'ları) hazırlanan ayar varsa sormadan uygula.
+        CustomWidgetConfigStore.takePending(this)?.let { pending ->
+            CustomWidgetConfigStore.write(this, widgetId, pending)
+            HedefitWidgets.render(this, AppWidgetManager.getInstance(this), widgetId, "CustomWidget")
+            setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)); finish(); return
+        }
 
         val primaryKeys = listOf("steps", "calories", "water", "protein", "distance", "active_time", "weight", "workout")
         val primaryLabels = listOf("Adım", "Aktif Kalori", "Su", "Protein", "Mesafe", "Aktif süre", "Kilo", "Antrenman")

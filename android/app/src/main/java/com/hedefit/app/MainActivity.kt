@@ -593,6 +593,7 @@ class MainActivity : ComponentActivity() {
                                 onGenerateQuickWorkout = { regions, duration, fatigue, environment, owned, level -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, owned, level, preferences.language) },
                                 onCreateOwnPlan = { draft -> mainViewModel.createCustomProgram(draft, preferences.language) { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary } },
                                 onAddPushPullTemplate = { key -> mainViewModel.addPushPullTemplate(key, preferences.language) },
+                                onPreviewTemplate = { key -> mainViewModel.previewReadyProgram(key, preferences.language == "en") },
                                 onSelectProgram = mainViewModel::activateProgram,
                                 onRemoveProgram = mainViewModel::deleteProgram,
                                 onCopyProgram = mainViewModel::copyProgram,

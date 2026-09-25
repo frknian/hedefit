@@ -232,7 +232,7 @@ fun ProfileSettingsScreen(
                             onPreferencesChange(preferences.copy(stepCounterNotificationEnabled = it))
                         }
                         CardDivider()
-                        SettingsRowContent(Icons.Default.AddToHomeScreen, if (en) "Home screen shortcuts" else "Ana ekran kısayolları", "", { showShortcut = true })
+                        SettingsRowContent(Icons.Default.AddToHomeScreen, if (en) "Home screen widgets" else "Ana ekran widget'ları", "", { showShortcut = true })
                         CardDivider()
                         SettingsRowContent(Icons.Default.Watch, if (en) "Smart watches" else "Akıllı saatler", "", onOpenWearables, HedefitColors.Lime)
                         CardDivider()
@@ -275,7 +275,13 @@ fun ProfileSettingsScreen(
     if (showFreeze) ConfirmDialog(if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data will remain. App access will pause until you reactivate." else "Verilerin korunacak. Yeniden etkinleştirene kadar uygulama erişimin duracak.", if (en) "Freeze" else "Dondur", accountBusy, en, { showFreeze = false }) { showFreeze = false; onFreeze() }
     if (showDelete) DeleteAccountDialog(email, accountBusy, en, { showDelete = false }) { confirmedEmail -> showDelete = false; onDelete(confirmedEmail) }
     if (showShare) ShareAppDialog(defaultShareMessage, en, { showShare = false }) { message -> showShare = false; onShareApp(message) }
-    if (showShortcut) ShortcutSettingsDialog(en, { showShortcut = false }) { onAddShortcut(it); showShortcut = false }
+    val widgetContext = androidx.compose.ui.platform.LocalContext.current
+    if (showShortcut) HomeWidgetsSheet(
+        onDismiss = { showShortcut = false },
+        onAddWidget = { onAddShortcut(it) },
+        onAddCustom = { config -> com.hedefit.app.widgets.CustomWidgetConfigStore.writePending(widgetContext, config); onAddShortcut("widget_custom") },
+        onAddShortcut = { onAddShortcut(it) },
+    )
     if (showUnits) MeasurementUnitsDialog(preferences.unitSystem, en, { showUnits = false }) { system -> onPreferencesChange(preferences.copy(unitSystem = system)); showUnits = false }
 }
 

@@ -1011,6 +1011,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Hareket id'leri RepDB kataloğuna (bkz. fit-ai/scripts/import-repdb.mjs) karşılık
     // gelir: görsellerin doğru yüklenmesi (ExerciseMedia/workoutExerciseImagePaths)
     // ve "Değiştir" ile katalogdan alternatif bulunabilmesi buna bağlıdır.
+    /** Önizleme: şablonun hareketleri; adlar yüklüyse katalogdan uygulama dilinde gelir. */
+    fun previewReadyProgram(key: String, en: Boolean): Pair<String, List<com.hedefit.app.data.model.WorkoutExerciseData>>? =
+        pushPullTemplate(key, en, _state.value.exerciseNames.byId.mapValues { (_, pair) -> if (en) pair.second else pair.first })
+
     private fun pushPullTemplate(key: String, en: Boolean, nameLookup: Map<String, String>): Pair<String, List<com.hedefit.app.data.model.WorkoutExerciseData>>? {
         // İsimler her zaman katalogdan (bkz. addPushPullTemplate) gelir — burada
         // yalnızca id id'ye eşlik eden fallback (katalog yüklenemezse) ve
@@ -1074,14 +1078,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             exercise("hanging-leg-raise", "Hanging Leg Raise", if (en) "Core" else "Karın", 3, "10–15", 60),
         )
         return when (key) {
-            "push_a" -> (if (en) "Push A" else "İtiş A") to pushA
-            "push_b" -> (if (en) "Push B" else "İtiş B") to pushB
-            "pull_a" -> (if (en) "Pull A" else "Çekiş A") to pullA
-            "pull_b" -> (if (en) "Pull B" else "Çekiş B") to pullB
-            "leg_a" -> (if (en) "Legs A" else "Bacak A") to legA
-            "leg_b" -> (if (en) "Legs B" else "Bacak B") to legB
-            "full_a" -> (if (en) "Full Body A" else "Tüm Vücut A") to fullA
-            "full_b" -> (if (en) "Full Body B" else "Tüm Vücut B") to fullB
+            "push_a" -> readyProgramTitle(key, en) to pushA
+            "push_b" -> readyProgramTitle(key, en) to pushB
+            "pull_a" -> readyProgramTitle(key, en) to pullA
+            "pull_b" -> readyProgramTitle(key, en) to pullB
+            "leg_a" -> readyProgramTitle(key, en) to legA
+            "leg_b" -> readyProgramTitle(key, en) to legB
+            "full_a" -> readyProgramTitle(key, en) to fullA
+            "full_b" -> readyProgramTitle(key, en) to fullB
             else -> null
         }
     }
@@ -1770,4 +1774,18 @@ private fun movementFamily(id: String): String {
         "curl", "lateral-raise", "front-raise", "calf-raise", "raise", "fly", "dip", "plank", "crunch", "bridge", "thrust", "extension", "pulldown", "kickback",
     )
         .firstOrNull { key.contains(it) } ?: key
+}
+
+
+/** Hazır program adları: kodlu "A/B" yerine içeriği anlatan adlar. */
+fun readyProgramTitle(key: String, en: Boolean): String = when (key) {
+    "push_a" -> if (en) "Chest & Triceps Power Day" else "Göğüs & Arka Kol Güç Günü"
+    "push_b" -> if (en) "Shoulder & Chest Sculpt" else "Omuz & Göğüs Şekillendirme"
+    "pull_a" -> if (en) "Wide Back & Biceps" else "Geniş Sırt & Ön Kol"
+    "pull_b" -> if (en) "Thick Back & Rear Delts" else "Kalın Sırt & Arka Omuz"
+    "leg_a" -> if (en) "Quad Power Day" else "Ön Bacak Güç Günü"
+    "leg_b" -> if (en) "Glutes & Hamstrings" else "Kalça & Arka Bacak"
+    "full_a" -> if (en) "Full Body Strength Basics" else "Tüm Vücut Temel Kuvvet"
+    "full_b" -> if (en) "Full Body Deadlift Day" else "Tüm Vücut Deadlift Günü"
+    else -> key
 }
