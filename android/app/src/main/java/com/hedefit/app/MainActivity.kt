@@ -499,6 +499,7 @@ class MainActivity : ComponentActivity() {
                             onBack = { utilityPage = UtilityPage.Main },
                             stepGoal = preferences.stepGoal,
                             waterGoalMl = preferences.waterGoalMl,
+                            onSetWaterGoal = { updatePreferences(preferences.copy(waterGoalMl = it)) },
                             onSetCurrentWeight = { currentWeight ->
                                 val latest = dashboard.measurements.lastOrNull()
                                 mainViewModel.saveBodyMeasurement(

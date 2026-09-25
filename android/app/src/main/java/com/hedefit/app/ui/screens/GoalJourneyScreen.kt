@@ -1,5 +1,7 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.foundation.border
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
@@ -45,7 +47,7 @@ import com.hedefit.app.ui.theme.HedefitColors
 import kotlin.math.abs
 
 @Composable
-fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeight: (Double) -> Unit, onSetGoalWeight: (Double) -> Unit, language: String = "tr", unitSystem: String = "metric", stepGoal: Int = 10_000, waterGoalMl: Int = 2_500) {
+fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeight: (Double) -> Unit, onSetGoalWeight: (Double) -> Unit, language: String = "tr", unitSystem: String = "metric", stepGoal: Int = 10_000, waterGoalMl: Int = 2_500, onSetWaterGoal: (Int) -> Unit = {}) {
     val en = language == "en"
     val locale = java.util.Locale.forLanguageTag(if (en) "en" else "tr")
     var showCurrentEditor by remember { mutableStateOf(false) }
@@ -54,14 +56,20 @@ fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeigh
     val current = weights.lastOrNull()?.second ?: data.profile.weightKg
     val start = weights.firstOrNull()?.second ?: current
     val target = data.profile.targetWeightKg
-    val weeks = estimatedGoalWeeks(current, target)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val pacePrefs = remember { context.getSharedPreferences("hedefit-goal", android.content.Context.MODE_PRIVATE) }
+    var pace by remember { mutableStateOf(runCatching { com.hedefit.app.ui.settings.GoalPace.valueOf(pacePrefs.getString("pace", "Steady")!!) }.getOrDefault(com.hedefit.app.ui.settings.GoalPace.Steady)) }
+    val weeks = com.hedefit.app.ui.settings.GoalScience.weeks(current, target, pace)
     val losing = current != null && target != null && target < current
     val gaining = current != null && target != null && target > current
     val heightMeters = data.profile.heightCm?.div(100.0)
     val bmi = if (current != null && heightMeters != null && heightMeters > 0) current / (heightMeters * heightMeters) else null
     val targetBmi = if (target != null && heightMeters != null && heightMeters > 0) target / (heightMeters * heightMeters) else null
     val remaining = if (current != null && target != null) abs(target - current) else null
-    val weeklyRate = if (remaining != null && weeks != null && weeks > 0) remaining / weeks else null
+    val weeklyRate = if (current != null && target != null && remaining != null && remaining >= .1) com.hedefit.app.ui.settings.GoalScience.weeklyRateKg(current, target, pace) else null
+    val weeklyTrainingMinutes = data.sessions.filter { runCatching { java.time.Instant.parse(it.completedAt).isAfter(java.time.Instant.now().minus(java.time.Duration.ofDays(7))) }.getOrDefault(false) }.sumOf { it.durationSeconds } / 60
+    val recommendedWater = com.hedefit.app.ui.settings.GoalScience.recommendedWaterMl(current, data.profile.gender, weeklyTrainingMinutes)
+    val recommendedProtein = com.hedefit.app.ui.settings.GoalScience.recommendedProteinG(current, losing)
     val totalChange = if (start != null && target != null) abs(target - start) else 0.0
     val progress = if (totalChange > .05 && start != null && current != null) (abs(current - start) / totalChange).toFloat().coerceIn(0f, 1f) else 0f
     val finishDate = weeks?.let { java.time.LocalDate.now().plusWeeks(it.toLong()) }
@@ -71,37 +79,72 @@ fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeigh
     ScreenContainer {
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(18.dp, 12.dp, 18.dp, 40.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { HfScreenHeader(if (en) "My goal journey" else "Hedef yolculuğum", onBack = onBack, backLabel = if (en) "Back" else "Geri") }
+            // Kahraman kart: ilerleme halkası, şimdi → hedef, kalan ve tahmini bitiş.
             item {
                 HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text(
-                            when { losing -> if (en) "WEIGHT LOSS" else "KİLO VERME"; gaining -> if (en) "WEIGHT GAIN" else "KİLO ALMA"; target != null -> if (en) "MAINTAIN" else "KİLOYU KORU"; else -> if (en) "SET YOUR GOAL" else "HEDEFİNİ BELİRLE" },
-                            color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold,
-                        )
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            JourneyWeight(if (en) "Now" else "Şimdi", current?.let { kg(it) } ?: "—", Modifier.weight(1f)) { showCurrentEditor = true }
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = HedefitColors.Lime)
-                            JourneyWeight(if (en) "Target" else "Hedef", target?.let { kg(it) } ?: (if (en) "Set" else "Belirle"), Modifier.weight(1f), end = true) { showGoalEditor = true }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        com.hedefit.app.ui.components.ActivityRing(progress, HedefitColors.Lime, size = 96.dp, stroke = 10.dp) {
+                            Text("%${(progress * 100).toInt()}", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
                         }
-                        HfProgressBar(progress, height = 10.dp)
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                when { losing -> if (en) "WEIGHT LOSS" else "KİLO VERME"; gaining -> if (en) "WEIGHT GAIN" else "KİLO ALMA"; target != null -> if (en) "MAINTAIN" else "KİLOYU KORU"; else -> if (en) "SET A GOAL" else "HEDEF BELİRLE" },
+                                color = HedefitColors.Lime, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold,
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                JourneyWeight(if (en) "Now" else "Şimdi", current?.let { kg(it) } ?: "—", Modifier.weight(1f)) { showCurrentEditor = true }
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = HedefitColors.Lime)
+                                JourneyWeight(if (en) "Target" else "Hedef", target?.let { kg(it) } ?: (if (en) "Set" else "Belirle"), Modifier.weight(1f), end = true) { showGoalEditor = true }
+                            }
+                            Text(
+                                if (target == null) (if (en) "Tap Target to set your goal" else "Hedef kilonu belirlemek için Hedef'e dokun")
+                                else (if (en) "${remaining?.let { kg(it) } ?: "—"} to go • ${finishDate?.format(dateFormat) ?: "—"}" else "${remaining?.let { kg(it) } ?: "—"} kaldı • ${finishDate?.format(dateFormat) ?: "—"}"),
+                                color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+            // Tempo seçimi (bilimsel aralık içinde)
+            if (current != null && target != null && remaining != null && remaining >= .1) item {
+                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(com.hedefit.app.ui.i18n.tr("Tempon", "Your pace"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            com.hedefit.app.ui.settings.GoalPace.entries.forEach { option ->
+                                val rate = com.hedefit.app.ui.settings.GoalScience.weeklyRateKg(current, target, option)
+                                val optionWeeks = com.hedefit.app.ui.settings.GoalScience.weeks(current, target, option) ?: 0
+                                val selected = option == pace
+                                Column(
+                                    Modifier.weight(1f).clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                                        .background(if (selected) HedefitColors.Lime.copy(alpha = .15f) else HedefitColors.SurfaceHigh)
+                                        .border(if (selected) 2.dp else 0.dp, if (selected) HedefitColors.Lime else HedefitColors.SurfaceHigh, androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+                                        .clickable { pace = option; pacePrefs.edit().putString("pace", option.name).apply() }
+                                        .padding(vertical = 10.dp, horizontal = 6.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(when (option) { com.hedefit.app.ui.settings.GoalPace.Slow -> com.hedefit.app.ui.i18n.tr("Yavaş", "Slow"); com.hedefit.app.ui.settings.GoalPace.Steady -> com.hedefit.app.ui.i18n.tr("Dengeli", "Steady"); com.hedefit.app.ui.settings.GoalPace.Fast -> com.hedefit.app.ui.i18n.tr("Hızlı", "Fast") }, fontWeight = FontWeight.Bold)
+                                    Text(kg(rate, 2) + com.hedefit.app.ui.i18n.tr("/hf", "/wk"), color = HedefitColors.Lime, fontWeight = FontWeight.Black, style = MaterialTheme.typography.bodySmall)
+                                    Text(com.hedefit.app.ui.i18n.tr("$optionWeeks hafta", "$optionWeeks weeks"), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
+                                    if (option == com.hedefit.app.ui.settings.GoalPace.Steady) Text(com.hedefit.app.ui.i18n.tr("Önerilen", "Recommended"), color = HedefitColors.Lime, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
                         Text(
-                            if (target == null) (if (en) "Tap Target to set your goal weight" else "Hedef kilonu belirlemek için Hedef'e dokun")
-                            else if (en) "${(progress * 100).toInt()}% done • ${remaining?.let { kg(it) } ?: "—"} to go" else "%${(progress * 100).toInt()} tamamlandı • ${remaining?.let { kg(it) } ?: "—"} kaldı",
-                            fontWeight = FontWeight.Bold,
+                            if (losing) com.hedefit.app.ui.i18n.tr("Haftada vücut ağırlığının %0,5–1'i kas kaybını en aza indirir. Daha hızlısı kas ve performans kaybını artırır.", "0.5–1% of body weight per week minimises muscle loss. Faster increases muscle and performance loss.")
+                            else com.hedefit.app.ui.i18n.tr("Haftada %0,25–0,5 kilo alımı kas kazanımını yağ artışına göre en iyi dengeler.", "Gaining 0.25–0.5% per week best balances muscle gain against fat gain."),
+                            color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall,
                         )
+                        Text(com.hedefit.app.ui.i18n.tr("Günlük enerji farkı: ", "Daily energy difference: ") + "${com.hedefit.app.ui.settings.GoalScience.dailyEnergyDelta(current, target, pace)} kcal", fontWeight = FontWeight.Bold)
                     }
                 }
             }
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        HfStatTile(if (en) "Weekly pace" else "Haftalık tempo", weeklyRate?.let { kg(it, 2) } ?: "—", Modifier.weight(1f), valueColor = HedefitColors.Lime)
-                        HfStatTile(if (en) "Duration" else "Süre", weeks?.let { if (en) "$it weeks" else "$it hafta" } ?: "—", Modifier.weight(1f))
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        HfStatTile(if (en) "Est. finish" else "Tahmini bitiş", finishDate?.format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", locale)) ?: "—", Modifier.weight(1f))
-                        HfStatTile(if (en) "BMI" else "VKİ", bmi?.let { "%.1f".format(it) } ?: "—", Modifier.weight(1f), sub = targetBmi?.let { if (en) "Target %.1f".format(it) else "Hedef %.1f".format(it) })
-                    }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    HfStatTile(if (en) "Weekly pace" else "Haftalık tempo", weeklyRate?.let { kg(it, 2) } ?: "—", Modifier.weight(1f), valueColor = HedefitColors.Lime)
+                    HfStatTile(if (en) "Duration" else "Süre", weeks?.let { if (en) "$it weeks" else "$it hafta" } ?: "—", Modifier.weight(1f))
+                    HfStatTile(if (en) "BMI" else "VKİ", bmi?.let { "%.1f".format(it) } ?: "—", Modifier.weight(1f), sub = targetBmi?.let { if (en) "Target %.1f".format(it) else "Hedef %.1f".format(it) })
                 }
             }
             item {
@@ -171,11 +214,32 @@ fun GoalJourneyScreen(data: DashboardData, onBack: () -> Unit, onSetCurrentWeigh
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(if (en) "Daily targets for this goal" else "Bu hedef için günlük hedeflerin", style = MaterialTheme.typography.titleLarge)
                         GoalDetailRow(if (en) "Calories" else "Kalori", "${data.nutritionGoal.calories} kcal")
-                        GoalDetailRow("Protein", "${data.nutritionGoal.protein} g")
+                        GoalDetailRow("Protein", "${data.nutritionGoal.protein} g" + (recommendedProtein?.let { com.hedefit.app.ui.i18n.tr(" • önerilen $it g", " • recommended $it g") } ?: ""))
                         GoalDetailRow(if (en) "Carbs / Fat" else "Karb / Yağ", "${data.nutritionGoal.carbs} g / ${data.nutritionGoal.fat} g")
-                        GoalDetailRow(if (en) "Steps" else "Adım", "%,d".format(stepGoal).replace(',', '.'))
-                        GoalDetailRow(if (en) "Water" else "Su", MeasurementUnits.formatWater(waterGoalMl, unitSystem))
+                        GoalDetailRow(if (en) "Steps" else "Adım", "%,d".format(stepGoal).replace(',', '.') + com.hedefit.app.ui.i18n.tr(" • önerilen 8.000", " • recommended 8,000"))
+                        GoalDetailRow(if (en) "Water" else "Su", MeasurementUnits.formatWater(waterGoalMl, unitSystem) + com.hedefit.app.ui.i18n.tr(" • önerilen ", " • recommended ") + MeasurementUnits.formatWater(recommendedWater, unitSystem))
+                        if (waterGoalMl > recommendedWater * 1.5 || waterGoalMl < recommendedWater * 0.6) {
+                            Row(Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(HedefitColors.Warning.copy(alpha = .12f)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(com.hedefit.app.ui.i18n.tr("Su hedefin bilimsel önerinin çok dışında.", "Your water goal is far from the evidence-based range."), color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                                TextButton(onClick = { onSetWaterGoal(recommendedWater) }) { Text(com.hedefit.app.ui.i18n.tr("Önerilene ayarla", "Use recommended"), color = HedefitColors.Lime, fontWeight = FontWeight.Bold) }
+                            }
+                        }
                         GoalDetailRow(if (en) "Goal type" else "Hedef türü", data.profile.goal.substringBefore(" | ").let { g -> when (g) { "Kilo verme" -> com.hedefit.app.ui.i18n.tr("Kilo verme", "Lose weight"); "Kilo alma" -> com.hedefit.app.ui.i18n.tr("Kilo alma", "Gain weight"); "Kas kazanma", "Kas alma" -> com.hedefit.app.ui.i18n.tr("Kas kazanma", "Build muscle"); "Formu koruma" -> com.hedefit.app.ui.i18n.tr("Formu koruma", "Stay in shape"); else -> g.ifBlank { "—" } } })
+                    }
+                }
+            }
+            item {
+                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(com.hedefit.app.ui.i18n.tr("Bilimsel kaynaklar", "Scientific sources"), style = MaterialTheme.typography.titleLarge)
+                        com.hedefit.app.ui.settings.GOAL_SOURCES.forEach { source ->
+                            Column(Modifier.fillMaxWidth().clickable { uriHandler.openUri(source.url) }.padding(vertical = 4.dp)) {
+                                Text(if (en) source.claimEn else source.claim, fontWeight = FontWeight.Bold)
+                                Text(source.citation + " ↗", color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        Text(com.hedefit.app.ui.i18n.tr("Bu hesaplar genel yetişkinler içindir; tıbbi tavsiye değildir.", "These estimates are for healthy adults and are not medical advice."), color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }

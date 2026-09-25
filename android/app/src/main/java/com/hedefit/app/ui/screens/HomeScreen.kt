@@ -201,6 +201,8 @@ fun HomeScreen(
                 }
             }
             item { TodayCard(data, en, onOpenProgram) }
+            item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
+            item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) }
             item {
                 val done = listOf(
                     data.nutritionLogs.sumOf { it.calories } >= data.nutritionGoal.calories * .9,
@@ -235,8 +237,6 @@ fun HomeScreen(
                     }
                 }
             }
-            item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
-            item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) }
             if (showAds) item { AdBanner(Modifier.fillMaxWidth()) }
             item { HomePrograms(data, en, onOpenProgram, onProgramHomeVisibilityChange) }
         }
