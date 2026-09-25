@@ -28,6 +28,9 @@ private val speedControl = CardioControl("speed", "Hız", "km/s", 1.0, 20.0, 0.5
 private val inclineControl = CardioControl("incline", "Eğim", "%", 0.0, 15.0, 1.0, 1.0)
 private val levelControl = CardioControl("level", "Direnç", "seviye", 1.0, 20.0, 1.0, 6.0)
 
+/** Açık hava temposu → yaklaşık hız (km/s). Dışarıda hızı bilmek zor olduğu için tempo seçilir. */
+val OUTDOOR_PACES = listOf("Yavaş yürüyüş" to 4.0, "Orta tempo" to 5.3, "Hızlı yürüyüş" to 6.4, "Hafif koşu" to 8.5, "Koşu" to 10.5)
+
 val cardioMachines = listOf(
     CardioMachine("treadmill", "🏃", "Koşu bandı", listOf(speedControl, inclineControl)),
     CardioMachine("bike", "🚴", "Bisiklet", listOf(levelControl, CardioControl("rpm", "Devir", "rpm", 30.0, 130.0, 5.0, 75.0))),
@@ -35,7 +38,7 @@ val cardioMachines = listOf(
     CardioMachine("rower", "🚣", "Kürek", listOf(CardioControl("spm", "Tempo", "kürek/dk", 14.0, 40.0, 1.0, 24.0), CardioControl("split", "500 m süresi", "sn", 90.0, 240.0, 5.0, 150.0))),
     CardioMachine("stepper", "🪜", "Merdiven", listOf(CardioControl("spm", "Basamak", "basamak/dk", 20.0, 160.0, 5.0, 70.0)), tracksDistance = false),
     // Dışarıda eğim yüzdesi bilinemez: arazi tipi seçilir, hesapta tahmini eğime çevrilir.
-    CardioMachine("outdoor", "🌳", "Açık hava", listOf(speedControl.copy(default = 5.5), CardioControl("terrain", "Arazi", "", 0.0, 3.0, 1.0, 0.0, labels = listOf("Düz", "Hafif yokuş", "Dik yokuş", "İnişli çıkışlı")))),
+    CardioMachine("outdoor", "🌳", "Açık hava", listOf(CardioControl("pace", "Tempo", "", 0.0, 4.0, 1.0, 1.0, labels = OUTDOOR_PACES.map { it.first }), CardioControl("terrain", "Arazi", "", 0.0, 3.0, 1.0, 0.0, labels = listOf("Düz", "Hafif yokuş", "Dik yokuş", "İnişli çıkışlı")))),
 )
 
 /** İlerleme listesi gibi yerlerde kardiyo seanslarını göstermek için (activity:cardio_<key>). */
@@ -58,7 +61,7 @@ fun cardioRate(machineKey: String, values: Map<String, Double>, weightKg: Double
     fun fromMet(met: Double) = (met.coerceIn(1.5, 16.0) - 1.0) * 3.5 * kg / 200.0
     return when (machineKey) {
         "treadmill", "outdoor" -> {
-            val kmh = v("speed", 6.0)
+            val kmh = if (machineKey == "outdoor") OUTDOOR_PACES[v("pace", 1.0).toInt().coerceIn(0, OUTDOOR_PACES.lastIndex)].second else v("speed", 6.0)
             val grade = if (machineKey == "outdoor") outdoorTerrainGrade(v("terrain", 0.0)) else v("incline", 0.0) / 100.0
             val mPerMin = kmh * 1000.0 / 60.0
             // 6.4 km/s altında yürüme, üstünde koşu denklemi.
@@ -163,6 +166,7 @@ private val cardioEn = mapOf(
     "sn" to "sec",
     "basamak/dk" to "steps/min",
     "Düz" to "Flat",
+    "Yavaş yürüyüş" to "Slow walk", "Orta tempo" to "Moderate pace", "Hızlı yürüyüş" to "Brisk walk", "Hafif koşu" to "Easy run", "Koşu" to "Run",
     "Hafif yokuş" to "Gentle hill",
     "Dik yokuş" to "Steep hill",
     "İnişli çıkışlı" to "Rolling",

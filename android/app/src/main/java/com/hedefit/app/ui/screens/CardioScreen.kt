@@ -338,7 +338,9 @@ private fun CardioLive(
     BackHandler { if (locked) Unit else confirmExit = true }
 
     Box(Modifier.fillMaxSize().background(HedefitColors.Background)) {
-        Column(Modifier.fillMaxSize().systemBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
+        BoxWithConstraints(Modifier.fillMaxSize().systemBarsPadding()) {
+        val screenH = maxHeight
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = screenH).padding(horizontal = 18.dp), verticalArrangement = Arrangement.Center) {
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 com.hedefit.app.ui.components.CardioMachineIcon(machine.key, Modifier.size(28.dp))
                 Spacer(Modifier.width(8.dp))
@@ -402,6 +404,7 @@ private fun CardioLive(
                     colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
                 ) { Icon(Icons.Default.Stop, null); Spacer(Modifier.width(6.dp)); Text(ct("Bitir"), fontWeight = FontWeight.Bold) }
             }
+        }
         }
         ConfettiBurst(celebrate, pieceCount = 50)
 

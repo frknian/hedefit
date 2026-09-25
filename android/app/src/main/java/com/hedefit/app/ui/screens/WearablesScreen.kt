@@ -56,7 +56,7 @@ private val WATCH_BRANDS = listOf(
         listOf("Add your watch in Garmin Connect.", "Garmin Connect: More → Settings → Connected Apps → Health Connect.", "Turn on the data to share.", "Tap \"Grant permissions\" in Hedefit."),
     ),
     WatchBrand(
-        "xiaomi", "Xiaomi / Redmi", "Mi Fitness", listOf("com.xiaomi.wearable", "com.mi.health"), WatchSupport.HEALTH_CONNECT,
+        "xiaomi", "Xiaomi / Redmi", "Mi Fitness", listOf("com.xiaomi.wearable", "com.mi.health", "com.xiaomi.hm.health", "com.mi.health.global"), WatchSupport.HEALTH_CONNECT,
         listOf("Saatini Mi Fitness uygulamasına ekle.", "Mi Fitness: Profil → Üçüncü taraf veri erişimi → Health Connect.", "Senkronizasyonu aç.", "Hedefit'te \"İzinleri ver\"e dokun."),
         listOf("Add your watch in Mi Fitness.", "Mi Fitness: Profile → Third-party data access → Health Connect.", "Turn on sync.", "Tap \"Grant permissions\" in Hedefit."),
     ),
@@ -158,7 +158,12 @@ fun WearablesScreen(
             }
             item { HfSectionHeader(if (en) "Brands" else "Markalar") }
             items(WATCH_BRANDS, key = { it.key }) { brand ->
-                val lastSeen = brand.packages.mapNotNull { snapshot?.sourceLastSeen?.get(it) }.maxOrNull()
+                // Paket adına ek olarak cihaz üreticisine göre de eşle: veri aracı bir uygulamadan
+                // gelse bile (ör. Zepp Life, Mi Fitness küresel sürümü) "Xiaomi" cihazı görünür.
+                val brandWord = brand.name.substringBefore(" ").substringBefore("/").trim().lowercase()
+                val lastSeen = (brand.packages.mapNotNull { snapshot?.sourceLastSeen?.get(it) } +
+                    snapshot?.devices.orEmpty().filter { it.label.lowercase().contains(brandWord) || it.sourcePackage in brand.packages }.map { it.lastSeen })
+                    .maxOrNull()
                 val installedPackage = brand.packages.firstOrNull { context.packageManager.getLaunchIntentForPackage(it) != null }
                 val open = expanded == brand.key
                 HedefitCard(Modifier.fillMaxWidth(), onClick = { expanded = if (open) null else brand.key }, contentPadding = PaddingValues(16.dp)) {

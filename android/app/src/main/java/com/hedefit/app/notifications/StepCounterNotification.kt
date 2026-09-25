@@ -21,6 +21,7 @@ object StepCounterNotification {
     private const val CHANNEL_ID = "hedefit_step_counter_v3"
     private const val LEGACY_CHANNEL_ID = "hedefit_step_counter_v2"
     private const val NOTIFICATION_ID = 1210
+    private const val NOTIFICATION_ID_PUBLIC = 1210
     private var lastSteps = -1
     private var lastGoal = -1
     private var lastPublishedAt = 0L
@@ -29,14 +30,37 @@ object StepCounterNotification {
     private const val KEY_DAY = "day"
     private const val ACTION_MIDNIGHT_RESET = "com.hedefit.app.action.STEP_MIDNIGHT_RESET"
 
+    const val FOREGROUND_ID = NOTIFICATION_ID_PUBLIC
+
     fun show(context: Context, steps: Int, goal: Int, activeCalories: Int = steps / 25) {
         if (android.os.Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val safeSteps = steps.coerceAtLeast(0)
         val safeGoal = goal.coerceAtLeast(1)
-        val safeCalories = activeCalories.coerceAtLeast(0)
         val now = android.os.SystemClock.elapsedRealtime()
         // A visible update every 25 steps, or a refresh after 30 seconds, prevents notification churn.
         if (lastSteps >= 0 && kotlin.math.abs(safeSteps - lastSteps) < 25 && safeGoal == lastGoal && now - lastPublishedAt < 30_000L) return
+        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, build(context, safeSteps, safeGoal, activeCalories))
+        context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).edit()
+            .putInt("goal", safeGoal)
+            .putString(KEY_DAY, LocalDate.now(ZoneId.systemDefault()).toString())
+            .putBoolean("enabled", true)
+            .apply()
+        scheduleMidnightReset(context)
+        lastSteps = safeSteps
+        lastGoal = safeGoal
+        lastPublishedAt = now
+        // Uygulama kapalıyken de güncellenmesi için arka plan sayacını başlat.
+        StepTrackingService.start(context)
+    }
+
+    /** Kayıtlı hedef (uygulamanın son gösterdiği); servis bunu kullanır. */
+    fun savedGoal(context: Context): Int = context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).getInt("goal", 8_000)
+    fun isEnabled(context: Context): Boolean = context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).getBoolean("enabled", false)
+
+    fun build(context: Context, steps: Int, goal: Int, activeCalories: Int = steps / 25): android.app.Notification {
+        val safeSteps = steps.coerceAtLeast(0)
+        val safeGoal = goal.coerceAtLeast(1)
+        val safeCalories = activeCalories.coerceAtLeast(0)
         val manager = context.getSystemService(NotificationManager::class.java)
         // Channel importance can't be raised after creation, so ranking needs a new
         // HIGH channel; setSilent keeps it from ever producing a heads-up popup.
@@ -69,16 +93,7 @@ object StepCounterNotification {
             .setSortKey("00_steps")
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-        context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).edit()
-            .putInt("goal", safeGoal)
-            .putString(KEY_DAY, LocalDate.now(ZoneId.systemDefault()).toString())
-            .putBoolean("enabled", true)
-            .apply()
-        scheduleMidnightReset(context)
-        lastSteps = safeSteps
-        lastGoal = safeGoal
-        lastPublishedAt = now
+        return notification
     }
 
     fun scheduleMidnightReset(context: Context) {
@@ -109,6 +124,7 @@ object StepCounterNotification {
     }
 
     fun cancel(context: Context) {
+        StepTrackingService.stop(context)
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
         context.getSharedPreferences(STATE_FILE, Context.MODE_PRIVATE).edit().putBoolean("enabled", false).apply()
         val intent = PendingIntent.getBroadcast(
@@ -123,5 +139,9 @@ object StepCounterNotification {
 }
 
 class StepMidnightResetReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) = StepCounterNotification.ensureCurrentDay(context)
+    override fun onReceive(context: Context, intent: Intent?) {
+        StepCounterNotification.ensureCurrentDay(context)
+        // Telefon yeniden başladığında arka plan adım sayacını geri aç.
+        if (intent?.action == Intent.ACTION_BOOT_COMPLETED) StepTrackingService.start(context)
+    }
 }

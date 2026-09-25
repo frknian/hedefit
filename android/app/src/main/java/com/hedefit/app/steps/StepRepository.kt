@@ -52,7 +52,7 @@ private class HealthConnectStepDataSource(private val health: HealthConnectManag
  * infers steps from accelerometer movement, so shaking the phone is not enough
  * to create a Hedefit step.
  */
-private class DeviceStepCounterDataSource(context: Context, private val onChanged: (TodaySteps) -> Unit) : SensorEventListener {
+internal class DeviceStepCounterDataSource(context: Context, private val onChanged: (TodaySteps) -> Unit) : SensorEventListener {
     private val appContext = context.applicationContext
     private val sensorManager = appContext.getSystemService(SensorManager::class.java)
     private val storage = appContext.getSharedPreferences("hedefit-native-steps", Context.MODE_PRIVATE)

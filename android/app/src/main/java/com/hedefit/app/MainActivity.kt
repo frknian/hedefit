@@ -44,6 +44,7 @@ import com.hedefit.app.ui.screens.WorkoutPlanScreen
 import com.hedefit.app.ui.screens.ProfileSettingsScreen
 import com.hedefit.app.ui.screens.ProfileQuestionnaireScreen
 import com.hedefit.app.ui.state.limits
+import com.hedefit.app.ui.state.tier
 import com.hedefit.app.ui.i18n.withLocalizedExercises
 import com.hedefit.app.ui.state.canUseExercise
 import com.hedefit.app.ui.screens.NotificationCalendarScreen
@@ -381,6 +382,7 @@ class MainActivity : ComponentActivity() {
                             onPreferencesChange = ::updatePreferences,
                             onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
                             isGuest = uiState.isGuest,
+                            tier = uiState.tier(),
                             onSaveAccount = { mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.Manual) },
                             onOpenNotifications = { utilityPage = UtilityPage.Notifications },
                             onOpenWearables = { utilityPage = UtilityPage.Wearables },

@@ -1,5 +1,7 @@
 package com.hedefit.app.ui.screens
 
+import androidx.compose.material.icons.filled.Check
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -86,7 +88,10 @@ fun ProfileSettingsScreen(
     defaultShareMessage: String = "",
     isGuest: Boolean = false,
     onSaveAccount: () -> Unit = {},
+    tier: com.hedefit.app.ui.state.Tier = com.hedefit.app.ui.state.Tier.Free,
 ) {
+    var showPlans by remember { mutableStateOf(false) }
+    if (showPlans) PlansSheet(tier) { showPlans = false }
     val en = preferences.language == "en"
     var showShare by remember { mutableStateOf(false) }
     var name by remember(profile) { mutableStateOf(profile.displayName) }
@@ -154,6 +159,18 @@ fun ProfileSettingsScreen(
                             Text(if (en) "You're a guest. Save to keep your progress on any device." else "Misafir olarak kullanıyorsun. İlerlemen kaybolmasın diye hesabını kaydet.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                         }
                         Text("›", color = HedefitColors.Lime, fontSize = 26.sp)
+                    }
+                }
+            }
+            if (!isGuest) item {
+                Surface(onClick = { showPlans = true }, color = HedefitColors.Surface, shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp), modifier = Modifier.fillMaxWidth().border(1.5.dp, HedefitColors.Lime.copy(alpha = .6f), androidx.compose.foundation.shape.RoundedCornerShape(18.dp))) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("⭐", fontSize = 26.sp)
+                        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                            Text(com.hedefit.app.ui.i18n.tr("Paketin: ", "Your plan: ") + tier.label, color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold)
+                            Text(if (tier == com.hedefit.app.ui.state.Tier.Free) com.hedefit.app.ui.i18n.tr("Plus ile sınırsız öğün, reklamsız kullanım ve günde 20 FitKoç sorusu.", "Plus: unlimited meals, no ads and 20 Fit Coach questions a day.") else com.hedefit.app.ui.i18n.tr("Paketini yönet veya yükselt.", "Manage or upgrade your plan."), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text(if (tier == com.hedefit.app.ui.state.Tier.Free) com.hedefit.app.ui.i18n.tr("Plus'a geç", "Get Plus") else "›", color = HedefitColors.Lime, fontWeight = FontWeight.Black)
                     }
                 }
             }
@@ -282,24 +299,21 @@ private fun AccentColorPicker(hue: Float, en: Boolean, onHueChange: (Float) -> U
                 Text(if (en) "Reset" else "Sıfırla", color = HedefitColors.Lime)
             }
         }
-        Box(Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
-            Box(
-                Modifier.fillMaxWidth().height(12.dp).padding(horizontal = 10.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Brush.horizontalGradient(rainbow)),
-            )
-            Slider(
-                value = hue.coerceIn(0f, 360f),
-                onValueChange = onHueChange,
-                valueRange = 0f..360f,
-                modifier = Modifier.fillMaxWidth(),
-                colors = SliderDefaults.colors(
-                    thumbColor = HedefitColors.Lime,
-                    activeTrackColor = Color.Transparent,
-                    inactiveTrackColor = Color.Transparent,
-                ),
-            )
-        }
+        // Temel renkler: tema aynı ton hesabıyla (applyTheme) açık/koyu için ayarlanır.
+        // Sarı, pembe, mor, turuncu, yeşil, mavi, kırmızı, turkuaz, camgöbeği, lacivert, açık yeşil, eflatun
+        val presets = listOf(50f, 330f, 275f, 28f, 106f, 210f, 0f, 170f, 190f, 232f, 82f, 300f)
+        presets.chunked(6).forEach { row -> Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            row.forEach { preset ->
+                val selected = kotlin.math.abs(hue - preset) < 3f
+                Box(
+                    Modifier.size(36.dp).clip(CircleShape)
+                        .background(Color.hsl(preset, .68f, if (HedefitColors.isLight) .46f else .58f))
+                        .border(if (selected) 3.dp else 0.dp, HedefitColors.TextPrimary, CircleShape)
+                        .clickable { onHueChange(preset) },
+                    contentAlignment = Alignment.Center,
+                ) { if (selected) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(18.dp)) }
+            }
+        } }
     }
 }
 

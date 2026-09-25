@@ -284,7 +284,7 @@ private fun quickActionCatalog(
     "watch" to QuickAction(Icons.Default.Watch, HedefitColors.Lime, if (en) "Smart watch" else "Akıllı saat", "", onOpenWearables),
     "rewards" to QuickAction(Icons.Default.EmojiEvents, HedefitColors.Warning, if (en) "Rewards" else "Ödüller", "", onOpenRewards),
     "cardio" to QuickAction(Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Coral, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower" else "Koşu bandı, bisiklet, kürek", onOpenCardio),
-    "curlgame" to QuickAction(Icons.Default.SportsEsports, HedefitColors.Lime, if (en) "Dumbbell game" else "Dambıl oyunu", if (en) "Tap and curl" else "Dokun, kaldır, kaslan", onOpenCurlGame),
+    "curlgame" to QuickAction(Icons.Default.SportsEsports, HedefitColors.Lime, if (en) "Game" else "Oyun", if (en) "Train your athlete" else "Sporcunu çalıştır", onOpenCurlGame),
 )
 
 @Composable
