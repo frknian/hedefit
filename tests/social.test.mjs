@@ -489,3 +489,70 @@ test("social/challenges/[id]/progress GET: edge case — katılımcı değilse 4
     restoreEnv();
   }
 });
+
+test("social/settings GET: normal durum — aranabilirlik tercihi döner", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    const href = String(url);
+    if (href.includes("/rpc/hedefit_get_discoverable")) return Response.json(false);
+    throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
+  }, freshUserId());
+  try {
+    const { GET } = await import(`../app/api/social/settings/route.ts?test=${Date.now()}`);
+    const response = await GET(authorizedRequest("http://localhost/api/social/settings"));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { discoverable: false });
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("social/settings PATCH: normal durum — değer RPC'ye iletilir ve yeni durum döner", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  let sentBody = null;
+  globalThis.fetch = withAuthenticatedFetch(async (url, init) => {
+    const href = String(url);
+    if (href.includes("/rpc/hedefit_set_discoverable")) {
+      sentBody = JSON.parse(String(init?.body ?? "{}"));
+      return Response.json(false);
+    }
+    throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
+  }, freshUserId());
+  try {
+    const { PATCH } = await import(`../app/api/social/settings/route.ts?test=${Date.now()}`);
+    const response = await PATCH(authorizedRequest("http://localhost/api/social/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discoverable: false }),
+    }));
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { discoverable: false });
+    assert.deepEqual(sentBody, { p_value: false });
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("social/settings PATCH: hatalı input — boolean olmayan değer Supabase'e gitmeden reddedilir", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withAuthenticatedFetch(() => { throw new TypeError("ağa gitmemeliydi"); }, freshUserId());
+  try {
+    const { PATCH } = await import(`../app/api/social/settings/route.ts?test=${Date.now()}`);
+    for (const value of ["false", 0, null, undefined]) {
+      const response = await PATCH(authorizedRequest("http://localhost/api/social/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discoverable: value }),
+      }));
+      assert.equal(response.status, 400);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});

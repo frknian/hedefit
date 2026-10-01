@@ -9,7 +9,7 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     var settings: AppSettings { didSet { saveSettings(); Task { await NotificationService.configure(settings) }; WidgetShared.update(dashboard, settings: settings) } }
     var exercises: [ExerciseCatalogItem] = []; let route = RouteService()
     var friendsSummary = FriendsSummary(); var leaderboard: [LeaderboardEntry] = []; var feed: [FeedItem] = []
-    var userSearchResults: [FriendUser] = []; var challenges: [Challenge] = []; var challengeProgress: [ChallengeProgressEntry] = []
+    var discoverable: Bool? = nil; var userSearchResults: [FriendUser] = []; var challenges: [Challenge] = []; var challengeProgress: [ChallengeProgressEntry] = []
     private let net = NetworkClient.shared, repository = HedefitRepository.shared
 
     init() { settings = (try? JSONDecoder().decode(AppSettings.self, from: UserDefaults.standard.data(forKey: "settings") ?? Data())) ?? AppSettings()
@@ -83,6 +83,12 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
 
     // MARK: - Sosyal katman
     func loadFriendsSummary() async { do { friendsSummary = try await repository.friendsSummary() } catch { self.error = error.localizedDescription } }
+    func loadDiscoverable() async { if let value = try? await repository.discoverable() { discoverable = value } }
+    func setDiscoverable(_ value: Bool) async {
+        let previous = discoverable
+        discoverable = value
+        do { discoverable = try await repository.setDiscoverable(value) } catch { discoverable = previous; self.error = error.localizedDescription }
+    }
     func searchUsers(_ query: String) async { guard query.count >= 2 else { userSearchResults = []; return }; do { userSearchResults = try await repository.searchUsers(query) } catch { self.error = error.localizedDescription } }
     func sendFriendRequest(username: String) async { do { try await repository.sendFriendRequest(username: username); message = "İstek gönderildi."; await loadFriendsSummary() } catch { self.error = error.localizedDescription } }
     func respondToFriendRequest(id: String, accept: Bool) async { do { try await repository.respondToFriendRequest(id: id, accept: accept); await loadFriendsSummary(); await loadWeeklyLeaderboard() } catch { self.error = error.localizedDescription } }

@@ -141,6 +141,8 @@ data class MainUiState(
     val exerciseNames: com.hedefit.app.ui.i18n.ExerciseNameIndex = com.hedefit.app.ui.i18n.ExerciseNameIndex.Empty,
     val friendsBusy: Boolean = false,
     val friendsSummary: FriendsSummaryData? = null,
+    /** Aramada görünme tercihi; null = henüz yüklenmedi. */
+    val discoverable: Boolean? = null,
     val userSearchBusy: Boolean = false,
     val userSearchResults: List<com.hedefit.app.data.model.FriendUserData> = emptyList(),
     val leaderboardBusy: Boolean = false,
@@ -953,6 +955,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             runCatching { repository.loadFriendsSummary() }
                 .onSuccess { summary -> _state.update { it.copy(friendsBusy = false, friendsSummary = summary) } }
                 .onFailure { error -> _state.update { it.copy(friendsBusy = false, transientMessage = friendlyError(error)) } }
+            if (_state.value.discoverable == null) loadDiscoverable()
+        }
+    }
+
+    fun loadDiscoverable() {
+        viewModelScope.launch {
+            runCatching { repository.loadDiscoverable() }
+                .onSuccess { value -> _state.update { it.copy(discoverable = value) } }
+        }
+    }
+
+    fun setDiscoverable(value: Boolean) {
+        val previous = _state.value.discoverable
+        _state.update { it.copy(discoverable = value) }
+        viewModelScope.launch {
+            runCatching { repository.setDiscoverable(value) }
+                .onSuccess { saved -> _state.update { it.copy(discoverable = saved) } }
+                .onFailure { error -> _state.update { it.copy(discoverable = previous, transientMessage = friendlyError(error)) } }
         }
     }
 

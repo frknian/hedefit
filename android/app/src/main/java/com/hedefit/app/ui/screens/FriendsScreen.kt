@@ -36,8 +36,10 @@ fun FriendsScreen(
     feedBusy: Boolean,
     searchResults: List<FriendUserData>,
     searchBusy: Boolean,
+    discoverable: Boolean?,
     language: String,
     onBack: () -> Unit,
+    onDiscoverableChange: (Boolean) -> Unit,
     onSearch: (String) -> Unit,
     onClearSearch: () -> Unit,
     onSendRequest: (String) -> Unit,
@@ -93,6 +95,32 @@ fun FriendsScreen(
                             unfocusedContainerColor = HedefitColors.Surface,
                         ),
                     )
+                }
+                if (discoverable != null) {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            HfNavRow(
+                                icon = Icons.Default.Search,
+                                tint = HedefitColors.Lime,
+                                title = if (en) "Appear in search" else "Aramada görün",
+                                onClick = { onDiscoverableChange(!discoverable) },
+                                chevron = false,
+                            ) {
+                                Switch(
+                                    checked = discoverable,
+                                    onCheckedChange = onDiscoverableChange,
+                                    colors = SwitchDefaults.colors(checkedThumbColor = HedefitColors.OnLime, checkedTrackColor = HedefitColors.Lime),
+                                )
+                            }
+                            Text(
+                                if (en) "When off, you won't show up in username search. Anyone who knows your exact username can still send you a friend request; current friends are unaffected."
+                                else "Kapalıyken kullanıcı adı aramasında çıkmazsın. Kullanıcı adını tam olarak bilen biri yine de sana arkadaşlık isteği gönderebilir; mevcut arkadaşların etkilenmez.",
+                                color = HedefitColors.TextMuted,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(horizontal = 4.dp),
+                            )
+                        }
+                    }
                 }
                 if (searchResults.isNotEmpty()) {
                     item { HfSectionHeader(if (en) "Results" else "Sonuçlar") }
