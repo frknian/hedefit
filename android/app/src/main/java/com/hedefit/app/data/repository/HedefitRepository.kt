@@ -36,6 +36,13 @@ import com.hedefit.app.data.model.ExerciseReplacementCandidate
 import com.hedefit.app.data.model.WorkoutAdaptationResultData
 import com.hedefit.app.data.model.CoachActionData
 import com.hedefit.app.data.model.WorkoutCoachContext
+import com.hedefit.app.data.model.FriendUserData
+import com.hedefit.app.data.model.FriendRequestData
+import com.hedefit.app.data.model.FriendsSummaryData
+import com.hedefit.app.data.model.LeaderboardEntryData
+import com.hedefit.app.data.model.FeedItemData
+import com.hedefit.app.data.model.ChallengeData
+import com.hedefit.app.data.model.ChallengeProgressEntryData
 import com.hedefit.app.health.HealthSnapshot
 import com.hedefit.app.data.network.HedefitApiClient
 import com.hedefit.app.data.network.SupabaseRestClient
@@ -1384,4 +1391,124 @@ class HedefitRepository(
     private fun localDate(instant: String): LocalDate = runCatching {
         Instant.parse(instant).atZone(ZoneId.systemDefault()).toLocalDate()
     }.getOrDefault(LocalDate.MIN)
+
+    // ---- Sosyal katman: arkadaşlık + haftalık lider tablosu ----------------
+
+    suspend fun searchUsers(query: String): List<FriendUserData> {
+        if (query.trim().length < 2) return emptyList()
+        val encoded = java.net.URLEncoder.encode(query.trim(), Charsets.UTF_8.name())
+        val array = api.get("/api/social/users/search?q=$encoded").requireSuccess("Kullanıcı aranamadı.").jsonObject().optJSONArray("users") ?: JSONArray()
+        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { add(parseFriendUser(it)) } }
+    }
+
+    suspend fun loadFriendsSummary(): FriendsSummaryData {
+        val json = api.get("/api/social/friends").requireSuccess("Arkadaşlar yüklenemedi.").jsonObject()
+        fun parseList(key: String) = json.optJSONArray(key)?.let { array ->
+            buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { add(parseFriendRequest(it)) } }
+        }.orEmpty()
+        return FriendsSummaryData(
+            friends = parseList("friends"),
+            incomingRequests = parseList("incomingRequests"),
+            outgoingRequests = parseList("outgoingRequests"),
+        )
+    }
+
+    suspend fun sendFriendRequest(username: String) {
+        api.post("/api/social/friends", JSONObject().put("username", username.trim().lowercase())).requireSuccess("İstek gönderilemedi.")
+    }
+
+    suspend fun respondToFriendRequest(id: String, accept: Boolean) {
+        api.patch("/api/social/friends/$id", JSONObject().put("status", if (accept) "accepted" else "declined")).requireSuccess("İstek güncellenemedi.")
+    }
+
+    suspend fun removeFriend(id: String) {
+        api.delete("/api/social/friends/$id").requireSuccess("Arkadaşlık sonlandırılamadı.")
+    }
+
+    suspend fun loadWeeklyLeaderboard(): List<LeaderboardEntryData> {
+        val array = api.get("/api/social/leaderboard").requireSuccess("Sıralama yüklenemedi.").jsonObject().optJSONArray("entries") ?: JSONArray()
+        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
+            add(LeaderboardEntryData(
+                rank = item.optInt("rank"),
+                weeklyXp = item.optLong("weeklyXp"),
+                isCurrentUser = item.optBoolean("isCurrentUser"),
+                user = parseFriendUser(item.getJSONObject("user")),
+            ))
+        } }
+    }
+
+    private fun parseFriendUser(item: JSONObject) = FriendUserData(
+        id = item.optString("id"),
+        username = item.stringOrNull("username"),
+        displayName = item.stringOrNull("displayName"),
+        avatarPath = item.stringOrNull("avatarPath"),
+    )
+
+    private fun parseFriendRequest(item: JSONObject) = FriendRequestData(
+        id = item.optString("id"),
+        status = item.optString("status"),
+        createdAt = item.optString("createdAt"),
+        isIncoming = item.optBoolean("isIncoming"),
+        user = parseFriendUser(item.getJSONObject("user")),
+    )
+
+    // ---- Sosyal katman: aktivite akışı + ortak meydan okumalar -------------
+
+    suspend fun loadFriendActivityFeed(before: String? = null): List<FeedItemData> {
+        val path = if (before != null) "/api/social/feed?before=${java.net.URLEncoder.encode(before, Charsets.UTF_8.name())}" else "/api/social/feed"
+        val array = api.get(path).requireSuccess("Akış yüklenemedi.").jsonObject().optJSONArray("items") ?: JSONArray()
+        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
+            add(FeedItemData(
+                id = item.optString("id"),
+                source = item.optString("source"),
+                amount = item.optInt("amount"),
+                occurredAt = item.optString("occurredAt"),
+                user = parseFriendUser(item.getJSONObject("user")),
+            ))
+        } }
+    }
+
+    suspend fun loadChallenges(): List<ChallengeData> {
+        val array = api.get("/api/social/challenges").requireSuccess("Meydan okumalar yüklenemedi.").jsonObject().optJSONArray("challenges") ?: JSONArray()
+        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
+            add(ChallengeData(
+                id = item.optString("id"),
+                title = item.optString("title"),
+                metric = item.optString("metric"),
+                targetValue = item.optDouble("targetValue"),
+                startsAt = item.optString("startsAt"),
+                endsAt = item.optString("endsAt"),
+                creatorId = item.optString("creatorId"),
+                isCreator = item.optBoolean("isCreator"),
+                myStatus = item.optString("myStatus"),
+                participantCount = item.optInt("participantCount"),
+            ))
+        } }
+    }
+
+    suspend fun createChallenge(title: String, metric: String, targetValue: Double, days: Int, friendIds: List<String>): String {
+        val body = JSONObject().put("title", title.trim()).put("metric", metric).put("targetValue", targetValue).put("days", days)
+            .put("friendIds", JSONArray(friendIds))
+        return api.post("/api/social/challenges", body).requireSuccess("Meydan okuma oluşturulamadı.").jsonObject().optString("id")
+    }
+
+    suspend fun respondToChallengeInvite(id: String, accept: Boolean) {
+        api.patch("/api/social/challenges/$id", JSONObject().put("status", if (accept) "joined" else "declined")).requireSuccess("Davet güncellenemedi.")
+    }
+
+    suspend fun leaveOrCancelChallenge(id: String) {
+        api.delete("/api/social/challenges/$id").requireSuccess("Meydan okuma güncellenemedi.")
+    }
+
+    suspend fun loadChallengeProgress(id: String): List<ChallengeProgressEntryData> {
+        val array = api.get("/api/social/challenges/$id/progress").requireSuccess("İlerleme yüklenemedi.").jsonObject().optJSONArray("entries") ?: JSONArray()
+        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
+            add(ChallengeProgressEntryData(
+                rank = item.optInt("rank"),
+                progressValue = item.optDouble("progressValue"),
+                isCurrentUser = item.optBoolean("isCurrentUser"),
+                user = parseFriendUser(item.getJSONObject("user")),
+            ))
+        } }
+    }
 }

@@ -82,7 +82,7 @@ import com.hedefit.app.gym.detectPersonalRecord
 private fun coreQuestionsAnswered(answers: List<String>) =
     com.hedefit.app.ui.screens.CORE_QUESTION_INDICES.all { answers.getOrNull(it)?.isNotBlank() == true }
 
-private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio }
+private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges }
 
 /** Programdaki Türkçe bölge adını atlasın birincil kas filtresine çevirir. */
 private fun replacementMuscle(area: String): String {
@@ -553,6 +553,45 @@ class MainActivity : ComponentActivity() {
                             onRefresh = mainViewModel::loadWearables,
                             onGrantPermissions = { healthPermissionLauncher.launch(healthConnectManager.allPermissions) },
                         )
+                        UtilityPage.Friends -> com.hedefit.app.ui.screens.FriendsScreen(
+                            summary = uiState.friendsSummary,
+                            busy = uiState.friendsBusy,
+                            leaderboard = uiState.leaderboard,
+                            leaderboardBusy = uiState.leaderboardBusy,
+                            feed = uiState.feed,
+                            feedBusy = uiState.feedBusy,
+                            searchResults = uiState.userSearchResults,
+                            searchBusy = uiState.userSearchBusy,
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onSearch = mainViewModel::searchUsers,
+                            onClearSearch = mainViewModel::clearUserSearch,
+                            onSendRequest = mainViewModel::sendFriendRequest,
+                            onAccept = { id -> mainViewModel.respondToFriendRequest(id, true) },
+                            onDecline = { id -> mainViewModel.respondToFriendRequest(id, false) },
+                            onRemove = mainViewModel::removeFriend,
+                            onOpenChallenges = {
+                                utilityPage = UtilityPage.Challenges
+                                mainViewModel.loadChallenges()
+                            },
+                        )
+                        UtilityPage.Challenges -> com.hedefit.app.ui.screens.ChallengesScreen(
+                            challenges = uiState.challenges,
+                            busy = uiState.challengesBusy,
+                            creating = uiState.challengeCreating,
+                            friends = uiState.friendsSummary?.friends.orEmpty(),
+                            progress = uiState.challengeProgress,
+                            progressBusy = uiState.challengeProgressBusy,
+                            activeChallengeId = uiState.activeChallengeId,
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Friends },
+                            onCreate = mainViewModel::createChallenge,
+                            onAccept = { id -> mainViewModel.respondToChallengeInvite(id, true) },
+                            onDecline = { id -> mainViewModel.respondToChallengeInvite(id, false) },
+                            onLeaveOrCancel = mainViewModel::leaveOrCancelChallenge,
+                            onOpenProgress = mainViewModel::openChallengeProgress,
+                            onCloseProgress = mainViewModel::closeChallengeProgress,
+                        )
                         UtilityPage.ManualActivity -> ManualActivityScreen(
                             language = preferences.language,
                             weightKg = dashboard.profile.weightKg,
@@ -611,6 +650,12 @@ class MainActivity : ComponentActivity() {
                                 dailyStreak = dailyStreak,
                                 quickActions = preferences.homeQuickActions,
                                 onQuickActionsChange = { updatePreferences(preferences.copy(homeQuickActions = it)) },
+                                onOpenFriends = {
+                                    utilityPage = UtilityPage.Friends
+                                    mainViewModel.loadFriendsSummary()
+                                    mainViewModel.loadWeeklyLeaderboard()
+                                    mainViewModel.loadFriendActivityFeed()
+                                },
                             )
                             AppDestination.Workout -> WorkoutPlanScreen(padding, expanded, uiState.dashboard?.workouts.orEmpty(), uiState.dashboard?.workoutPrograms.orEmpty(), uiState.exerciseLibrary, uiState.exerciseLibraryBusy, uiState.dataLoading, uiState.planGenerating, mainViewModel::generatePlan, onStartWorkout = {
                                 if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
@@ -694,6 +739,12 @@ class MainActivity : ComponentActivity() {
                                 weeklyActivityGoal = preferences.weeklyWorkoutGoal,
                                 language = preferences.language,
                                 onBack = { selected = AppDestination.Home },
+                                onOpenFriends = {
+                                    utilityPage = UtilityPage.Friends
+                                    mainViewModel.loadFriendsSummary()
+                                    mainViewModel.loadWeeklyLeaderboard()
+                                    mainViewModel.loadFriendActivityFeed()
+                                },
                             )
                             AppDestination.Progress -> ProgressScreen(
                                 padding, expanded, uiState.dashboard, preferences.language,

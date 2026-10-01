@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MilitaryTech
@@ -93,6 +94,7 @@ fun GameScreen(
     weeklyActivityGoal: Int,
     language: String = "tr",
     onBack: (() -> Unit)? = null,
+    onOpenFriends: () -> Unit = {},
 ) {
     val en = language == "en"
     val snapshot = remember(data, stepGoal, waterGoalMl, weeklyActivityGoal, language) {
@@ -123,13 +125,13 @@ fun GameScreen(
         if (snapshot == null || data == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = GameLime) }
         } else {
-            GameContent(snapshot, data.profile.displayName, en, onBack)
+            GameContent(snapshot, data.profile.displayName, en, onBack, onOpenFriends)
         }
     }
 }
 
 @Composable
-private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en: Boolean, onBack: (() -> Unit)?) {
+private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en: Boolean, onBack: (() -> Unit)?, onOpenFriends: () -> Unit) {
     var selectedAchievement by remember { mutableStateOf<Achievement?>(null) }
     var showAllAchievements by remember { mutableStateOf(false) }
     val quests = snapshot.dailyQuests
@@ -141,6 +143,15 @@ private fun GameContent(snapshot: GamificationSnapshot, displayName: String, en:
     ) {
         item { HfScreenHeader(if (en) "Rewards" else "Ödüller", "${if (en) "Level" else "Seviye"} ${snapshot.level.level} • ${leagueFor(snapshot.totalXp)}", onBack = onBack, backLabel = if (en) "Back" else "Geri") }
         item { HeroCard(snapshot, en) }
+        item {
+            HfNavRow(
+                icon = Icons.Default.Group,
+                tint = GameLime,
+                title = if (en) "Friends" else "Arkadaşlar",
+                subtitle = if (en) "Compare XP, feed and weekly challenges" else "XP'ni karşılaştır, akışı ve haftalık meydan okumaları gör",
+                onClick = onOpenFriends,
+            )
+        }
         item { HfSectionHeader(if (en) "What you'll earn" else "Neler kazanacaksın") }
         item { RewardRoadmapCard(snapshot.totalXp, en) }
         item { HfSectionHeader(if (en) "Today's quests" else "Bugünün görevleri", "${quests.count { it.completed }} / ${quests.size}") }

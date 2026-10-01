@@ -35,6 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PlayArrow
@@ -160,6 +161,7 @@ fun HomeScreen(
     onOpenGame: () -> Unit = {},
     quickActions: List<String> = com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS,
     onQuickActionsChange: (List<String>) -> Unit = {},
+    onOpenFriends: () -> Unit = {},
 ) {
     val en = language == "en"
     var metricDialog by remember { mutableStateOf<String?>(null) }
@@ -226,7 +228,7 @@ fun HomeScreen(
             }
             item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler", if (en) "Customize" else "Özelleştir") { editingQuickActions = true } }
             item {
-                val catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" })
+                val catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" }, onOpenFriends)
                 val active = quickActions.mapNotNull(catalog::get).ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS.mapNotNull(catalog::get) }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     active.chunked(2).forEach { row ->
@@ -257,7 +259,7 @@ fun HomeScreen(
     }
     if (editingQuickActions && data != null) QuickActionPickerDialog(
         en = en,
-        catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}),
+        catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}, {}),
         selected = quickActions.ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS },
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
@@ -284,6 +286,7 @@ private fun quickActionCatalog(
     onOpenWearables: () -> Unit,
     onOpenCardio: () -> Unit,
     onOpenCurlGame: () -> Unit,
+    onOpenFriends: () -> Unit,
 ): Map<String, QuickAction> = linkedMapOf(
     "nutrition" to QuickAction(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition),
     "route" to QuickAction(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
@@ -302,6 +305,7 @@ private fun quickActionCatalog(
     "rewards" to QuickAction(Icons.Default.EmojiEvents, HedefitColors.Lime, if (en) "Rewards" else "Ödüller", "", onOpenRewards),
     "cardio" to QuickAction(Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Lime, if (en) "Cardio" else "Kardiyo", if (en) "Treadmill, bike, rower" else "Koşu bandı, bisiklet, kürek", onOpenCardio),
     "curlgame" to QuickAction(Icons.Default.SportsEsports, HedefitColors.Lime, if (en) "Game" else "Oyun", if (en) "Train your athlete" else "Sporcunu çalıştır", onOpenCurlGame),
+    "friends" to QuickAction(Icons.Default.Group, HedefitColors.Lime, if (en) "Friends" else "Arkadaşlar", if (en) "Compare, feed & challenges" else "Karşılaştır, akış ve meydan okumalar", onOpenFriends),
 )
 
 @Composable

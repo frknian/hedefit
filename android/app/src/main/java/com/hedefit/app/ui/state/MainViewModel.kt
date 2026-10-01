@@ -63,6 +63,11 @@ import com.hedefit.app.data.model.ExerciseReplacementCandidate
 import com.hedefit.app.data.model.WorkoutAdaptationResultData
 import com.hedefit.app.data.model.WorkoutCoachContext
 import com.hedefit.app.data.model.WorkoutExerciseData
+import com.hedefit.app.data.model.FriendsSummaryData
+import com.hedefit.app.data.model.LeaderboardEntryData
+import com.hedefit.app.data.model.FeedItemData
+import com.hedefit.app.data.model.ChallengeData
+import com.hedefit.app.data.model.ChallengeProgressEntryData
 
 data class ChatMessageState(
     val text: String,
@@ -130,6 +135,20 @@ data class MainUiState(
     val lockedFeature: LockedFeature? = null,
     /** Hareket adlarının TR/EN karşılıkları (katalogdan, bir kez yüklenir). */
     val exerciseNames: com.hedefit.app.ui.i18n.ExerciseNameIndex = com.hedefit.app.ui.i18n.ExerciseNameIndex.Empty,
+    val friendsBusy: Boolean = false,
+    val friendsSummary: FriendsSummaryData? = null,
+    val userSearchBusy: Boolean = false,
+    val userSearchResults: List<com.hedefit.app.data.model.FriendUserData> = emptyList(),
+    val leaderboardBusy: Boolean = false,
+    val leaderboard: List<LeaderboardEntryData> = emptyList(),
+    val feedBusy: Boolean = false,
+    val feed: List<FeedItemData> = emptyList(),
+    val challengesBusy: Boolean = false,
+    val challenges: List<ChallengeData> = emptyList(),
+    val challengeCreating: Boolean = false,
+    val challengeProgressBusy: Boolean = false,
+    val challengeProgress: List<ChallengeProgressEntryData> = emptyList(),
+    val activeChallengeId: String? = null,
 ) {
     val isGuest: Boolean get() = (auth as? AuthState.SignedIn)?.session?.user?.isAnonymous == true
 }
@@ -922,6 +941,118 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .onSuccess { items -> _state.update { it.copy(exerciseLibraryBusy = false, exerciseLibrary = items) } }
                 .onFailure { error -> _state.update { it.copy(exerciseLibraryBusy = false, transientMessage = friendlyError(error)) } }
         }
+    }
+
+    fun loadFriendsSummary() {
+        viewModelScope.launch {
+            _state.update { it.copy(friendsBusy = true) }
+            runCatching { repository.loadFriendsSummary() }
+                .onSuccess { summary -> _state.update { it.copy(friendsBusy = false, friendsSummary = summary) } }
+                .onFailure { error -> _state.update { it.copy(friendsBusy = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun searchUsers(query: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(userSearchBusy = true) }
+            runCatching { repository.searchUsers(query) }
+                .onSuccess { results -> _state.update { it.copy(userSearchBusy = false, userSearchResults = results) } }
+                .onFailure { error -> _state.update { it.copy(userSearchBusy = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun clearUserSearch() {
+        _state.update { it.copy(userSearchResults = emptyList()) }
+    }
+
+    fun sendFriendRequest(username: String) {
+        viewModelScope.launch {
+            runCatching { repository.sendFriendRequest(username) }
+                .onSuccess { _state.update { it.copy(transientMessage = "İstek gönderildi.") }; loadFriendsSummary() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun respondToFriendRequest(id: String, accept: Boolean) {
+        viewModelScope.launch {
+            runCatching { repository.respondToFriendRequest(id, accept) }
+                .onSuccess { loadFriendsSummary(); if (accept) loadWeeklyLeaderboard() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun removeFriend(id: String) {
+        viewModelScope.launch {
+            runCatching { repository.removeFriend(id) }
+                .onSuccess { loadFriendsSummary(); loadWeeklyLeaderboard() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun loadWeeklyLeaderboard() {
+        viewModelScope.launch {
+            _state.update { it.copy(leaderboardBusy = true) }
+            runCatching { repository.loadWeeklyLeaderboard() }
+                .onSuccess { entries -> _state.update { it.copy(leaderboardBusy = false, leaderboard = entries) } }
+                .onFailure { error -> _state.update { it.copy(leaderboardBusy = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun loadFriendActivityFeed() {
+        viewModelScope.launch {
+            _state.update { it.copy(feedBusy = true) }
+            runCatching { repository.loadFriendActivityFeed() }
+                .onSuccess { items -> _state.update { it.copy(feedBusy = false, feed = items) } }
+                .onFailure { error -> _state.update { it.copy(feedBusy = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun loadChallenges() {
+        viewModelScope.launch {
+            _state.update { it.copy(challengesBusy = true) }
+            runCatching { repository.loadChallenges() }
+                .onSuccess { items -> _state.update { it.copy(challengesBusy = false, challenges = items) } }
+                .onFailure { error -> _state.update { it.copy(challengesBusy = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun createChallenge(title: String, metric: String, targetValue: Double, days: Int, friendIds: List<String>) {
+        viewModelScope.launch {
+            _state.update { it.copy(challengeCreating = true) }
+            runCatching { repository.createChallenge(title, metric, targetValue, days, friendIds) }
+                .onSuccess { _state.update { it.copy(challengeCreating = false, transientMessage = "Meydan okuma oluşturuldu.") }; loadChallenges() }
+                .onFailure { error -> _state.update { it.copy(challengeCreating = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun respondToChallengeInvite(id: String, accept: Boolean) {
+        viewModelScope.launch {
+            runCatching { repository.respondToChallengeInvite(id, accept) }
+                .onSuccess { loadChallenges() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun leaveOrCancelChallenge(id: String) {
+        viewModelScope.launch {
+            runCatching { repository.leaveOrCancelChallenge(id) }
+                .onSuccess { loadChallenges() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun openChallengeProgress(id: String) {
+        _state.update { it.copy(activeChallengeId = id) }
+        viewModelScope.launch {
+            _state.update { it.copy(challengeProgressBusy = true) }
+            runCatching { repository.loadChallengeProgress(id) }
+                .onSuccess { entries -> _state.update { it.copy(challengeProgressBusy = false, challengeProgress = entries) } }
+                .onFailure { error -> _state.update { it.copy(challengeProgressBusy = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun closeChallengeProgress() {
+        _state.update { it.copy(activeChallengeId = null, challengeProgress = emptyList()) }
     }
 
     fun loadPreviousPerformance(requestedExercises: List<com.hedefit.app.data.model.WorkoutExerciseData>? = null) {
