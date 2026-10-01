@@ -15,6 +15,8 @@ toplayan bir fitness uygulamasıdır. Bu depo backend servislerini, native Andro
 - **Hedef yolculuğu**: kanıta dayalı tempo seçenekleri, su/protein/adım
   hedefleri ve kaynaklar
 - **Görevler ve başarımlar**: XP, seri (streak) ve başlangıç rehberi görevleri
+- **Sosyal**: karşılıklı arkadaşlık, haftalık XP lider tablosu, aktivite
+  akışı ve arkadaşlarla ortak meydan okumalar
 - **Diğer**: misafir modu, plan katmanları, ana ekran widget'ları, akıllı
   saat eşleştirme, Türkçe/İngilizce arayüz
 
@@ -64,6 +66,23 @@ Canlı dağıtım:
 npm run deploy
 ```
 
+## Web sitesi (tanıtım)
+
+`site/` klasörü, Cloudflare Pages'e yayınlanan statik tanıtım sitesidir (API Worker'ından ayrıdır).
+Sayfalar: `index.html`, `planlar.html`, `gizlilik.html`, `destek.html`, `hesap-silme.html`.
+
+```bash
+npm run site:preview                       # http://localhost:8788 (yerel Pages sunucusu)
+SITE_URL=https://alanadi.com npm run site:build
+SITE_URL=https://alanadi.com CF_PAGES_PROJECT=<proje-adı> npm run site:deploy
+```
+
+- `site:build` çıktısı `.site-dist/` içindedir: `__SITE_URL__` yer tutucularını doldurur, `sitemap.xml` ve `robots.txt` üretir.
+- Mağaza bağlantıları: `site/main.js` içindeki `STORES` nesnesine Google Play ve App Store adreslerini yaz; butonlar otomatik aktifleşir.
+- `gizlilik.html` ve `destek.html` üretilir: `LegalTexts.kt` değişince `python3 scripts/build-legal-pages.py`.
+- Plan limitleri (`planlar.html`) `lib/usage-limits.ts` ve Android `Entitlements.kt` ile birlikte güncellenmelidir.
+- Wrangler Pages komutları depo dışından çalıştırılır (kökteki `.wrangler/deploy` yönlendirmesi API Worker'ına aittir).
+
 ## Geliştirme
 
 ```bash
@@ -96,6 +115,18 @@ Ayrıntılar için `ios/README.md`.
 Yeni özellikler `supabase/migrations` altındaki migrasyonlara bağlıdır; örneğin
 rota kayak aktivitesi için `20260925140000_route_activity_ski.sql`. Dağıtımdan
 önce bekleyen migrasyonları uygula.
+
+## Sosyal katman
+
+Karşılıklı arkadaşlık (istek/onay, `profiles.username` üzerinden arama),
+haftalık XP lider tablosu, arkadaşların antrenman/rota/başarım aktivitelerini
+gösteren bir akış ve arkadaşlarla ortak haftalık meydan okumalar (XP,
+antrenman sayısı veya mesafe hedefi). Tümü mevcut `xp_events` ve
+`route_activities` üzerinde okuma-zamanlı `security definer` RPC'lerle
+çalışır, yeni bir yazım/fan-out katmanı eklemez — meydan okumalar hariç, onlar
+kendi `challenges`/`challenge_participants` tablolarını kullanır. Android'de
+Profil → Arkadaşlar'dan erişilir. Gerekli migration'lar:
+`20260929000000_friendships.sql`, `20260930000000_social_feed_challenges.sql`.
 
 ## Görevler, başarımlar ve beslenme hedefleri
 
