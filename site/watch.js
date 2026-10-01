@@ -71,7 +71,7 @@
 
   // etkileşim
   const touched = () => { userActive = true; clearTimeout(tour); clearTimeout(idle); idle = setTimeout(() => { userActive = false; if (visible && !reduce) next(); }, 15000); };
-  stage.addEventListener('pointerdown', touched, { passive: true });
+  stage.addEventListener('pointerdown', e => { if (e.target.closest('button, a')) touched(); }, { passive: true });
   list.addEventListener('pointerdown', touched, { passive: true });
   list.addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(+b.dataset.i); });
   dots.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { touched(); show(+b.dataset.i); } });

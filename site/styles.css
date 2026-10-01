@@ -576,3 +576,12 @@ details a{color:var(--g)}
 .view-img.crop img{height:113%;object-fit:cover;object-position:top center}
 
 @media (max-width:520px){.feat-shots{min-height:440px}.feat{padding:36px 0}}
+
+/* yüzen kartlar süstür: telefonun dokunmatik alanını asla örtmesin */
+.phone-zone .float{pointer-events:none}
+@media (max-width:640px){
+  /* kartlar telefonun dışında kalsın: üstte hedef kartı, altta rota kartı */
+  .phone-zone{margin-top:116px;margin-bottom:172px}
+  .phone-zone .goal{top:-118px}
+  .phone-zone .route{bottom:-176px}
+}

@@ -63,7 +63,8 @@
     userActive = true; clearTimeout(tourT); clearTimeout(idleT);
     idleT = setTimeout(() => { userActive = false; if (!reduce && visible) tour(); }, 15000);
   };
-  app.addEventListener('pointerdown', touched, { passive: true });
+  // Yalnız gerçek dokunuş (düğme/bağlantı) turu durdurur; sayfayı kaydırırken tur sürsün.
+  app.addEventListener('pointerdown', e => { if (e.target.closest('button, a, [data-go], [data-tab]')) touched(); }, { passive: true });
   app.addEventListener('wheel', touched, { passive: true });
   app.addEventListener('click', e => {
     const g = e.target.closest('[data-go]'); if (g) { go(g.dataset.go); return; }
