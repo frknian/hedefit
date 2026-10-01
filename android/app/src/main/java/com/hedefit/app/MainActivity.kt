@@ -269,10 +269,14 @@ class MainActivity : ComponentActivity() {
                     if (preferences.stepCounterNotificationEnabled) stepCounterNotification.show(this@MainActivity, uiState.dashboard?.steps ?: 0, preferences.stepGoal, uiState.dashboard?.activeCalories ?: 0)
                     else stepCounterNotification.cancel(this@MainActivity)
                 }
-                LaunchedEffect(uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl) {
-                    com.hedefit.app.wear.WearSync.push(this@MainActivity, uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl)
+                LaunchedEffect(uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl, preferences.language, uiState.leaderboard, uiState.challenges) {
+                    com.hedefit.app.wear.WearSync.push(this@MainActivity, uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl, preferences.language, uiState.leaderboard, uiState.challenges)
                 }
                 val dashboardReady = uiState.dashboard != null
+                LaunchedEffect(dashboardReady) {
+                    // Saatteki sıralama sayfası için sosyal veriyi bir kez yükle (misafirde sosyal özellik yok).
+                    if (dashboardReady && !uiState.isGuest) { mainViewModel.loadWeeklyLeaderboard(); mainViewModel.loadChallenges() }
+                }
                 LaunchedEffect(dashboardReady) {
                     if (!dashboardReady) return@LaunchedEffect
                     com.hedefit.app.wear.WearInbox.drainPendingWater(this@MainActivity).takeIf { it > 0 }?.let { mainViewModel.addWater(it) }
@@ -281,15 +285,45 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(dashboardReady) {
                     if (!dashboardReady) return@LaunchedEffect
                     suspend fun save(workout: com.hedefit.app.wear.WatchWorkout) {
-                        // recordManualActivity aynı anda tek kayıt kabul eder; öncekinin bitmesini bekle.
+                        // Kayıtlar tek tek yapılır; öncekinin bitmesini bekle.
                         while (mainViewModel.state.value.workoutSaving) kotlinx.coroutines.delay(300)
-                        mainViewModel.recordManualActivity(
-                            com.hedefit.app.data.model.ManualActivityInput(workout.activityKey, workout.minutes, workout.distanceKm, notes = if (preferences.language == "en") "Recorded on watch" else "Saatte kaydedildi"),
-                            preferences.language,
-                        ) {}
+                        val en = preferences.language == "en"
+                        val dashboard = mainViewModel.state.value.dashboard
+                        val planned = dashboard?.workouts.orEmpty()
+                        val setInputs = workout.sets.map { com.hedefit.app.data.model.WorkoutSetInput(it.exerciseId, it.exerciseName, it.order, it.setNumber, it.weightKg, it.reps, null, null) }
+                        val exercises = planned.filter { p -> workout.sets.any { it.exerciseId == p.id } }
+                        if (workout.activityKey == "strength" && setInputs.isNotEmpty() && exercises.isNotEmpty()) {
+                            val calories = workout.calories ?: (5.0 * (dashboard?.profile?.weightKg ?: 70.0) * workout.minutes / 60).toInt()
+                            mainViewModel.completeDetailedWorkout(workout.minutes * 60, calories, setInputs, com.hedefit.app.data.model.WorkoutFeedbackData(), exercises)
+                        } else {
+                            mainViewModel.recordManualActivity(
+                                com.hedefit.app.data.model.ManualActivityInput(workout.activityKey, workout.minutes, workout.distanceKm, notes = if (en) "Recorded on watch" else "Saatte kaydedildi"),
+                                preferences.language, workout.calories,
+                            ) {}
+                        }
+                        val type = when (workout.activityKey) {
+                            "running" -> androidx.health.connect.client.records.ExerciseSessionRecord.EXERCISE_TYPE_RUNNING
+                            "walking" -> androidx.health.connect.client.records.ExerciseSessionRecord.EXERCISE_TYPE_WALKING
+                            "hiking" -> androidx.health.connect.client.records.ExerciseSessionRecord.EXERCISE_TYPE_HIKING
+                            "cycling" -> androidx.health.connect.client.records.ExerciseSessionRecord.EXERCISE_TYPE_BIKING
+                            else -> androidx.health.connect.client.records.ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING
+                        }
+                        val start = java.time.Instant.ofEpochMilli(workout.startMillis)
+                        healthConnectManager.writeExercise(type, "Hedefit", start, start.plusSeconds(workout.minutes * 60L))
                     }
                     com.hedefit.app.wear.WearInbox.drainPendingWorkouts(this@MainActivity).forEach { save(it) }
                     com.hedefit.app.wear.WearInbox.workouts.collect { save(it) }
+                }
+                LaunchedEffect(dashboardReady) {
+                    if (!dashboardReady) return@LaunchedEffect
+                    com.hedefit.app.wear.WearInbox.asks.collect { ask ->
+                        launch {
+                            val result = runCatching {
+                                if (ask.mode == "food") mainViewModel.logFoodForWatch(ask.text) else mainViewModel.askCoachForWatch(ask.text, preferences.language)
+                            }
+                            com.hedefit.app.wear.WearSync.reply(this@MainActivity, ask.nodeId, ask.id, result.isSuccess, result.getOrElse { it.message ?: "Hata" })
+                        }
+                    }
                 }
                 LaunchedEffect(uiState.dashboard, preferences.stepGoal) {
                     HedefitWidgetData.write(this@MainActivity, uiState.dashboard, RouteTrackingStore(this@MainActivity).readSummary(), preferences.stepGoal)

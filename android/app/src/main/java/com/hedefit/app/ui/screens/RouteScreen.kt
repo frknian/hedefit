@@ -241,6 +241,7 @@ fun RouteScreen(
                 if (cue !in spokenNavigationCues) {
                     spokenNavigationCues = spokenNavigationCues + cue
                     val street = maneuver.streetName.takeIf(String::isNotBlank)?.let { " $it" }.orEmpty()
+                    com.hedefit.app.wear.WearSync.sendNav(context, maneuver.type.name, threshold.toInt())
                     navigationVoice.speak(if (en) "In $threshold meters, ${RoutePlanner.instructionFor(maneuver.type, true)}$street" else "$threshold metre sonra ${RoutePlanner.instructionFor(maneuver.type)}$street")
                 }
             }

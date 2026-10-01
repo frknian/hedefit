@@ -1,5 +1,7 @@
 package com.hedefit.wear.ui
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 object HedefitColors {
@@ -16,3 +18,9 @@ fun clock(seconds: Long): String {
     val s = seconds.coerceAtLeast(0)
     return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, s % 3600 / 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
 }
+
+val LocalEnglish = compositionLocalOf { false }
+
+/** Arayüz metni: telefonun dil ayarına göre Türkçe veya İngilizce. */
+@Composable
+fun tx(tr: String, en: String): String = if (LocalEnglish.current) en else tr

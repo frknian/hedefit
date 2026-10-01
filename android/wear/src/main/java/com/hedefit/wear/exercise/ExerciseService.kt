@@ -34,12 +34,12 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 
-enum class WorkoutKind(val id: String, val title: String, val type: ExerciseType, val outdoor: Boolean) {
-    RUN("running", "Koşu", ExerciseType.RUNNING, true),
-    WALK("walking", "Yürüyüş", ExerciseType.WALKING, true),
-    HIKE("hiking", "Doğa yürüyüşü", ExerciseType.HIKING, true),
-    BIKE("cycling", "Bisiklet", ExerciseType.BIKING, true),
-    STRENGTH("strength", "Ağırlık", ExerciseType.STRENGTH_TRAINING, false),
+enum class WorkoutKind(val id: String, val title: String, val titleEn: String, val type: ExerciseType, val outdoor: Boolean) {
+    RUN("running", "Koşu", "Running", ExerciseType.RUNNING, true),
+    WALK("walking", "Yürüyüş", "Walking", ExerciseType.WALKING, true),
+    HIKE("hiking", "Doğa yürüyüşü", "Hiking", ExerciseType.HIKING, true),
+    BIKE("cycling", "Bisiklet", "Cycling", ExerciseType.BIKING, true),
+    STRENGTH("strength", "Ağırlık", "Strength", ExerciseType.STRENGTH_TRAINING, false),
 }
 
 data class ExerciseUi(
@@ -61,6 +61,7 @@ class ExerciseService : Service() {
     private var checkpointTime: Instant = Instant.now()
     private var checkpointActive: Duration = Duration.ZERO
     private var ticking = false
+    private var startMillis = System.currentTimeMillis()
 
     private val callback = object : ExerciseUpdateCallback {
         override fun onExerciseUpdateReceived(update: ExerciseUpdate) {
@@ -94,6 +95,8 @@ class ExerciseService : Service() {
     private fun start(kind: WorkoutKind) {
         startForeground(NOTIFICATION_ID, notification(kind))
         state.value = ExerciseUi(active = true, kind = kind)
+        sets.value = emptyList()
+        startMillis = System.currentTimeMillis()
         scope.launch {
             val supported = client.getCapabilitiesAsync().await().getExerciseTypeCapabilities(kind.type).supportedDataTypes
             val wanted = setOf(DataType.HEART_RATE_BPM, DataType.CALORIES_TOTAL, DataType.DISTANCE_TOTAL).filter { it in supported }.toSet()
@@ -119,7 +122,7 @@ class ExerciseService : Service() {
             runCatching { client.endExerciseAsync().await() }
             state.value = state.value.copy(active = false)
             // Telefona gönder; hesaba yazılması telefon tarafında yapılır.
-            com.hedefit.wear.data.PhoneLink.queueWorkout(applicationContext, summary.kind.id, summary.elapsedSeconds, summary.distanceM, summary.calories)
+            com.hedefit.wear.data.PhoneLink.queueWorkout(applicationContext, summary.kind.id, summary.elapsedSeconds, summary.distanceM, summary.calories, startMillis, sets.value)
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -150,6 +153,10 @@ class ExerciseService : Service() {
         private const val EXTRA_KIND = "kind"
         val state: MutableStateFlow<ExerciseUi> = MutableStateFlow(ExerciseUi())
         val ui: StateFlow<ExerciseUi> get() = state.asStateFlow()
+
+        /** Ağırlık antrenmanında kaydedilen setler; bitişte telefona gönderilir. */
+        val sets: MutableStateFlow<List<com.hedefit.wear.data.SetLog>> = MutableStateFlow(emptyList())
+        fun logSet(set: com.hedefit.wear.data.SetLog) { sets.value = sets.value + set }
 
         fun start(context: Context, kind: WorkoutKind) =
             context.startForegroundService(Intent(context, ExerciseService::class.java).setAction(ACTION_START).putExtra(EXTRA_KIND, kind.id))

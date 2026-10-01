@@ -13,6 +13,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <queries>
+        <intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent>
+    </queries>
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
@@ -35,31 +39,35 @@
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/hedefit/snapshot" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/hedefit/" />
+            </intent-filter>
         </service>
 
         <service android:name=".exercise.ExerciseService" android:exported="false"
             android:foregroundServiceType="health|location" />
 
         <service android:name=".tile.SummaryTileService" android:exported="true"
-            android:label="Hedefit" android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            android:label="@string/tile_label" android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
             <intent-filter><action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" /></intent-filter>
             <meta-data android:name="androidx.wear.tiles.PREVIEW" android:resource="@mipmap/ic_launcher" />
         </service>
 
         <service android:name=".complication.StepsComplicationService" android:exported="true"
-            android:label="Adım" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            android:label="@string/comp_steps" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
             <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="RANGED_VALUE,SHORT_TEXT" />
             <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="0" />
         </service>
         <service android:name=".complication.WaterComplicationService" android:exported="true"
-            android:label="Su" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            android:label="@string/comp_water" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
             <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="RANGED_VALUE,SHORT_TEXT" />
             <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="0" />
         </service>
         <service android:name=".complication.StreakComplicationService" android:exported="true"
-            android:label="Seri" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            android:label="@string/comp_streak" android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter><action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" /></intent-filter>
             <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT" />
             <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="0" />
