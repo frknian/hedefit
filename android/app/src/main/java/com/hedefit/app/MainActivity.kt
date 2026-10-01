@@ -269,6 +269,15 @@ class MainActivity : ComponentActivity() {
                     if (preferences.stepCounterNotificationEnabled) stepCounterNotification.show(this@MainActivity, uiState.dashboard?.steps ?: 0, preferences.stepGoal, uiState.dashboard?.activeCalories ?: 0)
                     else stepCounterNotification.cancel(this@MainActivity)
                 }
+                LaunchedEffect(uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl) {
+                    com.hedefit.app.wear.WearSync.push(this@MainActivity, uiState.dashboard, preferences.stepGoal, preferences.waterGoalMl)
+                }
+                val dashboardReady = uiState.dashboard != null
+                LaunchedEffect(dashboardReady) {
+                    if (!dashboardReady) return@LaunchedEffect
+                    com.hedefit.app.wear.WearInbox.drainPending(this@MainActivity).takeIf { it > 0 }?.let { mainViewModel.addWater(it) }
+                    com.hedefit.app.wear.WearInbox.water.collect { mainViewModel.addWater(it) }
+                }
                 LaunchedEffect(uiState.dashboard, preferences.stepGoal) {
                     HedefitWidgetData.write(this@MainActivity, uiState.dashboard, RouteTrackingStore(this@MainActivity).readSummary(), preferences.stepGoal)
                 }
