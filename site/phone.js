@@ -17,6 +17,7 @@
     beslenme:  { img: 'beslenme', t: 'Beslenme', d: 'Kalori halkası, makrolar ve su. Öğünü yaz ya da fotoğrafla, yapay zekâ hesaplasın.', a: '#f-beslenme', tab: 'beslenme' },
     ilerleme:  { img: 'istatistik', t: 'İlerleme', d: 'Aktivite takvimi, seri ve haftalık süre. 7G’den Tümü’ne.', a: '#f-ilerleme', tab: 'ilerleme' },
     koc:       { img: 'koc', t: 'Fit Koç', d: 'Antrenman, beslenme ve ilerleme sorularını senin verine göre yanıtlar.', a: '#f-koc', tab: 'koc' },
+    seans:     { img: 'seans-hizli', t: 'Antrenman seansı', d: 'Setlere dokun, dinlenme sayacı kendiliğinden başlar. İstersen detaylı moda geç.', a: '#f-antrenman' },
     hedef:     { img: 'hedef', t: 'Hedef yolculuğu', d: 'Hedef kilon için tempo seç; tarihin ve ara hedeflerin hesaplansın.', a: '#hedef-yolculugu' },
     atlas:     { img: 'atlas', t: 'Hareket Atlası', d: '600’den fazla hareket; kas, ekipman ve seviyeye göre filtrele.', a: '#f-antrenman' },
     kardiyo:   { img: 'kardiyo-prog', t: 'Kardiyo', d: '6 makine ve hazır programlar: HIIT, tepe tırmanışı, bisiklet sprintleri.', a: '#f-kardiyo' },

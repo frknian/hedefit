@@ -1401,6 +1401,13 @@ class HedefitRepository(
         return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { add(parseFriendUser(it)) } }
     }
 
+    /** Kullanıcı adıyla aramada görünme tercihi (kapalıyken arama sonuçlarında çıkmaz). */
+    suspend fun loadDiscoverable(): Boolean =
+        api.get("/api/social/settings").requireSuccess("Ayar yüklenemedi.").jsonObject().optBoolean("discoverable", true)
+
+    suspend fun setDiscoverable(value: Boolean): Boolean =
+        api.patch("/api/social/settings", JSONObject().put("discoverable", value)).requireSuccess("Ayar kaydedilemedi.").jsonObject().optBoolean("discoverable", value)
+
     suspend fun loadFriendsSummary(): FriendsSummaryData {
         val json = api.get("/api/social/friends").requireSuccess("Arkadaşlar yüklenemedi.").jsonObject()
         fun parseList(key: String) = json.optJSONArray(key)?.let { array ->

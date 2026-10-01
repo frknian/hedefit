@@ -141,6 +141,8 @@ data class MainUiState(
     val exerciseNames: com.hedefit.app.ui.i18n.ExerciseNameIndex = com.hedefit.app.ui.i18n.ExerciseNameIndex.Empty,
     val friendsBusy: Boolean = false,
     val friendsSummary: FriendsSummaryData? = null,
+    /** Aramada görünme tercihi; null = henüz yüklenmedi. */
+    val discoverable: Boolean? = null,
     val userSearchBusy: Boolean = false,
     val userSearchResults: List<com.hedefit.app.data.model.FriendUserData> = emptyList(),
     val leaderboardBusy: Boolean = false,
@@ -465,12 +467,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun recordManualActivity(input: ManualActivityInput, language: String, onSaved: () -> Unit) {
+    fun recordManualActivity(input: ManualActivityInput, language: String, caloriesOverride: Int? = null, onSaved: () -> Unit) {
         if (_state.value.workoutSaving) return
         val dashboard = _state.value.dashboard ?: return
         val activity = manualActivityTypes.firstOrNull { it.key == input.activityKey } ?: return
         val estimate = estimateManualActivityEnergy(activity, input, dashboard.profile.weightKg)
-        val calories = estimate.activeCalories
+        val calories = caloriesOverride?.takeIf { it > 0 } ?: estimate.activeCalories
         viewModelScope.launch {
             _state.update { it.copy(workoutSaving = true) }
             runCatching { repository.recordManualActivity(input, calories) }
@@ -953,6 +955,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             runCatching { repository.loadFriendsSummary() }
                 .onSuccess { summary -> _state.update { it.copy(friendsBusy = false, friendsSummary = summary) } }
                 .onFailure { error -> _state.update { it.copy(friendsBusy = false, transientMessage = friendlyError(error)) } }
+            if (_state.value.discoverable == null) loadDiscoverable()
+        }
+    }
+
+    fun loadDiscoverable() {
+        viewModelScope.launch {
+            runCatching { repository.loadDiscoverable() }
+                .onSuccess { value -> _state.update { it.copy(discoverable = value) } }
+        }
+    }
+
+    fun setDiscoverable(value: Boolean) {
+        val previous = _state.value.discoverable
+        _state.update { it.copy(discoverable = value) }
+        viewModelScope.launch {
+            runCatching { repository.setDiscoverable(value) }
+                .onSuccess { saved -> _state.update { it.copy(discoverable = saved) } }
+                .onFailure { error -> _state.update { it.copy(discoverable = previous, transientMessage = friendlyError(error)) } }
         }
     }
 
@@ -1447,6 +1467,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }.onFailure { error -> _state.update { it.copy(nutritionBusy = false, transientMessage = friendlyError(error)) } }
         }
+    }
+
+    /** Saatten gelen soru: sohbet geçmişine dokunmadan tek yanıt döner. */
+    suspend fun askCoachForWatch(text: String, locale: String): String =
+        repository.sendChat(listOf(text to true), _state.value.dashboard, locale).text
+
+    /** Saatten sesle yemek kaydı: metni çözümler, öğüne ekler ve kısa özet döner. */
+    suspend fun logFoodForWatch(text: String): String {
+        if (!canAddMeals()) throw IllegalStateException("Bugünkü öğün hakkın doldu.")
+        val items = repository.parseMealText(text)
+        require(items.isNotEmpty()) { "Yemek anlaşılamadı." }
+        val hour = java.time.LocalTime.now().hour
+        val meal = when (hour) { in 4..10 -> "Kahvaltı"; in 11..15 -> "Öğle yemeği"; in 16..21 -> "Akşam yemeği"; else -> "Atıştırmalık" }
+        val logs = repository.savePhotoNutrition(items, meal, "text")
+        _state.update { current -> current.copy(dashboard = current.dashboard?.copy(nutritionLogs = logs + current.dashboard.nutritionLogs)) }
+        return logs.joinToString(", ") { it.name } + " · " + logs.sumOf { it.calories } + " kcal"
     }
 
     fun sendChat(text: String, locale: String = "tr", workoutContext: WorkoutCoachContext? = null) {

@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "HedefitAndroid"
 include(":app")
+include(":wear")

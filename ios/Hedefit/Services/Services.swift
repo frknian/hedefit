@@ -167,6 +167,8 @@ actor HedefitRepository {
 
     // MARK: - Sosyal katman: arkadaşlık, akış, lider tablosu, meydan okumalar
     func searchUsers(_ query: String) async throws -> [FriendUser] { let result = try await net.api("/api/social/users/search?q=\(query)") as? [String: Any]; return decodeRows(result?["users"] ?? []) }
+    func discoverable() async throws -> Bool { let result = try await net.api("/api/social/settings") as? [String: Any]; return result?["discoverable"] as? Bool ?? true }
+    func setDiscoverable(_ value: Bool) async throws -> Bool { let result = try await net.api("/api/social/settings", method: "PATCH", body: ["discoverable": value]) as? [String: Any]; return result?["discoverable"] as? Bool ?? value }
     func friendsSummary() async throws -> FriendsSummary { try await net.decode(FriendsSummary.self, from: try await net.api("/api/social/friends")) }
     func sendFriendRequest(username: String) async throws { _ = try await net.api("/api/social/friends", method: "POST", body: ["username": username]) }
     func respondToFriendRequest(id: String, accept: Bool) async throws { _ = try await net.api("/api/social/friends/\(id)", method: "PATCH", body: ["status": accept ? "accepted" : "declined"]) }

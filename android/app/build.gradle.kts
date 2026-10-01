@@ -25,6 +25,10 @@ fun appConfig(name: String, fallback: String = ""): String =
 
 fun quoted(value: String): String = "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
+// Yayın imzası: ortam değişkenleri veya -P ile verilir (keystore git'e eklenmez).
+fun signingValue(name: String): String? =
+    providers.gradleProperty(name).orNull ?: providers.environmentVariable(name).orNull
+
 android {
     namespace = "com.hedefit.app"
     compileSdk = 36
@@ -69,8 +73,21 @@ android {
         jniLibs.useLegacyPackaging = true
     }
 
+    signingConfigs {
+        create("release") {
+            val store = signingValue("HEDEFIT_UPLOAD_STORE_FILE")
+            if (store != null) {
+                storeFile = file(store)
+                storePassword = signingValue("HEDEFIT_UPLOAD_STORE_PASSWORD")
+                keyAlias = signingValue("HEDEFIT_UPLOAD_KEY_ALIAS")
+                keyPassword = signingValue("HEDEFIT_UPLOAD_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (signingValue("HEDEFIT_UPLOAD_STORE_FILE") != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -103,6 +120,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:25.4.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.play:review-ktx:2.0.2")
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -119,6 +137,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.09.00"))
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")

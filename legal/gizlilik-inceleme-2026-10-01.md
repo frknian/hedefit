@@ -24,7 +24,7 @@
    kapısı görür (aynı iki kutu); rıza verilene kadar ana arayüz ve veri yükleme açılmaz, reddeden çıkış
    yapar, silme için e-posta yönlendirmesi vardır. Rıza durumu okunamazsa (ağ hatası) kullanıcı kilitlenmez.
    **Yapılmadı:** iOS kayıt akışı ve iOS rıza kapısı; uygulama içinden rızayı görme/geri çekme ekranı.
-2. **[METNE EKLENDİ — aranabilirlik kapatma ayarı hâlâ yok] Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
+2. **[METNE EKLENDİ; aranabilirlik kapatma ayarı eklendi (`discoverable`) — migrasyon uygulanmalı] Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
    etkinlik akışı ve ortak meydan okumalar var; arkadaşlar görünen adı, kullanıcı adını, avatarı, XP'yi,
    etkinlik türünü ve (meydan okumada) mesafeyi görüyor. Kullanıcı adı en az 2 karakterle herkese
    aranabilir. Gizlilik politikasında "Sosyal özellikler" bölümü ve (mümkünse) aranabilirliği kapatma

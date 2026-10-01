@@ -24,12 +24,19 @@ struct FriendsView: View {
         }
         .navigationTitle("Arkadaşlar")
         .toolbar { NavigationLink("Meydan okumalar") { ChallengesView() } }
-        .task { await store.loadFriendsSummary(); await store.loadWeeklyLeaderboard(); await store.loadFriendFeed() }
+        .task { await store.loadFriendsSummary(); await store.loadWeeklyLeaderboard(); await store.loadFriendFeed(); await store.loadDiscoverable() }
     }
 
     private var friendsTab: some View {
         List {
             Section { TextField("Kullanıcı adıyla ara…", text: $query).onChange(of: query) { _, value in Task { await store.searchUsers(value) } } }
+            if let discoverable = store.discoverable {
+                Section {
+                    Toggle("Aramada görün", isOn: Binding(get: { discoverable }, set: { value in Task { await store.setDiscoverable(value) } }))
+                } footer: {
+                    Text("Kapalıyken kullanıcı adı aramasında çıkmazsın. Kullanıcı adını tam olarak bilen biri yine de sana arkadaşlık isteği gönderebilir; mevcut arkadaşların etkilenmez.")
+                }
+            }
             if !store.userSearchResults.isEmpty {
                 Section("Sonuçlar") {
                     ForEach(store.userSearchResults) { user in

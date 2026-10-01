@@ -9,12 +9,13 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     var settings: AppSettings { didSet { saveSettings(); Task { await NotificationService.configure(settings) }; WidgetShared.update(dashboard, settings: settings) } }
     var exercises: [ExerciseCatalogItem] = []; let route = RouteService()
     var friendsSummary = FriendsSummary(); var leaderboard: [LeaderboardEntry] = []; var feed: [FeedItem] = []
-    var userSearchResults: [FriendUser] = []; var challenges: [Challenge] = []; var challengeProgress: [ChallengeProgressEntry] = []
+    var discoverable: Bool? = nil; var userSearchResults: [FriendUser] = []; var challenges: [Challenge] = []; var challengeProgress: [ChallengeProgressEntry] = []
     private let net = NetworkClient.shared, repository = HedefitRepository.shared
 
     init() { settings = (try? JSONDecoder().decode(AppSettings.self, from: UserDefaults.standard.data(forKey: "settings") ?? Data())) ?? AppSettings()
         WatchBridge.shared.activate()
         WatchBridge.shared.onWater = { [weak self] ml in Task { await self?.addWater(ml) } }
+        WatchBridge.shared.onWorkout = { [weak self] kind, minutes, _ in Task { await self?.addWatchWorkout(kind: kind, minutes: minutes) } }
     }
 
     func bootstrap() async {
@@ -51,6 +52,11 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     }
     func addWater(_ amount: Int) async { guard let session else { return }; let old = dashboard.waterMl; dashboard.waterMl = max(0, min(old + amount, 20_000)); do { try await repository.setWater(dashboard.waterMl, userID: session.userID); WidgetShared.update(dashboard, settings: settings) } catch { dashboard.waterMl = old; self.error = error.localizedDescription } }
     func saveWorkout(sets: [WorkoutSet], seconds: Int, calories: Int, feedback: WorkoutFeedback) async throws { guard let session else { return }; try await repository.saveWorkout(dashboard.workouts, sets: sets, duration: seconds, calories: calories, feedback: feedback, userID: session.userID); message = "Antrenman ve tüm setlerin ilerlemene kaydedildi."; await refresh() }
+    /// Saatte biten antrenmanı elle eklenen aktivite gibi kaydeder (kalori ağırlığa göre tahmin edilir).
+    func addWatchWorkout(kind: String, minutes: Int) async {
+        let type = manualActivities.first { $0.id == kind } ?? ManualActivityType(id: kind, tr: kind == "hiking" ? "Doğa Yürüyüşü" : "Kuvvet", en: kind == "hiking" ? "Hiking" : "Strength", icon: kind == "hiking" ? "figure.hiking" : "dumbbell.fill", met: kind == "hiking" ? 6 : 5)
+        try? await addManual(type, minutes: minutes, effort: 3)
+    }
     func addManual(_ type: ManualActivityType, minutes: Int, effort: Int) async throws { guard let session else { return }; try await repository.addManualActivity(type, minutes: minutes, effort: effort, weight: dashboard.profile.weightKg ?? 70, userID: session.userID); message = "\(type.tr) aktivitesi kaydedildi."; await refresh() }
     func addFood(_ text: String, grams: Double, meal: String) async { guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }; loading = true; do { try await repository.addFood(text: text, grams: grams, meal: meal); message = "Öğün kaydedildi."; await refresh() } catch { self.error = error.localizedDescription }; loading = false }
     func deleteFood(_ log: NutritionLog) async { do { try await repository.deleteFood(log.id); dashboard.nutritionLogs.removeAll { $0.id == log.id } } catch { self.error = error.localizedDescription } }
@@ -83,6 +89,12 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
 
     // MARK: - Sosyal katman
     func loadFriendsSummary() async { do { friendsSummary = try await repository.friendsSummary() } catch { self.error = error.localizedDescription } }
+    func loadDiscoverable() async { if let value = try? await repository.discoverable() { discoverable = value } }
+    func setDiscoverable(_ value: Bool) async {
+        let previous = discoverable
+        discoverable = value
+        do { discoverable = try await repository.setDiscoverable(value) } catch { discoverable = previous; self.error = error.localizedDescription }
+    }
     func searchUsers(_ query: String) async { guard query.count >= 2 else { userSearchResults = []; return }; do { userSearchResults = try await repository.searchUsers(query) } catch { self.error = error.localizedDescription } }
     func sendFriendRequest(username: String) async { do { try await repository.sendFriendRequest(username: username); message = "İstek gönderildi."; await loadFriendsSummary() } catch { self.error = error.localizedDescription } }
     func respondToFriendRequest(id: String, accept: Bool) async { do { try await repository.respondToFriendRequest(id: id, accept: accept); await loadFriendsSummary(); await loadWeeklyLeaderboard() } catch { self.error = error.localizedDescription } }

@@ -10,6 +10,7 @@ import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.metadata.Device
@@ -43,7 +44,10 @@ class HealthConnectManager(private val context: Context) {
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
     )
 
-    val allPermissions = permissions + heartPermissions
+    /** Saatte biten antrenmanları yazmak için; verilmezse yazma sessizce atlanır. */
+    val exerciseWritePermission = HealthPermission.getWritePermission(ExerciseSessionRecord::class)
+
+    val allPermissions = permissions + heartPermissions + exerciseWritePermission
 
     private val client by lazy { HealthConnectClient.getOrCreate(context) }
 
@@ -51,6 +55,19 @@ class HealthConnectManager(private val context: Context) {
     fun permissionContract(): ActivityResultContract<Set<String>, Set<String>> = PermissionController.createRequestPermissionResultContract()
 
     suspend fun hasPermissions(): Boolean = sdkStatus() == HealthConnectClient.SDK_AVAILABLE && client.permissionController.getGrantedPermissions().containsAll(permissions)
+
+    /** Antrenmanı Health Connect'e yazar. İzin yoksa veya Health Connect yoksa false döner. */
+    suspend fun writeExercise(exerciseType: Int, title: String, start: Instant, end: Instant): Boolean = runCatching {
+        if (sdkStatus() != HealthConnectClient.SDK_AVAILABLE) return false
+        if (exerciseWritePermission !in client.permissionController.getGrantedPermissions()) return false
+        val zone = ZoneId.systemDefault().rules.getOffset(start)
+        client.insertRecords(listOf(ExerciseSessionRecord(
+            startTime = start, startZoneOffset = zone, endTime = end, endZoneOffset = zone,
+            exerciseType = exerciseType, title = title,
+            metadata = androidx.health.connect.client.records.metadata.Metadata.manualEntry(),
+        )))
+        true
+    }.getOrDefault(false)
 
     suspend fun hasStepPermission(): Boolean =
         sdkStatus() == HealthConnectClient.SDK_AVAILABLE &&
