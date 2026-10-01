@@ -55,8 +55,21 @@ cd android
 - [ ] İzin reddinde uygulama çökmüyor
 - [ ] `./gradlew :wear:lintRelease` temiz
 
+## Yeni özellikler için ek test maddeleri
+
+- [ ] Ağırlık: programdaki egzersizler saatte listeleniyor; kg (taç) ve tekrar girilip set bitirilince telefonda ayrıntılı antrenman olarak görünüyor
+- [ ] Koşu/yürüyüş: saatin ölçtüğü kalori kayda yazılıyor; Health Connect izni verildiyse oturum orada da görünüyor
+- [ ] Sesli soru ve yemek ekleme (telefonda uygulama açıkken); kapalıyken "telefonda aç" mesajı
+- [ ] Sosyal sayfa: Arkadaşlar'ı açmadan da sıralama geliyor; sırada yükselince saatte bildirim
+- [ ] Rota takibi sırasında dönüşlerde saat titreşiyor (sol: iki kısa, sağ: bir uzun) ve ok gösteriyor
+- [ ] Tile'daki "+250 ml" düğmesi suyu artırıyor; complication'a dokununca ilgili sayfa açılıyor
+- [ ] Saat dili telefon ayarını (TR/EN) izliyor
+- [ ] Health Connect yazma izni (`WRITE_EXERCISE`) için kullanıcıdan yeniden onay isteniyor; Play'deki Sağlık beyanı güncelle
+
 ## Bilinen sınırlar
 
-- Saatte biten antrenman telefona gönderilir ve elle eklenen aktivite olarak hesaba yazılır; kalori telefonda kilodan tahmin edilir (saatin ölçtüğü değer kullanılmaz). Health Connect'e yazılmaz.
-- Ağırlık antrenmanında kg/tekrar saatten girilmiyor; yalnızca set sayacı ve dinlenme var.
+- Saatin ölçtüğü mesafe Android'de kayda yazılıyor, iOS'ta yazılmıyor (iOS aktivite kaydında mesafe alanı yok).
+- Sesli soru ve yemek kaydı telefonda Hedefit açıkken çalışır; kapalıysa saat bunu söyler.
+- Rota dönüş ipuçları yalnızca Android telefonda var (iOS uygulamasında adım adım rota yönlendirme yok).
+- Wear OS uygulama ikonu telefonunkiyle aynı; saat için sadeleştirilmiş bir ikon henüz yok.
 - Telefon tarafı `:app` için `lintVitalRelease` bu çalışmada çalıştırılmadı; yayından önce çalıştır.
