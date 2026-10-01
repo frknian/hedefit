@@ -275,8 +275,21 @@ class MainActivity : ComponentActivity() {
                 val dashboardReady = uiState.dashboard != null
                 LaunchedEffect(dashboardReady) {
                     if (!dashboardReady) return@LaunchedEffect
-                    com.hedefit.app.wear.WearInbox.drainPending(this@MainActivity).takeIf { it > 0 }?.let { mainViewModel.addWater(it) }
+                    com.hedefit.app.wear.WearInbox.drainPendingWater(this@MainActivity).takeIf { it > 0 }?.let { mainViewModel.addWater(it) }
                     com.hedefit.app.wear.WearInbox.water.collect { mainViewModel.addWater(it) }
+                }
+                LaunchedEffect(dashboardReady) {
+                    if (!dashboardReady) return@LaunchedEffect
+                    suspend fun save(workout: com.hedefit.app.wear.WatchWorkout) {
+                        // recordManualActivity aynı anda tek kayıt kabul eder; öncekinin bitmesini bekle.
+                        while (mainViewModel.state.value.workoutSaving) kotlinx.coroutines.delay(300)
+                        mainViewModel.recordManualActivity(
+                            com.hedefit.app.data.model.ManualActivityInput(workout.activityKey, workout.minutes, workout.distanceKm, notes = if (preferences.language == "en") "Recorded on watch" else "Saatte kaydedildi"),
+                            preferences.language,
+                        ) {}
+                    }
+                    com.hedefit.app.wear.WearInbox.drainPendingWorkouts(this@MainActivity).forEach { save(it) }
+                    com.hedefit.app.wear.WearInbox.workouts.collect { save(it) }
                 }
                 LaunchedEffect(uiState.dashboard, preferences.stepGoal) {
                     HedefitWidgetData.write(this@MainActivity, uiState.dashboard, RouteTrackingStore(this@MainActivity).readSummary(), preferences.stepGoal)

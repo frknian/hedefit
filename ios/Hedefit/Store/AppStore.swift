@@ -15,6 +15,7 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     init() { settings = (try? JSONDecoder().decode(AppSettings.self, from: UserDefaults.standard.data(forKey: "settings") ?? Data())) ?? AppSettings()
         WatchBridge.shared.activate()
         WatchBridge.shared.onWater = { [weak self] ml in Task { await self?.addWater(ml) } }
+        WatchBridge.shared.onWorkout = { [weak self] kind, minutes, _ in Task { await self?.addWatchWorkout(kind: kind, minutes: minutes) } }
     }
 
     func bootstrap() async {
@@ -51,6 +52,11 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     }
     func addWater(_ amount: Int) async { guard let session else { return }; let old = dashboard.waterMl; dashboard.waterMl = max(0, min(old + amount, 20_000)); do { try await repository.setWater(dashboard.waterMl, userID: session.userID); WidgetShared.update(dashboard, settings: settings) } catch { dashboard.waterMl = old; self.error = error.localizedDescription } }
     func saveWorkout(sets: [WorkoutSet], seconds: Int, calories: Int, feedback: WorkoutFeedback) async throws { guard let session else { return }; try await repository.saveWorkout(dashboard.workouts, sets: sets, duration: seconds, calories: calories, feedback: feedback, userID: session.userID); message = "Antrenman ve tüm setlerin ilerlemene kaydedildi."; await refresh() }
+    /// Saatte biten antrenmanı elle eklenen aktivite gibi kaydeder (kalori ağırlığa göre tahmin edilir).
+    func addWatchWorkout(kind: String, minutes: Int) async {
+        let type = manualActivities.first { $0.id == kind } ?? ManualActivityType(id: kind, tr: kind == "hiking" ? "Doğa Yürüyüşü" : "Kuvvet", en: kind == "hiking" ? "Hiking" : "Strength", icon: kind == "hiking" ? "figure.hiking" : "dumbbell.fill", met: kind == "hiking" ? 6 : 5)
+        try? await addManual(type, minutes: minutes, effort: 3)
+    }
     func addManual(_ type: ManualActivityType, minutes: Int, effort: Int) async throws { guard let session else { return }; try await repository.addManualActivity(type, minutes: minutes, effort: effort, weight: dashboard.profile.weightKg ?? 70, userID: session.userID); message = "\(type.tr) aktivitesi kaydedildi."; await refresh() }
     func addFood(_ text: String, grams: Double, meal: String) async { guard !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }; loading = true; do { try await repository.addFood(text: text, grams: grams, meal: meal); message = "Öğün kaydedildi."; await refresh() } catch { self.error = error.localizedDescription }; loading = false }
     func deleteFood(_ log: NutritionLog) async { do { try await repository.deleteFood(log.id); dashboard.nutritionLogs.removeAll { $0.id == log.id } } catch { self.error = error.localizedDescription } }

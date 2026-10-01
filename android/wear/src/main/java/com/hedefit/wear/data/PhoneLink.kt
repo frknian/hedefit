@@ -17,6 +17,7 @@ import kotlinx.coroutines.tasks.await
 
 private const val SNAPSHOT_PATH = "/hedefit/snapshot"
 private const val WATER_PATH = "/hedefit/water"
+private const val WORKOUT_PATH = "/hedefit/workout"
 
 /** Saat -> telefon: su ekleme mesajı. Telefon erişilemezse miktar kuyruğa alınır. */
 object PhoneLink {
@@ -31,15 +32,35 @@ object PhoneLink {
         flush(context)
     }
 
+    /** Biten antrenmanı kuyruğa alır ve gönderir; telefon erişilemezse sonraki açılışta tekrar dener. */
+    suspend fun queueWorkout(context: Context, kind: String, durationSec: Long, distanceM: Double, calories: Int) {
+        if (durationSec < 60) return
+        val json = org.json.JSONObject()
+            .put("id", java.util.UUID.randomUUID().toString()).put("kind", kind)
+            .put("durationSec", durationSec).put("distanceM", distanceM).put("calories", calories).toString()
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet("workouts", prefs.getStringSet("workouts", emptySet()).orEmpty() + json).apply()
+        flush(context)
+    }
+
     suspend fun flush(context: Context) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val pending = prefs.getInt("pending", 0)
-        if (pending <= 0) return
+        val water = prefs.getInt("pending", 0)
+        val workouts = prefs.getStringSet("workouts", emptySet()).orEmpty()
+        if (water <= 0 && workouts.isEmpty()) return
         runCatching {
             val nodes = Wearable.getNodeClient(context).connectedNodes.await()
             if (nodes.isEmpty()) return
-            nodes.forEach { Wearable.getMessageClient(context).sendMessage(it.id, WATER_PATH, pending.toString().toByteArray()).await() }
-            prefs.edit().putInt("pending", 0).apply()
+            val client = Wearable.getMessageClient(context)
+            if (water > 0) {
+                nodes.forEach { client.sendMessage(it.id, WATER_PATH, water.toString().toByteArray()).await() }
+                prefs.edit().putInt("pending", 0).apply()
+            }
+            // Her antrenman ayrı gönderilir; başarılı olan kuyruktan çıkar. Telefon aynı id'yi iki kez kaydetmez.
+            for (json in workouts) {
+                nodes.forEach { client.sendMessage(it.id, WORKOUT_PATH, json.toByteArray()).await() }
+                prefs.edit().putStringSet("workouts", prefs.getStringSet("workouts", emptySet()).orEmpty() - json).apply()
+            }
         }
     }
 

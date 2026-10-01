@@ -115,8 +115,11 @@ class ExerciseService : Service() {
 
     private fun end() {
         scope.launch {
+            val summary = state.value
             runCatching { client.endExerciseAsync().await() }
             state.value = state.value.copy(active = false)
+            // Telefona gönder; hesaba yazılması telefon tarafında yapılır.
+            com.hedefit.wear.data.PhoneLink.queueWorkout(applicationContext, summary.kind.id, summary.elapsedSeconds, summary.distanceM, summary.calories)
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }

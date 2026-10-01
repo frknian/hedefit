@@ -50,12 +50,13 @@ cd android
 - [ ] Saatten su ekleme telefona ve sunucuya yazılıyor; uçak modunda ekleme sonradan senkronlanıyor
 - [ ] Koşu/yürüyüş/bisiklet: nabız, mesafe ve süre doğru; ekran kapalıyken ölçüm sürüyor
 - [ ] Ağırlık antrenmanı: set sayacı ve dinlenme titreşimi
+- [ ] Biten antrenman telefonda aktivite olarak görünüyor (uygulama kapalıyken bitirip sonra açarak da dene); aynı antrenman iki kez kaydolmuyor
 - [ ] Tile ve üç complication (Adım, Su, Seri) kadrana eklenebiliyor
 - [ ] İzin reddinde uygulama çökmüyor
 - [ ] `./gradlew :wear:lintRelease` temiz
 
 ## Bilinen sınırlar
 
-- Saatte biten antrenman henüz telefona/Health Connect'e yazılmıyor (yalnızca saatte ölçülür ve gösterilir).
+- Saatte biten antrenman telefona gönderilir ve elle eklenen aktivite olarak hesaba yazılır; kalori telefonda kilodan tahmin edilir (saatin ölçtüğü değer kullanılmaz). Health Connect'e yazılmaz.
 - Ağırlık antrenmanında kg/tekrar saatten girilmiyor; yalnızca set sayacı ve dinlenme var.
 - Telefon tarafı `:app` için `lintVitalRelease` bu çalışmada çalıştırılmadı; yayından önce çalıştır.

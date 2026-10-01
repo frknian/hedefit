@@ -9,6 +9,7 @@ import com.hedefit.app.data.model.DashboardData
 object WearSync {
     const val SNAPSHOT_PATH = "/hedefit/snapshot"
     const val WATER_PATH = "/hedefit/water"
+    const val WORKOUT_PATH = "/hedefit/workout"
 
     fun push(context: Context, dashboard: DashboardData?, stepGoal: Int, waterGoalMl: Int) {
         if (dashboard == null) return

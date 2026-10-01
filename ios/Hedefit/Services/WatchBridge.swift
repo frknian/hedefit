@@ -6,6 +6,9 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     static let shared = WatchBridge()
     /// Saatten gelen su miktarını (ml) uygulamak için AppStore tarafından ayarlanır.
     @MainActor var onWater: ((Int) -> Void)?
+    /// Saatte biten antrenman: (tür kimliği, dakika, mesafe metre).
+    @MainActor var onWorkout: ((String, Int, Double) -> Void)?
+    private let allowedKinds: Set<String> = ["running", "walking", "hiking", "cycling", "strength"]
 
     func activate() {
         guard WCSession.isSupported() else { return }
@@ -30,7 +33,15 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     func sessionDidBecomeInactive(_ session: WCSession) {}
     func sessionDidDeactivate(_ session: WCSession) { session.activate() }
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        guard let ml = userInfo["water"] as? Int else { return }
-        Task { @MainActor in self.onWater?(ml) }
+        if let ml = userInfo["water"] as? Int { Task { @MainActor in self.onWater?(ml) }; return }
+        guard let workout = userInfo["workout"] as? [String: Any], let id = workout["id"] as? String, let kind = workout["kind"] as? String, allowedKinds.contains(kind),
+              let seconds = (workout["durationSec"] as? NSNumber)?.intValue, seconds >= 60, seconds <= 86_400 else { return }
+        // Saat aynı antrenmanı tekrar gönderebilir; kimliği görülmüşse yok say.
+        let defaults = UserDefaults.standard
+        var seen = defaults.stringArray(forKey: "watchWorkoutIDs") ?? []
+        guard !seen.contains(id) else { return }
+        seen.append(id); defaults.set(Array(seen.suffix(50)), forKey: "watchWorkoutIDs")
+        let distance = (workout["distanceM"] as? NSNumber)?.doubleValue ?? 0
+        Task { @MainActor in self.onWorkout?(kind, seconds / 60, distance) }
     }
 }

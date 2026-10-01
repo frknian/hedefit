@@ -1,5 +1,6 @@
 import Foundation
 import HealthKit
+import WatchConnectivity
 import Observation
 
 /// Saatte HKWorkoutSession ile nabız, kalori ve mesafe ölçer; bitince Sağlık'a yazar.
@@ -58,10 +59,13 @@ import Observation
     func togglePause() { paused ? session?.resume() : session?.pause() }
 
     func finish() async {
+        let summary: [String: Any] = ["id": UUID().uuidString, "kind": kind.id, "durationSec": elapsed, "distanceM": distance, "calories": Int(calories)]
         session?.end()
         timer?.invalidate(); timer = nil
         if let builder { try? await builder.endCollection(at: Date()); _ = try? await builder.finishWorkout() }
         running = false; paused = false; session = nil; builder = nil
+        // 1 dakikadan kısa antrenmanlar kaydedilmez; iPhone hesaba yazar (transferUserInfo kuyruğa alır).
+        if elapsed >= 60, WCSession.default.activationState == .activated { WCSession.default.transferUserInfo(["workout": summary]) }
     }
 
     nonisolated func workoutSession(_ s: HKWorkoutSession, didChangeTo to: HKWorkoutSessionState, from: HKWorkoutSessionState, date: Date) {
