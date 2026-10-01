@@ -75,6 +75,8 @@ Sayfalar: `index.html`, `planlar.html`, `gizlilik.html`, `destek.html`, `hesap-s
 npm run site:preview                       # http://localhost:8788 (yerel Pages sunucusu)
 SITE_URL=https://alanadi.com npm run site:build
 SITE_URL=https://alanadi.com CF_PAGES_PROJECT=<proje-adı> npm run site:deploy
+# Pages yerine workers.dev (statik varlıklı Worker, scripts/wrangler.site.jsonc):
+SITE_URL=https://hedefit-site.frknian.workers.dev npm run site:deploy:worker
 ```
 
 - `site:build` çıktısı `.site-dist/` içindedir: `__SITE_URL__` yer tutucularını doldurur, `sitemap.xml` ve `robots.txt` üretir.
