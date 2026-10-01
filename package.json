@@ -13,7 +13,6 @@
     "site:build": "node scripts/build-site.mjs",
     "site:preview": "node scripts/deploy-site.mjs preview",
     "site:deploy": "node scripts/deploy-site.mjs",
-    "site:deploy:worker": "node scripts/deploy-site.mjs worker",
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint app lib worker --ignore-pattern dist --ignore-pattern .next",
     "data:import-exercises": "node scripts/import-free-exercise-db.mjs",

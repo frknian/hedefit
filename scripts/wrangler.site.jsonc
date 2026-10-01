@@ -1,5 +1,5 @@
 {
-  // Tanıtım sitesi: yalnız statik dosyalardan oluşan Worker (Pages yerine workers.dev ile yayın).
+  // Tanıtım sitesi: yalnız statik dosyalardan oluşan Worker (workers.dev; özel alan adı Cloudflare panelinden bu Worker'a bağlanır).
   "name": "hedefit-site",
   "compatibility_date": "2026-10-01",
   "workers_dev": true,

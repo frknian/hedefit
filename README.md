@@ -68,22 +68,22 @@ npm run deploy
 
 ## Web sitesi (tanıtım)
 
-`site/` klasörü, Cloudflare Pages'e yayınlanan statik tanıtım sitesidir (API Worker'ından ayrıdır).
+`site/` klasörü, statik varlıklı bir Cloudflare Worker (`hedefit-site`, `scripts/wrangler.site.jsonc`) olarak yayınlanan tanıtım sitesidir; API Worker'ından ayrıdır.
 Sayfalar: `index.html`, `planlar.html`, `gizlilik.html`, `destek.html`, `hesap-silme.html`.
 
 ```bash
-npm run site:preview                       # http://localhost:8788 (yerel Pages sunucusu)
-SITE_URL=https://alanadi.com npm run site:build
-SITE_URL=https://alanadi.com CF_PAGES_PROJECT=<proje-adı> npm run site:deploy
-# Pages yerine workers.dev (statik varlıklı Worker, scripts/wrangler.site.jsonc):
-SITE_URL=https://hedefit-site.frknian.workers.dev npm run site:deploy:worker
+npm run site:preview        # http://localhost:8788 (yerel önizleme)
+npm run site:deploy         # https://hedefit-site.frknian.workers.dev
+SITE_URL=https://alanadi.com npm run site:deploy   # özel alan adı bağlanınca
+npm run site:build          # yalnız .site-dist/ üretir (SITE_URL gerekir)
 ```
 
 - `site:build` çıktısı `.site-dist/` içindedir: `__SITE_URL__` yer tutucularını doldurur, `sitemap.xml` ve `robots.txt` üretir.
+- Özel alan adı: Cloudflare panelinde `hedefit-site` Worker'ına alan adı ekle, sonra `SITE_URL` ile yeniden yayınla (canonical, sitemap ve paylaşım görseli güncellenir).
 - Mağaza bağlantıları: `site/main.js` içindeki `STORES` nesnesine Google Play ve App Store adreslerini yaz; butonlar otomatik aktifleşir.
 - `gizlilik.html` ve `destek.html` üretilir: `LegalTexts.kt` değişince `python3 scripts/build-legal-pages.py`.
 - Plan limitleri (`planlar.html`) `lib/usage-limits.ts` ve Android `Entitlements.kt` ile birlikte güncellenmelidir.
-- Wrangler Pages komutları depo dışından çalıştırılır (kökteki `.wrangler/deploy` yönlendirmesi API Worker'ına aittir).
+- Wrangler komutları depo dışından çalıştırılır (kökteki `.wrangler/deploy` yönlendirmesi API Worker'ına aittir).
 
 ## Geliştirme
 
