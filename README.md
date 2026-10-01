@@ -6,8 +6,7 @@ toplayan bir fitness uygulamasıdır. Bu depo backend servislerini, native Andro
 
 ## Öne çıkanlar
 
-- **Fit Koç**: bulut modelleri ve cihaz üstü (on-device) yerel AI ile sohbet,
-  program üretimi ve besin çıkarımı
+- **Fit Koç**: bulut tabanlı AI ile sohbet, program üretimi ve besin çıkarımı
 - **Antrenman**: hazır programlar, detaylı ve hızlı (dokun-bitir) set modu,
   takvim, spor salonu analitiği ve kas haritası
 - **Kardiyo ve Rota**: tam ekran kardiyo, rota planlama, arka planda takip ve

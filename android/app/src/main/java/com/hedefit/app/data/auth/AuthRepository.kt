@@ -16,10 +16,16 @@ data class AuthUser(val id: String, val email: String, val emailVerified: Boolea
 data class RegistrationLegalAcceptance(
     val kvkkNoticeAccepted: Boolean,
     val privacyPolicyAccepted: Boolean,
+    /** KVKK m.6/2: sağlık verilerinin işlenmesine AYRI açık rıza (aydınlatma onayından bağımsız). */
+    val healthDataConsent: Boolean,
+    /** KVKK m.9: verilerin yurt dışındaki sunuculara/yapay zekâ sağlayıcısına aktarılmasına AYRI açık rıza. */
+    val crossBorderConsent: Boolean,
 ) {
     fun requireComplete() {
         require(kvkkNoticeAccepted) { "KVKK Aydınlatma Metni'ni onaylamalısın." }
         require(privacyPolicyAccepted) { "Gizlilik Politikası'nı onaylamalısın." }
+        require(healthDataConsent) { "Sağlık verilerinin işlenmesine açık rıza vermelisin." }
+        require(crossBorderConsent) { "Verilerin yurt dışına aktarılmasına açık rıza vermelisin." }
     }
 }
 
@@ -213,6 +219,35 @@ class AuthRepository(
         }
     }
 
+    /**
+     * Hesapta iki açık rıza (sağlık verisi, yurt dışı aktarım) kayıtlı mı? Rıza alan alanlar
+     * olmadan önce kayıt olmuş hesaplar için false döner → uygulama yeniden rıza ister.
+     */
+    suspend fun hasExplicitConsents(): Boolean {
+        val response = http.request(
+            url = authUrl("user"),
+            method = "GET",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+        ).requireSuccess("Rıza durumu okunamadı.")
+        val meta = response.jsonObject().optJSONObject("user_metadata")
+        return meta?.optString("health_data_consent_at")?.isNotBlank() == true &&
+            meta.optString("cross_border_consent_at").isNotBlank()
+    }
+
+    /** Var olan hesap için iki açık rızayı (ayrı zaman damgalarıyla) kaydeder. */
+    suspend fun saveExplicitConsents() {
+        val now = Instant.now().toString()
+        http.request(
+            url = authUrl("user"),
+            method = "PUT",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+            body = JSONObject().put("data", JSONObject()
+                .put("consent_text_version", LEGAL_DOCUMENT_VERSION)
+                .put("health_data_consent_at", now)
+                .put("cross_border_consent_at", now)).toString(),
+        ).requireSuccess("Rıza kaydedilemedi.")
+    }
+
     private suspend fun saveRegistrationLegalAcceptance() {
         http.request(
             url = authUrl("user"),
@@ -222,10 +257,18 @@ class AuthRepository(
         ).requireSuccess("Yasal onay kaydedilemedi.")
     }
 
-    private fun legalAcceptancePayload() = JSONObject()
-        .put("kvkk_notice_version", LEGAL_DOCUMENT_VERSION)
-        .put("privacy_policy_version", LEGAL_DOCUMENT_VERSION)
-        .put("legal_accepted_at", Instant.now().toString())
+    // Yalnızca requireComplete() geçtikten sonra çağrılır: dört onayın hepsi verilmiştir.
+    // Açık rızalar aydınlatma onayından ayrı alan adlarıyla (ve ayrı zaman damgasıyla) saklanır.
+    private fun legalAcceptancePayload(): JSONObject {
+        val now = Instant.now().toString()
+        return JSONObject()
+            .put("kvkk_notice_version", LEGAL_DOCUMENT_VERSION)
+            .put("privacy_policy_version", LEGAL_DOCUMENT_VERSION)
+            .put("legal_accepted_at", now)
+            .put("consent_text_version", LEGAL_DOCUMENT_VERSION)
+            .put("health_data_consent_at", now)
+            .put("cross_border_consent_at", now)
+    }
 
 
     suspend fun validAccessToken(forceRefresh: Boolean = false): String = refreshMutex.withLock {
@@ -293,6 +336,6 @@ class AuthRepository(
     private fun authHeaders() = mapOf("apikey" to BuildConfig.SUPABASE_ANON_KEY, "Content-Type" to "application/json")
 
     internal companion object {
-        const val LEGAL_DOCUMENT_VERSION = "2026-09-23"
+        const val LEGAL_DOCUMENT_VERSION = "2026-10-01"
     }
 }

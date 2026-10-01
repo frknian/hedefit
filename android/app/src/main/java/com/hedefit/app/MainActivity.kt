@@ -49,6 +49,7 @@ import com.hedefit.app.ui.i18n.withLocalizedExercises
 import com.hedefit.app.ui.state.canUseExercise
 import com.hedefit.app.ui.screens.NotificationCalendarScreen
 import com.hedefit.app.ui.screens.FrozenAccountScreen
+import com.hedefit.app.ui.screens.ExplicitConsentGateScreen
 import com.hedefit.app.ui.screens.WorkoutCalendarScreen
 import com.hedefit.app.ui.screens.ExerciseLibraryScreen
 import com.hedefit.app.ui.screens.RouteScreen
@@ -323,6 +324,16 @@ class MainActivity : ComponentActivity() {
                                     }
                                 googleCredentialBusy = false
                             }
+                        },
+                    )
+                } else if (uiState.consentRequired) {
+                    ExplicitConsentGateScreen(
+                        busy = uiState.consentBusy,
+                        error = uiState.consentError,
+                        onAccept = mainViewModel::acceptExplicitConsents,
+                        onSignOut = {
+                            scope.launch { googleSignIn.clearCredentialState() }
+                            mainViewModel.signOut()
                         },
                     )
                 } else if (uiState.accountFrozen) {

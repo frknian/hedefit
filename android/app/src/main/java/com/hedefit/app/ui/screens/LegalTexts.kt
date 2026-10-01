@@ -20,24 +20,27 @@ internal val KVKK_NOTICE = listOf(
             "• Konum: yalnızca Hedefit Rota ile kayıt başlattığında, kayıt süresince GPS rota noktaları ve mesafe/tempo bilgileri.\n" +
             "• Görsel: öğün analizi ve ekipman tanıma için çektiğin fotoğraflar (yalnızca analiz için işlenir, sunucularımızda saklanmaz).\n" +
             "• FitKoç: bulut modunda koça yazdığın mesajlar ve sorunun yanıtlanması için gereken profil/antrenman/beslenme özeti. Sohbet geçmişi yalnızca cihazında tutulur.\n" +
+            "• FitKoç hafızası: sohbetlerinden çıkarılan ya da açıkça söylediğin kısa notlar. Her not bir kategori (egzersiz, yemek, koçluk veya program tercihi; hedef; kısıt; alışkanlık; ekipman; motivasyon), kısa bir etiket ve değerden oluşur. \"Kısıt\" notları bir sakatlığa veya sağlık durumuna ilişkin bilgi içerebilir. Notlar sohbet geçmişinden farklı olarak sunucuda hesabına bağlı saklanır; kullanıcı başına en fazla 60 not tutulur.\n" +
+            "• Sosyal özellikler: kullanıcı adın, görünen adın ve profil fotoğrafın; arkadaşlık kayıtların (istek durumu ve tarihleri); haftalık XP'n; etkinlik akışında görünen olaylar (antrenman tamamlama, rota mesafesi, başarım ve haftalık hedef/meydan okuma tamamlama ile kazanılan XP); ortak meydan okumalarda başlık, ölçüt, hedef, katılım durumun ve ilerlemen (XP, antrenman sayısı veya kilometre).\n" +
             "• Cihaz ve kullanım: uygulama sürümü, hata kayıtları, günlük yapay zekâ kullanım sayacı, bildirim tercihleri; reklam gösterilen sürümde reklam kimliği.",
     ),
     LegalSection(
         "3. İşleme amaçları",
-        "Hesabını oluşturmak ve güvenliğini sağlamak; kişisel antrenman programı, kalori ve makro hedefleri oluşturmak; antrenman, beslenme, adım, uyku ve kilo ilerlemeni takip etmek; FitKoç önerilerini ve öğün/fotoğraf analizlerini sunmak; rota kaydı yapmak; hatırlatma bildirimleri göndermek; ödül ve seviye sistemini işletmek; kullanıcı adının benzersizliğini ve uygunluğunu denetlemek; hataları gidermek ve hizmeti iyileştirmek; yasal yükümlülükleri yerine getirmek ve olası uyuşmazlıklarda haklarımızı korumak.",
+        "Hesabını oluşturmak ve güvenliğini sağlamak; kişisel antrenman programı, kalori ve makro hedefleri oluşturmak; antrenman, beslenme, adım, uyku ve kilo ilerlemeni takip etmek; FitKoç önerilerini ve öğün/fotoğraf analizlerini sunmak; FitKoç'un tercihlerini ve kısıtlarını hatırlayarak sana zamanla daha uygun yanıt vermesi için hafıza notlarını tutmak; rota kaydı yapmak; arkadaşlık, haftalık sıralama, etkinlik akışı ve ortak meydan okumaları işletmek; hatırlatma bildirimleri göndermek; ödül ve seviye sistemini işletmek; kullanıcı adının benzersizliğini ve uygunluğunu denetlemek; hataları gidermek ve hizmeti iyileştirmek; yasal yükümlülükleri yerine getirmek ve olası uyuşmazlıklarda haklarımızı korumak.",
     ),
     LegalSection(
         "4. Hukuki sebepler",
-        "Genel nitelikli verilerin; sözleşmenin kurulması ve ifası (KVKK m.5/2-c), hukuki yükümlülük (m.5/2-ç), bir hakkın tesisi ve korunması (m.5/2-e) ve meşru menfaat (m.5/2-f) sebeplerine dayanarak işlenir. Özel nitelikli sağlık verilerin ve yurt dışına aktarım gerektiren işlemler ise ayrıca verdiğin açık rızaya (m.6/2 ve m.9) dayanır. Reklam kimliğinin kişiselleştirilmiş reklam amacıyla kullanımı, uygulamadaki izin ekranında verdiğin tercihe bağlıdır.",
+        "Genel nitelikli verilerin; sözleşmenin kurulması ve ifası (KVKK m.5/2-c), hukuki yükümlülük (m.5/2-ç), bir hakkın tesisi ve korunması (m.5/2-e) ve meşru menfaat (m.5/2-f) sebeplerine dayanarak işlenir. Özel nitelikli sağlık verilerin (FitKoç hafızasında yer alabilecek sağlık bilgileri dahil) ve yurt dışına aktarım gerektiren işlemler ise ayrıca verdiğin açık rızaya (m.6/2 ve m.9) dayanır. Reklam kimliğinin kişiselleştirilmiş reklam amacıyla kullanımı, uygulamadaki izin ekranında verdiğin tercihe bağlıdır.",
     ),
     LegalSection(
         "5. Aktarılan taraflar ve yurt dışı aktarım",
         "Veriler satılmaz. Hizmetin çalışması için şu hizmet sağlayıcılarla, yalnızca gerekli olduğu kadar paylaşılır:\n" +
             "• Supabase: kimlik doğrulama, veritabanı ve profil fotoğrafı depolama.\n" +
             "• Cloudflare: uygulama sunucusu ve güvenli bağlantı altyapısı.\n" +
-            "• OpenAI (ABD): bulut FitKoç yanıtları, öğün/fotoğraf analizleri ve ekipman tanıma. Gönderilen veriler yanıt üretmek için işlenir ve yapay zekâ modellerini eğitmek için kullanılmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır.\n" +
+            "• OpenAI (ABD): bulut FitKoç yanıtları, öğün/fotoğraf analizleri ve ekipman tanıma. Gönderilen veriler (FitKoç hafıza notların dahil) yanıt üretmek için işlenir ve yapay zekâ modellerini eğitmek için kullanılmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır.\n" +
             "• Google: Google ile giriş, reklam gösterimi (AdMob) ve izin yönetimi, uygulama içi değerlendirme; Health Connect verileri cihazında Google altyapısı üzerinden okunur.\n" +
-            "Bu sağlayıcıların sunucuları Türkiye dışında bulunabilir. Yurt dışı aktarımlar KVKK m.9 kapsamında uygun güvencelere (standart sözleşmeler) veya açık rızana dayanılarak yapılır. Ayrıca yetkili kamu kurumlarının hukuka uygun talepleri halinde veriler paylaşılabilir.",
+            "Bu sağlayıcıların sunucuları Türkiye dışında bulunabilir. Yurt dışı aktarımlar KVKK m.9 kapsamında uygun güvencelere (standart sözleşmeler) veya açık rızana dayanılarak yapılır. Ayrıca yetkili kamu kurumlarının hukuka uygun talepleri halinde veriler paylaşılabilir.\n" +
+            "Sosyal özellikleri kullandığında diğer Hedefit kullanıcılarıyla da bazı veriler paylaşılır: kullanıcı adın en az 2 karakter yazan her kullanıcı tarafından aranabilir ve arama sonucunda kullanıcı adın, görünen adın ve profil fotoğrafın görünür (bu aranabilirliği kapatan bir ayar şu an yoktur). Kabul ettiğin arkadaşların; kullanıcı adını, görünen adını, profil fotoğrafını, haftalık XP'ni ve etkinlik akışındaki olayları (antrenman tamamlama, rota mesafesi, başarım, haftalık hedef tamamlama ve kazanılan XP) görür. Ortak meydan okumada katılımcılar birbirinin ilerlemesini (XP, antrenman sayısı veya kilometre) görür. Öğün, ölçüm, kilo, sağlık ve konum kayıtların arkadaşlarınla paylaşılmaz.",
     ),
     LegalSection(
         "6. Toplama yöntemi",
@@ -45,7 +48,7 @@ internal val KVKK_NOTICE = listOf(
     ),
     LegalSection(
         "7. Saklama ve silme",
-        "Veriler hesabın açık olduğu sürece saklanır. \"Hesabı kalıcı sil\" işlemiyle hesabın ve ilişkili verilerin silinir; yasal saklama yükümlülüğü olan kayıtlar yalnızca bu süre boyunca tutulur. \"İlerlemeyi sıfırla\" kayıtlarını siler, \"Hesabı dondur\" verilerini koruyarak erişimi durdurur. Fotoğraf analizleri saklanmaz; FitKoç sohbeti yalnızca cihazındadır ve uygulamadan temizlenebilir.",
+        "Veriler hesabın açık olduğu sürece saklanır. \"Hesabı kalıcı sil\" işlemiyle hesabın ve ilişkili verilerin silinir; yasal saklama yükümlülüğü olan kayıtlar yalnızca bu süre boyunca tutulur. \"İlerlemeyi sıfırla\" kayıtlarını siler, \"Hesabı dondur\" verilerini koruyarak erişimi durdurur. Fotoğraf analizleri saklanmaz; FitKoç sohbeti yalnızca cihazındadır ve uygulamadan temizlenebilir. FitKoç hafıza notları ile arkadaşlık ve meydan okuma kayıtların hesabını sildiğinde silinir. Hafıza notlarının hesabını silmeden kaldırılmasını istersen $LEGAL_CONTACT adresine yazabilirsin.",
     ),
     LegalSection(
         "8. Haklarınız (KVKK m.11)",
@@ -67,12 +70,20 @@ internal val PRIVACY_POLICY = listOf(
         "Hesap bilgilerin (e-posta, kullanıcı adı), profilin (yaş, boy, kilo, hedef), kayıtların (antrenman, öğün, su, uyku, adım, ölçüm), izin verdiğinde konumun (yalnızca rota kaydı sırasında), kameran (öğün ve ekipman analizi) ve Health Connect verilerin.",
     ),
     LegalSection(
+        "Sosyal özellikler",
+        "Arkadaş ekleyebilir, haftalık XP sıralamasına, etkinlik akışına ve ortak meydan okumalara katılabilirsin. Kullanıcı adın, en az 2 karakter yazan her Hedefit kullanıcısı tarafından aranabilir; sonuçta kullanıcı adın, görünen adın ve profil fotoğrafın görünür. Şu an aranabilirliği kapatan bir ayar yoktur. Kabul ettiğin arkadaşların kullanıcı adını, görünen adını, profil fotoğrafını, haftalık XP'ni ve etkinlik özetini (antrenman tamamlama, rota mesafesi, başarım, haftalık hedef/meydan okuma tamamlama ve kazanılan XP) görür. Meydan okumada katılımcılar birbirinin ilerlemesini görür. Öğün, ölçüm, kilo, sağlık ve konum kayıtların arkadaşlarınla paylaşılmaz.",
+    ),
+    LegalSection(
         "Kullanıcı adları",
         "Kullanıcı adı her hesap için benzersizdir ve başka biri tarafından alınamaz. En az 3 karakter olmalı; müstehcen, cinsel içerikli, küfür ya da hakaret içeren veya Hedefit'i taklit eden adlar kabul edilmez.",
     ),
     LegalSection(
         "Yapay zekâ",
         "FitKoç'un bulut modu, öğün/fotoğraf analizleri ve ekipman tanıma, isteğin yanıtlanması için gereken bilgileri yapay zekâ sağlayıcısına (OpenAI) gönderir. Sağlayıcı bu verileri yanıt üretmek için işler ve yapay zekâ modellerini eğitmek için kullanmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır. Yapay zekâ önerileri tıbbi tavsiye değildir; bir sağlık sorunun varsa uzmana danış.",
+    ),
+    LegalSection(
+        "FitKoç hafızası",
+        "FitKoç, seni zamanla tanıyıp daha uygun yanıt verebilmek için sohbetlerinden çıkardığı ya da açıkça söylediğin kısa notları (egzersiz ve yemek tercihi, hedef, kısıt, alışkanlık, ekipman, motivasyon) hesabına bağlı olarak sunucuda saklar; kullanıcı başına en fazla 60 not tutulur. Kısıt notları bir sakatlık veya sağlık durumuna ilişkin bilgi içerebilir. Bu notlar yanıt üretmek için yapay zekâ sağlayıcısına gönderilen bağlama dahil edilir. Hesabını sildiğinde notların da silinir; hesabını silmeden kaldırılmasını istersen $LEGAL_CONTACT adresine yazabilirsin.",
     ),
     LegalSection(
         "Reklamlar",
@@ -114,24 +125,27 @@ internal val KVKK_NOTICE_EN = listOf(
             "• Location: only while you record with Hedefit Route, GPS route points and distance/pace for the duration of the recording.\n" +
             "• Images: photos you take for meal analysis and equipment recognition (processed only for analysis, not stored on our servers).\n" +
             "• Fit Coach: in cloud mode, the messages you send and the profile/workout/nutrition summary needed to answer. Chat history is kept only on your device.\n" +
+            "• Fit Coach memory: short notes inferred from your chats or that you state explicitly. Each note has a category (exercise, food, coaching or schedule preference; goal; constraint; habit; equipment; motivation), a short label and a value. \"Constraint\" notes may include information about an injury or health condition. Unlike chat history, notes are stored on our servers linked to your account; at most 60 notes are kept per user.\n" +
+            "• Social features: your username, display name and profile photo; your friendship records (request status and dates); your weekly XP; events shown in the activity feed (workout completed, route distance, achievement and weekly goal/challenge completion, with the XP earned); in shared challenges, the title, metric, target, your participation status and your progress (XP, workout count or kilometres).\n" +
             "• Device and usage: app version, error logs, daily AI usage counter, notification preferences; advertising ID in the ad-supported version.",
     ),
     LegalSection(
         "3. Purposes of processing",
-        "Creating and securing your account; building your personal training program and calorie and macro targets; tracking your workout, nutrition, step, sleep and weight progress; providing Fit Coach suggestions and meal/photo analysis; recording routes; sending reminder notifications; running the rewards and level system; checking that usernames are unique and appropriate; fixing errors and improving the service; meeting legal obligations and protecting our rights in potential disputes.",
+        "Creating and securing your account; building your personal training program and calorie and macro targets; tracking your workout, nutrition, step, sleep and weight progress; providing Fit Coach suggestions and meal/photo analysis; keeping memory notes so Fit Coach can remember your preferences and constraints and answer more fittingly over time; recording routes; running friendships, the weekly leaderboard, the activity feed and shared challenges; sending reminder notifications; running the rewards and level system; checking that usernames are unique and appropriate; fixing errors and improving the service; meeting legal obligations and protecting our rights in potential disputes.",
     ),
     LegalSection(
         "4. Legal grounds",
-        "General personal data is processed on the grounds of entering into and performing a contract (KVKK Art. 5/2-c), legal obligation (Art. 5/2-ç), establishing and protecting a right (Art. 5/2-e) and legitimate interest (Art. 5/2-f). Special-category health data and processing that requires transfer abroad additionally rely on your explicit consent (Art. 6/2 and Art. 9). Use of the advertising ID for personalized ads depends on the choice you make on the in-app consent screen.",
+        "General personal data is processed on the grounds of entering into and performing a contract (KVKK Art. 5/2-c), legal obligation (Art. 5/2-ç), establishing and protecting a right (Art. 5/2-e) and legitimate interest (Art. 5/2-f). Special-category health data (including health information that may appear in Fit Coach memory) and processing that requires transfer abroad additionally rely on your explicit consent (Art. 6/2 and Art. 9). Use of the advertising ID for personalized ads depends on the choice you make on the in-app consent screen.",
     ),
     LegalSection(
         "5. Recipients and transfers abroad",
         "Your data is never sold. It is shared with the following service providers only as far as needed to run the service:\n" +
             "• Supabase: authentication, database and profile photo storage.\n" +
             "• Cloudflare: application server and secure connection infrastructure.\n" +
-            "• OpenAI (USA): cloud Fit Coach replies, meal/photo analysis and equipment recognition. Data sent is processed to produce the reply and is not used to train AI models; for requests that include a photo, provider-side storage (store) is turned off.\n" +
+            "• OpenAI (USA): cloud Fit Coach replies, meal/photo analysis and equipment recognition. Data sent (including your Fit Coach memory notes) is processed to produce the reply and is not used to train AI models; for requests that include a photo, provider-side storage (store) is turned off.\n" +
             "• Google: Google sign-in, ad serving (AdMob) and consent management, in-app reviews; Health Connect data is read on your device through Google infrastructure.\n" +
-            "These providers' servers may be located outside Türkiye. Transfers abroad are made under KVKK Art. 9 on the basis of appropriate safeguards (standard contracts) or your explicit consent. Data may also be shared in response to lawful requests from competent public authorities.",
+            "These providers' servers may be located outside Türkiye. Transfers abroad are made under KVKK Art. 9 on the basis of appropriate safeguards (standard contracts) or your explicit consent. Data may also be shared in response to lawful requests from competent public authorities.\n" +
+            "When you use social features, some data is also shared with other Hedefit users: your username can be searched by any user who types at least 2 characters, and a search result shows your username, display name and profile photo (there is currently no setting to turn off being searchable). Friends you accept can see your username, display name, profile photo, weekly XP and the events in the activity feed (workout completed, route distance, achievement, weekly goal completion and the XP earned). In a shared challenge, participants see each other's progress (XP, workout count or kilometres). Your meal, measurement, weight, health and location records are not shared with your friends.",
     ),
     LegalSection(
         "6. Collection method",
@@ -139,7 +153,7 @@ internal val KVKK_NOTICE_EN = listOf(
     ),
     LegalSection(
         "7. Retention and deletion",
-        "Data is kept while your account is open. \"Delete account permanently\" deletes your account and related data; records subject to legal retention are kept only for that period. \"Reset progress\" deletes your logs, and \"Freeze account\" stops access while keeping your data. Photo analyses are not stored; Fit Coach chats live only on your device and can be cleared in the app.",
+        "Data is kept while your account is open. \"Delete account permanently\" deletes your account and related data; records subject to legal retention are kept only for that period. \"Reset progress\" deletes your logs, and \"Freeze account\" stops access while keeping your data. Photo analyses are not stored; Fit Coach chats live only on your device and can be cleared in the app. Fit Coach memory notes and your friendship and challenge records are deleted when you delete your account. If you want memory notes removed without deleting your account, write to $LEGAL_CONTACT.",
     ),
     LegalSection(
         "8. Your rights (KVKK Art. 11)",
@@ -161,12 +175,20 @@ internal val PRIVACY_POLICY_EN = listOf(
         "Your account details (email, username), profile (age, height, weight, goal), logs (workouts, meals, water, sleep, steps, measurements), your location when you allow it (only while recording a route), your camera (meal and equipment analysis) and Health Connect data.",
     ),
     LegalSection(
+        "Social features",
+        "You can add friends and take part in the weekly XP leaderboard, the activity feed and shared challenges. Your username can be searched by any Hedefit user who types at least 2 characters; a result shows your username, display name and profile photo. There is currently no setting to turn off being searchable. Friends you accept can see your username, display name, profile photo, weekly XP and activity summary (workout completed, route distance, achievement, weekly goal/challenge completion and the XP earned). In a challenge, participants see each other's progress. Your meal, measurement, weight, health and location records are not shared with your friends.",
+    ),
+    LegalSection(
         "Usernames",
         "Each username is unique and can't be taken by anyone else. It must be at least 3 characters; obscene, sexual, profane or insulting names, or names impersonating Hedefit, are not accepted.",
     ),
     LegalSection(
         "Artificial intelligence",
         "Fit Coach's cloud mode, meal/photo analysis and equipment recognition send the information needed to answer your request to the AI provider (OpenAI). The provider processes this data to generate the reply and does not use it to train AI models; for requests that include a photo, provider-side storage (store) is turned off. AI suggestions are not medical advice; if you have a health concern, consult a professional.",
+    ),
+    LegalSection(
+        "Fit Coach memory",
+        "So that Fit Coach can get to know you and answer more fittingly over time, it stores short notes inferred from your chats or that you state explicitly (exercise and food preferences, goals, constraints, habits, equipment, motivation) on our servers, linked to your account; at most 60 notes are kept per user. Constraint notes may include information about an injury or health condition. These notes are included in the context sent to the AI provider to generate replies. They are deleted when you delete your account; if you want them removed without deleting your account, write to $LEGAL_CONTACT.",
     ),
     LegalSection(
         "Ads",

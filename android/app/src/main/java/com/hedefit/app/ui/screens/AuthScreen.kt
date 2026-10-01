@@ -129,6 +129,8 @@ private fun HeroChip(emoji: String, text: String, modifier: Modifier = Modifier)
 @Composable
 private fun WelcomeIntroScreen(busy: Boolean, message: String?, onStart: (RegistrationLegalAcceptance) -> Unit, onHaveAccount: () -> Unit) {
     var accepted by rememberSaveable { mutableStateOf(false) }
+    var healthConsent by rememberSaveable { mutableStateOf(false) }
+    var crossBorderConsent by rememberSaveable { mutableStateOf(false) }
     var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
     val reduced = rememberReducedMotion()
     val float = if (reduced) 0f else rememberInfiniteTransition(label = "heroFloat")
@@ -195,10 +197,13 @@ private fun WelcomeIntroScreen(busy: Boolean, message: String?, onStart: (Regist
                 Spacer(Modifier.size(12.dp))
                 Text(consentText, color = HedefitColors.TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
             }
+            ExplicitConsentRow(healthConsent, { healthConsent = it }, healthConsentText())
+            ExplicitConsentRow(crossBorderConsent, { crossBorderConsent = it }, crossBorderConsentText())
+            Text(consentWithdrawNote(), color = HedefitColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
             if (message != null) Text(message, color = HedefitColors.Coral, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 8.dp))
             androidx.compose.material3.Button(
-                onClick = { onStart(RegistrationLegalAcceptance(kvkkNoticeAccepted = true, privacyPolicyAccepted = true)) },
-                enabled = accepted && !busy,
+                onClick = { onStart(RegistrationLegalAcceptance(kvkkNoticeAccepted = true, privacyPolicyAccepted = true, healthDataConsent = healthConsent, crossBorderConsent = crossBorderConsent)) },
+                enabled = accepted && healthConsent && crossBorderConsent && !busy,
                 modifier = Modifier.fillMaxWidth().height(58.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime, disabledContainerColor = HedefitColors.SurfaceHigh, disabledContentColor = HedefitColors.TextMuted),
@@ -242,11 +247,15 @@ private fun AuthForm(
     var submitted by remember { mutableStateOf(false) }
     var kvkkAccepted by remember { mutableStateOf(false) }
     var privacyAccepted by remember { mutableStateOf(false) }
+    var healthConsent by remember { mutableStateOf(false) }
+    var crossBorderConsent by remember { mutableStateOf(false) }
     var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
     fun legalError(requireSubmission: Boolean): String? = when {
         login || (requireSubmission && !submitted) -> null
         !kvkkAccepted -> "KVKK Aydınlatma Metni'ni okuduğunu onaylamalısın."
         !privacyAccepted -> "Gizlilik Politikası'nı kabul etmelisin."
+        !healthConsent -> "Sağlık verilerinin işlenmesine açık rıza vermelisin."
+        !crossBorderConsent -> "Verilerin yurt dışına aktarılmasına açık rıza vermelisin."
         else -> null
     }
     val localError = validateAuthForm(email, password, passwordAgain, login, submitted) ?: legalError(requireSubmission = true)
@@ -303,6 +312,10 @@ private fun AuthForm(
                             privacyAccepted = privacyAccepted,
                             onKvkkChange = { kvkkAccepted = it },
                             onPrivacyChange = { privacyAccepted = it },
+                            healthConsent = healthConsent,
+                            crossBorderConsent = crossBorderConsent,
+                            onHealthConsentChange = { healthConsent = it },
+                            onCrossBorderConsentChange = { crossBorderConsent = it },
                             onOpenDocument = { legalDocument = it },
                         )
                     } }
@@ -315,7 +328,7 @@ private fun AuthForm(
                         val error = validateAuthForm(email, password, passwordAgain, login, submitted = true) ?: usernameError ?: legalError(requireSubmission = false)
                         if (!busy && error == null) {
                             if (login) onSignIn(email.trim(), password)
-                            else onSignUp(email.trim(), password, username, RegistrationLegalAcceptance(kvkkAccepted, privacyAccepted))
+                            else onSignUp(email.trim(), password, username, RegistrationLegalAcceptance(kvkkAccepted, privacyAccepted, healthConsent, crossBorderConsent))
                         }
                     })
                     Row(
@@ -329,7 +342,7 @@ private fun AuthForm(
                     }
                     GoogleSignInButton(disabled = busy, loading = googleBusy, onClick = {
                         if (login) onGoogleSignIn(null)
-                        else if (kvkkAccepted && privacyAccepted) onGoogleSignIn(RegistrationLegalAcceptance(kvkkAccepted, privacyAccepted))
+                        else if (kvkkAccepted && privacyAccepted && healthConsent && crossBorderConsent) onGoogleSignIn(RegistrationLegalAcceptance(kvkkAccepted, privacyAccepted, healthConsent, crossBorderConsent))
                         else submitted = true
                     })
                     Text(
@@ -352,6 +365,10 @@ private fun LegalAcceptanceFields(
     privacyAccepted: Boolean,
     onKvkkChange: (Boolean) -> Unit,
     onPrivacyChange: (Boolean) -> Unit,
+    healthConsent: Boolean,
+    crossBorderConsent: Boolean,
+    onHealthConsentChange: (Boolean) -> Unit,
+    onCrossBorderConsentChange: (Boolean) -> Unit,
     onOpenDocument: (LegalDocument) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -363,8 +380,101 @@ private fun LegalAcceptanceFields(
             Checkbox(checked = privacyAccepted, onCheckedChange = onPrivacyChange)
             TextButton(onClick = { onOpenDocument(LegalDocument.Privacy) }) { Text(com.hedefit.app.ui.i18n.tr("Gizlilik Politikası'nı okudum ve kabul ediyorum", "I have read and accept the Privacy Policy")) }
         }
+        // KVKK m.6/2 ve m.9: açık rızalar aydınlatma onayından AYRI, işaretsiz kutular.
+        ExplicitConsentRow(healthConsent, onHealthConsentChange, healthConsentText())
+        ExplicitConsentRow(crossBorderConsent, onCrossBorderConsentChange, crossBorderConsentText())
+        Text(consentWithdrawNote(), color = HedefitColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp, modifier = Modifier.padding(top = 2.dp, start = 4.dp))
     }
 }
+
+/**
+ * Açık rıza alanları olmayan (eski) hesaplar için tam ekran rıza kapısı. Rıza verilene kadar
+ * ana uygulamaya (ve sağlık verilerinin yüklenmesine) geçilmez; reddeden çıkış yapar.
+ */
+@Composable
+fun ExplicitConsentGateScreen(busy: Boolean, error: String?, onAccept: () -> Unit, onSignOut: () -> Unit) {
+    var healthConsent by rememberSaveable { mutableStateOf(false) }
+    var crossBorderConsent by rememberSaveable { mutableStateOf(false) }
+    var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
+    Column(
+        Modifier.fillMaxSize().background(HedefitColors.Background).safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Spacer(Modifier.height(12.dp))
+        Text(com.hedefit.app.ui.i18n.tr("Açık rızanı onayla", "Confirm your explicit consent"), color = HedefitColors.TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Black, lineHeight = 32.sp)
+        Text(
+            com.hedefit.app.ui.i18n.tr(
+                "Gizlilik metinlerimizi güncelledik. Sağlık verilerini işleyebilmemiz ve verilerinin yurt dışındaki sunucularda tutulabilmesi için senden ayrıca açık rıza almamız gerekiyor.",
+                "We updated our privacy texts. We need your separate explicit consent to process your health data and to keep your data on servers abroad.",
+            ),
+            color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(onClick = { legalDocument = LegalDocument.Kvkk }) { Text(com.hedefit.app.ui.i18n.tr("KVKK Aydınlatma Metni", "KVKK Privacy Notice"), color = HedefitColors.Lime) }
+            TextButton(onClick = { legalDocument = LegalDocument.Privacy }) { Text(com.hedefit.app.ui.i18n.tr("Gizlilik Politikası", "Privacy Policy"), color = HedefitColors.Lime) }
+        }
+        ExplicitConsentRow(healthConsent, { healthConsent = it }, healthConsentText())
+        ExplicitConsentRow(crossBorderConsent, { crossBorderConsent = it }, crossBorderConsentText())
+        Text(consentWithdrawNote(), color = HedefitColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp)
+        if (error != null) Text(error, color = HedefitColors.Coral, style = MaterialTheme.typography.bodyMedium)
+        androidx.compose.material3.Button(
+            onClick = onAccept,
+            enabled = healthConsent && crossBorderConsent && !busy,
+            modifier = Modifier.fillMaxWidth().height(54.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime, disabledContainerColor = HedefitColors.Surface),
+        ) {
+            if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = HedefitColors.OnLime, strokeWidth = 2.dp)
+            else Text(com.hedefit.app.ui.i18n.tr("Onayla ve devam et", "Confirm and continue"), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+        TextButton(onClick = onSignOut, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Text(com.hedefit.app.ui.i18n.tr("Kabul etmiyorum, çıkış yap", "I do not accept, sign out"), color = HedefitColors.TextSecondary)
+        }
+        Text(
+            com.hedefit.app.ui.i18n.tr("Hesabının silinmesini istersen $LEGAL_CONTACT adresine yaz.", "To have your account deleted, write to $LEGAL_CONTACT."),
+            color = HedefitColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp,
+        )
+    }
+    legalDocument?.let { LegalDocumentDialog(it) { legalDocument = null } }
+}
+
+/** Çok satırlı, tüm satırı dokunulabilir açık rıza kutusu. */
+@Composable
+private fun ExplicitConsentRow(checked: Boolean, onChange: (Boolean) -> Unit, text: String) {
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = androidx.compose.ui.semantics.Role.Checkbox) { onChange(!checked) }
+            .padding(vertical = 5.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Box(
+            Modifier.padding(top = 2.dp).size(20.dp).clip(RoundedCornerShape(6.dp))
+                .background(if (checked) HedefitColors.Lime else androidx.compose.ui.graphics.Color.Transparent)
+                .border(1.5.dp, if (checked) HedefitColors.Lime else HedefitColors.TextMuted, RoundedCornerShape(6.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) Icon(Icons.Default.Check, null, tint = HedefitColors.OnLime, modifier = Modifier.size(14.dp))
+        }
+        Spacer(Modifier.size(12.dp))
+        Text(text, color = HedefitColors.TextMuted, fontSize = 12.sp, lineHeight = 17.sp)
+    }
+}
+
+private fun healthConsentText() = com.hedefit.app.ui.i18n.tr(
+    "Sağlık verilerimin (boy, kilo, ölçüler, antrenman, beslenme, uyku, adım, nabız ve bildirdiğim ağrı/sakatlık bilgileri) program ve takip özellikleri için işlenmesine açık rıza veriyorum.",
+    "I give my explicit consent to the processing of my health data (height, weight, measurements, workouts, nutrition, sleep, steps, heart rate and any pain/injury information I report) for the program and tracking features.",
+)
+
+private fun crossBorderConsentText() = com.hedefit.app.ui.i18n.tr(
+    "Verilerimin hizmetin sunulması için yurt dışındaki sunuculara ve yapay zekâ sağlayıcısına (Supabase, Cloudflare, OpenAI, Google) aktarılmasına açık rıza veriyorum.",
+    "I give my explicit consent to my data being transferred abroad to servers and AI providers (Supabase, Cloudflare, OpenAI, Google) to provide the service.",
+)
+
+private fun consentWithdrawNote() = com.hedefit.app.ui.i18n.tr(
+    "Bu rızalar olmadan hesap açılamaz. Rızanı istediğin zaman hesabını silerek ya da bize yazarak geri çekebilirsin.",
+    "The account cannot be created without these consents. You can withdraw your consent at any time by deleting your account or writing to us.",
+)
 
 @Composable
 private fun LegalDocumentDialog(document: LegalDocument, onDismiss: () -> Unit) {
