@@ -22,17 +22,6 @@ export type AiEvent = {
   outputTokens?: number;
   promptVersion: string;
   errorKind?: string;
-  // --- Cihaz üstü çıkarım ölçümleri (Phase 2) ---------------------------
-  // Yalnızca teknik metadata. İSTEM VE YANIT METNİ HİÇBİR ZAMAN YAZILMAZ:
-  // yerel çıkarımın temel vaadi verinin cihazdan çıkmamasıdır; performans
-  // ölçmek uğruna sağlık verisini yukarı göndermek bu vaadi bozardı.
-  runtime?: "litert-lm";
-  /** Model belleğe yüklenirken geçen süre (yalnız ilk yüklemede anlamlı). */
-  loadMs?: number;
-  /** İlk token'a kadar geçen süre — algılanan hızın asıl göstergesi. */
-  ttftMs?: number;
-  decodeTokensPerSecond?: number;
-  prefillTokensPerSecond?: number;
 };
 
 type ErrorRecord = Record<string, unknown>;

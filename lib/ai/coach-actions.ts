@@ -7,15 +7,15 @@
 //
 // TAŞIMA BİÇİMİ: model, yanıtının SONUNA ```hedefit-actions``` etiketli bir
 // JSON bloğu ekleyebilir. Sağlayıcıdan bağımsız çalışması için tool-calling
-// yerine bu yol seçildi — uygulama üç farklı sağlayıcıyla ve cihaz üstü bir
-// modelle çalışıyor, hepsinin araç çağırma desteği aynı değil. Blok yoksa ya
+// yerine bu yol seçildi — uygulama birden fazla sağlayıcıyla çalışabiliyor, hepsinin
+// araç çağırma desteği aynı değil. Blok yoksa ya
 // da bozuksa eylem üretilmez; kullanıcı normal metni görür.
 //
 // İKİ KURAL PAZARLIĞA KAPALI:
 //   1. Eylem kullanıcı ONAYI olmadan uygulanmaz. Buradaki her şey bir ÖNERİdir;
 //      düğmeye basan kullanıcıdır. Model kendi başına hedef değiştiremez.
 //   2. Yerel yedek yanıtlarda eylem ayrıştırılmaz (bkz. çağıran taraf):
-//      cihaz üstü küçük modelin ürettiği yapılandırılmış çağrıya güvenilmez.
+//      deterministik yedek yapılandırılmış çağrı üretmez.
 //
 // ÜÇÜNCÜ KURAL: model var olmayan/uydurma bir exerciseId ÖNEREMEZ. Egzersiz
 // kataloğuna karşı doğrulanmayan tüm exerciseId/replacementId/regressionId/
@@ -242,8 +242,7 @@ export function parseCoachActions(rawText: string): ParsedCoachResponse {
 /**
  * Modele eylem biçimini anlatan talimat.
  *
- * Prompt'a YALNIZCA gerçek (uzak) sağlayıcı kullanılırken eklenir; cihaz üstü
- * küçük modelden yapılandırılmış çıktı beklenmiyor.
+ * Prompt'a YALNIZCA gerçek (uzak) sağlayıcı kullanılırken eklenir.
  */
 export const COACH_ACTIONS_INSTRUCTION = {
   tr: `Yanıtın kullanıcıyı uygulamada bir işe veya antrenman uyarlamasına yönlendiriyorsa, metnin SONUNA şu biçimde bir blok ekleyebilirsin:

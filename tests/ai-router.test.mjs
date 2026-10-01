@@ -197,13 +197,13 @@ test("basit koçlukta da Automatic sırası yerel → uzak → deterministiktir"
     lastResortCategories: ["simple_coaching"],
   };
   providerRegistry.reset([
-    stubProvider("on-device", "local", { throws: new Error("native runtime failure") }),
+    stubProvider("native-local", "local", { throws: new Error("native runtime failure") }),
     deterministic,
     stubProvider("remote", "remote"),
   ]);
 
   const chain = await selectProviders(request, {}, false);
-  assert.deepEqual(chain.map((provider) => provider.id), ["on-device", "remote", "local-deterministic"]);
+  assert.deepEqual(chain.map((provider) => provider.id), ["native-local", "remote", "local-deterministic"]);
   const response = await routeText(request, SILENT);
   assert.equal(response.provider, "remote");
   assert.equal(response.fallbackUsed, true);
