@@ -5,13 +5,16 @@ import Observation
 
 /// Saatte HKWorkoutSession ile nabız, kalori ve mesafe ölçer; bitince Sağlık'a yazar.
 @MainActor @Observable final class WorkoutManager: NSObject, HKWorkoutSessionDelegate, HKLiveWorkoutBuilderDelegate {
-    struct Kind: Identifiable, Hashable { let id: String, title: String, icon: String, type: HKWorkoutActivityType, outdoor: Bool }
+    struct Kind: Identifiable, Hashable {
+        let id: String, title: String, titleEn: String, icon: String, type: HKWorkoutActivityType, outdoor: Bool
+        init(id: String, title: String, titleEn: String, icon: String, type: HKWorkoutActivityType, outdoor: Bool) { self.id = id; self.title = title; self.titleEn = titleEn; self.icon = icon; self.type = type; self.outdoor = outdoor }
+    }
     static let kinds: [Kind] = [
-        .init(id: "running", title: "Koşu", icon: "figure.run", type: .running, outdoor: true),
-        .init(id: "walking", title: "Yürüyüş", icon: "figure.walk", type: .walking, outdoor: true),
-        .init(id: "hiking", title: "Doğa yürüyüşü", icon: "figure.hiking", type: .hiking, outdoor: true),
-        .init(id: "cycling", title: "Bisiklet", icon: "bicycle", type: .cycling, outdoor: true),
-        .init(id: "strength", title: "Ağırlık", icon: "dumbbell.fill", type: .traditionalStrengthTraining, outdoor: false)
+        .init(id: "running", title: "Koşu", titleEn: "Running", icon: "figure.run", type: .running, outdoor: true),
+        .init(id: "walking", title: "Yürüyüş", titleEn: "Walking", icon: "figure.walk", type: .walking, outdoor: true),
+        .init(id: "hiking", title: "Doğa yürüyüşü", titleEn: "Hiking", icon: "figure.hiking", type: .hiking, outdoor: true),
+        .init(id: "cycling", title: "Bisiklet", titleEn: "Cycling", icon: "bicycle", type: .cycling, outdoor: true),
+        .init(id: "strength", title: "Ağırlık", titleEn: "Strength", icon: "dumbbell.fill", type: .traditionalStrengthTraining, outdoor: false)
     ]
 
     var running = false
@@ -20,7 +23,12 @@ import Observation
     var calories = 0.0
     var distance = 0.0
     var elapsed = 0
+    /// Ağırlık antrenmanında kaydedilen setler; bitişte telefona gider.
+    var sets: [WatchSetLog] = []
+    private var startDate = Date()
     var kind = WorkoutManager.kinds[0]
+    /// Antrenman bitince özetle çağrılır; uygulama telefona göndermek için kullanır.
+    var onFinished: ((WatchWorkoutPayload) -> Void)?
     private let store = HKHealthStore()
     private var session: HKWorkoutSession?
     private var builder: HKLiveWorkoutBuilder?
@@ -47,7 +55,7 @@ import Observation
             builder.dataSource = HKLiveWorkoutDataSource(healthStore: store, workoutConfiguration: config)
             session.delegate = self; builder.delegate = self
             self.session = session; self.builder = builder
-            heartRate = 0; calories = 0; distance = 0; elapsed = 0; paused = false
+            heartRate = 0; calories = 0; distance = 0; elapsed = 0; paused = false; sets = []; startDate = Date()
             let date = Date()
             session.startActivity(with: date)
             try await builder.beginCollection(at: date)
@@ -59,13 +67,13 @@ import Observation
     func togglePause() { paused ? session?.resume() : session?.pause() }
 
     func finish() async {
-        let summary: [String: Any] = ["id": UUID().uuidString, "kind": kind.id, "durationSec": elapsed, "distanceM": distance, "calories": Int(calories)]
+        let summary = WatchWorkoutPayload(id: UUID().uuidString, kind: kind.id, durationSec: elapsed, distanceM: distance, calories: Int(calories), start: startDate.timeIntervalSince1970, sets: sets)
         session?.end()
         timer?.invalidate(); timer = nil
         if let builder { try? await builder.endCollection(at: Date()); _ = try? await builder.finishWorkout() }
         running = false; paused = false; session = nil; builder = nil
         // 1 dakikadan kısa antrenmanlar kaydedilmez; iPhone hesaba yazar (transferUserInfo kuyruğa alır).
-        if elapsed >= 60, WCSession.default.activationState == .activated { WCSession.default.transferUserInfo(["workout": summary]) }
+        onFinished?(summary)
     }
 
     nonisolated func workoutSession(_ s: HKWorkoutSession, didChangeTo to: HKWorkoutSessionState, from: HKWorkoutSessionState, date: Date) {

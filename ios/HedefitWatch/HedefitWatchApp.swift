@@ -11,6 +11,7 @@ struct HedefitWatchApp: App {
                 .environment(model)
                 .environment(workout)
                 .tint(.hedefitGreen)
+                .onAppear { workout.onFinished = { [model] payload in model.send(payload) } }
         }
     }
 }

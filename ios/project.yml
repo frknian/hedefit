@@ -24,6 +24,7 @@ targets:
     type: application
     platform: iOS
     sources:
+      - path: Shared
       - path: Hedefit
         excludes:
           - Info.plist
@@ -88,6 +89,7 @@ targets:
     type: application
     platform: watchOS
     sources:
+      - path: Shared
       - path: HedefitWatch
         excludes:
           - HedefitWatch.entitlements
@@ -139,3 +141,13 @@ targets:
     configFiles:
       Debug: Config.base.xcconfig
       Release: Config.base.xcconfig
+  HedefitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: HedefitTests
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hedefit.app.tests
+        GENERATE_INFOPLIST_FILE: YES
