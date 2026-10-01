@@ -14,6 +14,14 @@
    bağlanmamalı (KVKK m.3, m.6/2).
    *Öneri:* Ayrı, işaretsiz kutular: (a) sağlık verilerimin işlenmesine, (b) yurt dışı aktarıma açık rıza;
    reddedilebilmeli ve reddedince ne olacağı net olmalı. Rıza kaydı (tarih, sürüm) zaten tutuluyor.
+   **Durum (Android):** Yapıldı. Kayıt ekranında (e-posta, Google, misafir başlangıcı) aydınlatma/politika
+   onayından ayrı iki işaretsiz kutu var: sağlık verisi ve yurt dışı aktarım. İkisi de hesap açmak için
+   zorunlu; metin bunu ve rızanın hesap silinerek/yazılarak geri çekilebileceğini söylüyor. Rıza zaman
+   damgaları kullanıcı meta verisinde ayrı alanlarda tutuluyor (`health_data_consent_at`,
+   `cross_border_consent_at`, `consent_text_version`). **Avukata sorulacak:** rızaların hizmet için
+   zorunlu tutulması "özgür irade" ölçütüne uyuyor mu; mevcut (eski) kullanıcılardan yeniden rıza
+   alınması gerekir mi. **Yapılmadı:** iOS kayıt akışı; mevcut kullanıcılar için yeniden rıza ekranı;
+   uygulama içinden rızayı geri çekme/ayarlardan görme ekranı.
 2. **Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
    etkinlik akışı ve ortak meydan okumalar var; arkadaşlar görünen adı, kullanıcı adını, avatarı, XP'yi,
    etkinlik türünü ve (meydan okumada) mesafeyi görüyor. Kullanıcı adı en az 2 karakterle herkese
