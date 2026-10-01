@@ -22,12 +22,12 @@
    zorunlu tutulması "özgür irade" ölçütüne uyuyor mu; mevcut (eski) kullanıcılardan yeniden rıza
    alınması gerekir mi. **Yapılmadı:** iOS kayıt akışı; mevcut kullanıcılar için yeniden rıza ekranı;
    uygulama içinden rızayı geri çekme/ayarlardan görme ekranı.
-2. **Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
+2. **[METNE EKLENDİ — aranabilirlik kapatma ayarı hâlâ yok] Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
    etkinlik akışı ve ortak meydan okumalar var; arkadaşlar görünen adı, kullanıcı adını, avatarı, XP'yi,
    etkinlik türünü ve (meydan okumada) mesafeyi görüyor. Kullanıcı adı en az 2 karakterle herkese
    aranabilir. Gizlilik politikasında "Sosyal özellikler" bölümü ve (mümkünse) aranabilirliği kapatma
    seçeneği gerekir.
-3. **AI hafızası sunucuda saklanıyor, metin "yalnızca cihazında" diyor.** KVKK metni: "Sohbet geçmişi
+3. **[METNE EKLENDİ — uygulamada hafıza görme/silme ekranı hâlâ yok; yalnızca API'de] AI hafızası sunucuda saklanıyor, metin "yalnızca cihazında" diyor.** KVKK metni: "Sohbet geçmişi
    yalnızca cihazında tutulur." Ancak sunucuda kullanıcıya bağlı, yapılandırılmış "AI hafıza" kayıtları
    var (egzersiz/yemek tercihi, hedef, kısıt, alışkanlık, ekipman, motivasyon; `lib/ai/memory.ts`,
    `db/migrations/20260819_ai_memory.sql`). Kullanıcı görüp silebiliyor. Bu veri kategorisi (özellikle
