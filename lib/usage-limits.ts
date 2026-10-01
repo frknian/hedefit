@@ -13,7 +13,7 @@ export type PlanTier = "free" | "plus" | "pro";
 const DAILY_LIMITS = {
   free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5, plan: 1, memory: 2 },
   plus: { chat: 20, photo: 3, text_nutrition: 15, weekly_review: 1, nutrition_advice: 12, plan: 3, memory: 10 },
-  pro: { chat: 25, photo: 8, text_nutrition: 40, weekly_review: 2, nutrition_advice: 30, plan: 6, memory: 25 },
+  pro: { chat: 40, photo: 15, text_nutrition: 40, weekly_review: 2, nutrition_advice: 30, plan: 6, memory: 25 },
 } as const satisfies Record<PlanTier, Record<UsageFeature, number>>;
 
 // Misafir (anonim) oturumlar ücretsiz katmandan da dar kotayla çalışır; hesabını

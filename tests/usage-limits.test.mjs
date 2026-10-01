@@ -22,21 +22,21 @@ test("ücretsiz kullanıcı için Fit Koç sohbeti günlük 5 mesajla sınırlı
   }
 });
 
-test("Pro kullanıcı için Fit Koç sohbeti günlük 50 mesajla sınırlıdır", async () => {
+test("Pro kullanıcı için Fit Koç sohbeti günlük 40 mesajla sınırlıdır", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;
   globalThis.fetch = withUsageMock({ isPremium: true, allowed: true, currentCount: 8 });
   try {
     const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "chat", TEST_USER_ID);
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: true, used: 8, limit: 50, isPremium: true, planTier: "pro" });
+    assert.deepEqual(result, { allowed: true, used: 8, limit: 40, isPremium: true, planTier: "pro" });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
   }
 });
 
-test("Pro kullanıcı için fotoğraf analizi günlük 8 istekle sınırlıdır", async () => {
+test("Pro kullanıcı için fotoğraf analizi günlük 15 istekle sınırlıdır", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;
   globalThis.fetch = withUsageMock({ isPremium: true, allowed: true, currentCount: 8 });
@@ -44,7 +44,7 @@ test("Pro kullanıcı için fotoğraf analizi günlük 8 istekle sınırlıdır"
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "photo", TEST_USER_ID);
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: true, used: 8, limit: 8, isPremium: true, planTier: "pro" });
+    assert.deepEqual(result, { allowed: true, used: 8, limit: 15, isPremium: true, planTier: "pro" });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
