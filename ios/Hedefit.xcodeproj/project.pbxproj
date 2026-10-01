@@ -8,13 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		16073E59302533939229F4DC /* HedefitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9C661815337F873E4EC65D /* HedefitWidgets.swift */; };
+		18EE3443A33AB8FB4395E459 /* HedefitWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CFB2C0B8734B4694681764 /* HedefitWatchApp.swift */; };
 		1DF3D56B0FF41CB8D03270B1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A0D659DD68F41D93FAF1B5D /* Models.swift */; };
+		20828A88EA683289D1E1334F /* WatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78B4D6084D36C78AA47CA14 /* WatchModel.swift */; };
 		22C9084E0698B76271561825 /* FeatureViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C67C4E9751FF941BB8A401D /* FeatureViews.swift */; };
+		27DF8856A7506F4EBEBFF2BB /* HedefitWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFA5CAA892CB3F7A155633B9 /* HedefitWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2C7A65A243E31882FC4FED8C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F1579FFAE72121291DEDE31 /* Assets.xcassets */; };
 		369E3EC4A1F8744B412D2296 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 941B2859D4E7B29DA95B1A71 /* AppStore.swift */; };
 		5EE29385FF29D1BF7296BA41 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB01284760B6C99254521D3 /* Components.swift */; };
+		76EB2A7F2A09793B85D003E2 /* ActiveWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E88B12B1102136BD3D03FA /* ActiveWorkoutView.swift */; };
+		77802071D335D042D20DFB61 /* SocialModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 232E04E2FC2494442624207D /* SocialModels.swift */; };
+		7A8033D10DFC23F683D51067 /* HedefitWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 5CBFD8BD5538F98525AFF334 /* HedefitWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7B918B64E1CE9EDDC51D1857 /* WorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC59F4DDECBA6E610CF1F0C1 /* WorkoutManager.swift */; };
 		88BE518DA6E9BED055E53B97 /* HedefitWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DA05552DD58259D70D856670 /* HedefitWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8CC50039B639762085EE64BC /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080930673F4CBE67F42FD7E6 /* Services.swift */; };
+		9504BC6555CE296E3A3C0089 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CF1FE176FE3973809F4CECD /* Theme.swift */; };
+		99A98C16F8D8A359CA863349 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16F513F5AFA75CBF30A66CE /* RootView.swift */; };
 		9B06DB3BF10D80C15990B89A /* HedefitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04ADD1955152D233E3D460C8 /* HedefitApp.swift */; };
+		A373C1FC3E8E52AC57F90C17 /* GoogleAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2229B6ACEEF95D458071D269 /* GoogleAuthService.swift */; };
+		B37FBD63FFDBE8BD19DFB30F /* HedefitComplications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E68BC1F66B65057A9585E6 /* HedefitComplications.swift */; };
+		C8E63A3B51EA76B8F7FB7BED /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3720669409DA8D83873410E7 /* GoogleSignIn */; };
+		CA9C420203753A211E22770D /* SocialViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D997DA056F7F82D09F505F46 /* SocialViews.swift */; };
+		D28D0E5B8598869EFE9077E6 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCE2D53F6964C8F2E1F08E5 /* WatchBridge.swift */; };
 		ED45663EC6E8C473F0733169 /* MainViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C546F13F047ABD292B74E0 /* MainViews.swift */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +40,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2300C3D95723D858CB4DE14B;
 			remoteInfo = HedefitWidgets;
+		};
+		87F868D78D7E04EB031921E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E308A22F93B6D50A2F384006 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 101DF200D921C937660CB8AF;
+			remoteInfo = HedefitWatchWidgets;
+		};
+		9824F86EF877943BE5A27C71 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E308A22F93B6D50A2F384006 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 89EC70B473C017C4551529F5;
+			remoteInfo = HedefitWatch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -40,23 +69,72 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A74FE6B322BFFF4ECC1D8DE3 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				27DF8856A7506F4EBEBFF2BB /* HedefitWatchWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EF2F0A3FF4C5FA1F27C246A7 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				7A8033D10DFC23F683D51067 /* HedefitWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		01C546F13F047ABD292B74E0 /* MainViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViews.swift; sourceTree = "<group>"; };
 		04ADD1955152D233E3D460C8 /* HedefitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HedefitApp.swift; sourceTree = "<group>"; };
 		080930673F4CBE67F42FD7E6 /* Services.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
+		08CFB2C0B8734B4694681764 /* HedefitWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HedefitWatchApp.swift; sourceTree = "<group>"; };
+		16E88B12B1102136BD3D03FA /* ActiveWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWorkoutView.swift; sourceTree = "<group>"; };
+		1CF1FE176FE3973809F4CECD /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		2229B6ACEEF95D458071D269 /* GoogleAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleAuthService.swift; sourceTree = "<group>"; };
+		232E04E2FC2494442624207D /* SocialModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialModels.swift; sourceTree = "<group>"; };
 		275E7F1757E221898C205240 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2F1579FFAE72121291DEDE31 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3C67C4E9751FF941BB8A401D /* FeatureViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureViews.swift; sourceTree = "<group>"; };
+		5AC988BCF8E6F61B9A243472 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5CBFD8BD5538F98525AFF334 /* HedefitWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HedefitWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EB01284760B6C99254521D3 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		761418C288D57E96585DE175 /* HedefitWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HedefitWidgets.entitlements; sourceTree = "<group>"; };
 		7D9C661815337F873E4EC65D /* HedefitWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HedefitWidgets.swift; sourceTree = "<group>"; };
 		8A0D659DD68F41D93FAF1B5D /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		941B2859D4E7B29DA95B1A71 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		99E68BC1F66B65057A9585E6 /* HedefitComplications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HedefitComplications.swift; sourceTree = "<group>"; };
+		A78B4D6084D36C78AA47CA14 /* WatchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchModel.swift; sourceTree = "<group>"; };
+		AC59F4DDECBA6E610CF1F0C1 /* WorkoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutManager.swift; sourceTree = "<group>"; };
+		B16F513F5AFA75CBF30A66CE /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		D29CB3EA74479DF745AF74F0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D997DA056F7F82D09F505F46 /* SocialViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialViews.swift; sourceTree = "<group>"; };
 		DA05552DD58259D70D856670 /* HedefitWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = HedefitWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFA5CAA892CB3F7A155633B9 /* HedefitWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HedefitWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7CFFAFE44B5BA41870B83DC /* Config.base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.base.xcconfig; sourceTree = "<group>"; };
+		EFCE2D53F6964C8F2E1F08E5 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 		F67A52AEE4120947D2A1A421 /* Hedefit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Hedefit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BFB3DEBE62A0F33C34C7CD08 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C8E63A3B51EA76B8F7FB7BED /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		040D4EFAAF71CA58CF5A9959 /* App */ = {
@@ -71,6 +149,7 @@
 			isa = PBXGroup;
 			children = (
 				8A0D659DD68F41D93FAF1B5D /* Models.swift */,
+				232E04E2FC2494442624207D /* SocialModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -81,6 +160,7 @@
 				5EB01284760B6C99254521D3 /* Components.swift */,
 				3C67C4E9751FF941BB8A401D /* FeatureViews.swift */,
 				01C546F13F047ABD292B74E0 /* MainViews.swift */,
+				D997DA056F7F82D09F505F46 /* SocialViews.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -89,6 +169,8 @@
 			isa = PBXGroup;
 			children = (
 				F67A52AEE4120947D2A1A421 /* Hedefit.app */,
+				5CBFD8BD5538F98525AFF334 /* HedefitWatch.app */,
+				DFA5CAA892CB3F7A155633B9 /* HedefitWatchWidgets.appex */,
 				DA05552DD58259D70D856670 /* HedefitWidgets.appex */,
 			);
 			name = Products;
@@ -98,6 +180,8 @@
 			isa = PBXGroup;
 			children = (
 				FEA0DCA572348A087015F27F /* Hedefit */,
+				F8B3F19E5C79DDA509D6F452 /* HedefitWatch */,
+				BC0729376A3F8E24F775AE54 /* HedefitWatchWidgets */,
 				7B3BFC3E7EB535CDEBB7D227 /* HedefitWidgets */,
 				C0A4F515E4D53D0F897C26A7 /* ios */,
 				55B23267BD05783BECCC874F /* Products */,
@@ -107,7 +191,9 @@
 		6E60005BE9C696C4DE46C135 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				2229B6ACEEF95D458071D269 /* GoogleAuthService.swift */,
 				080930673F4CBE67F42FD7E6 /* Services.swift */,
+				EFCE2D53F6964C8F2E1F08E5 /* WatchBridge.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -120,6 +206,15 @@
 				275E7F1757E221898C205240 /* Info.plist */,
 			);
 			path = HedefitWidgets;
+			sourceTree = "<group>";
+		};
+		BC0729376A3F8E24F775AE54 /* HedefitWatchWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				99E68BC1F66B65057A9585E6 /* HedefitComplications.swift */,
+				5AC988BCF8E6F61B9A243472 /* Info.plist */,
+			);
+			path = HedefitWatchWidgets;
 			sourceTree = "<group>";
 		};
 		C0A4F515E4D53D0F897C26A7 /* ios */ = {
@@ -139,6 +234,21 @@
 			path = Store;
 			sourceTree = "<group>";
 		};
+		F8B3F19E5C79DDA509D6F452 /* HedefitWatch */ = {
+			isa = PBXGroup;
+			children = (
+				16E88B12B1102136BD3D03FA /* ActiveWorkoutView.swift */,
+				2F1579FFAE72121291DEDE31 /* Assets.xcassets */,
+				08CFB2C0B8734B4694681764 /* HedefitWatchApp.swift */,
+				D29CB3EA74479DF745AF74F0 /* Info.plist */,
+				B16F513F5AFA75CBF30A66CE /* RootView.swift */,
+				1CF1FE176FE3973809F4CECD /* Theme.swift */,
+				A78B4D6084D36C78AA47CA14 /* WatchModel.swift */,
+				AC59F4DDECBA6E610CF1F0C1 /* WorkoutManager.swift */,
+			);
+			path = HedefitWatch;
+			sourceTree = "<group>";
+		};
 		FEA0DCA572348A087015F27F /* Hedefit */ = {
 			isa = PBXGroup;
 			children = (
@@ -154,6 +264,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		101DF200D921C937660CB8AF /* HedefitWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B903E2D86F97936129482A7B /* Build configuration list for PBXNativeTarget "HedefitWatchWidgets" */;
+			buildPhases = (
+				3B6E00410E8134BF1D4CE541 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HedefitWatchWidgets;
+			packageProductDependencies = (
+			);
+			productName = HedefitWatchWidgets;
+			productReference = DFA5CAA892CB3F7A155633B9 /* HedefitWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		2300C3D95723D858CB4DE14B /* HedefitWidgets */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE857AA35D081D888E45E59C /* Build configuration list for PBXNativeTarget "HedefitWidgets" */;
@@ -176,18 +303,42 @@
 			buildConfigurationList = C25FA34E44604FAA1C323B2A /* Build configuration list for PBXNativeTarget "Hedefit" */;
 			buildPhases = (
 				8DCE90CFBF0DBB430872C6D2 /* Sources */,
+				BFB3DEBE62A0F33C34C7CD08 /* Frameworks */,
 				70E62EA8ED0894441DDB853F /* Embed Foundation Extensions */,
+				EF2F0A3FF4C5FA1F27C246A7 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				1DE92EE0BF9E7C27D81596FE /* PBXTargetDependency */,
+				8A456C095F21ADAEAF6088F1 /* PBXTargetDependency */,
 			);
 			name = Hedefit;
 			packageProductDependencies = (
+				3720669409DA8D83873410E7 /* GoogleSignIn */,
 			);
 			productName = Hedefit;
 			productReference = F67A52AEE4120947D2A1A421 /* Hedefit.app */;
+			productType = "com.apple.product-type.application";
+		};
+		89EC70B473C017C4551529F5 /* HedefitWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0D2B631C0C7EFBFEFBF90EAD /* Build configuration list for PBXNativeTarget "HedefitWatch" */;
+			buildPhases = (
+				F55983A24165A32463F0763A /* Sources */,
+				5039088F400D1C46735BC50F /* Resources */,
+				A74FE6B322BFFF4ECC1D8DE3 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2EF42487F32D7496817DFE3F /* PBXTargetDependency */,
+			);
+			name = HedefitWatch;
+			packageProductDependencies = (
+			);
+			productName = HedefitWatch;
+			productReference = 5CBFD8BD5538F98525AFF334 /* HedefitWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -199,11 +350,19 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					101DF200D921C937660CB8AF = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
 					2300C3D95723D858CB4DE14B = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					48CC86AFE6C0CBB4DCFBF9E4 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					89EC70B473C017C4551529F5 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
@@ -218,6 +377,9 @@
 			);
 			mainGroup = 5AF680C1D761CB143FF20901;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B2A76B568C73DFCACD52C962 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 55B23267BD05783BECCC874F /* Products */;
 			projectDirPath = "";
@@ -225,11 +387,32 @@
 			targets = (
 				48CC86AFE6C0CBB4DCFBF9E4 /* Hedefit */,
 				2300C3D95723D858CB4DE14B /* HedefitWidgets */,
+				89EC70B473C017C4551529F5 /* HedefitWatch */,
+				101DF200D921C937660CB8AF /* HedefitWatchWidgets */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		5039088F400D1C46735BC50F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C7A65A243E31882FC4FED8C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		3B6E00410E8134BF1D4CE541 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B37FBD63FFDBE8BD19DFB30F /* HedefitComplications.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DCE90CFBF0DBB430872C6D2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -237,10 +420,14 @@
 				369E3EC4A1F8744B412D2296 /* AppStore.swift in Sources */,
 				5EE29385FF29D1BF7296BA41 /* Components.swift in Sources */,
 				22C9084E0698B76271561825 /* FeatureViews.swift in Sources */,
+				A373C1FC3E8E52AC57F90C17 /* GoogleAuthService.swift in Sources */,
 				9B06DB3BF10D80C15990B89A /* HedefitApp.swift in Sources */,
 				ED45663EC6E8C473F0733169 /* MainViews.swift in Sources */,
 				1DF3D56B0FF41CB8D03270B1 /* Models.swift in Sources */,
 				8CC50039B639762085EE64BC /* Services.swift in Sources */,
+				77802071D335D042D20DFB61 /* SocialModels.swift in Sources */,
+				CA9C420203753A211E22770D /* SocialViews.swift in Sources */,
+				D28D0E5B8598869EFE9077E6 /* WatchBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,6 +439,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F55983A24165A32463F0763A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				76EB2A7F2A09793B85D003E2 /* ActiveWorkoutView.swift in Sources */,
+				18EE3443A33AB8FB4395E459 /* HedefitWatchApp.swift in Sources */,
+				99A98C16F8D8A359CA863349 /* RootView.swift in Sources */,
+				9504BC6555CE296E3A3C0089 /* Theme.swift in Sources */,
+				20828A88EA683289D1E1334F /* WatchModel.swift in Sources */,
+				7B918B64E1CE9EDDC51D1857 /* WorkoutManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -259,6 +459,16 @@
 			isa = PBXTargetDependency;
 			target = 2300C3D95723D858CB4DE14B /* HedefitWidgets */;
 			targetProxy = 6B904468BAB7DB29E9408557 /* PBXContainerItemProxy */;
+		};
+		2EF42487F32D7496817DFE3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 101DF200D921C937660CB8AF /* HedefitWatchWidgets */;
+			targetProxy = 87F868D78D7E04EB031921E4 /* PBXContainerItemProxy */;
+		};
+		8A456C095F21ADAEAF6088F1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 89EC70B473C017C4551529F5 /* HedefitWatch */;
+			targetProxy = 9824F86EF877943BE5A27C71 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -280,6 +490,25 @@
 				PRODUCT_NAME = Hedefit;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		42F21DDFD6B1241060EDF9D9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7CFFAFE44B5BA41870B83DC /* Config.base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = HedefitWatchWidgets/HedefitWatchWidgets.entitlements;
+				INFOPLIST_FILE = HedefitWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hedefit.app.watchkitapp.widgets;
+				PRODUCT_NAME = HedefitWatchWidgets;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Release;
 		};
@@ -318,6 +547,22 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5C9F769184772AB2C30F2D25 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7CFFAFE44B5BA41870B83DC /* Config.base.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = HedefitWatch/HedefitWatch.entitlements;
+				INFOPLIST_FILE = HedefitWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hedefit.app.watchkitapp;
+				PRODUCT_NAME = Hedefit;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Debug;
 		};
@@ -401,12 +646,28 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
+		};
+		94E6F87DA0900224B03F82F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7CFFAFE44B5BA41870B83DC /* Config.base.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = HedefitWatch/HedefitWatch.entitlements;
+				INFOPLIST_FILE = HedefitWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hedefit.app.watchkitapp;
+				PRODUCT_NAME = Hedefit;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
 		};
 		B332931F4F65AA73AE67E24F /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -461,21 +722,58 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
+		};
+		ED1BA2A8B0C2283FC369B8AF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E7CFFAFE44B5BA41870B83DC /* Config.base.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = HedefitWatchWidgets/HedefitWatchWidgets.entitlements;
+				INFOPLIST_FILE = HedefitWatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hedefit.app.watchkitapp.widgets;
+				PRODUCT_NAME = HedefitWatchWidgets;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0D2B631C0C7EFBFEFBF90EAD /* Build configuration list for PBXNativeTarget "HedefitWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C9F769184772AB2C30F2D25 /* Debug */,
+				94E6F87DA0900224B03F82F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		7E3032949C15B0FEDE8A19B6 /* Build configuration list for PBXProject "Hedefit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7C5EA27A54D65D94CFDF8335 /* Debug */,
 				B332931F4F65AA73AE67E24F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B903E2D86F97936129482A7B /* Build configuration list for PBXNativeTarget "HedefitWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ED1BA2A8B0C2283FC369B8AF /* Debug */,
+				42F21DDFD6B1241060EDF9D9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -499,6 +797,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B2A76B568C73DFCACD52C962 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3720669409DA8D83873410E7 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B2A76B568C73DFCACD52C962 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E308A22F93B6D50A2F384006 /* Project object */;
 }

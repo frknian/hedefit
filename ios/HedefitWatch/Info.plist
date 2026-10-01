@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Hedefit</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,15 +15,18 @@
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
-	<string>XPC!</string>
+	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>NSExtension</key>
-	<dict>
-		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.widgetkit-extension</string>
-	</dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Nabız, kalori ve mesafeyi antrenman sırasında ölçmek için Sağlık erişimi gerekiyor.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Antrenmanını Sağlık uygulamasına kaydetmek için izin gerekiyor.</string>
+	<key>WKApplication</key>
+	<true/>
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>com.hedefit.app</string>
 </dict>
 </plist>

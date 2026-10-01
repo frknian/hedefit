@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.hedefit.app.sync</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -16,11 +20,41 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_URL_SCHEME)</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>GIDClientID</key>
+	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
+	<key>HEDEFIT_API_BASE_URL</key>
+	<string>$(HEDEFIT_API_BASE_URL)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Spor salonu ekipmanını tanımak için kameraya erişim gerekir.</string>
+	<string>Ekipman tanıma ve besin fotoğrafı için kameraya ihtiyacımız var.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Adım, uyku ve kilo verilerini okumak için Sağlık uygulamasına erişim gerekiyor.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Antrenman verilerini Sağlık uygulamasına yazmak için izin gerekiyor.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Arka planda rota takibine devam edebilmek için konumuna sürekli erişim gerekiyor.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Rota takibi için konumuna ihtiyacımız var.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Ekipman fotoğrafını analiz etmek için fotoğraf arşivine erişim gerekir.</string>
+	<string>Fotoğraf seçmek için galeri erişimine ihtiyacımız var.</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>$(NEXT_PUBLIC_SUPABASE_ANON_KEY)</string>
+	<key>SUPABASE_URL</key>
+	<string>$(NEXT_PUBLIC_SUPABASE_URL)</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>processing</string>
+	</array>
 </dict>
 </plist>

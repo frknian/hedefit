@@ -1,5 +1,6 @@
 import SwiftUI
 import BackgroundTasks
+import GoogleSignIn
 
 @main
 struct HedefitApp: App {
@@ -22,7 +23,7 @@ struct HedefitApp: App {
                 .background(Color.hedefitBackground.ignoresSafeArea())
                 .preferredColorScheme(store.settings.darkMode ? .dark : .light)
                 .task { await store.bootstrap() }
-                .onOpenURL { store.handleDeepLink($0) }
+                .onOpenURL { url in if !GIDSignIn.sharedInstance.handle(url) { store.handleDeepLink(url) } }
         }
     }
 }

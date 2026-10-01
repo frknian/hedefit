@@ -79,6 +79,14 @@ actor NetworkClient {
     }
     func signOut() async { if let url = URL(string: "\(AppConfiguration.supabaseURL)/auth/v1/logout") { _ = try? await execute(url, method: "POST", extra: ["apikey": AppConfiguration.anonKey]) }; session = nil }
 
+    /// Google id_token'ını Supabase'in id_token grant'ı ile değiştirir (Android AuthRepository.signInWithGoogle ile aynı REST akışı, nonce hariç — bkz. GoogleAuthService).
+    func signInWithGoogle(idToken: String) async throws -> UserSession {
+        try requireConfig(); let url = URL(string: "\(AppConfiguration.supabaseURL)/auth/v1/token?grant_type=id_token")!
+        let legal = ["kvkk_notice_version": "2026-08-25", "privacy_policy_version": "2026-08-25", "legal_accepted_at": ISO8601DateFormatter().string(from: Date())]
+        let data = try await execute(url, method: "POST", json: ["provider": "google", "id_token": idToken, "data": legal], auth: false, extra: ["apikey": AppConfiguration.anonKey])
+        return try parseSession(data)
+    }
+
     private func parseSession(_ data: Data) throws -> UserSession {
         guard let raw = try JSONSerialization.jsonObject(with: data) as? [String: Any], let access = raw["access_token"] as? String, let refresh = raw["refresh_token"] as? String, let user = raw["user"] as? [String: Any], let id = user["id"] as? String else { throw AppError.invalidResponse }
         let result = UserSession(accessToken: access, refreshToken: refresh, userID: id, email: user["email"] as? String ?? "", expiresAt: Date().addingTimeInterval(raw["expires_in"] as? Double ?? 3600)); session = result; return result
@@ -156,6 +164,20 @@ actor HedefitRepository {
     func chat(_ messages: [ChatMessage], dashboard: Dashboard) async throws -> String { let body: [String: Any] = ["messages": messages.suffix(12).map { ["role": $0.fromUser ? "user" : "assistant", "text": $0.text] }, "locale": "tr", "signals": ["today": ["steps": dashboard.steps, "waterMl": dashboard.waterMl, "sleepMinutes": dashboard.sleepMinutes], "profile": ["weightKg": dashboard.profile.weightKg as Any, "goal": dashboard.profile.goal]]]; guard let result = try await net.api("/api/chat", method: "POST", body: body) as? [String: Any] else { throw AppError.invalidResponse }; return result.str("text", result.str("reply", "Yanıt alınamadı.")) }
     func saveRoute(_ snapshot: RouteSnapshot, type: String, title: String, userID: String) async throws { let points = snapshot.points.map { ["lat": $0.coordinate.latitude, "lng": $0.coordinate.longitude, "alt": $0.altitude, "time": Int64($0.timestamp.timeIntervalSince1970 * 1000), "accuracy": $0.horizontalAccuracy] }; _ = try await net.rest("route_activities", method: "POST", body: ["id": snapshot.id.uuidString, "user_id": userID, "activity_type": type, "title": title, "started_at": ISO8601DateFormatter().string(from: snapshot.started), "ended_at": ISO8601DateFormatter().string(from: Date()), "duration_seconds": snapshot.duration, "moving_duration_seconds": snapshot.duration, "distance_meters": snapshot.distance, "average_speed_kmh": snapshot.speedKmh, "calories": Int(snapshot.distance / 1000 * 45), "status": "completed", "route_points": points]) }
     static func day(_ date: Date) -> String { let f = DateFormatter(); f.calendar = .init(identifier: .gregorian); f.locale = .init(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: date) }
+
+    // MARK: - Sosyal katman: arkadaşlık, akış, lider tablosu, meydan okumalar
+    func searchUsers(_ query: String) async throws -> [FriendUser] { let result = try await net.api("/api/social/users/search?q=\(query)") as? [String: Any]; return decodeRows(result?["users"] ?? []) }
+    func friendsSummary() async throws -> FriendsSummary { try await net.decode(FriendsSummary.self, from: try await net.api("/api/social/friends")) }
+    func sendFriendRequest(username: String) async throws { _ = try await net.api("/api/social/friends", method: "POST", body: ["username": username]) }
+    func respondToFriendRequest(id: String, accept: Bool) async throws { _ = try await net.api("/api/social/friends/\(id)", method: "PATCH", body: ["status": accept ? "accepted" : "declined"]) }
+    func removeFriend(id: String) async throws { _ = try await net.api("/api/social/friends/\(id)", method: "DELETE") }
+    func weeklyLeaderboard() async throws -> [LeaderboardEntry] { let result = try await net.api("/api/social/leaderboard") as? [String: Any]; return decodeRows(result?["entries"] ?? []) }
+    func friendActivityFeed() async throws -> [FeedItem] { let result = try await net.api("/api/social/feed") as? [String: Any]; return decodeRows(result?["items"] ?? []) }
+    func challenges() async throws -> [Challenge] { let result = try await net.api("/api/social/challenges") as? [String: Any]; return decodeRows(result?["challenges"] ?? []) }
+    func createChallenge(title: String, metric: String, targetValue: Double, days: Int, friendIds: [String]) async throws { _ = try await net.api("/api/social/challenges", method: "POST", body: ["title": title, "metric": metric, "targetValue": targetValue, "days": days, "friendIds": friendIds]) }
+    func respondToChallenge(id: String, accept: Bool) async throws { _ = try await net.api("/api/social/challenges/\(id)", method: "PATCH", body: ["status": accept ? "joined" : "declined"]) }
+    func leaveOrCancelChallenge(id: String) async throws { _ = try await net.api("/api/social/challenges/\(id)", method: "DELETE") }
+    func challengeProgress(id: String) async throws -> [ChallengeProgressEntry] { let result = try await net.api("/api/social/challenges/\(id)/progress") as? [String: Any]; return decodeRows(result?["entries"] ?? []) }
 }
 
 enum NetworkClientDecode { static func rows<T: Decodable>(_ type: T.Type, _ raw: Any) throws -> [T] { let decoder = JSONDecoder(); decoder.keyDecodingStrategy = .convertFromSnakeCase; return try decoder.decode([T].self, from: JSONSerialization.data(withJSONObject: raw)) } }
@@ -198,5 +220,5 @@ actor OfflineQueue {
 }
 
 enum WidgetShared {
-    static func update(_ dashboard: Dashboard, settings: AppSettings) { let defaults = UserDefaults(suiteName: "group.com.hedefit.app"); defaults?.set(dashboard.steps, forKey: "steps"); defaults?.set(settings.stepGoal, forKey: "stepGoal"); defaults?.set(dashboard.waterMl, forKey: "water"); defaults?.set(dashboard.activeCalories, forKey: "calories"); defaults?.set(dashboard.workouts.first?.name ?? "Antrenman", forKey: "workout"); WidgetCenter.shared.reloadAllTimelines() }
+    static func update(_ dashboard: Dashboard, settings: AppSettings) { let defaults = UserDefaults(suiteName: "group.com.hedefit.app"); defaults?.set(dashboard.steps, forKey: "steps"); defaults?.set(settings.stepGoal, forKey: "stepGoal"); defaults?.set(dashboard.waterMl, forKey: "water"); defaults?.set(dashboard.activeCalories, forKey: "calories"); defaults?.set(dashboard.workouts.first?.name ?? "Antrenman", forKey: "workout"); WidgetCenter.shared.reloadAllTimelines(); WatchBridge.shared.push(dashboard, settings: settings) }
 }

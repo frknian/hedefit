@@ -8,9 +8,14 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
     var loading = false; var message: String?; var error: String?; var chat: [ChatMessage] = []
     var settings: AppSettings { didSet { saveSettings(); Task { await NotificationService.configure(settings) }; WidgetShared.update(dashboard, settings: settings) } }
     var exercises: [ExerciseCatalogItem] = []; let route = RouteService()
+    var friendsSummary = FriendsSummary(); var leaderboard: [LeaderboardEntry] = []; var feed: [FeedItem] = []
+    var userSearchResults: [FriendUser] = []; var challenges: [Challenge] = []; var challengeProgress: [ChallengeProgressEntry] = []
     private let net = NetworkClient.shared, repository = HedefitRepository.shared
 
-    init() { settings = (try? JSONDecoder().decode(AppSettings.self, from: UserDefaults.standard.data(forKey: "settings") ?? Data())) ?? AppSettings() }
+    init() { settings = (try? JSONDecoder().decode(AppSettings.self, from: UserDefaults.standard.data(forKey: "settings") ?? Data())) ?? AppSettings()
+        WatchBridge.shared.activate()
+        WatchBridge.shared.onWater = { [weak self] ml in Task { await self?.addWater(ml) } }
+    }
 
     func bootstrap() async {
         guard !AppConfiguration.supabaseURL.isEmpty, !AppConfiguration.anonKey.isEmpty else { phase = .configurationError("iOS yapılandırmasında Supabase adresi veya anahtarı eksik."); return }
@@ -24,6 +29,14 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
         do {
             let result = signUp ? try await net.signUp(email: email, password: password) : try await net.signIn(email: email, password: password)
             guard let result else { message = "Doğrulama bağlantısı e-posta adresine gönderildi."; return }
+            session = result; await net.setSession(result); await KeychainSessionStore.shared.write(result); phase = .signedIn; await refresh()
+        } catch { self.error = error.localizedDescription }
+    }
+    func signInWithGoogle() async {
+        loading = true; defer { loading = false }
+        do {
+            let idToken = try await GoogleAuthService.signIn()
+            let result = try await net.signInWithGoogle(idToken: idToken)
             session = result; await net.setSession(result); await KeychainSessionStore.shared.write(result); phase = .signedIn; await refresh()
         } catch { self.error = error.localizedDescription }
     }
@@ -67,5 +80,19 @@ enum AuthPhase { case loading, signedOut, signedIn, frozen, configurationError(S
         }
     }
     func handleDeepLink(_ url: URL) { switch url.host { case "workout": selectedTab = .workout; case "nutrition": selectedTab = .nutrition; default: selectedTab = .home } }
+
+    // MARK: - Sosyal katman
+    func loadFriendsSummary() async { do { friendsSummary = try await repository.friendsSummary() } catch { self.error = error.localizedDescription } }
+    func searchUsers(_ query: String) async { guard query.count >= 2 else { userSearchResults = []; return }; do { userSearchResults = try await repository.searchUsers(query) } catch { self.error = error.localizedDescription } }
+    func sendFriendRequest(username: String) async { do { try await repository.sendFriendRequest(username: username); message = "İstek gönderildi."; await loadFriendsSummary() } catch { self.error = error.localizedDescription } }
+    func respondToFriendRequest(id: String, accept: Bool) async { do { try await repository.respondToFriendRequest(id: id, accept: accept); await loadFriendsSummary(); await loadWeeklyLeaderboard() } catch { self.error = error.localizedDescription } }
+    func removeFriend(id: String) async { do { try await repository.removeFriend(id: id); await loadFriendsSummary() } catch { self.error = error.localizedDescription } }
+    func loadWeeklyLeaderboard() async { do { leaderboard = try await repository.weeklyLeaderboard() } catch { self.error = error.localizedDescription } }
+    func loadFriendFeed() async { do { feed = try await repository.friendActivityFeed() } catch { self.error = error.localizedDescription } }
+    func loadChallenges() async { do { challenges = try await repository.challenges() } catch { self.error = error.localizedDescription } }
+    func createChallenge(title: String, metric: String, targetValue: Double, days: Int, friendIds: [String]) async { do { try await repository.createChallenge(title: title, metric: metric, targetValue: targetValue, days: days, friendIds: friendIds); await loadChallenges() } catch { self.error = error.localizedDescription } }
+    func respondToChallengeInvite(id: String, accept: Bool) async { do { try await repository.respondToChallenge(id: id, accept: accept); await loadChallenges() } catch { self.error = error.localizedDescription } }
+    func leaveOrCancelChallenge(id: String) async { do { try await repository.leaveOrCancelChallenge(id: id); await loadChallenges() } catch { self.error = error.localizedDescription } }
+    func loadChallengeProgress(id: String) async { do { challengeProgress = try await repository.challengeProgress(id: id) } catch { self.error = error.localizedDescription } }
     private func saveSettings() { if let data = try? JSONEncoder().encode(settings) { UserDefaults.standard.set(data, forKey: "settings") } }
 }
