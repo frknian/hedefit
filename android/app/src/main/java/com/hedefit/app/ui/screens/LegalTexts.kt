@@ -35,7 +35,7 @@ internal val KVKK_NOTICE = listOf(
         "Veriler satılmaz. Hizmetin çalışması için şu hizmet sağlayıcılarla, yalnızca gerekli olduğu kadar paylaşılır:\n" +
             "• Supabase: kimlik doğrulama, veritabanı ve profil fotoğrafı depolama.\n" +
             "• Cloudflare: uygulama sunucusu ve güvenli bağlantı altyapısı.\n" +
-            "• Moonshot AI: bulut FitKoç yanıtları ile öğün/fotoğraf analizleri. Yerel FitKoç modu seçildiğinde sohbet cihaz dışına çıkmaz.\n" +
+            "• OpenAI (ABD): bulut FitKoç yanıtları, öğün/fotoğraf analizleri ve ekipman tanıma. Gönderilen veriler yanıt üretmek için işlenir ve yapay zekâ modellerini eğitmek için kullanılmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır.\n" +
             "• Google: Google ile giriş, reklam gösterimi (AdMob) ve izin yönetimi, uygulama içi değerlendirme; Health Connect verileri cihazında Google altyapısı üzerinden okunur.\n" +
             "Bu sağlayıcıların sunucuları Türkiye dışında bulunabilir. Yurt dışı aktarımlar KVKK m.9 kapsamında uygun güvencelere (standart sözleşmeler) veya açık rızana dayanılarak yapılır. Ayrıca yetkili kamu kurumlarının hukuka uygun talepleri halinde veriler paylaşılabilir.",
     ),
@@ -72,7 +72,7 @@ internal val PRIVACY_POLICY = listOf(
     ),
     LegalSection(
         "Yapay zekâ",
-        "FitKoç'un bulut modu ve öğün/fotoğraf analizleri, isteğin yanıtlanması için gereken bilgileri yapay zekâ sağlayıcısına (Moonshot AI) gönderir. Sağlayıcı bu verileri yalnızca yanıt üretmek için işler. Yerel mod seçildiğinde sohbet tamamen cihazında çalışır. Yapay zekâ önerileri tıbbi tavsiye değildir; bir sağlık sorunun varsa uzmana danış.",
+        "FitKoç'un bulut modu, öğün/fotoğraf analizleri ve ekipman tanıma, isteğin yanıtlanması için gereken bilgileri yapay zekâ sağlayıcısına (OpenAI) gönderir. Sağlayıcı bu verileri yanıt üretmek için işler ve yapay zekâ modellerini eğitmek için kullanmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır. Yapay zekâ önerileri tıbbi tavsiye değildir; bir sağlık sorunun varsa uzmana danış.",
     ),
     LegalSection(
         "Reklamlar",
@@ -129,7 +129,7 @@ internal val KVKK_NOTICE_EN = listOf(
         "Your data is never sold. It is shared with the following service providers only as far as needed to run the service:\n" +
             "• Supabase: authentication, database and profile photo storage.\n" +
             "• Cloudflare: application server and secure connection infrastructure.\n" +
-            "• Moonshot AI: cloud Fit Coach replies and meal/photo analysis. In local Fit Coach mode, chats never leave your device.\n" +
+            "• OpenAI (USA): cloud Fit Coach replies, meal/photo analysis and equipment recognition. Data sent is processed to produce the reply and is not used to train AI models; for requests that include a photo, provider-side storage (store) is turned off.\n" +
             "• Google: Google sign-in, ad serving (AdMob) and consent management, in-app reviews; Health Connect data is read on your device through Google infrastructure.\n" +
             "These providers' servers may be located outside Türkiye. Transfers abroad are made under KVKK Art. 9 on the basis of appropriate safeguards (standard contracts) or your explicit consent. Data may also be shared in response to lawful requests from competent public authorities.",
     ),
@@ -166,7 +166,7 @@ internal val PRIVACY_POLICY_EN = listOf(
     ),
     LegalSection(
         "Artificial intelligence",
-        "Fit Coach's cloud mode and meal/photo analysis send the information needed to answer your request to the AI provider (Moonshot AI). The provider processes this data only to generate the reply. In local mode, the chat runs entirely on your device. AI suggestions are not medical advice; if you have a health concern, consult a professional.",
+        "Fit Coach's cloud mode, meal/photo analysis and equipment recognition send the information needed to answer your request to the AI provider (OpenAI). The provider processes this data to generate the reply and does not use it to train AI models; for requests that include a photo, provider-side storage (store) is turned off. AI suggestions are not medical advice; if you have a health concern, consult a professional.",
     ),
     LegalSection(
         "Ads",
