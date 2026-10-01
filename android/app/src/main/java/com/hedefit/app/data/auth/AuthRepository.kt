@@ -219,6 +219,35 @@ class AuthRepository(
         }
     }
 
+    /**
+     * Hesapta iki açık rıza (sağlık verisi, yurt dışı aktarım) kayıtlı mı? Rıza alan alanlar
+     * olmadan önce kayıt olmuş hesaplar için false döner → uygulama yeniden rıza ister.
+     */
+    suspend fun hasExplicitConsents(): Boolean {
+        val response = http.request(
+            url = authUrl("user"),
+            method = "GET",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+        ).requireSuccess("Rıza durumu okunamadı.")
+        val meta = response.jsonObject().optJSONObject("user_metadata")
+        return meta?.optString("health_data_consent_at")?.isNotBlank() == true &&
+            meta.optString("cross_border_consent_at").isNotBlank()
+    }
+
+    /** Var olan hesap için iki açık rızayı (ayrı zaman damgalarıyla) kaydeder. */
+    suspend fun saveExplicitConsents() {
+        val now = Instant.now().toString()
+        http.request(
+            url = authUrl("user"),
+            method = "PUT",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+            body = JSONObject().put("data", JSONObject()
+                .put("consent_text_version", LEGAL_DOCUMENT_VERSION)
+                .put("health_data_consent_at", now)
+                .put("cross_border_consent_at", now)).toString(),
+        ).requireSuccess("Rıza kaydedilemedi.")
+    }
+
     private suspend fun saveRegistrationLegalAcceptance() {
         http.request(
             url = authUrl("user"),

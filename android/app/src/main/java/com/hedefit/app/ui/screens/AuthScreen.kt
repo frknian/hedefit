@@ -387,6 +387,57 @@ private fun LegalAcceptanceFields(
     }
 }
 
+/**
+ * Açık rıza alanları olmayan (eski) hesaplar için tam ekran rıza kapısı. Rıza verilene kadar
+ * ana uygulamaya (ve sağlık verilerinin yüklenmesine) geçilmez; reddeden çıkış yapar.
+ */
+@Composable
+fun ExplicitConsentGateScreen(busy: Boolean, error: String?, onAccept: () -> Unit, onSignOut: () -> Unit) {
+    var healthConsent by rememberSaveable { mutableStateOf(false) }
+    var crossBorderConsent by rememberSaveable { mutableStateOf(false) }
+    var legalDocument by remember { mutableStateOf<LegalDocument?>(null) }
+    Column(
+        Modifier.fillMaxSize().background(HedefitColors.Background).safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Spacer(Modifier.height(12.dp))
+        Text(com.hedefit.app.ui.i18n.tr("Açık rızanı onayla", "Confirm your explicit consent"), color = HedefitColors.TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Black, lineHeight = 32.sp)
+        Text(
+            com.hedefit.app.ui.i18n.tr(
+                "Gizlilik metinlerimizi güncelledik. Sağlık verilerini işleyebilmemiz ve verilerinin yurt dışındaki sunucularda tutulabilmesi için senden ayrıca açık rıza almamız gerekiyor.",
+                "We updated our privacy texts. We need your separate explicit consent to process your health data and to keep your data on servers abroad.",
+            ),
+            color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            TextButton(onClick = { legalDocument = LegalDocument.Kvkk }) { Text(com.hedefit.app.ui.i18n.tr("KVKK Aydınlatma Metni", "KVKK Privacy Notice"), color = HedefitColors.Lime) }
+            TextButton(onClick = { legalDocument = LegalDocument.Privacy }) { Text(com.hedefit.app.ui.i18n.tr("Gizlilik Politikası", "Privacy Policy"), color = HedefitColors.Lime) }
+        }
+        ExplicitConsentRow(healthConsent, { healthConsent = it }, healthConsentText())
+        ExplicitConsentRow(crossBorderConsent, { crossBorderConsent = it }, crossBorderConsentText())
+        Text(consentWithdrawNote(), color = HedefitColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp)
+        if (error != null) Text(error, color = HedefitColors.Coral, style = MaterialTheme.typography.bodyMedium)
+        androidx.compose.material3.Button(
+            onClick = onAccept,
+            enabled = healthConsent && crossBorderConsent && !busy,
+            modifier = Modifier.fillMaxWidth().height(54.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime, disabledContainerColor = HedefitColors.Surface),
+        ) {
+            if (busy) CircularProgressIndicator(Modifier.size(20.dp), color = HedefitColors.OnLime, strokeWidth = 2.dp)
+            else Text(com.hedefit.app.ui.i18n.tr("Onayla ve devam et", "Confirm and continue"), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+        TextButton(onClick = onSignOut, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+            Text(com.hedefit.app.ui.i18n.tr("Kabul etmiyorum, çıkış yap", "I do not accept, sign out"), color = HedefitColors.TextSecondary)
+        }
+        Text(
+            com.hedefit.app.ui.i18n.tr("Hesabının silinmesini istersen $LEGAL_CONTACT adresine yaz.", "To have your account deleted, write to $LEGAL_CONTACT."),
+            color = HedefitColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp,
+        )
+    }
+    legalDocument?.let { LegalDocumentDialog(it) { legalDocument = null } }
+}
+
 /** Çok satırlı, tüm satırı dokunulabilir açık rıza kutusu. */
 @Composable
 private fun ExplicitConsentRow(checked: Boolean, onChange: (Boolean) -> Unit, text: String) {

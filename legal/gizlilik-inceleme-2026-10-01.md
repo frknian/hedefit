@@ -20,8 +20,10 @@
    damgaları kullanıcı meta verisinde ayrı alanlarda tutuluyor (`health_data_consent_at`,
    `cross_border_consent_at`, `consent_text_version`). **Avukata sorulacak:** rızaların hizmet için
    zorunlu tutulması "özgür irade" ölçütüne uyuyor mu; mevcut (eski) kullanıcılardan yeniden rıza
-   alınması gerekir mi. **Yapılmadı:** iOS kayıt akışı; mevcut kullanıcılar için yeniden rıza ekranı;
-   uygulama içinden rızayı geri çekme/ayarlardan görme ekranı.
+   alınması gerekir mi. **Mevcut kullanıcılar (Android):** Yapıldı. Rıza alanları olmayan hesap açılışta tam ekran rıza
+   kapısı görür (aynı iki kutu); rıza verilene kadar ana arayüz ve veri yükleme açılmaz, reddeden çıkış
+   yapar, silme için e-posta yönlendirmesi vardır. Rıza durumu okunamazsa (ağ hatası) kullanıcı kilitlenmez.
+   **Yapılmadı:** iOS kayıt akışı ve iOS rıza kapısı; uygulama içinden rızayı görme/geri çekme ekranı.
 2. **[METNE EKLENDİ — aranabilirlik kapatma ayarı hâlâ yok] Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
    etkinlik akışı ve ortak meydan okumalar var; arkadaşlar görünen adı, kullanıcı adını, avatarı, XP'yi,
    etkinlik türünü ve (meydan okumada) mesafeyi görüyor. Kullanıcı adı en az 2 karakterle herkese

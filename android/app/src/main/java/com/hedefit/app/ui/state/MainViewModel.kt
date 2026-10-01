@@ -102,6 +102,10 @@ data class MainUiState(
     val measurementSaving: Boolean = false,
     val accountBusy: Boolean = false,
     val accountFrozen: Boolean = false,
+    /** Açık rıza alanları olmayan (eski) hesap: ana arayüz yerine rıza ekranı gösterilir. */
+    val consentRequired: Boolean = false,
+    val consentBusy: Boolean = false,
+    val consentError: String? = null,
     val healthConnected: Boolean = false,
     val healthBusy: Boolean = false,
     val wearables: com.hedefit.app.health.WearableSnapshot? = null,
@@ -1880,6 +1884,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun checkAccountThenLoad() {
+        viewModelScope.launch {
+            // Ağ hatasında kilitleme: yalnızca rızanın kesin olarak EKSİK olduğu hesaplarda ekranı göster.
+            val consented = runCatching { authRepository.hasExplicitConsents() }.getOrDefault(true)
+            if (!consented) {
+                _state.update { it.copy(consentRequired = true, consentError = null, dataLoading = false) }
+                return@launch
+            }
+            loadAfterConsent()
+        }
+    }
+
+    fun acceptExplicitConsents() {
+        if (_state.value.consentBusy) return
+        viewModelScope.launch {
+            _state.update { it.copy(consentBusy = true, consentError = null) }
+            runCatching { authRepository.saveExplicitConsents() }
+                .onSuccess {
+                    _state.update { it.copy(consentRequired = false, consentBusy = false) }
+                    loadAfterConsent()
+                }
+                .onFailure { error -> _state.update { it.copy(consentBusy = false, consentError = friendlyError(error)) } }
+        }
+    }
+
+    private fun loadAfterConsent() {
         viewModelScope.launch {
             runCatching { repository.accountStatus() }
                 .onSuccess { status ->
