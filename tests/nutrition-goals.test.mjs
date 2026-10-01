@@ -18,6 +18,21 @@ test("derives safe calorie and macro targets for all goals", () => {
   }
 });
 
+test("keeps general protein goals practical instead of scaling without bound", () => {
+  const highWeightLoss = calculateNutritionGoal({ ...base, weightKg: 130, workoutDays: 3, goalType: "fatLoss" });
+  const regularAdult = calculateNutritionGoal({ ...base, weightKg: 82.5, workoutDays: 4, goalType: "lose" });
+  assert.ok(highWeightLoss.proteinGrams <= 140);
+  assert.equal(regularAdult.proteinGrams, 115);
+  for (const goal of [highWeightLoss, regularAdult]) {
+    const proteinShare = goal.proteinGrams * 4 / goal.calorieTarget;
+    const carbsShare = goal.carbsGrams * 4 / goal.calorieTarget;
+    const fatShare = goal.fatGrams * 9 / goal.calorieTarget;
+    assert.ok(proteinShare >= 0.10 && proteinShare <= 0.28);
+    assert.ok(carbsShare >= 0.44 && carbsShare <= 0.65);
+    assert.ok(fatShare >= 0.20 && fatShare <= 0.35);
+  }
+});
+
 test("infers goal and weekly training frequency from profile answers", () => {
   // Serbest metinde ikisi birden geçiyorsa yağ kaybı kazanır: daha küçük açık
   // ve daha yüksek protein üretir, yani tartıyı da düşürür ama kası korur.

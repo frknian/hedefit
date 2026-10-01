@@ -1,0 +1,5240 @@
+[
+  {
+    "old_exercise_id": "3_4_Sit-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "90_90_Hamstring",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Ab_Crunch_Machine",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Ab_Roller",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Adductor",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Adductor_Groin",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Advanced_Kettlebell_Windmill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Air_Bike",
+    "new_exercise_id": "air-bike",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "All_Fours_Quad_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternate_Hammer_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternate_Heel_Touchers",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternate_Incline_Dumbbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternate_Leg_Diagonal_Bound",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Cable_Shoulder_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Deltoid_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Floor_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Hang_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Kettlebell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Kettlebell_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Alternating_Renegade_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Ankle_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Ankle_On_The_Knee",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Anterior_Tibialis-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Anti-Gravity_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Arm_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Arnold_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Around_The_Worlds",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Atlas_Stone_Trainer",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Atlas_Stones",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Axle_Deadlift",
+    "new_exercise_id": "pause-deadlift",
+    "match_type": "normalized_name",
+    "confidence": 0.77
+  },
+  {
+    "old_exercise_id": "Back_Flyes_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Backward_Drag",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Backward_Medicine_Ball_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Balance_Board",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Ball_Leg_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Band_Assisted_Pull-Up",
+    "new_exercise_id": "band-assisted-pull-ups",
+    "match_type": "normalized_name",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Band_Good_Morning",
+    "new_exercise_id": "banded-good-morning",
+    "match_type": "normalized_name",
+    "confidence": 0.88
+  },
+  {
+    "old_exercise_id": "Band_Good_Morning_Pull_Through",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Band_Hip_Adductions",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Band_Pull_Apart",
+    "new_exercise_id": "band-pull-apart",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Band_Skull_Crusher",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Ab_Rollout",
+    "new_exercise_id": "barbell-ab-rollout",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Ab_Rollout_-_On_Knees",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Bench_Press_-_Medium_Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Curl",
+    "new_exercise_id": "barbell-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Curls_Lying_Against_An_Incline",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Deadlift",
+    "new_exercise_id": "deadlift",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Full_Squat",
+    "new_exercise_id": "squat",
+    "match_type": "normalized_name",
+    "confidence": 0.78
+  },
+  {
+    "old_exercise_id": "Barbell_Glute_Bridge",
+    "new_exercise_id": "barbell-glute-bridge",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Guillotine_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Hack_Squat",
+    "new_exercise_id": "squat",
+    "match_type": "normalized_name",
+    "confidence": 0.94
+  },
+  {
+    "old_exercise_id": "Barbell_Hip_Thrust",
+    "new_exercise_id": "hip-thrust",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Incline_Bench_Press_-_Medium_Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Incline_Shoulder_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Lunge",
+    "new_exercise_id": "barbell-lunge",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Rear_Delt_Row",
+    "new_exercise_id": "barbell-rear-delt-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Rollout_from_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Seated_Calf_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Shoulder_Press",
+    "new_exercise_id": "dumbbell-shoulder-press",
+    "match_type": "normalized_name",
+    "confidence": 0.82
+  },
+  {
+    "old_exercise_id": "Barbell_Shrug",
+    "new_exercise_id": "shrug",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Barbell_Shrug_Behind_The_Back",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Side_Bend",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Side_Split_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Squat_To_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Step_Ups",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Barbell_Walking_Lunge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Battling_Ropes",
+    "new_exercise_id": "battle-ropes",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Bear_Crawl_Sled_Drags",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Behind_Head_Chest_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bench_Dips",
+    "new_exercise_id": "bench-dips",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Bench_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bench_Press_-_Powerlifting",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bench_Press_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bench_Press_with_Chains",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bench_Sprint",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent-Arm_Barbell_Pullover",
+    "new_exercise_id": "bent-arm-barbell-pullover",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Bent-Arm_Dumbbell_Pullover",
+    "new_exercise_id": "bent-arm-barbell-pullover",
+    "match_type": "normalized_name",
+    "confidence": 0.85
+  },
+  {
+    "old_exercise_id": "Bent-Knee_Hip_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent_Over_Barbell_Row",
+    "new_exercise_id": "barbell-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent_Over_Low-Pulley_Side_Lateral",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent_Over_One-Arm_Long_Bar_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent_Over_Two-Arm_Long_Bar_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent_Over_Two-Dumbbell_Row",
+    "new_exercise_id": "bent-over-db-row",
+    "match_type": "normalized_name",
+    "confidence": 0.85
+  },
+  {
+    "old_exercise_id": "Bent_Over_Two-Dumbbell_Row_With_Palms_In",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bent_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bicycling",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bicycling_Stationary",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Board_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Body-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Body_Tricep_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bodyweight_Flyes",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bodyweight_Mid_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bodyweight_Squat",
+    "new_exercise_id": "bodyweight-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Bodyweight_Walking_Lunge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bosu_Ball_Cable_Crunch_With_Side_Bends",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bottoms-Up_Clean_From_The_Hang_Position",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bottoms_Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Box_Jump_Multiple_Response",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Box_Skip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Box_Squat",
+    "new_exercise_id": "box-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Box_Squat_with_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Box_Squat_with_Chains",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Brachialis-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Bradford_Rocky_Presses",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Butt-Ups",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Butt_Lift_Bridge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Butterfly",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Chest_Press",
+    "new_exercise_id": "cable-chest-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Cable_Crossover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Crunch",
+    "new_exercise_id": "cable-crunch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Cable_Deadlifts",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Hammer_Curls_-_Rope_Attachment",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Hip_Adduction",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Incline_Pushdown",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Incline_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Internal_Rotation",
+    "new_exercise_id": "cable-external-rotation",
+    "match_type": "normalized_name",
+    "confidence": 0.91
+  },
+  {
+    "old_exercise_id": "Cable_Iron_Cross",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Judo_Flip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Lying_Triceps_Extension",
+    "new_exercise_id": "ez-bar-lying-tricep-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Cable_One_Arm_Tricep_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Preacher_Curl",
+    "new_exercise_id": "barbell-preacher-curl",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Cable_Rear_Delt_Fly",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Reverse_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Rope_Overhead_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Rope_Rear-Delt_Rows",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Russian_Twists",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Seated_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Seated_Lateral_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Shoulder_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Shrugs",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cable_Wrist_Curl",
+    "new_exercise_id": "cable-wrist-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Calf-Machine_Shoulder_Shrug",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calf_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calf_Press_On_The_Leg_Press_Machine",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calf_Raise_On_A_Dumbbell",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calf_Raises_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calf_Stretch_Elbows_Against_Wall",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calf_Stretch_Hands_Against_Wall",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Calves-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Car_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Car_Drivers",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Carioca_Quick_Step",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cat_Stretch",
+    "new_exercise_id": "cat-stretch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Catch_and_Overhead_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chain_Handle_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chain_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chair_Leg_Extended_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chair_Lower_Back_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chair_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chair_Upper_Body_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chest_And_Front_Of_Shoulder_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chest_Push_from_3_point_stance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chest_Push_multiple_response",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chest_Push_single_response",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chest_Push_with_Run_Release",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Chest_Stretch_on_Stability_Ball",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Childs_Pose",
+    "new_exercise_id": "childs-pose",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Chin-Up",
+    "new_exercise_id": "chin-ups",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "Chin_To_Chest_Stretch",
+    "new_exercise_id": "knee-to-chest-stretch",
+    "match_type": "normalized_name",
+    "confidence": 0.81
+  },
+  {
+    "old_exercise_id": "Circus_Bell",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Clean",
+    "new_exercise_id": "clean",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Clean_Deadlift",
+    "new_exercise_id": "deadlift",
+    "match_type": "manual",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Clean_Pull",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Clean_Shrug",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Clean_and_Jerk",
+    "new_exercise_id": "clean-and-jerk",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Clean_and_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Clean_from_Blocks",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Clock_Push-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Close-Grip_Barbell_Bench_Press",
+    "new_exercise_id": "close-grip-db-bench-press",
+    "match_type": "normalized_name",
+    "confidence": 0.87
+  },
+  {
+    "old_exercise_id": "Close-Grip_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Close-Grip_EZ-Bar_Curl_with_Band",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Close-Grip_EZ-Bar_Press",
+    "new_exercise_id": "close-grip-ez-bar-curl",
+    "match_type": "normalized_name",
+    "confidence": 0.78
+  },
+  {
+    "old_exercise_id": "Close-Grip_EZ_Bar_Curl",
+    "new_exercise_id": "close-grip-ez-bar-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Close-Grip_Front_Lat_Pulldown",
+    "new_exercise_id": "close-grip-lat-pulldown",
+    "match_type": "manual",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Close-Grip_Push-Up_off_of_a_Dumbbell",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Close-Grip_Standing_Barbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Cocoons",
+    "new_exercise_id": "cocoons",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Conans_Wheel",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Concentration_Curls",
+    "new_exercise_id": "concentration-curl",
+    "match_type": "normalized_name",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Cross-Body_Crunch",
+    "new_exercise_id": "cross-body-crunch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Cross_Body_Hammer_Curl",
+    "new_exercise_id": "cross-body-hammer-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Cross_Over_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Crossover_Reverse_Lunge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Crucifix",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Crunch_-_Hands_Overhead",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Crunch_-_Legs_On_Exercise_Ball",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Crunches",
+    "new_exercise_id": "crunches",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Cuban_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dancers_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dead_Bug",
+    "new_exercise_id": "dead-bug",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Deadlift_with_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Deadlift_with_Chains",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Decline_Barbell_Bench_Press",
+    "new_exercise_id": "decline-bench-press-barbell",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Decline_Close-Grip_Bench_To_Skull_Crusher",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Decline_Crunch",
+    "new_exercise_id": "decline-crunch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Decline_Dumbbell_Bench_Press",
+    "new_exercise_id": "decline-bench-press-barbell",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "Decline_Dumbbell_Flyes",
+    "new_exercise_id": "decline-db-fly",
+    "match_type": "normalized_name",
+    "confidence": 0.91
+  },
+  {
+    "old_exercise_id": "Decline_Dumbbell_Triceps_Extension",
+    "new_exercise_id": "seated-dumbbell-tricep-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Decline_EZ_Bar_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Decline_Oblique_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Decline_Push-Up",
+    "new_exercise_id": "decline-push-up",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Decline_Reverse_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Decline_Smith_Press",
+    "new_exercise_id": "decline-bench-press",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Deficit_Deadlift",
+    "new_exercise_id": "deficit-deadlift",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Depth_Jump_Leap",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dip_Machine",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dips_-_Chest_Version",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dips_-_Triceps_Version",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Donkey_Calf_Raises",
+    "new_exercise_id": "donkey-calf-raise",
+    "match_type": "normalized_name",
+    "confidence": 0.94
+  },
+  {
+    "old_exercise_id": "Double_Kettlebell_Alternating_Hang_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Double_Kettlebell_Jerk",
+    "new_exercise_id": "double-kettlebell-jerk",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Double_Kettlebell_Push_Press",
+    "new_exercise_id": "double-kettlebell-push-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Double_Kettlebell_Snatch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Double_Kettlebell_Windmill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Double_Leg_Butt_Kick",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Downward_Facing_Balance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Drag_Curl",
+    "new_exercise_id": "drag-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Drop_Push",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Alternate_Bicep_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Bench_Press",
+    "new_exercise_id": "db-bench-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Dumbbell_Bench_Press_with_Neutral_Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Bicep_Curl",
+    "new_exercise_id": "bicep-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Dumbbell_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Floor_Press",
+    "new_exercise_id": "dumbbell-floor-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Dumbbell_Flyes",
+    "new_exercise_id": "db-fly",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "Dumbbell_Incline_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Incline_Shoulder_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Lunges",
+    "new_exercise_id": "db-lunge",
+    "match_type": "normalized_name",
+    "confidence": 0.93
+  },
+  {
+    "old_exercise_id": "Dumbbell_Lying_One-Arm_Rear_Lateral_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Lying_Pronation",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Lying_Rear_Lateral_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Lying_Supination",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_One-Arm_Shoulder_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_One-Arm_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_One-Arm_Upright_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Prone_Incline_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Rear_Lunge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Scaption",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Seated_Box_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Seated_One-Leg_Calf_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Shoulder_Press",
+    "new_exercise_id": "dumbbell-shoulder-press",
+    "match_type": "manual",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Dumbbell_Shrug",
+    "new_exercise_id": "db-shrug",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Dumbbell_Side_Bend",
+    "new_exercise_id": "dumbbell-side-bend",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Dumbbell_Squat",
+    "new_exercise_id": "db-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Dumbbell_Squat_To_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Step_Ups",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dumbbell_Tricep_Extension_-Pronated_Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dynamic_Back_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Dynamic_Chest_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "EZ-Bar_Curl",
+    "new_exercise_id": "ez-bar-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "EZ-Bar_Skullcrusher",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Elbow_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Elbow_to_Knee",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Elbows_Back",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Elevated_Back_Lunge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Elevated_Cable_Rows",
+    "new_exercise_id": "seated-cable-row",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Elliptical_Trainer",
+    "new_exercise_id": "elliptical-trainer",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Exercise_Ball_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Exercise_Ball_Pull-In",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Extended_Range_One-Arm_Kettlebell_Floor_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "External_Rotation",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "External_Rotation_with_Band",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "External_Rotation_with_Cable",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Face_Pull",
+    "new_exercise_id": "rack-pull",
+    "match_type": "normalized_name",
+    "confidence": 0.78
+  },
+  {
+    "old_exercise_id": "Farmers_Walk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Fast_Skipping",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Finger_Curls",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Flat_Bench_Cable_Flyes",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Flat_Bench_Leg_Pull-In",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Flat_Bench_Lying_Leg_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Flexor_Incline_Dumbbell_Curls",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Floor_Glute-Ham_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Floor_Press",
+    "new_exercise_id": "floor-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Floor_Press_with_Chains",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Flutter_Kicks",
+    "new_exercise_id": "flutter-kicks",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Foot-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Forward_Drag_with_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Frankenstein_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Freehand_Jump_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Frog_Hops",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Frog_Sit-Ups",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Barbell_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Barbell_Squat_To_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Box_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Cable_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Cone_Hops_or_hurdle_hops",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Dumbbell_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Incline_Dumbbell_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Leg_Raises",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Plate_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Raise_And_Pullover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Squat_Clean_Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Squats_With_Two_Kettlebells",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Front_Two-Dumbbell_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Full_Range-Of-Motion_Lat_Pulldown",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Gironda_Sternum_Chins",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Glute_Ham_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Glute_Kickback",
+    "new_exercise_id": "glute-kickback",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Goblet_Squat",
+    "new_exercise_id": "goblet-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Good_Morning",
+    "new_exercise_id": "good-morning",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Good_Morning_off_Pins",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Gorilla_Chin_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Groin_and_Back_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Groiners",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hack_Squat",
+    "new_exercise_id": "hack-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Hammer_Curls",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hammer_Grip_Incline_DB_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hamstring-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hamstring_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Handstand_Push-Ups",
+    "new_exercise_id": "handstand-push-ups",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Hang_Clean",
+    "new_exercise_id": "hang-clean",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Hang_Clean_-_Below_the_Knees",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hang_Snatch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hang_Snatch_-_Below_Knees",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hanging_Bar_Good_Morning",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hanging_Leg_Raise",
+    "new_exercise_id": "hanging-leg-raise",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Hanging_Pike",
+    "new_exercise_id": "hanging-pike",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Heaving_Snatch_Balance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Heavy_Bag_Thrust",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "High_Cable_Curls",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hip_Circles_prone",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hip_Extension_with_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hip_Flexion_with_Band",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hip_Lift_with_Band",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hug_A_Ball",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hug_Knees_To_Chest",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hurdle_Hops",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hyperextensions_Back_Extensions",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Hyperextensions_With_No_Hyperextension_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "IT_Band_and_Glute_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Iliotibial_Tract-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Inchworm",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Barbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Bench_Pull",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Cable_Chest_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Cable_Flye",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Dumbbell_Bench_With_Palms_Facing_In",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Dumbbell_Curl",
+    "new_exercise_id": "incline-db-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Incline_Dumbbell_Flyes",
+    "new_exercise_id": "incline-dumbbell-fly",
+    "match_type": "normalized_name",
+    "confidence": 0.91
+  },
+  {
+    "old_exercise_id": "Incline_Dumbbell_Flyes_-_With_A_Twist",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Dumbbell_Press",
+    "new_exercise_id": "incline-db-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Incline_Hammer_Curls",
+    "new_exercise_id": "incline-hammer-curl",
+    "match_type": "normalized_name",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Incline_Inner_Biceps_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Push-Up",
+    "new_exercise_id": "incline-push-ups",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Incline_Push-Up_Close-Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Push-Up_Depth_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Push-Up_Medium",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Push-Up_Reverse_Grip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Incline_Push-Up_Wide",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Intermediate_Groin_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Intermediate_Hip_Flexor_and_Quad_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Internal_Rotation_with_Band",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Inverted_Row",
+    "new_exercise_id": "inverted-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Inverted_Row_with_Straps",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Iron_Cross",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Iron_Crosses_stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Isometric_Chest_Squeezes",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Isometric_Neck_Exercise_-_Front_And_Back",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Isometric_Neck_Exercise_-_Sides",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Isometric_Wipers",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "JM_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Jackknife_Sit-Up",
+    "new_exercise_id": "jackknife-sit-up",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Janda_Sit-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Jefferson_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Jerk_Balance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Jerk_Dip_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Jogging_Treadmill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Keg_Load",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Arnold_Press",
+    "new_exercise_id": "kettlebell-floor-press",
+    "match_type": "normalized_name",
+    "confidence": 0.78
+  },
+  {
+    "old_exercise_id": "Kettlebell_Dead_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Figure_8",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Hang_Clean",
+    "new_exercise_id": "kettlebell-swing-clean",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "Kettlebell_One-Legged_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Pass_Between_The_Legs",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Pirate_Ships",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Pistol_Squat",
+    "new_exercise_id": "kettlebell-pistol-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Kettlebell_Seated_Press",
+    "new_exercise_id": "kettlebell-svend-press",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Kettlebell_Seesaw_Press",
+    "new_exercise_id": "kettlebell-svend-press",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Kettlebell_Sumo_High_Pull",
+    "new_exercise_id": "kettlebell-sumo-high-pull",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Kettlebell_Thruster",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Turkish_Get-Up_Lunge_style",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Turkish_Get-Up_Squat_style",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kettlebell_Windmill",
+    "new_exercise_id": "kettlebell-windmills",
+    "match_type": "normalized_name",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Kipping_Muscle_Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Knee_Across_The_Body",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Knee_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Knee_Hip_Raise_On_Parallel_Bars",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Knee_Tuck_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Arm_Drill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Cable_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Forearm_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_High_Pulley_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Hip_Flexor",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Jump_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Single-Arm_High_Pulley_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Kneeling_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Landmine_180s",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Landmine_Linear_Jammer",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lateral_Bound",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lateral_Box_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lateral_Cone_Hops",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lateral_Raise_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Latissimus_Dorsi-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leg-Over_Floor_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leg-Up_Hamstring_Stretch",
+    "new_exercise_id": "bench-hamstring-stretch",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Leg_Extensions",
+    "new_exercise_id": "leg-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.93
+  },
+  {
+    "old_exercise_id": "Leg_Lift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leg_Press",
+    "new_exercise_id": "leg-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Leg_Pull-In",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Chest_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Decline_Chest_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_High_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Incline_Chest_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Iso_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Shoulder_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Leverage_Shrug",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Linear_3-Part_Start_Technique",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Linear_Acceleration_Wall_Drill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Linear_Depth_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Log_Lift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "London_Bridges",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Looking_At_Ceiling",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Low_Cable_Crossover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Low_Cable_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Low_Pulley_Row_To_Neck",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lower_Back-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lower_Back_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lunge_Pass_Through",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lunge_Sprint",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Bent_Leg_Groin",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Cable_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Cambered_Barbell_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Close-Grip_Bar_Curl_On_High_Pulley",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Close-Grip_Barbell_Triceps_Extension_Behind_The_Head",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Close-Grip_Barbell_Triceps_Press_To_Chin",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Crossover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Dumbbell_Tricep_Extension",
+    "new_exercise_id": "dumbbell-tricep-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.81
+  },
+  {
+    "old_exercise_id": "Lying_Face_Down_Plate_Neck_Resistance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Face_Up_Plate_Neck_Resistance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Glute",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Hamstring",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_High_Bench_Barbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Leg_Curls",
+    "new_exercise_id": "leg-curl",
+    "match_type": "normalized_name",
+    "confidence": 0.93
+  },
+  {
+    "old_exercise_id": "Lying_Machine_Squat",
+    "new_exercise_id": "smith-machine-squat",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Lying_One-Arm_Lateral_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Prone_Quadriceps",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Rear_Delt_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Supine_Dumbbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_T-Bar_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Lying_Triceps_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Machine_Bench_Press",
+    "new_exercise_id": "decline-bench-press",
+    "match_type": "normalized_name",
+    "confidence": 0.84
+  },
+  {
+    "old_exercise_id": "Machine_Bicep_Curl",
+    "new_exercise_id": "machine-bicep-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Machine_Preacher_Curls",
+    "new_exercise_id": "machine-preacher-curl",
+    "match_type": "normalized_name",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Machine_Shoulder_Military_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Machine_Triceps_Extension",
+    "new_exercise_id": "machine-triceps-extension",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Medicine_Ball_Chest_Pass",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Medicine_Ball_Full_Twist",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Medicine_Ball_Scoop_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Middle_Back_Shrug",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Middle_Back_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Mixed_Grip_Chin",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Monster_Walk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Mountain_Climbers",
+    "new_exercise_id": "mountain-climbers",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Moving_Claw_Series",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Muscle_Snatch",
+    "new_exercise_id": "muscle-snatch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Muscle_Up",
+    "new_exercise_id": "muscle-ups",
+    "match_type": "normalized_name",
+    "confidence": 0.89
+  },
+  {
+    "old_exercise_id": "Narrow_Stance_Hack_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Narrow_Stance_Leg_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Narrow_Stance_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Natural_Glute_Ham_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Neck-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Neck_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Oblique_Crunches",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Oblique_Crunches_-_On_The_Floor",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Olympic_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "On-Your-Back_Quad_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "On_Your_Side_Quad_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Dumbbell_Row",
+    "new_exercise_id": "single-arm-db-row",
+    "match_type": "normalized_name",
+    "confidence": 0.8
+  },
+  {
+    "old_exercise_id": "One-Arm_Flat_Bench_Dumbbell_Flye",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_High-Pulley_Cable_Side_Bends",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Incline_Lateral_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Clean",
+    "new_exercise_id": "one-arm-kettlebell-row",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Clean_and_Jerk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Floor_Press",
+    "new_exercise_id": "one-arm-kettlebell-floor-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Jerk",
+    "new_exercise_id": "one-arm-kettlebell-row",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Military_Press_To_The_Side",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Para_Press",
+    "new_exercise_id": "one-arm-kettlebell-push-press",
+    "match_type": "normalized_name",
+    "confidence": 0.9
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Push_Press",
+    "new_exercise_id": "one-arm-kettlebell-push-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Row",
+    "new_exercise_id": "one-arm-kettlebell-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Snatch",
+    "new_exercise_id": "one-arm-kettlebell-swing",
+    "match_type": "normalized_name",
+    "confidence": 0.8
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Split_Jerk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Split_Snatch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Kettlebell_Swings",
+    "new_exercise_id": "one-arm-kettlebell-swing",
+    "match_type": "normalized_name",
+    "confidence": 0.96
+  },
+  {
+    "old_exercise_id": "One-Arm_Long_Bar_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Medicine_Ball_Slam",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Open_Palm_Kettlebell_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Overhead_Kettlebell_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Side_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Arm_Side_Laterals",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One-Legged_Cable_Kickback",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Arm_Against_Wall",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Arm_Chin-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Arm_Dumbbell_Bench_Press",
+    "new_exercise_id": "one-arm-dumbbell-push-press",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "One_Arm_Dumbbell_Preacher_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Arm_Floor_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Arm_Lat_Pulldown",
+    "new_exercise_id": "one-arm-lat-pulldown",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "One_Arm_Pronated_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Arm_Supinated_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Half_Locust",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Handed_Hang",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Knee_To_Chest",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "One_Leg_Barbell_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Open_Palm_Kettlebell_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Otis-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Overhead_Cable_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Overhead_Lat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Overhead_Slam",
+    "new_exercise_id": "overhead-squat",
+    "match_type": "normalized_name",
+    "confidence": 0.77
+  },
+  {
+    "old_exercise_id": "Overhead_Squat",
+    "new_exercise_id": "overhead-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Overhead_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Overhead_Triceps",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pallof_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pallof_Press_With_Rotation",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Palms-Down_Wrist_Curl_Over_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Palms-Up_Barbell_Wrist_Curl_Over_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Parallel_Bar_Dip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pelvic_Tilt_Into_Bridge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Peroneals-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Peroneals_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Physioball_Hip_Bridge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pin_Presses",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Piriformis-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Plank",
+    "new_exercise_id": "plank",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Plate_Pinch",
+    "new_exercise_id": "plate-pinch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Plate_Twist",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Platform_Hamstring_Slides",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Plie_Dumbbell_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Plyo_Kettlebell_Pushups",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Plyo_Push-up",
+    "new_exercise_id": "plyo-push-up",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Posterior_Tibialis_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Clean_from_Blocks",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Jerk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Partials",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Snatch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Snatch_from_Blocks",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Power_Stairs",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Preacher_Curl",
+    "new_exercise_id": "preacher-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Preacher_Hammer_Dumbbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Press_Sit-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Prone_Manual_Hamstring",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Prowler_Sprint",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pull_Through",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pullups",
+    "new_exercise_id": "pull-up",
+    "match_type": "manual",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Push-Up_Wide",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Push-Ups_-_Close_Triceps_Position",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Push-Ups_With_Feet_Elevated",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Push-Ups_With_Feet_On_An_Exercise_Ball",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Push_Press",
+    "new_exercise_id": "push-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Push_Press_-_Behind_the_Neck",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Push_Up_to_Side_Plank",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pushups",
+    "new_exercise_id": "push-up",
+    "match_type": "normalized_name",
+    "confidence": 0.71
+  },
+  {
+    "old_exercise_id": "Pushups_Close_and_Wide_Hand_Positions",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Pyramid",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Quad_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Quadriceps-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Quick_Leap",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rack_Delivery",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rack_Pull_with_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rack_Pulls",
+    "new_exercise_id": "rack-pull",
+    "match_type": "normalized_name",
+    "confidence": 0.9
+  },
+  {
+    "old_exercise_id": "Rear_Leg_Raises",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Recumbent_Bike",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Return_Push_from_Stance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Band_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Band_Box_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Band_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Band_Power_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Band_Sumo_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Barbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Barbell_Preacher_Curls",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Cable_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Crunch",
+    "new_exercise_id": "reverse-crunches",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "Reverse_Flyes",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Flyes_With_External_Rotation",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Grip_Bent-Over_Rows",
+    "new_exercise_id": "reverse-grip-bent-over-row",
+    "match_type": "normalized_name",
+    "confidence": 0.96
+  },
+  {
+    "old_exercise_id": "Reverse_Grip_Triceps_Pushdown",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Hyperextension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Machine_Flyes",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Plate_Curls",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Reverse_Triceps_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rhomboids-SMR",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rickshaw_Carry",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rickshaw_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Ring_Dips",
+    "new_exercise_id": "ring-dips",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Rocket_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rocking_Standing_Calf_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rocky_Pull-Ups_Pulldowns",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Romanian_Deadlift",
+    "new_exercise_id": "romanian-deadlift",
+    "match_type": "manual",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Romanian_Deadlift_from_Deficit",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rope_Climb",
+    "new_exercise_id": "rope-climb",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Rope_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rope_Jumping",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rope_Straight-Arm_Pulldown",
+    "new_exercise_id": "straight-arm-pulldown",
+    "match_type": "normalized_name",
+    "confidence": 0.81
+  },
+  {
+    "old_exercise_id": "Round_The_World_Shoulder_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Rowing_Stationary",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Runners_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Running_Treadmill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Russian_Twist",
+    "new_exercise_id": "russian-twist",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Sandbag_Load",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Scapular_Pull-Up",
+    "new_exercise_id": "scapular-pull-ups",
+    "match_type": "normalized_name",
+    "confidence": 0.94
+  },
+  {
+    "old_exercise_id": "Scissor_Kick",
+    "new_exercise_id": "scissor-kicks",
+    "match_type": "normalized_name",
+    "confidence": 0.92
+  },
+  {
+    "old_exercise_id": "Scissors_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Band_Hamstring_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Barbell_Military_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Barbell_Twist",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Bent-Over_One-Arm_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Bent-Over_Rear_Delt_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Biceps",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Cable_Rows",
+    "new_exercise_id": "seated-cable-row",
+    "match_type": "normalized_name",
+    "confidence": 0.94
+  },
+  {
+    "old_exercise_id": "Seated_Cable_Shoulder_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Calf_Raise",
+    "new_exercise_id": "seated-calf-raise",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Seated_Calf_Stretch",
+    "new_exercise_id": "banded-calf-stretch",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "Seated_Close-Grip_Concentration_Barbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Dumbbell_Curl",
+    "new_exercise_id": "seated-dumbbell-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Seated_Dumbbell_Inner_Biceps_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Dumbbell_Palms-Down_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Dumbbell_Palms-Up_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Flat_Bench_Leg_Pull-In",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Floor_Hamstring_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Front_Deltoid",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Glute",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Good_Mornings",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Hamstring",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Hamstring_and_Calf_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Head_Harness_Neck_Resistance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Leg_Curl",
+    "new_exercise_id": "seated-leg-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Seated_Leg_Tucks",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_One-Arm_Dumbbell_Palms-Down_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_One-arm_Cable_Pulley_Rows",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Overhead_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Palm-Up_Barbell_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Palms-Down_Barbell_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Side_Lateral_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Triceps_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Seated_Two-Arm_Palms-Up_Low-Pulley_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "See-Saw_Press_Alternating_Side_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Shotgun_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Shoulder_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Shoulder_Press_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Shoulder_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Shoulder_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side-Lying_Floor_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Bridge",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Hop-Sprint",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Jackknife",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Lateral_Raise",
+    "new_exercise_id": "cable-lateral-raise",
+    "match_type": "normalized_name",
+    "confidence": 0.78
+  },
+  {
+    "old_exercise_id": "Side_Laterals_to_Front_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Leg_Raises",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Lying_Groin_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Neck_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Standing_Long_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_To_Side_Chins",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_Wrist_Pull",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Side_to_Side_Box_Shuffle",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Arm_Cable_Crossover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Arm_Linear_Jammer",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Arm_Push-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Cone_Sprint_Drill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Leg_High_Box_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Leg_Hop_Progression",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Leg_Lateral_Hop",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single-Leg_Leg_Extension",
+    "new_exercise_id": "single-leg-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Single-Leg_Stride_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single_Dumbbell_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single_Leg_Butt_Kick",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Single_Leg_Glute_Bridge",
+    "new_exercise_id": "single-leg-glute-bridge",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Single_Leg_Push-off",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sit-Up",
+    "new_exercise_id": "sit-ups",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Sit_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Skating",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sled_Drag_-_Harness",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sled_Overhead_Backward_Walk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sled_Overhead_Triceps_Extension",
+    "new_exercise_id": "overhead-tricep-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.81
+  },
+  {
+    "old_exercise_id": "Sled_Push",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sled_Reverse_Flye",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sled_Row",
+    "new_exercise_id": "sled-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Sledgehammer_Swings",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Incline_Shoulder_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Behind_the_Back_Shrug",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Bench_Press",
+    "new_exercise_id": "smith-machine-bench-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Bent_Over_Row",
+    "new_exercise_id": "smith-machine-bent-over-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Calf_Raise",
+    "new_exercise_id": "smith-machine-calf-raise",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Close-Grip_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Decline_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Hang_Power_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Hip_Raise",
+    "new_exercise_id": "smith-machine-calf-raise",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Incline_Bench_Press",
+    "new_exercise_id": "smith-machine-incline-bench-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Leg_Press",
+    "new_exercise_id": "smith-machine-bench-press",
+    "match_type": "normalized_name",
+    "confidence": 0.83
+  },
+  {
+    "old_exercise_id": "Smith_Machine_One-Arm_Upright_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Overhead_Shoulder_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Pistol_Squat",
+    "new_exercise_id": "smith-machine-split-squat",
+    "match_type": "normalized_name",
+    "confidence": 0.81
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Reverse_Calf_Raises",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Squat",
+    "new_exercise_id": "smith-machine-squat",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Stiff-Legged_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Smith_Machine_Upright_Row",
+    "new_exercise_id": "smith-machine-upright-row",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Smith_Single-Leg_Split_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Snatch",
+    "new_exercise_id": "snatch",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Snatch_Balance",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Snatch_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Snatch_Pull",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Snatch_Shrug",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Snatch_from_Blocks",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Speed_Band_Overhead_Triceps",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Speed_Box_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Speed_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Spell_Caster",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Spider_Crawl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Spider_Curl",
+    "new_exercise_id": "spider-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Spinal_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Split_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Split_Jerk",
+    "new_exercise_id": "split-jerk",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Split_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Split_Snatch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Split_Squat_with_Dumbbells",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Split_Squats",
+    "new_exercise_id": "split-squat",
+    "match_type": "normalized_name",
+    "confidence": 0.92
+  },
+  {
+    "old_exercise_id": "Squat_Jerk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Squat_with_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Squat_with_Chains",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Squat_with_Plate_Movers",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Squats_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Stairmaster",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Alternating_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Barbell_Calf_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Barbell_Press_Behind_Neck",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Biceps_Cable_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Biceps_Stretch",
+    "new_exercise_id": "standing-calf-stretch",
+    "match_type": "normalized_name",
+    "confidence": 0.78
+  },
+  {
+    "old_exercise_id": "Standing_Bradford_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Cable_Chest_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Cable_Lift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Cable_Wood_Chop",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Calf_Raises",
+    "new_exercise_id": "standing-calf-raise",
+    "match_type": "normalized_name",
+    "confidence": 0.95
+  },
+  {
+    "old_exercise_id": "Standing_Concentration_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Dumbbell_Calf_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Dumbbell_Reverse_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Dumbbell_Triceps_Extension",
+    "new_exercise_id": "seated-dumbbell-tricep-extension",
+    "match_type": "normalized_name",
+    "confidence": 0.8
+  },
+  {
+    "old_exercise_id": "Standing_Dumbbell_Upright_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Elevated_Quad_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Front_Barbell_Raise_Over_Head",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Gastrocnemius_Calf_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Hamstring_and_Calf_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Hip_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Hip_Flexors",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Inner-Biceps_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Lateral_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Leg_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Long_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Low-Pulley_Deltoid_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Low-Pulley_One-Arm_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Military_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Olympic_Plate_Hand_Squeeze",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_One-Arm_Cable_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_One-Arm_Dumbbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Overhead_Barbell_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Palm-In_One-Arm_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Palms-In_Dumbbell_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Pelvic_Tilt",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Rope_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Soleus_And_Achilles_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Toe_Touches",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Towel_Triceps_Extension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Standing_Two-Arm_Overhead_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Star_Jump",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Step-up_with_Knee_Raise",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Step_Mill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Stiff-Legged_Barbell_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Stiff-Legged_Dumbbell_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Stiff_Leg_Barbell_Good_Morning",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Stomach_Vacuum",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Straight-Arm_Dumbbell_Pullover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Straight-Arm_Pulldown",
+    "new_exercise_id": "straight-arm-pulldown",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Straight_Bar_Bench_Mid_Rows",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Straight_Raises_on_Incline_Bench",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Stride_Jump_Crossover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sumo_Deadlift",
+    "new_exercise_id": "sumo-deadlift",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Sumo_Deadlift_with_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Sumo_Deadlift_with_Chains",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Superman",
+    "new_exercise_id": "superman",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Supine_Chest_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Supine_One-Arm_Overhead_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Supine_Two-Arm_Overhead_Throw",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Suspended_Fallout",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Suspended_Push-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Suspended_Reverse_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Suspended_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Suspended_Split_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Svend_Press",
+    "new_exercise_id": "svend-press",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "T-Bar_Row_with_Handle",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Tate_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "The_Straddle",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Thigh_Abductor",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Thigh_Adductor",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Tire_Flip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Toe_Touchers",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Torso_Rotation",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Trail_Running_Walking",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Trap_Bar_Deadlift",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Tricep_Dumbbell_Kickback",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Tricep_Side_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Triceps_Overhead_Extension_with_Rope",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Triceps_Pushdown",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Triceps_Pushdown_-_Rope_Attachment",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Triceps_Pushdown_-_V-Bar_Attachment",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Triceps_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Tuck_Crunch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Two-Arm_Dumbbell_Preacher_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Two-Arm_Kettlebell_Clean",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Two-Arm_Kettlebell_Jerk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Two-Arm_Kettlebell_Military_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Two-Arm_Kettlebell_Row",
+    "new_exercise_id": "one-arm-kettlebell-row",
+    "match_type": "normalized_name",
+    "confidence": 0.86
+  },
+  {
+    "old_exercise_id": "Underhand_Cable_Pulldowns",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Upper_Back-Leg_Grab",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Upper_Back_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Upright_Barbell_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Upright_Cable_Row",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Upright_Row_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Upward_Stretch",
+    "new_exercise_id": "lizard-stretch",
+    "match_type": "normalized_name",
+    "confidence": 0.79
+  },
+  {
+    "old_exercise_id": "V-Bar_Pulldown",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "V-Bar_Pullup",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Vertical_Swing",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Walking_Treadmill",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Ball_Hyperextension",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Ball_Side_Bend",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Bench_Dip",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Crunches",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Jump_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Pull_Ups",
+    "new_exercise_id": "weighted-pull-up",
+    "match_type": "normalized_name",
+    "confidence": 0.94
+  },
+  {
+    "old_exercise_id": "Weighted_Sissy_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Sit-Ups_-_With_Bands",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Weighted_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Barbell_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Decline_Barbell_Bench_Press",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Decline_Barbell_Pullover",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Lat_Pulldown",
+    "new_exercise_id": "close-grip-lat-pulldown",
+    "match_type": "normalized_name",
+    "confidence": 0.82
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Pulldown_Behind_The_Neck",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Rear_Pull-Up",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide-Grip_Standing_Barbell_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide_Stance_Barbell_Squat",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wide_Stance_Stiff_Legs",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wind_Sprints",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Windmills",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Worlds_Greatest_Stretch",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wrist_Circles",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Wrist_Roller",
+    "new_exercise_id": "wrist-roller",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Wrist_Rotations_with_Straight_Bar",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Yoke_Walk",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Zercher_Squats",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  },
+  {
+    "old_exercise_id": "Zottman_Curl",
+    "new_exercise_id": "zottman-curl",
+    "match_type": "exact",
+    "confidence": 1
+  },
+  {
+    "old_exercise_id": "Zottman_Preacher_Curl",
+    "new_exercise_id": null,
+    "match_type": "no_match",
+    "confidence": 0
+  }
+]

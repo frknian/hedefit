@@ -1,7 +1,7 @@
 // AI Coach Service — Hedefit'in AI'ya açılan TEK kapısı.
 //
 // Rotalar ve bileşenler buradaki fonksiyonları çağırır; hangi sağlayıcının
-// (yerel / Kimi / gelecekteki bir sağlayıcı) cevapladığını bilmezler.
+// hangi bulut modelinin yanıt verdiğini bilmezler.
 //
 // Akış:
 //   deterministik gerçekler → hafıza → bilgi getirimi → bağlam bütçesi
@@ -30,6 +30,7 @@ export type CoachRequest = {
   memories?: UserMemory[];
   category?: AiTaskCategory;
   policy?: RoutingPolicy;
+  workoutContext?: Record<string, unknown>;
   maxOutputTokens?: number;
   temperature?: number;
   abortSignal?: AbortSignal;
@@ -78,6 +79,7 @@ export async function generateCoachResponse(request: CoachRequest): Promise<Coac
     memories: request.memories,
     messages: request.messages,
     locale,
+    workoutContextJson: request.workoutContext ? JSON.stringify(request.workoutContext) : undefined,
   });
 
   const response = await routeText({
@@ -134,7 +136,7 @@ const memoryExtractionSchema = jsonSchema<{ memories: Array<{ type: string; key:
  * Model çıktısı `sanitizeMemory` ile TEK TEK doğrulanır — şemaya uyduğunu
  * iddia eden ama uymayan JSON (bkz. openai-compatible.ts) uygulamayı bozamaz.
  */
-export async function extractMemories(input: { message: string; locale?: "tr" | "en"; abortSignal?: AbortSignal }): Promise<UserMemory[]> {
+export async function extractMemories(input: { message: string; locale?: "tr" | "en"; maxOutputTokens?: number; abortSignal?: AbortSignal }): Promise<UserMemory[]> {
   const locale = input.locale === "en" ? "en" : "tr";
   const message = input.message.trim().slice(0, 600);
   if (!message) return [];
@@ -145,7 +147,7 @@ export async function extractMemories(input: { message: string; locale?: "tr" | 
       system: MEMORY_EXTRACTION_PROMPT[locale],
       prompt: `<message>\n${message}\n</message>`,
       temperature: 0,
-      maxOutputTokens: 400,
+      maxOutputTokens: Math.max(100, Math.min(input.maxOutputTokens ?? 300, 400)),
       abortSignal: input.abortSignal,
     });
     const raw = Array.isArray(response.object?.memories) ? response.object.memories : [];

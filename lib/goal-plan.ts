@@ -24,10 +24,18 @@ export const MAX_PLAN_WEEKS = 104;
 export type GoalIntensity = "easy" | "steady" | "hard";
 
 /** Seçilen tempo → hedeflenen haftalık değişim (vücut ağırlığının oranı). */
+// Kilo verme: %0,5–1/hafta (Helms 2014). Android GoalScience.kt ile aynı tutulmalı.
 const INTENSITY_FRACTION: Record<GoalIntensity, number> = {
-  easy: 0.004,
-  steady: 0.0065,
+  easy: 0.005,
+  steady: 0.0075,
   hard: 0.01,
+};
+
+/** Kilo alma: %0,25–0,5/hafta (Iraki 2019); daha hızlısı çoğunlukla yağ olarak eklenir. */
+const GAIN_INTENSITY_FRACTION: Record<GoalIntensity, number> = {
+  easy: 0.0025,
+  steady: 0.00375,
+  hard: 0.005,
 };
 
 /** Seans yoğunluğunun MET karşılığı; antrenman yakımını hesaplamak için. */
@@ -38,7 +46,7 @@ const INTENSITY_MET: Record<GoalIntensity, number> = {
 };
 
 export const GOAL_INTENSITIES: GoalIntensity[] = ["easy", "steady", "hard"];
-export const WEEKLY_DAY_OPTIONS = [2, 3, 4, 5, 6];
+export const WEEKLY_DAY_OPTIONS = [2, 3, 4, 5, 6, 7];
 export const SESSION_MINUTE_OPTIONS = [30, 45, 60, 75];
 
 export type GoalPlanAnswers = {
@@ -130,7 +138,7 @@ export function planGoal(answers: GoalPlanAnswers, context: GoalPlanContext): Go
   const warnings: GoalPlanWarning[] = [];
 
   // Tempo seçimi hedeflenen hızı verir; güvenli tavanı aşarsa kırpılır.
-  const requested = current * INTENSITY_FRACTION[answers.intensity];
+  const requested = current * (losing ? INTENSITY_FRACTION : GAIN_INTENSITY_FRACTION)[answers.intensity];
   const maxSafe = current * MAX_SAFE_WEEKLY_FRACTION;
   const magnitude = Math.min(requested, maxSafe);
   if (requested > maxSafe + 1e-9) warnings.push("clampedToSafeRate");

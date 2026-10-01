@@ -1,0 +1,11 @@
+{
+  // Tanıtım sitesi: yalnız statik dosyalardan oluşan Worker (workers.dev; özel alan adı Cloudflare panelinden bu Worker'a bağlanır).
+  "name": "hedefit-site",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../.site-dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

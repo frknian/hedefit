@@ -137,6 +137,8 @@ create table if not exists public.workout_schedule (
   scheduled_time time not null,
   status text not null default 'planned' check (status in ('planned', 'completed', 'rest', 'deferred')),
   original_date date,
+  program_id uuid,
+  program_name text,
   completed_session_id uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

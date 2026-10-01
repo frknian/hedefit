@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { isVerifiedAuthUser } from "./auth.ts";
 
-export type AuthenticatedUser = { id: string; email: string | null };
+export type AuthenticatedUser = { id: string; email: string | null; isGuest: boolean };
 
 export function bearerToken(request: Request) {
   const authorization = request.headers.get("authorization") || "";
@@ -37,8 +37,13 @@ export async function authenticateRequest(request: Request): Promise<{ user: Aut
   // AYNI tutmazsak, istemci zaten doğrulanmış saydığı bir kullanıcıyı sunucu
   // reddedebilir (ör. hesap silme/ilerleme sıfırlama az önce Google ile giriş
   // yapmış birinde 403 döndürüyordu).
-  if (!isVerifiedAuthUser(data.user)) {
+  // Misafir (Supabase anonim) oturumlar: kullanıcı üye olmadan uygulamayı dener,
+  // hesabını sonradan aynı user_id'ye kimlik bağlayarak kalıcı hale getirir.
+  // E-postası olmadığından doğrulama şartı aranmaz; kotalar ücretsiz katmanla
+  // aynıdır (checkAndConsumeUsage) ve RLS yine auth.uid() üzerinden işler.
+  const isGuest = data.user.is_anonymous === true;
+  if (!isGuest && !isVerifiedAuthUser(data.user)) {
     return { error: Response.json({ error: "Bu işlem için e-posta adresini doğrulamalısın." }, { status: 403 }) };
   }
-  return { user: { id: data.user.id, email: data.user.email ?? null } };
+  return { user: { id: data.user.id, email: data.user.email ?? null, isGuest } };
 }

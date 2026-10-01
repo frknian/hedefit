@@ -1,0 +1,13 @@
+// xcconfig'te "//" yorum başlangıcı sayıldığından URL'lerdeki çift eğik
+// çizgi $() ile bölünerek yazılır, yoksa "https:" sonrası satırın geri kalanı
+// yorum kabul edilip silinir.
+HEDEFIT_API_BASE_URL = https:/$()/hedefit.frknian.workers.dev
+NEXT_PUBLIC_SUPABASE_URL = https:/$()/YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = YOUR_PUBLISHABLE_OR_ANON_KEY
+
+// Google Cloud Console'da OAuth Client ID (tür: iOS, bundle ID: com.hedefit.app)
+// oluşturunca buraya yapıştırın. GOOGLE_URL_SCHEME, aynı client ID'nin
+// TERS çevrilmiş hâlidir: "1234567890-abc.apps.googleusercontent.com" ise
+// "com.googleusercontent.apps.1234567890-abc" olur.
+GOOGLE_IOS_CLIENT_ID = YOUR_IOS_OAUTH_CLIENT_ID.apps.googleusercontent.com
+GOOGLE_URL_SCHEME = com.googleusercontent.apps.YOUR_IOS_OAUTH_CLIENT_ID

@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hedefit — Antrenman, beslenme ve yapay zekâ koçu tek uygulamada</title>
+<meta name="description" content="Hedefit; antrenman, kardiyo, GPS rota ve öğün takibini tek uygulamada toplar. Yapay zekâ öğününü okur, programını kurar, haftanı değerlendirir. Hedeflerin ise yapay zekâya bırakılmaz, profilinden hesaplanır.">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="canonical" href="__SITE_URL__/">
+<meta property="og:site_name" content="Hedefit">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:url" content="__SITE_URL__/">
+<meta property="og:image" content="__SITE_URL__/assets/brand/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hedefit — Antrenman, beslenme ve yapay zekâ koçu tek uygulamada">
+<meta name="twitter:description" content="Hedefit; antrenman, kardiyo, GPS rota ve öğün takibini tek uygulamada toplar. Yapay zekâ öğününü okur, programını kurar, haftanı değerlendirir. Hedeflerin ise yapay zekâya bırakılmaz, profilinden hesaplanır.">
+<meta name="twitter:image" content="__SITE_URL__/assets/brand/og.png">
+<meta property="og:title" content="Hedefit — Hedefine giden yol, tek uygulamada">
+<meta property="og:description" content="Antrenman, beslenme, kardiyo, GPS rota ve Fit Koç. Yakında Google Play ve App Store'da.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="assets/brand/favicon.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav" id="top">
+  <a class="brand" href="#top" aria-label="Hedefit ana sayfa"><img src="assets/brand/icon.png" alt="" width="36" height="36"><span>HEDEFIT</span></a>
+  <nav aria-label="Ana menü">
+    <a href="#yapay-zeka">Yapay zekâ</a>
+    <a href="#fark">Fark</a>
+    <a href="#ozellikler">Özellikler</a>
+    <a href="#hedef-yolculugu">Yolculuk</a>
+    <a href="#rota">Rota</a>
+    <a href="#akilli-saat">Saat</a>
+    <a href="#galeri">Ekranlar</a>
+    <a href="#sss">SSS</a>
+    <a href="planlar.html">Planlar</a>
+  </nav>
+  <a class="btn btn-sm" href="#yakinda">Yakında</a>
+</header>
+
+<main>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow reveal">Antrenman · Beslenme · Kardiyo · Yapay zekâ koçu</p>
+    <h1 class="reveal">Hedefine giden yol,<br><span class="hl">tek uygulamada.</span></h1>
+    <p class="lead reveal">Antrenmanın, öğünlerin, koşuların ve koçun tek yerde. Yapay zekâ <b>öğününü okur, programını kurar, haftanı değerlendirir</b> ve sorularını senin verine bakarak yanıtlar. Hedeflerin ise ona bırakılmaz: boyundan, kilondan ve amacından <b>hesaplanır</b>.</p>
+    <div class="stores reveal" id="yakinda">
+      <a class="store" aria-disabled="true" data-store="google-play" role="link" tabindex="0">
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M3.6 2.3c-.2.2-.3.6-.3 1v17.4c0 .4.1.8.3 1l9.7-9.7L3.6 2.3zm10.6 8.7 2.7-2.7L5.4 1.7c-.4-.2-.7-.2-1 0l9.8 9.3zm0 2 -9.8 9.3c.3.2.7.2 1 0l11.5-6.6-2.7-2.7zm3.7-1.8-3 1.7 3 3 2.8-1.6c.8-.5.8-1.3 0-1.8l-2.8-1.3z"/></svg>
+        <span><small>YAKINDA</small>Google Play</span>
+      </a>
+      <a class="store" aria-disabled="true" data-store="app-store" role="link" tabindex="0">
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.700 2.400 2.900 2.300 1.200 0 1.600-.7 3-.7s1.800.7 3 .7 2.100-1.100 2.800-2.200c.9-1.300 1.200-2.500 1.300-2.600-.1 0-2.500-1-2.500-3.900zM14.200 5.700c.6-.8 1.100-1.900.9-3-.9 0-2.100.6-2.700 1.400-.6.700-1.100 1.800-1 2.900 1 .1 2.100-.5 2.800-1.300z"/></svg>
+        <span><small>YAKINDA</small>App Store</span>
+      </a>
+    </div>
+    <ul class="proof reveal">
+      <li><b data-count="600" data-suffix="+">0</b> animasyonlu hareket</li>
+      <li><b data-count="6">0</b> kardiyo makinesi</li>
+      <li><b data-count="6">0</b> GPS aktivitesi</li>
+    </ul>
+  </div>
+
+  <div class="hero-stage" aria-hidden="false">
+    <div class="hero-device">
+      <div class="phone-zone">
+      <div class="phone hero-phone" data-tilt id="heroApp">
+        <div class="app" aria-label="Hedefit uygulaması etkileşimli demo">
+          <div class="app-views">
+            <section class="view view-home on" data-v="home" tabindex="-1">
+              <div class="ah-top"><h3>Merhaba, Deniz</h3><span class="chip">🏆 12</span><span class="av">DE</span></div>
+              <div class="a-card today">
+                <small>BUGÜNÜN ANTRENMANI</small><b>Kişisel Atlas Programım</b>
+                <div class="tags"><i>Kalça</i><i>Göğüs</i><i>Sırt</i></div>
+                <button type="button" class="a-btn" data-go="antrenman">▶ Antrenmanı başlat</button>
+              </div>
+              <h4>Hedef yolculuğu</h4>
+              <button type="button" class="a-card goalc" data-go="hedef">
+                <div class="gc-row"><div><small>ŞİMDİ</small><b id="apKg">95.0 kg</b></div><span class="pill" id="apWk">20 hafta kaldı</span><div class="gr"><small>HEDEF</small><b>80.0 kg</b></div></div>
+                <div class="gbar"><span id="apBar"></span></div>
+              </button>
+              <h4>Günlük denge</h4>
+              <div class="a-card rings4">
+                <div class="rg" data-p=".82" style="--c:#7dc862"><svg viewBox="0 0 56 56"><circle class="bg" cx="28" cy="28" r="22"/><circle class="fg" cx="28" cy="28" r="22"/></svg><b>1.840</b><small>/ 2.250</small><em>Kalori</em></div>
+                <div class="rg" data-p=".93" style="--c:#38bdf8"><svg viewBox="0 0 56 56"><circle class="bg" cx="28" cy="28" r="22"/><circle class="fg" cx="28" cy="28" r="22"/></svg><b>7.420</b><small>/ 8.000</small><em>Adım</em></div>
+                <div class="rg" data-p=".72" style="--c:#22d3ee"><svg viewBox="0 0 56 56"><circle class="bg" cx="28" cy="28" r="22"/><circle class="fg" cx="28" cy="28" r="22"/></svg><b>1.8</b><small>/ 2.5 L</small><em>Su</em></div>
+                <div class="rg" data-p=".94" style="--c:#a78bfa"><svg viewBox="0 0 56 56"><circle class="bg" cx="28" cy="28" r="22"/><circle class="fg" cx="28" cy="28" r="22"/></svg><b>7s 30dk</b><small>/ 8s</small><em>Uyku</em></div>
+              </div>
+              <div class="qh"><h4>Hızlı işlemler</h4><span>Özelleştir</span></div>
+              <div class="qg">
+                <button type="button" data-go="atlas">📖<b>Hareket Atlası</b></button>
+                <button type="button" data-go="kardiyo">🏃<b>Kardiyo</b></button>
+                <button type="button" data-go="oyun">🎮<b>Oyun</b></button>
+                <button type="button" data-go="rota">🧭<b>Hedefit Rota</b></button>
+                <button type="button" data-go="ogunler">🍴<b>Öğün ekle</b></button>
+                <button type="button" data-go="antrenman">🏋<b>Antrenmanı başlat</b></button>
+                <button type="button" data-go="arkadaslar">👥<b>Arkadaşlar</b></button>
+                <button type="button" data-go="saat">⌚<b>Akıllı saat</b></button>
+              </div>
+              <h4>Programlar</h4>
+              <div class="a-card prog"><small>PROGRAM</small><b>Kişisel Atlas Programım</b></div>
+              <div class="a-pad"></div>
+            </section>
+          </div>
+          <button type="button" class="app-back" id="appBack" hidden>‹ Geri</button>
+          <nav class="app-nav" aria-label="Uygulama sekmeleri">
+            <button type="button" data-tab="home" class="on" aria-label="Ana sayfa"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
+            <button type="button" data-tab="antrenman" aria-label="Antrenman"><svg viewBox="0 0 24 24" class="fill"><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><rect x="8" y="11" width="8" height="2"/></svg></button>
+            <button type="button" data-tab="beslenme" aria-label="Beslenme"><svg viewBox="0 0 24 24"><path d="M7 3v7M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/></svg></button>
+            <button type="button" data-tab="ilerleme" aria-label="İlerleme"><svg viewBox="0 0 24 24" class="fill"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="5" width="4" height="15" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg></button>
+            <button type="button" data-tab="koc" aria-label="Fit Koç"><img src="assets/brand/koc.png" alt="" width="24" height="24"></button>
+          </nav>
+          <span class="tap" id="appTap" aria-hidden="true"></span>
+        </div>
+      </div>
+    <div class="float card goal f1" id="heroGoal">
+      <small>HEDEF YOLCULUĞU</small>
+      <div class="hg-now"><b id="hgKg">95.0</b><i>kg</i><span class="hg-arrow">→</span><b class="g">80.0</b><i>kg</i></div>
+      <svg viewBox="0 0 180 56" class="hg-chart" aria-hidden="true"><line class="hg-base" x1="4" y1="52" x2="176" y2="52"/><path class="hg-line" id="hgLine" d="M6 8 L174 48"/><circle class="hg-dot" id="hgDot" r="4.5" cx="6" cy="8"/><circle class="hg-end" cx="174" cy="48" r="3.5"/></svg>
+      <em>20 hafta · Dengeli tempo</em>
+    </div>
+    <div class="float card rings f2">
+      <small>GÜNLÜK DENGE</small>
+      <svg viewBox="0 0 120 120" width="112" height="112" role="img" aria-label="Kalori, adım, su ve uyku halkaları">
+        <circle class="r-bg" cx="60" cy="60" r="50"/><circle class="r r1" cx="60" cy="60" r="50"/>
+        <circle class="r-bg" cx="60" cy="60" r="38"/><circle class="r r2" cx="60" cy="60" r="38"/>
+        <circle class="r-bg" cx="60" cy="60" r="26"/><circle class="r r3" cx="60" cy="60" r="26"/>
+      </svg>
+    </div>
+    <div class="float card route f3" id="heroRoute">
+      <small>HEDEFIT ROTA · KOŞU</small>
+      <svg viewBox="0 0 200 120" class="hr-map" role="img" aria-label="Haritada ilerleyen koşu rotası">
+        <path class="hr-road" d="M0 84 L200 70 M0 30 L200 44 M62 0 L72 120 M142 0 L130 120"/>
+        <path class="hr-plan" d="M30 88 C24 56 44 30 78 28 C112 26 120 52 148 44 C176 36 184 70 164 92 C146 112 84 112 54 104 C38 100 32 96 30 88 Z"/>
+        <path class="hr-run" id="hrRun" d="M30 88 C24 56 44 30 78 28 C112 26 120 52 148 44 C176 36 184 70 164 92 C146 112 84 112 54 104 C38 100 32 96 30 88 Z"/>
+        <circle class="hr-pulse" id="hrPulse" r="7"/><circle class="hr-dot" id="hrDot" r="4.5"/>
+      </svg>
+      <div class="hr-stats"><span><b id="hrKm">0,00</b> km</span><span><b>5:23</b> /km</span></div>
+    </div>
+      </div>
+      <div class="app-cap" aria-live="polite"><b id="capT">Ana ekran</b><span id="capD">Bugünün antrenmanı, hedef yolculuğu ve günlük dengen tek bakışta.</span><a id="capL" href="#ozellikler" hidden>Bölüme git →</a><em>Dokun, kaydır, keşfet.</em></div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee" aria-label="Özellikler">
+  <div class="marquee-track">
+    <span>Antrenman</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
+    <span>Antrenman</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
+    <span>Antrenman</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
+  </div>
+</div>
+
+<!-- YAPAY ZEKÂ -->
+<section class="section ai" id="yapay-zeka">
+  <div class="wrap">
+    <p class="eyebrow reveal">Yapay zekâ takibi</p>
+    <h2 class="reveal">Yapay zekâ her adımda <span class="hl">yanında.</span></h2>
+    <p class="lead reveal">Öğün yazmak, program kurmak, haftayı yorumlamak, salonda makineyi tanımak: yorucu işlerin hepsini yapay zekâ üstlenir. Ama kalori ve makro hedeflerin gibi kritik sayılar ona bırakılmaz; bilimsel formüllerle hesaplanır.</p>
+
+    <div class="ai-grid">
+      <article class="ai-demo card-lg reveal" id="aiDemo">
+        <header><span class="dot"></span> Akıllı öğün ekle <em>Örnek gösterim</em></header>
+        <div class="typing" aria-live="polite"><span id="typed"></span><i class="caret"></i></div>
+        <div class="result" id="aiResult">
+          <div class="result-head"><b>≈ <span data-to="350">0</span> kcal</b><small>yapay zekâ ile tahmin edildi</small></div>
+          <ul>
+            <li><span>Protein</span><div class="mbar"><i style="--w:55%"></i></div><b>20 g</b></li>
+            <li><span>Karb.</span><div class="mbar blue"><i style="--w:42%"></i></div><b>28 g</b></li>
+            <li><span>Yağ</span><div class="mbar yellow"><i style="--w:48%"></i></div><b>14 g</b></li>
+          </ul>
+        </div>
+        <p class="note">Yaz, söyle ya da fotoğrafını çek. Değerleri kaydetmeden önce düzenleyebilirsin.</p>
+      </article>
+
+      <div class="ai-points">
+        <article class="point reveal"><span class="num">01</span>
+          <h3>Öğünü yaz ya da fotoğrafla</h3>
+          <p>“2 dilim ekmek, omlet” yaz ya da tabağın fotoğrafını çek. Yapay zekâ kalori ve makroları çıkarır; gram ya da adet seçebilir, kaydetmeden önce düzenleyebilirsin.</p></article>
+        <article class="point reveal"><span class="num">02</span>
+          <h3>Programı senin için kurar</h3>
+          <p>“Hedefit AI ile oluştur” hedefini, seviyeni, ekipmanını ve profilini dikkate alarak kişisel program üretir. Hızlı antrenman, hazır şablon ya da kendi programın da yanında.</p></article>
+        <article class="point reveal"><span class="num">03</span>
+          <h3>Fit Koç seni tanır</h3>
+          <p>“Bugünkü antrenmanım?”, “Akşam ne yesem?” gibi soruları genel değil, kendi antrenman, beslenme ve ilerleme kaydına göre yanıtlar. Önemli ayrıntıları hatırlar; hafızasını görebilir ve silebilirsin.</p></article>
+        <article class="point reveal"><span class="num">04</span>
+          <h3>Haftanı değerlendirir</h3>
+          <p>Haftalık değerlendirme neyin iyi gittiğini, nelere dikkat etmen gerektiğini ve gelecek hafta için önerileri özetler; her zaman bir güvenlik notuyla.</p></article>
+        <article class="point reveal"><span class="num">05</span>
+          <h3>Ekipmanı fotoğraftan tanır</h3>
+          <p>Salonda bir makinenin fotoğrafını çek; Hedefit hangi ekipman olduğunu tanısın ve programına uygun hareketleri bulmana yardım etsin.</p></article>
+        <article class="point reveal guard"><span class="num">06</span>
+          <h3>Hedefini ise AI uydurmaz</h3>
+          <p>Günlük kalori ve makro hedefin profilinden formülle, aktivite kalorin MET değerleriyle hesaplanır. Yapay zekâ sadece tahmin gereken yerde (porsiyon, yorum, öneri) çalışır; bu yüzden hedeflerin tutarlı ve gerçekçidir.</p></article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FARK -->
+<section class="section diff" id="fark">
+  <div class="wrap">
+    <p class="eyebrow reveal">Farkı</p>
+    <h2 class="reveal">Dört uygulama yerine <span class="hl">bir.</span></h2>
+    <div class="compare reveal">
+      <div class="col head"><span></span><b class="us">Hedef<span lang="en">it</span></b><b class="them">Dağınık yaklaşım</b></div>
+      <div class="col"><span>Veri</span><p class="us">Antrenman, öğün, kardiyo ve rota tek yerde</p><p class="them">3–4 ayrı uygulamaya bölünmüş kayıtlar</p></div>
+      <div class="col"><span>Hedefler</span><p class="us">Profilinden hesaplanır, kaynakları gösterilir</p><p class="them">Genel şablon ya da tahmin</p></div>
+      <div class="col"><span>Yapay zekâ</span><p class="us">Öğünü okur, programı kurar, haftayı yorumlar; hedefleri formülle sabit tutar</p><p class="them">Ya hiç yok ya da her şeyi kara kutuya bırakır</p></div>
+      <div class="col"><span>Koç</span><p class="us">Kendi verine bakarak yanıtlar</p><p class="them">Herkese aynı genel tavsiye</p></div>
+      <div class="col"><span>Hareketler</span><p class="us">600+ hareket, animasyonlu önizleme</p><p class="them">Metin listesi</p></div>
+      <div class="col"><span>Motivasyon</span><p class="us">XP, seri, arkadaşlarla meydan okuma</p><p class="them">Yalnız takip</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 ÖZELLİK -->
+<section class="section features" id="ozellikler">
+  <div class="wrap">
+    <p class="eyebrow reveal">Beş bölüm, tek akış</p>
+    <h2 class="reveal">Bugün ne yapacağını <span class="hl">bilirsin.</span></h2>
+  </div>
+
+  <article class="feat wrap" id="f-antrenman">
+    <div class="feat-copy reveal">
+      <span class="big">01</span>
+      <h3>Antrenman</h3>
+      <p>Bugünün antrenmanı ana ekranda seni bekler. Her hareket animasyonlu önizlemeyle gelir; set sayısını, tekrarı ve dinlenmeyi dokunarak ayarlarsın.</p>
+      <ul class="ticks">
+        <li>600’den fazla hareketlik atlas, kas ve ekipman filtreleriyle</li>
+        <li>Kas atlası: bu hafta hangi bölgeyi ne kadar çalıştırdığını gör</li>
+        <li>Hızlı antrenman, hazır programlar, kendi programın ya da AI programı</li>
+        <li>Kamerayla ekipman tarama</li>
+      </ul>
+    </div>
+    <div class="feat-shots reveal">
+      <div class="phone"><img loading="lazy" src="assets/shots/hareketler.jpg" alt="Antrenman programı: altı hareket ve animasyonlu önizlemeler" width="560" height="1244"></div>
+      <div class="phone back"><img loading="lazy" src="assets/shots/kas.jpg" alt="Kas atlası" width="560" height="1244"></div>
+    </div>
+  </article>
+
+  <article class="feat flip wrap" id="f-beslenme">
+    <div class="feat-copy reveal">
+      <span class="big">02</span>
+      <h3>Beslenme</h3>
+      <p>Kalori halkası, protein–karbonhidrat–yağ çubukları ve su takibi tek ekranda. Öğünü yaz, yapay zekâ porsiyonu hesaplasın.</p>
+      <ul class="ticks">
+        <li>Metinle ya da fotoğrafla akıllı öğün ekleme</li>
+        <li>Besin veritabanında arama, gram ya da adet</li>
+        <li>Spor günü ve aktivite için kalori ayarı</li>
+        <li>Lif ve mikro besin takibi, haftalık öğün planı</li>
+      </ul>
+    </div>
+    <div class="feat-shots reveal">
+      <div class="phone"><img loading="lazy" src="assets/shots/beslenme.jpg" alt="Beslenme ekranı: kalori halkası ve makro çubukları" width="560" height="1244"></div>
+      <div class="phone back"><img loading="lazy" src="assets/shots/ogunler.jpg" alt="Öğün listesi" width="560" height="1244"></div>
+    </div>
+  </article>
+
+  <article class="feat wrap" id="f-kardiyo">
+    <div class="feat-copy reveal">
+      <span class="big">03</span>
+      <h3>Kardiyo &amp; Hedef<span lang="en">it</span> Rota</h3>
+      <p>Makineni seç, ayarını canlı değiştir; yaktığın kalori günlük hesabına eklenir. Dışarıdaysan GPS ile rotanı kaydet, hatta rotanı önceden planla.</p>
+      <ul class="ticks">
+        <li>6 kardiyo makinesi: koşu bandı, bisiklet, eliptik, kürek, merdiven, açık hava</li>
+        <li>GPS ile koşu, yürüyüş, trail, doğa yürüyüşü, bisiklet ve kayak</li>
+        <li>Süreye ya da mesafeye göre dönüşlü ya da A → B rota planlama</li>
+        <li>HIIT, tepe tırmanışı ve bisiklet sprinti gibi hazır kardiyo programları</li>
+      </ul>
+    </div>
+    <div class="feat-shots reveal">
+      <div class="phone"><img loading="lazy" src="assets/shots/kosubandi.jpg" alt="Koşu bandı seansı: süre halkası, hız ve eğim" width="560" height="1244"></div>
+      <div class="phone back"><img loading="lazy" src="assets/shots/rota.jpg" alt="Kaydedilmiş koşu rotası haritası" width="560" height="1244"></div>
+    </div>
+  </article>
+
+  <article class="feat flip wrap" id="f-ilerleme">
+    <div class="feat-copy reveal">
+      <span class="big">04</span>
+      <h3>İlerleme</h3>
+      <p>Takvimde hangi günler çalıştığını, seri durumunu ve haftalık antrenman süreni gör. Hedef yolculuğunda kilo hedefine giden yol ara hedeflere bölünür.</p>
+      <ul class="ticks">
+        <li>7G, 30G, 90G, 1Y ve Tümü aralıkları</li>
+        <li>Aktivite takvimi, seri ve haftalık süre grafiği</li>
+        <li>Üç tempo seçeneği: yavaş, dengeli, hızlı; her biri için hedef tarih</li>
+        <li>Su, protein ve adım hedefleri</li>
+      </ul>
+    </div>
+    <div class="feat-shots reveal">
+      <div class="phone"><img loading="lazy" src="assets/shots/istatistik.jpg" alt="İlerleme ekranı: antrenman sayısı, seri ve aktivite takvimi" width="560" height="1244"></div>
+      <div class="phone back"><img loading="lazy" src="assets/shots/hedef.jpg" alt="Hedef yolculuğu: tempo seçenekleri" width="560" height="1244"></div>
+    </div>
+  </article>
+
+  <article class="feat wrap" id="f-koc">
+    <div class="feat-copy reveal">
+      <span class="big">05</span>
+      <h3>Fit Koç</h3>
+      <p>Antrenman, beslenme ya da ilerleme hakkında aklına ne takılırsa sor. Hazır sorularla başla ya da kendi sorunu yaz.</p>
+      <ul class="ticks">
+        <li>Günlük soru hakkı plana göre: Misafir 3, Free 5, Plus 20, Premium 40; ücretsiz hesaplarda görevlerden kazandığın XP hakkı artırır</li>
+        <li>Verine göre yanıt: bugünkü antrenman, akşam yemeği, haftalık değerlendirme</li>
+        <li>Plus ve Premium’da çok daha yüksek hak; <a href="planlar.html">planları gör</a></li>
+      </ul>
+    </div>
+    <div class="feat-shots reveal">
+      <div class="phone"><img loading="lazy" src="assets/shots/koc.jpg" alt="Fit Koç sohbet ekranı" width="560" height="1244"></div>
+      <div class="phone back"><img loading="lazy" src="assets/shots/program.jpg" alt="Program oluştur: Hedefit AI ile oluştur" width="560" height="1244"></div>
+    </div>
+  </article>
+</section>
+
+<!-- HEDEF YOLCULUĞU -->
+<section class="section journey" id="hedef-yolculugu">
+  <div class="wrap jgrid">
+    <div class="jcopy">
+      <p class="eyebrow reveal">Hedef yolculuğu</p>
+      <h2 class="reveal">Hedefin, <span class="hl">tarihli bir yol.</span></h2>
+      <p class="lead reveal">Hedef kilonu seç; Hedefit haftalık hızını, bitiş tarihini ve ara hedeflerini hesaplasın. Tempoyu değiştirdiğinde yol haritası anında yeniden çizilir.</p>
+      <div class="seg reveal" role="tablist" aria-label="Tempo seçimi" id="tempoSeg">
+        <button type="button" role="tab" data-t="0" aria-selected="false"><b>Yavaş</b><small>0,51 kg/hf</small></button>
+        <button type="button" role="tab" data-t="1" aria-selected="true"><b>Dengeli</b><small>0,77 kg/hf</small></button>
+        <button type="button" role="tab" data-t="2" aria-selected="false"><b>Hızlı</b><small>1,02 kg/hf</small></button>
+      </div>
+      <ul class="ticks reveal">
+        <li>Ara hedefler: %25, %50, %75 ve hedef kilo; her biri için tarih</li>
+        <li>Kilo verme, koruma ve alma hedefleri</li>
+        <li>Su, protein ve adım hedefleri; kaynakları gösterilir</li>
+        <li>Ölçüm ekledikçe gerçek ilerleme planlanan yolun üzerine çizilir</li>
+      </ul>
+    </div>
+    <div class="jpanel card-lg reveal" id="journey">
+      <div class="jp-top">
+        <div><small>ŞİMDİ</small><div class="jp-kg"><b id="jKg">102.0</b><i>kg</i></div></div>
+        <div class="jp-badge" id="jBadge">16 hafta</div>
+        <div class="jp-goal"><small>HEDEF</small><div class="jp-kg"><b>90.0</b><i>kg</i></div></div>
+      </div>
+      <svg viewBox="0 0 600 270" class="jchart" role="img" aria-label="Planlanan kilo yolu: 102 kilodan 90 kiloya">
+        <defs><linearGradient id="jfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fe02a" stop-opacity=".28"/><stop offset="1" stop-color="#6fe02a" stop-opacity="0"/></linearGradient>
+          <clipPath id="jclip"><rect id="jclipRect" x="0" y="0" width="0" height="270"/></clipPath></defs>
+        <g class="jgrid-l"><line x1="30" y1="40" x2="580" y2="40"/><line x1="30" y1="110" x2="580" y2="110"/><line x1="30" y1="180" x2="580" y2="180"/><line x1="30" y1="250" x2="580" y2="250"/></g>
+        <path class="jplan" d="M30 40 L570 232"/>
+        <g clip-path="url(#jclip)"><path d="M30 40 L570 232 L570 250 L30 250 Z" fill="url(#jfill)"/></g>
+        <path class="jline" id="jLine" d="M30 40 L570 232"/>
+        <g id="jMiles"></g>
+        <circle class="jdot" id="jDot" r="8" cx="30" cy="40"/>
+      </svg>
+      <div class="jmiles" id="jMileList"></div>
+      <div class="jstats">
+        <div><small>HAFTALIK TEMPO</small><b id="jRate">0,77 kg</b></div>
+        <div><small>SÜRE</small><b id="jWeeks">16 hafta</b></div>
+        <div><small>VKİ</small><b>31,5 <i>→ 27,8</i></b></div>
+      </div>
+      <p class="fine">Örnek: 102 kg, 180 cm. Hedefit değerleri profiline göre hesaplar.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HEDEFIT ROTA -->
+<section class="section rota" id="rota">
+  <div class="wrap jgrid flipgrid">
+    <div class="rmap card-lg reveal" id="routeDemo">
+      <div class="r-chips" role="tablist" aria-label="Aktivite seçimi">
+        <button type="button" role="tab" data-a="run" aria-selected="true">Koşu</button>
+        <button type="button" role="tab" data-a="bike" aria-selected="false">Bisiklet</button>
+        <button type="button" role="tab" data-a="hike" aria-selected="false">Doğa yürüyüşü</button>
+      </div>
+      <div class="r-stage"><span class="r-step on" data-s="0">Planla</span><span class="r-step" data-s="1">Kaydet</span><span class="r-step" data-s="2">Bitir</span></div>
+      <div class="r-canvas">
+        <svg viewBox="0 0 400 300" id="rSvg" role="img" aria-label="Harita üzerinde çizilen rota">
+          <defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <path class="m-water" d="M0 250 C60 230 110 270 180 262 C250 254 300 290 400 270 L400 300 L0 300 Z"/>
+          <rect class="m-park" x="236" y="26" width="96" height="62" rx="16"/><rect class="m-park" x="20" y="120" width="54" height="76" rx="14"/>
+          <g class="m-road"><path d="M0 70 L400 90"/><path d="M0 170 L400 150"/><path d="M110 0 L130 300"/><path d="M270 0 L250 300"/><path d="M0 230 L400 214"/></g>
+          <path class="r-plan" id="rPlan" d=""/>
+          <path class="r-live" id="rLive" d="" filter="url(#glow)"/>
+          <circle class="r-start" id="rStart" r="7"/><circle class="r-pulse" id="rPulse" r="10"/><circle class="r-dot" id="rDot" r="6"/>
+        </svg>
+        <div class="r-plancard" id="rPlanCard"><small>ROTA PLANLA</small><b>Dönüşlü · <span id="rPlanGoal">30 dk</span></b><span class="r-gen">Rota oluşturuldu ✓</span></div>
+        <div class="r-done" id="rDone"><span>✓</span> Kaydedildi</div>
+      </div>
+      <div class="r-stats">
+        <div><small>SÜRE</small><b id="rTime">00:00:00</b></div>
+        <div><small>MESAFE</small><b><span id="rKm">0,00</span> <i>km</i></b></div>
+        <div><small id="rPaceLbl">TEMPO</small><b id="rPace">–</b></div>
+        <div><small>KALORİ</small><b id="rKcal">0</b></div>
+      </div>
+      <p class="fine">Örnek kayıtlar. Kalori uygulamadaki formülle hesaplanır.</p>
+    </div>
+    <div class="jcopy">
+      <p class="eyebrow reveal">Hedef<span lang="en">it</span> Rota</p>
+      <h2 class="reveal">Planla, kaydet, <span class="hl">tekrar et.</span></h2>
+      <p class="lead reveal">Süreye ya da mesafeye göre dönüşlü ya da A → B rota planla. GPS kaydı arka planda sürer; ekranı kapatıp koşuna odaklan.</p>
+      <ol class="steps reveal">
+        <li data-s="0"><b>Planla</b><span>Başlangıcı seç, süre ya da mesafe hedefi ver, Hedefit rotayı çizsin.</span></li>
+        <li data-s="1"><b>Kaydet</b><span>Süre, mesafe, tempo ve kalori canlı akar. Kayıt arka planda devam eder.</span></li>
+        <li data-s="2"><b>Bitir ve tekrar kullan</b><span>Aktivite kaydedilir; beğendiğin rotayı bir sonraki antrenmanda yeniden kullan.</span></li>
+      </ol>
+      <p class="chips-line reveal">Koşu · Yürüyüş · Trail koşusu · Doğa yürüyüşü · Bisiklet · Kayak</p>
+    </div>
+  </div>
+</section>
+
+<!-- AKILLI SAAT -->
+<section class="section watch" id="akilli-saat">
+  <div class="wrap jgrid">
+    <div class="jcopy">
+      <p class="eyebrow reveal">Akıllı saat · yakında</p>
+      <h2 class="reveal">Telefonu çıkarma. <span class="hl">Bileğinden kontrol et.</span></h2>
+      <p class="lead reveal">Hedefit saatine de geliyor. Su ekle, setini bitir, dinlenme sayacını izle ve koşunu kaydet; hepsi bileğinden. Wear OS ve Apple Watch için tasarlanıyor.</p>
+      <div class="seg two reveal" role="tablist" aria-label="Saat platformu" id="wPlat">
+        <button type="button" role="tab" data-p="wear" aria-selected="true"><b>Wear OS</b><small>Yuvarlak kadran</small></button>
+        <button type="button" role="tab" data-p="apple" aria-selected="false"><b>Apple Watch</b><small>Digital Crown</small></button>
+      </div>
+      <ol class="wlist reveal" id="wList"></ol>
+      <p class="note reveal">Saat uygulaması telefonla eşleşir ve aynı hesabı kullanır. Saatinin sağlık verileri ayrıca Health Connect üzerinden de aktarılabilir (Samsung, Garmin, Xiaomi, Amazfit, Pixel Watch / Fitbit).</p>
+    </div>
+    <div class="wstage reveal" id="watchStage">
+      <div class="wdev round" id="wDev" aria-live="polite"><span class="wcrown" aria-hidden="true"></span><div class="wface2" id="wFace"></div></div>
+      <div class="wdots" id="wDots" role="tablist" aria-label="Saat ekranları"></div>
+      <p class="fine">Tasarım gösterimi; uygulama geliştirme aşamasında. Değerler örnektir.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HIZLI İŞLEMLER -->
+<section class="section quick">
+  <div class="wrap">
+    <p class="eyebrow reveal">Hızlı işlemler</p>
+    <h2 class="reveal">Hepsi <span class="hl">bir dokunuş</span> uzakta.</h2>
+    <div class="qgrid reveal">
+      <div>Hareket Atlası</div><div>Kardiyo</div><div>Oyun</div><div>Hedefit Rota</div><div>Öğün ekle</div><div>Antrenmanı başlat</div><div>Arkadaşlar</div><div>Akıllı saat</div>
+    </div>
+    <p class="note reveal">Ana ekranı kendine göre özelleştir; en çok kullandığın kısayollar en üstte kalsın.</p>
+  </div>
+</section>
+
+<!-- SOSYAL -->
+<section class="section social" id="sosyal">
+  <div class="wrap">
+    <p class="eyebrow reveal">Birlikte daha iyi</p>
+    <h2 class="reveal">Yalnız değilsin. <span class="hl">Arkadaşlarınla yarış.</span></h2>
+    <p class="lead reveal">Arkadaş ekle, haftalık XP sıralamasında yarış, akışta kimin ne yaptığını gör ve ortak meydan okumalar başlat: XP, antrenman sayısı ya da mesafe hedefiyle.</p>
+    <div class="social-row reveal">
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/sosyal-friends.jpg" alt="Arkadaş listesi" width="560" height="1244"></div><figcaption>Arkadaşlar</figcaption></figure>
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/sosyal-feed.jpg" alt="Aktivite akışı" width="560" height="1244"></div><figcaption>Akış</figcaption></figure>
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/sosyal-board.jpg" alt="Haftalık XP sıralaması" width="560" height="1244"></div><figcaption>Sıralama</figcaption></figure>
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/sosyal-challenges.jpg" alt="Meydan okumalar" width="560" height="1244"></div><figcaption>Meydan okumalar</figcaption></figure>
+    </div>
+    <p class="fine reveal">Sosyal ekranlar tasarım gösterimidir; adlar ve sayılar örnektir.</p>
+  </div>
+</section>
+
+<!-- GALERİ -->
+<section class="section gallery" id="galeri">
+  <div class="wrap"><p class="eyebrow reveal">Ekranlar</p><h2 class="reveal">Uygulamanın <span class="hl">içinden.</span></h2></div>
+  <div class="gal-track" tabindex="0" aria-label="Uygulama ekranları, yatay kaydırın">
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/home.jpg" alt="Ana ekran"  width="560" height="1244"></div><figcaption>Ana ekran</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/hareketler.jpg" alt="Antrenman" width="560" height="1244"></div><figcaption>Antrenman</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/atlas.jpg" alt="Hareket atlası" width="560" height="1244"></div><figcaption>Hareket atlası</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/beslenme.jpg" alt="Beslenme" width="560" height="1244"></div><figcaption>Beslenme</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/kardiyo-prog.jpg" alt="Kardiyo programları" width="560" height="1244"></div><figcaption>Kardiyo programları</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/kosubandi.jpg" alt="Koşu bandı" width="560" height="1244"></div><figcaption>Koşu bandı</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/rotaplan.jpg" alt="Rota planla" width="560" height="1244"></div><figcaption>Rota planla</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/rota.jpg" alt="Rota detayı" width="560" height="1244"></div><figcaption>Rota detayı</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/hedef.jpg" alt="Hedef yolculuğu" width="560" height="1244"></div><figcaption>Hedef yolculuğu</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/istatistik.jpg" alt="İlerleme" width="560" height="1244"></div><figcaption>İlerleme</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/oyun.jpg" alt="Oyun modu" width="560" height="1244"></div><figcaption>Oyun modu</figcaption></figure>
+    <figure><div class="phone"><img loading="lazy" src="assets/shots/koc.jpg" alt="Fit Koç" width="560" height="1244"></div><figcaption>Fit Koç</figcaption></figure>
+  </div>
+</section>
+
+<!-- PLANLAR ÖZETİ -->
+<section class="section plan-teaser" id="planlar">
+  <div class="wrap">
+    <p class="eyebrow reveal">Planlar</p>
+    <h2 class="reveal">Ücretsiz başla. <span class="hl">Hazır olunca yüksel.</span></h2>
+    <div class="pt-row">
+      <article class="pt-card reveal"><h3>Plus</h3><p>20 Fit Koç sorusu, 3 fotoğraftan kalori, tüm hareketler, 5 kendi program, öğün planlayıcı ve reklamsız deneyim.</p></article>
+      <article class="pt-card feat reveal"><h3>Premium</h3><p>40 Fit Koç sorusu, 15 fotoğraftan kalori, sınırsız program ve öğün kaydı, bölgesel program, sınırsız geçmiş. Reklamsız.</p></article>
+      <div class="pt-cta reveal"><a class="btn" href="planlar.html">Planları gör</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- SSS -->
+<section class="section faq" id="sss">
+  <div class="wrap narrow">
+    <p class="eyebrow reveal">Sık sorulanlar</p>
+    <h2 class="reveal">Aklındaki <span class="hl">sorular.</span></h2>
+    <details class="reveal" open><summary>Hedefit ücretsiz mi?</summary>
+      <p>Evet, ücretsiz başlayabilirsin. Antrenman, beslenme ve ilerleme takibi ücretsizdir. Fit Koç’a Misafir hesapta günlük 3, ücretsiz hesapta 5 soru hakkın var; görevlerden kazandığın XP bunu artırır. Daha yüksek limitler, tüm hareketler ve reklamsız deneyim için Plus ve Premium planları vardır; ayrıntılar <a href="planlar.html">planlar sayfasında</a>. Fiyatlar mağaza sayfalarında yayınlanacaktır.</p></details>
+    <details class="reveal"><summary>Verilerim nerede, kim görebilir?</summary>
+      <p>Hesabına bağlı veriler (antrenman, öğün, rota, ölçümler) güvenli bir bulut veritabanında saklanır ve satır düzeyinde erişim kurallarıyla yalnızca senin hesabına açıktır. Arkadaşların yalnızca XP ve aktivite özetini görür; öğün ve ölçüm kayıtların görünmez. Yapay zekâ özelliklerinde sadece o an yazdığın metin ya da seçtiğin fotoğraf işlenir.</p></details>
+    <details class="reveal"><summary>Hesabımı ve verilerimi nasıl silerim?</summary>
+      <p>Uygulamada <b>Profil ve ayarlar → Hesabı kalıcı sil</b> yolunu izle. Silme kalıcıdır. Silmeden önce hesabını dondurabilir ya da yalnızca ilerleme verilerini sıfırlayabilirsin. Ayrıntılar için <a href="hesap-silme.html">hesap silme sayfasına</a> bak.</p></details>
+    <details class="reveal"><summary>Hesap açmadan deneyebilir miyim?</summary>
+      <p>Evet. Misafir olarak başlayıp ilerlemen kaybolmasın diye istediğin zaman hesabını kaydedebilirsin.</p></details>
+    <details class="reveal"><summary>Hedefit tıbbi tavsiye verir mi?</summary>
+      <p>Hayır. Hedefit bir fitness ve alışkanlık takip uygulamasıdır; tıbbi tanı ya da tedavi yerine geçmez. Sağlık sorunun varsa programa başlamadan önce doktoruna danış.</p></details>
+    <details class="reveal"><summary>Akıllı saatte çalışacak mı?</summary>
+      <p>Hedefit’in kendi saat uygulaması geliştirme aşamasında: Wear OS ve Apple Watch için su ekleme, antrenman seti, dinlenme sayacı ve kardiyo kaydı bileğinden kontrol edilecek. Bunun dışında Android’de saatinin sağlık verileri Health Connect üzerinden (Samsung, Garmin, Xiaomi, Amazfit, Pixel Watch / Fitbit) telefon uygulamasına aktarılabilir.</p></details>
+    <details class="reveal"><summary>Hangi platformlarda olacak?</summary>
+      <p>Android (Google Play) ve iOS (App Store). Uygulama Türkçe ve İngilizce arayüz sunar.</p></details>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="wrap cta-inner">
+    <img src="assets/brand/logo.png" alt="" width="160" height="160" class="cta-logo">
+    <h2>Çok <span class="hl">yakında.</span></h2>
+    <p>Hedefit Google Play ve App Store’da yayına hazırlanıyor.</p>
+    <div class="stores">
+      <a class="store" aria-disabled="true" data-store="google-play" role="link" tabindex="0"><span><small>YAKINDA</small>Google Play</span></a>
+      <a class="store" aria-disabled="true" data-store="app-store" role="link" tabindex="0"><span><small>YAKINDA</small>App Store</span></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot">
+    <a class="brand" href="#top"><img src="assets/brand/icon.png" alt="" width="32" height="32"><span>HEDEFIT</span></a>
+    <nav aria-label="Alt menü">
+      <a href="#yapay-zeka">Yapay zekâ</a><a href="#ozellikler">Özellikler</a><a href="#sss">SSS</a><a href="planlar.html">Planlar</a><a href="gizlilik.html">Gizlilik</a><a href="destek.html">Destek</a><a href="hesap-silme.html">Hesap silme</a>
+    </nav>
+    <p>Hareket verisi: <a href="https://repdb.co" rel="noopener">RepDB</a>. Hedefit tıbbi tavsiye vermez.</p>
+    <p>© <span id="yr">2026</span> Hedefit</p>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+<script src="anim.js"></script>
+<script src="phone.js"></script>
+<script src="watch.js"></script>
+</body>
+</html>

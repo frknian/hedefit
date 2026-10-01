@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  "Cin efekti": diyalog, ekranın alt-orta noktasından küçük ve saydam başlayıp
+  hafif bir sekmeyle (overshoot) tam boyutuna büyüyerek açılır — masaüstü
+  "genie" efektinin mobilde pratik karşılığı. Gerçek sıvı/warp deformasyonu
+  View pencere animasyonlarıyla yapılamaz; bu, standart Android dialog pencere
+  animasyon sistemiyle (styles.xml windowAnimationStyle) elde edilebilecek en
+  yakın, performanslı yaklaşımdır.
+-->
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <scale
+        android:fromXScale="0.35"
+        android:toXScale="1.0"
+        android:fromYScale="0.35"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="85%"
+        android:duration="320"
+        android:interpolator="@android:interpolator/overshoot" />
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="1.0"
+        android:duration="200" />
+</set>

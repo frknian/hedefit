@@ -115,10 +115,10 @@ test("şema gerektiren istekte generateObject'i olmayan sağlayıcı elenir", as
   assert.deepEqual(response.object, { ok: "remote" });
 });
 
-test("mode:'local' uzak sağlayıcıyı tamamen dışarıda bırakır", async () => {
+test("mode:'auto' kayıtlı uygun sağlayıcı sırasını korur", async () => {
   providerRegistry.reset([stubProvider("local", "local"), stubProvider("remote", "remote")]);
-  const chain = await selectProviders(request, { mode: "local" }, false);
-  assert.deepEqual(chain.map((provider) => provider.id), ["local"]);
+  const chain = await selectProviders(request, { mode: "auto" }, false);
+  assert.deepEqual(chain.map((provider) => provider.id), ["local", "remote"]);
 });
 
 test("mode:'remote' yerel sağlayıcıyı atlar", async () => {
@@ -139,9 +139,9 @@ test("kullanıcı isteği iptal ettiyse ücretli yedek çağrı YAPILMAZ", async
   assert.equal(remoteCalls, 0);
 });
 
-test("registry yerel sağlayıcıları uzak olanların önüne alır", () => {
+test("registry sağlayıcıların açık kayıt sırasını korur", () => {
   providerRegistry.reset([stubProvider("remote", "remote"), stubProvider("local", "local")]);
-  assert.deepEqual(providerRegistry.list().map((provider) => provider.id), ["local", "remote"]);
+  assert.deepEqual(providerRegistry.list().map((provider) => provider.id), ["remote", "local"]);
 });
 
 test("aynı id ile kayıt sağlayıcıyı değiştirir, ikinci kopya oluşturmaz", () => {
@@ -170,5 +170,41 @@ test("uzak sağlayıcı çökerse son çare yerel sağlayıcı kullanıcıyı ya
 
   const response = await routeText({ category: "conversation", prompt: "merhaba" }, SILENT);
   assert.equal(response.provider, "local");
+  assert.equal(response.fallbackUsed, true);
+});
+
+test("bulut sağlayıcının süresi dolarsa iptal sanılmadan yerel Fit Koç'a düşülür", async () => {
+  const signal = AbortSignal.timeout(5);
+  const remote = {
+    ...stubProvider("remote", "remote"),
+    generateText: async () => new Promise((_, reject) => {
+      const fail = () => reject(signal.reason);
+      if (signal.aborted) fail(); else signal.addEventListener("abort", fail, { once: true });
+    }),
+  };
+  const local = { ...stubProvider("local", "local"), categories: [], lastResortCategories: ["conversation"] };
+  providerRegistry.reset([remote, local]);
+
+  const response = await routeText({ category: "conversation", prompt: "merhaba", abortSignal: signal }, SILENT);
+  assert.equal(response.provider, "local");
+  assert.equal(response.fallbackUsed, true);
+});
+
+test("basit koçlukta da Automatic sırası yerel → uzak → deterministiktir", async () => {
+  const deterministic = {
+    ...stubProvider("local-deterministic", "local"),
+    categories: [],
+    lastResortCategories: ["simple_coaching"],
+  };
+  providerRegistry.reset([
+    stubProvider("on-device", "local", { throws: new Error("native runtime failure") }),
+    deterministic,
+    stubProvider("remote", "remote"),
+  ]);
+
+  const chain = await selectProviders(request, {}, false);
+  assert.deepEqual(chain.map((provider) => provider.id), ["on-device", "remote", "local-deterministic"]);
+  const response = await routeText(request, SILENT);
+  assert.equal(response.provider, "remote");
   assert.equal(response.fallbackUsed, true);
 });
