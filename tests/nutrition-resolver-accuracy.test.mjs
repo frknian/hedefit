@@ -5,6 +5,8 @@ import { listDefaultFoods, matchDefaultFood } from "../lib/default-food-catalog.
 import { resolveFood } from "../lib/food-resolver.ts";
 import { parseMealTextLocally } from "../lib/natural-meal-parser.ts";
 import { RAW_FOODS, matchRawFood } from "../lib/raw-food-equivalents.ts";
+import { POST as parseTextRoute } from "../app/api/nutrition/parse-text/route.ts";
+import { authorizedRequest, withAuthenticatedFetch, withSupabaseAuthEnv } from "./helpers/auth.mjs";
 
 const total = (items) => items.reduce((sum, item) => sum + item.calories, 0);
 const parse = (text) => {
@@ -150,4 +152,54 @@ test("takma adlar tek bir girişe gider (aynı ad iki farklı yiyeceğe çözül
   assert.equal(matchDefaultFood("kola zero")?.id, "kola-sekersiz");
   assert.equal(matchDefaultFood("dana kıyma")?.id, "kiyma");
   assert.equal(matchDefaultFood("tavuk göğsü")?.id, "tavuk-gogsu");
+});
+
+// -----------------------------------------------------------------------------
+// Uyarılar: her kalem NEDEN kontrol istediğini kodla bildirir (istemci yerelleştirir)
+// -----------------------------------------------------------------------------
+test("uyarılar sabit bir kodla gelir: yaklaşık miktar, pişmiş varsayımı, katalogda yok", () => {
+  assert.equal(resolveFood({ text: "pirinç", grams: 100 }).warningCode, "cooked_assumed");
+  assert.equal(resolveFood({ text: "bilinmeyen yemek xyz", grams: 100 }).warningCode, "not_in_catalogue");
+  assert.equal(resolveFood({ text: "biraz zeytin" }).warningCode, "approximate_amount");
+  for (const clean of [resolveFood({ text: "çiğ pirinç", grams: 100 }), resolveFood({ text: "pilav", grams: 100 }), resolveFood({ text: "kola", unit: "kutu" })]) {
+    assert.equal(clean.warning, undefined);
+    assert.equal(clean.warningCode, undefined);
+    assert.equal(clean.needsConfirmation, false);
+  }
+});
+
+async function postParseText(body) {
+  const previousFetch = globalThis.fetch;
+  const previousKey = process.env.OPENAI_API_KEY;
+  const previousAiKey = process.env.AI_API_KEY;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  delete process.env.OPENAI_API_KEY;
+  delete process.env.AI_API_KEY;
+  globalThis.fetch = withAuthenticatedFetch(null, "33333333-3333-4333-8333-333333333333");
+  try {
+    const response = await parseTextRoute(authorizedRequest("http://localhost/api/nutrition/parse-text", { method: "POST", body: JSON.stringify(body) }));
+    return { status: response.status, body: await response.json() };
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previousKey;
+    if (previousAiKey === undefined) delete process.env.AI_API_KEY; else process.env.AI_API_KEY = previousAiKey;
+  }
+}
+
+test("parse-text yanıtı her kalem için warning ve warningCode taşır; temiz kalemde yoktur", { concurrency: false }, async () => {
+  const { status, body } = await postParseText({ text: "100 gram pirinç, 1 kutu kola, bilinmeyen yemek xyz" });
+  assert.equal(status, 200);
+  const byName = Object.fromEntries(body.items.map((item) => [item.query, item]));
+  const rice = byName["Pirinç Pilavı"];
+  assert.equal(rice.needsConfirmation, true);
+  assert.equal(rice.warningCode, "cooked_assumed");
+  assert.match(rice.warning, /Pişmiş ağırlık varsayıldı/);
+  const cola = byName["Kola"];
+  assert.equal(cola.needsConfirmation, false);
+  assert.equal(cola.warning, undefined);
+  assert.equal(cola.warningCode, undefined);
+  const unknown = body.items.find((item) => item.source === "generic_estimate");
+  assert.equal(unknown.warningCode, "not_in_catalogue");
+  assert.equal(unknown.verified, false);
 });

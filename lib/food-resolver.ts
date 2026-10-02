@@ -46,7 +46,11 @@ export interface ResolvedFood {
   source: "turkish_database" | "default_catalog" | "generic_estimate";
   needsConfirmation: boolean;
   warning?: string;
+  /** Stable machine-readable reason for `warning`, so clients can localise the message. */
+  warningCode?: ResolvedFoodWarningCode;
 }
+
+export type ResolvedFoodWarningCode = "approximate_amount" | "cooked_assumed" | "not_in_catalogue";
 
 function rounded(value: number, digits = 1): number {
   const factor = 10 ** digits;
@@ -83,6 +87,7 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
   let confidence = 0.9;
   let needsConfirmation = false;
   let warning: string | undefined;
+  let warningCode: ResolvedFoodWarningCode | undefined;
 
   // 0. ÇİĞ / KURU AĞIRLIK: "100 gram çiğ pirinç", "80 gram kuru makarna".
   // Pişirme ağırlığı değiştirir, enerjiyi değil; açık işaret yoksa pişmiş değer kullanılır.
@@ -191,6 +196,7 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
     needsConfirmation = true;
     confidence = Math.min(confidence, 0.7);
     warning = "Miktar yaklaşık olarak tahmin edilmiştir; kaydetmeden önce kontrol edebilirsin.";
+    warningCode = "approximate_amount";
   }
 
   // 4. Gramaj ve Porsiyon Çözümlemesi
@@ -275,6 +281,7 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
       needsConfirmation = true;
       confidence = Math.min(confidence, 0.7);
       warning = "Pişmiş ağırlık varsayıldı. Çiğ/kuru tarttıysan 'çiğ pirinç' gibi yaz; kalori yaklaşık 2,5 kat yüksek çıkar.";
+      warningCode = "cooked_assumed";
     }
 
     return {
@@ -300,6 +307,7 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
       source: "turkish_database",
       needsConfirmation,
       warning,
+      warningCode,
     };
   }
 
@@ -328,6 +336,7 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
       source: "default_catalog",
       needsConfirmation,
       warning,
+      warningCode,
     };
   }
 
@@ -357,6 +366,7 @@ export function resolveFood(input: ResolveFoodInput): ResolvedFood {
     source: "generic_estimate",
     needsConfirmation: true,
     warning: `Bu yiyecek veritabanında bulunamadı; ${guess.label} değerleri gösteriliyor. Kaydetmeden önce kontrol et.`,
+    warningCode: "not_in_catalogue",
   };
 }
 
