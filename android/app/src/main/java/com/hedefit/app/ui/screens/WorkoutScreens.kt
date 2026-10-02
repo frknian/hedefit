@@ -196,6 +196,7 @@ fun WorkoutPlanScreen(
     onSelectProgram: (WorkoutProgramData) -> Unit,
     onRemoveProgram: (WorkoutProgramData) -> Unit,
     onCopyProgram: (WorkoutProgramData) -> Unit,
+    onRenameProgram: (WorkoutProgramData, String) -> Unit = { _, _ -> },
     onUpdateExercise: (WorkoutExerciseData) -> Unit,
     onReplaceExercise: (String, WorkoutExerciseData) -> Unit,
     onRemoveExercise: (String) -> Unit,
@@ -232,6 +233,8 @@ fun WorkoutPlanScreen(
     var showRegional by remember { mutableStateOf(false) }
     var selectedRegional by remember { mutableStateOf<Pair<String, String>?>(null) }
     var removingProgram by remember { mutableStateOf<WorkoutProgramData?>(null) }
+    var renamingProgram by remember { mutableStateOf<WorkoutProgramData?>(null) }
+    var renameText by remember { mutableStateOf("") }
     var editingExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
     var previewExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
     var replacingExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
@@ -406,6 +409,7 @@ fun WorkoutPlanScreen(
                         chevron = false,
                     ) {
                         if (program.isActive) HfPill(if (en) "ACTIVE" else "AKTİF")
+                        IconButton(onClick = { renamingProgram = program; renameText = programDisplayName(program, en) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.Edit, if (en) "Rename program" else "Programı yeniden adlandır", tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp)) }
                         IconButton(onClick = { onCopyProgram(program) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, if (en) "Copy program" else "Programı kopyala", tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp)) }
                         IconButton(onClick = { removingProgram = program }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.DeleteOutline, if (en) "Remove program" else "Programı kaldır", tint = HedefitColors.TextMuted, modifier = Modifier.size(19.dp)) }
                     }
@@ -413,6 +417,15 @@ fun WorkoutPlanScreen(
             }
             item { HfNavRow(Icons.Default.Add, HedefitColors.TextSecondary, if (en) "Create a new program" else "Yeni program oluştur", if (en) "With AI, from a template or your own" else "AI ile, hazır şablondan veya kendin", { page = "hub" }) }
         }
+    }
+    renamingProgram?.let { program ->
+        AlertDialog(
+            onDismissRequest = { renamingProgram = null },
+            title = { Text(if (en) "Rename program" else "Program adını değiştir") },
+            text = { OutlinedTextField(value = renameText, onValueChange = { renameText = it.take(60) }, singleLine = true, label = { Text(if (en) "Program name" else "Program adı") }) },
+            confirmButton = { TextButton(enabled = renameText.isNotBlank(), onClick = { onRenameProgram(program, renameText); renamingProgram = null }) { Text(if (en) "Save" else "Kaydet") } },
+            dismissButton = { TextButton(onClick = { renamingProgram = null }) { Text(if (en) "Cancel" else "Vazgeç") } },
+        )
     }
     removingProgram?.let { program ->
         AlertDialog(

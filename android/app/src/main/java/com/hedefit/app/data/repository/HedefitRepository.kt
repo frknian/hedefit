@@ -714,6 +714,16 @@ class HedefitRepository(
         return program.copy(showOnHome = showOnHome)
     }
 
+    suspend fun renameProgram(program: WorkoutProgramData, name: String): WorkoutProgramData {
+        val userId = requireNotNull(auth.userId())
+        rest.update(
+            "workout_program_collections",
+            "id=eq.${SupabaseRestClient.encode(program.id)}&user_id=eq.$userId",
+            JSONObject().put("name", name).put("updated_at", Instant.now().toString()),
+        )
+        return program.copy(name = name)
+    }
+
     suspend fun deleteProgram(program: WorkoutProgramData): WorkoutProgramData? {
         val userId = requireNotNull(auth.userId())
         rest.delete("workout_program_collections", "id=eq.${SupabaseRestClient.encode(program.id)}&user_id=eq.$userId")

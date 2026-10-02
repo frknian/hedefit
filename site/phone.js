@@ -4,7 +4,7 @@
   const EN = document.documentElement.lang === 'en';
   const t = (tr, en) => (EN ? en : tr);
   // İngilizce arayüzlü ekran görüntüsü olanlar (site/assets/shots-en); diğerleri Türkçe arayüzlü kalır.
-  const EN_SHOTS = new Set(['atlas', 'hareketler', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
+  const EN_SHOTS = new Set(['atlas', 'beslenme', 'hareketler', 'istatistik', 'ogunler', 'rota', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
   const app = document.getElementById('heroApp');
   if (!app) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

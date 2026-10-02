@@ -1310,6 +1310,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun renameProgram(program: WorkoutProgramData, newName: String) {
+        val name = newName.trim().take(60)
+        if (name.isEmpty() || name == program.name) return
+        viewModelScope.launch {
+            runCatching { repository.renameProgram(program, name) }
+                .onSuccess { updated -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data ->
+                    data.copy(workoutPrograms = data.workoutPrograms.map { if (it.id == updated.id) updated else it })
+                }, transientMessage = com.hedefit.app.ui.i18n.tr("Program adı güncellendi.", "Program renamed.")) } }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
     fun deleteProgram(program: WorkoutProgramData) {
         viewModelScope.launch { runCatching { repository.deleteProgram(program) }
             .onSuccess { active -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data ->

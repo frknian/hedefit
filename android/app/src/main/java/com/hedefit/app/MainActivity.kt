@@ -780,6 +780,7 @@ class MainActivity : ComponentActivity() {
                                 onSelectProgram = mainViewModel::activateProgram,
                                 onRemoveProgram = mainViewModel::deleteProgram,
                                 onCopyProgram = mainViewModel::copyProgram,
+                                onRenameProgram = mainViewModel::renameProgram,
                                 onUpdateExercise = mainViewModel::updateWorkoutExercise,
                                 onReplaceExercise = mainViewModel::replaceWorkoutExercise,
                                 onRemoveExercise = mainViewModel::removeWorkoutExercise,
