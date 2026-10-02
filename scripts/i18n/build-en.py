@@ -15,14 +15,14 @@ LET = re.compile(r"[A-Za-zÇĞİÖŞÜçğıöşü]{2}")
 
 # Türkçe dosya → İngilizce yol (uzantısız, Cloudflare'in temiz URL'leri)
 PAGES = {"index.html": "/en/", "planlar.html": "/en/plans", "gizlilik.html": "/en/privacy",
-         "destek.html": "/en/support", "hesap-silme.html": "/en/delete-account"}
+         "destek.html": "/en/support", "hesap-silme.html": "/en/delete-account", "detay.html": "/en/detail"}
 TR_PATH = {"index.html": "/", "planlar.html": "/planlar", "gizlilik.html": "/gizlilik",
-           "destek.html": "/destek", "hesap-silme.html": "/hesap-silme"}
+           "destek.html": "/destek", "hesap-silme.html": "/hesap-silme", "detay.html": "/detay"}
 OUT = {"index.html": "index.html", "planlar.html": "plans.html", "gizlilik.html": "privacy.html",
-       "destek.html": "support.html", "hesap-silme.html": "delete-account.html"}
+       "destek.html": "support.html", "hesap-silme.html": "delete-account.html", "detay.html": "detail.html"}
 LINKS = {"index.html": "/en/", "planlar.html": "/en/plans", "gizlilik.html": "/en/privacy",
-         "destek.html": "/en/support", "hesap-silme.html": "/en/delete-account"}
-ASSETS = ("styles.css", "main.js", "anim.js", "phone.js", "watch.js", "page.js", "tools.js")
+         "destek.html": "/en/support", "hesap-silme.html": "/en/delete-account", "detay.html": "/en/detail"}
+ASSETS = ("styles.css", "main.js", "anim.js", "phone.js", "watch.js", "page.js", "tools.js", "bento.js")
 missing = []
 CURRENT = [None]
 

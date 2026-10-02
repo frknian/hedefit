@@ -5,7 +5,7 @@ import json, re, sys
 from html.parser import HTMLParser
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
-PAGES = ["index.html", "planlar.html", "destek.html", "hesap-silme.html"]
+PAGES = ["index.html", "detay.html", "planlar.html", "destek.html", "hesap-silme.html"]
 KEEP_ATTR = {"alt", "aria-label", "placeholder", "title"}
 META = {("name", "description"), ("property", "og:title"), ("property", "og:description"), ("name", "twitter:title"), ("name", "twitter:description")}
 LET = r"[A-Za-zÇĞİÖŞÜçğıöşü]{2}"

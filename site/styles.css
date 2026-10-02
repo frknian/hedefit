@@ -791,3 +791,73 @@ details a{color:var(--g)}
   .atlas-grid,.rt-grid,.fgrid{grid-template-columns:1fr}
 }
 @keyframes rdraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+
+/* Ana sayfa: yüzen menü ve bento kartları */
+.nav.pill{inset:14px 16px auto;max-width:1120px;margin-inline:auto;border-radius:20px;border:1px solid rgba(255,255,255,.08);padding:9px 14px 9px 16px;background:rgba(16,18,20,.72)}
+.nav.pill nav{gap:22px;margin:0 auto}
+@media (max-width:960px){.nav.pill{inset:10px 10px auto}}
+.bento{padding-top:clamp(40px,6vw,80px)}
+.bgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:34px}
+.bcard{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:clamp(18px,2.4vw,26px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.bcard.span2{grid-column:span 2}
+.bhead{display:flex;gap:12px;align-items:flex-start}
+.bico{flex:none;width:40px;height:40px;border-radius:12px;background:var(--gd);display:grid;place-items:center;font-size:1.2rem}
+.bhead h3{font-size:1.08rem;font-weight:700;line-height:1.25}
+.bhead p{color:var(--muted);font-size:.88rem;margin-top:2px}
+.bdemo{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+.bcard .ai-demo{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:16px}
+.bnote{color:var(--muted);font-size:.8rem}
+.bmuted{color:var(--muted)}
+.bfoot{display:flex;align-items:center;gap:12px;font-weight:700;margin-top:auto}
+.bpill{background:var(--g);color:#06130a;border-radius:999px;padding:3px 12px;font-size:.8rem;font-weight:800;margin-left:auto}
+.sets{display:grid;gap:8px}
+.set{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"c n" "c s";column-gap:12px;align-items:center;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--text);font:inherit;cursor:pointer;transition:border-color .2s,background .2s}
+.set:hover{border-color:#38424d}
+.set .chk{grid-area:c;width:24px;height:24px;border-radius:50%;border:2px solid #4a5560;display:grid;place-items:center;transition:all .2s}
+.set b{grid-area:n;font-weight:700}.set small{grid-area:s;color:var(--muted)}
+.set.done{background:var(--gd);border-color:rgba(111,224,42,.45)}
+.set.done .chk{background:var(--g);border-color:var(--g)}
+.set.done .chk::after{content:"✓";color:#06130a;font-weight:900;font-size:.8rem}
+.bmode.seg{margin-top:0;max-width:none}
+.bmode button{padding:9px 6px}
+.brange{display:grid;gap:6px;font-size:.8rem;color:var(--muted);font-weight:600}
+.brange b{color:var(--g);font-size:1.15rem;margin-left:6px}
+.brange input{width:100%;accent-color:var(--g)}
+.bgoal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bgoal div{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.bgoal b{display:block;font-size:1.15rem}.bgoal small{color:var(--muted);font-size:.74rem}
+.bchart{width:100%;height:auto;background:var(--bg2);border:1px solid var(--line);border-radius:14px}
+.bstreak{display:flex;align-items:baseline;gap:8px}
+.bstreak b{font-family:var(--display);font-style:italic;font-weight:800;font-size:3.2rem;line-height:1;color:var(--g)}
+.bstreak small{color:var(--muted)}
+.bweek{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.bd{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:6px 0;color:var(--muted);font:inherit;cursor:pointer;display:grid;gap:2px;justify-items:center}
+.bd small{font-size:.7rem}.bd b{height:1.2em;line-height:1.2;font-size:.95rem}
+.bd.d1{background:rgba(111,224,42,.22);border-color:rgba(111,224,42,.5);color:var(--text)}
+.bd.d2{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.45);color:var(--blue)}
+.bd:focus-visible,.set:focus-visible,.chips button:focus-visible,.wbtns button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.bwater{position:relative;align-items:center}
+.bwater .ring{width:132px;height:132px}
+.bwater .rbg{fill:none;stroke:var(--card2);stroke-width:12}
+.bwater .rfg{fill:none;stroke:var(--blue);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.rwrap{position:relative;width:132px;height:132px;margin:0 auto}
+.rtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.rtxt b{font-size:1.5rem;line-height:1}.rtxt small{color:var(--muted);font-size:.72rem}
+.wbtns{display:flex;gap:8px;width:100%}
+.wbtns button{flex:1;background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px;font:700 .95rem var(--body);cursor:pointer}
+.wbtns button:last-child{background:var(--blue);border-color:var(--blue);color:#04202f}
+.wbtns #bWm{flex:none;width:48px}
+.chat{min-height:150px;max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:12px}
+.msg{max-width:88%;padding:9px 13px;border-radius:14px;font-size:.92rem;line-height:1.45}
+.msg.me{align-self:flex-end;background:var(--g);color:#06130a;font-weight:600;border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--card2);border-bottom-left-radius:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:8px 14px;font:600 .85rem var(--body);cursor:pointer;transition:border-color .2s,color .2s}
+.chips button:hover{border-color:var(--g);color:var(--g)}
+.broute{width:100%;height:auto;background:var(--bg2);border:1px solid var(--line);border-radius:16px}
+.bmore{background:var(--gd);border-color:rgba(111,224,42,.3)}
+.blinks{display:flex;flex-wrap:wrap;gap:8px}
+.blinks a{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:9px 16px;color:var(--text);text-decoration:none;font-weight:600;font-size:.9rem;transition:background .2s,color .2s}
+.blinks a:hover{background:var(--g);color:#06130a}
+@media (max-width:900px){.bgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.bcard.span2{grid-column:1/-1}}
+@media (max-width:600px){.bgrid{grid-template-columns:minmax(0,1fr)}.bgoal{grid-template-columns:repeat(3,1fr)}}

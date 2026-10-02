@@ -68,29 +68,27 @@
 
 
 
-<header class="nav" id="top">
+<body>
+
+
+
+<header class="nav pill" id="top">
   
   <a class="brand" href="#top" aria-label="Hedefit home page"><img src="/assets/brand/icon.png" alt="" width="36" height="36"><span>HEDEFIT</span></a>
   
   <nav aria-label="Main menu">
     
-    <a href="#yapay-zeka">AI</a>
+    <a href="#nasil">How it works</a>
+    
+    <a href="#dene">Try</a>
     
     <a href="#fark">Difference</a>
     
-    <a href="#ozellikler">Features</a>
-    
-    <a href="#hedef-yolculugu">Journey</a>
-    
-    <a href="#rota">Routes</a>
-    
-    <a href="#akilli-saat">Watch</a>
-    
-    <a href="#galeri">Screens</a>
+    <a href="#planlar">Plans</a>
     
     <a href="#sss">FAQ</a>
     
-    <a href="/en/plans">Plans</a>
+    <a href="/en/detail">Details</a>
   
   </nav>
   
@@ -360,87 +358,213 @@
 
 <!-- YAPAY ZEKÂ -->
 
-<section class="section ai" id="yapay-zeka">
+<!-- DOKUN, DENE -->
+
+<section class="section bento" id="dene">
   
   <div class="wrap">
     
-    <p class="eyebrow reveal">AI and data</p>
+    <p class="eyebrow reveal">Tap and try</p>
     
-    <h2 class="reveal">AI helps, <span class="hl">data does the math.</span></h2>
+    <h2 class="reveal">What does Hedefit do? <span class="hl">See for yourself.</span></h2>
     
-    <p class="lead reveal">AI takes on the tiring jobs: reading a plate from a photo, reviewing your week, answering your questions, recognizing a machine at the gym. But critical numbers are not left to it: exercises in your program come from a verified atlas, meal calories from a database, and your goals from scientific formulas.</p>
+    <p class="lead reveal">Each card is a small piece of the app. Type, tap, slide and see the result instantly.</p>
 
     
 
-    <div class="ai-grid">
+    <div class="bgrid">
       
-      <article class="ai-demo card-lg reveal" id="aiDemo">
+      <article class="bcard span2 reveal">
         
-        <header><span class="dot"></span> Smart meal add <em>Example</em></header>
+        <div class="bhead"><span class="bico"><i class="ti">🍽</i></span><div><h3>Type it, AI works it out</h3><p>Describe your meal in a sentence and get the portion and calories.</p></div></div>
         
-        <div class="typing" aria-live="polite"><span id="typed"></span><i class="caret"></i></div>
-        
-        <div class="result" id="aiResult">
+        <div class="ai-demo bdemo" id="aiDemo">
           
-          <div class="result-head"><b>≈ <span data-to="334">0</span> kcal</b><small>calculated from the database</small></div>
+          <header><span class="dot"></span> Smart meal add <em>Example</em></header>
           
-          <ul>
-            
-            <li><span>Protein</span><div class="mbar"><i style="--w:60%"></i></div><b>22 g</b></li>
-            
-            <li><span>Carbs</span><div class="mbar blue"><i style="--w:39%"></i></div><b>26 g</b></li>
-            
-            <li><span>Fat</span><div class="mbar yellow"><i style="--w:55%"></i></div><b>16 g</b></li>
+          <div class="typing" aria-live="polite"><span id="typed"></span><i class="caret"></i></div>
           
-          </ul>
+          <div class="result" id="aiResult">
+            
+            <div class="result-head"><b>≈ <span data-to="334">0</span> kcal</b><small>calculated from the database</small></div>
+            
+            <ul>
+              
+              <li><span>Protein</span><div class="mbar"><i style="--w:60%"></i></div><b>22 g</b></li>
+              
+              <li><span>Carbs</span><div class="mbar blue"><i style="--w:39%"></i></div><b>26 g</b></li>
+              
+              <li><span>Fat</span><div class="mbar yellow"><i style="--w:55%"></i></div><b>16 g</b></li>
+            
+            </ul>
+          
+          </div>
         
         </div>
-        
-        <p class="note">Type, speak or take a photo. You can edit the values before saving.</p>
       
       </article>
 
       
 
-      <div class="ai-points">
+      <article class="bcard reveal">
         
-        <article class="point reveal"><span class="num">01</span>
-          
-          <h3>Type or photograph your meal</h3>
-          
-          <p>Type “2 slices of bread, omelette”: portions and calories are calculated from a Turkish-cuisine database. Or photograph your plate: AI recognizes the foods and estimates the amount. Either way you can choose grams or pieces and edit before saving.</p></article>
+        <div class="bhead"><span class="bico">🏋</span><div><h3>Finish your set</h3><p>Tap and the rest timer starts.</p></div></div>
         
-        <article class="point reveal"><span class="num">02</span>
+        <div class="bdemo">
           
-          <h3>Builds your program</h3>
+          <div class="sets" id="bSets">
+            
+            <button type="button" class="set"><span class="chk" aria-hidden="true"></span><b>Squat</b><small>3×10 · 60 kg</small></button>
+            
+            <button type="button" class="set"><span class="chk" aria-hidden="true"></span><b>Bench press</b><small>3×8 · 50 kg</small></button>
+            
+            <button type="button" class="set"><span class="chk" aria-hidden="true"></span><b>Barbell row</b><small>3×10 · 40 kg</small></button>
           
-          <p>“Create with Hedefit AI” builds a personal program from your goal, level, equipment and profile. It picks exercises from a verified atlas of 600+ moves, and AI explains the reasoning in a personal note. Even if you only have dumbbells or only a resistance band at home, you get a full-body program; it refreshes weekly or monthly while your main lifts stay fixed for your progress. Quick workouts, ready templates and your own programs are there too.</p></article>
+          </div>
+          
+          <div class="bfoot"><span id="bSetCount" aria-live="polite">0 / 3</span><span id="bRest" class="bmuted" aria-live="polite"></span><span class="bpill" id="bXp" hidden>+40 XP</span></div>
         
-        <article class="point reveal"><span class="num">03</span>
-          
-          <h3>Fit Coach knows you</h3>
-          
-          <p>Questions like “What's my workout today?” or “What should I eat tonight?” are answered from your own workout, nutrition and progress records, not generic advice. It remembers important details; you can see and delete its memory.</p></article>
-        
-        <article class="point reveal"><span class="num">04</span>
-          
-          <h3>Reviews your week</h3>
-          
-          <p>The weekly review summarizes what went well, what to watch and suggestions for next week, always with a safety note.</p></article>
-        
-        <article class="point reveal"><span class="num">05</span>
-          
-          <h3>Recognizes equipment from a photo</h3>
-          
-          <p>Take a photo of a machine at the gym; Hedefit identifies the equipment and helps you find suitable exercises for your program.</p></article>
-        
-        <article class="point reveal guard"><span class="num">06</span>
-          
-          <h3>AI doesn't make up your goal</h3>
-          
-          <p>Your daily calorie and macro targets are calculated from your profile with formulas, and activity calories with MET values. AI works only where an estimate is needed (portions from photos, comments, suggestions), so your targets stay consistent and realistic.</p></article>
+        </div>
       
-      </div>
+      </article>
+
+      
+
+      <article class="bcard span2 reveal">
+        
+        <div class="bhead"><span class="bico">🎯</span><div><h3>How long will your goal take?</h3><p>Calculated by formula; the AI does not make it up.</p></div></div>
+        
+        <div class="bdemo">
+          
+          <div class="seg three bmode" id="bMode" role="tablist" aria-label="Goal type">
+            
+            <button type="button" data-m="lose" aria-selected="true"><b>Lose weight</b></button>
+            
+            <button type="button" data-m="gain" aria-selected="false"><b>Build muscle</b></button>
+            
+            <button type="button" data-m="keep" aria-selected="false"><b>Maintain</b></button>
+          
+          </div>
+          
+          <label class="brange">Target weight <b id="bGoalOut">80 kg</b><input id="bGoal" type="range" min="60" max="94" step="1" value="80"></label>
+          
+          <div class="bgoal"><div><b id="bWeeks">–</b><small id="bWeeksL">weeks</small></div><div><b id="bEta">–</b><small>estimated date</small></div><div><b id="bPace">–</b><small>weekly pace</small></div></div>
+          
+          <svg class="bchart" id="bChart" viewBox="0 0 300 60" role="img" aria-label="Projected weight curve"></svg>
+          
+          <p class="bnote">An example starting at 95 kg. The pace is capped at 1% of body weight per week.</p>
+        
+        </div>
+      
+      </article>
+
+      
+
+      <article class="bcard reveal">
+        
+        <div class="bhead"><span class="bico">🔥</span><div><h3>Protect your streak</h3><p>Use a rest day on a day you missed.</p></div></div>
+        
+        <div class="bdemo">
+          
+          <div class="bstreak"><b id="bStreak">0</b><small>day streak</small></div>
+          
+          <div class="bweek" id="bWeek" role="group" aria-label="This week"></div>
+          
+          <p class="bnote" id="bStreakMsg" aria-live="polite">Tap the empty days.</p>
+        
+        </div>
+      
+      </article>
+
+      
+
+      <article class="bcard reveal">
+        
+        <div class="bhead"><span class="bico">💧</span><div><h3>Water, from your wrist</h3><p>Add it from your watch with one tap.</p></div></div>
+        
+        <div class="bdemo bwater">
+          
+          <div class="rwrap"><svg viewBox="0 0 120 120" class="ring" role="img" aria-label="Water ring"><circle cx="60" cy="60" r="48" class="rbg"/><circle cx="60" cy="60" r="48" class="rfg" id="bRing" transform="rotate(-90 60 60)"/></svg>
+          
+          <div class="rtxt"><b id="bMl">1.000</b><small>/ 2,500 ml</small></div></div>
+          
+          <div class="wbtns"><button type="button" id="bWm" aria-label="Remove 250 ml">−</button><button type="button" id="bWp">+250 ml</button></div>
+        
+        </div>
+      
+      </article>
+
+      
+
+      <article class="bcard span2 reveal">
+        
+        <div class="bhead"><span class="bico">💬</span><div><h3>Ask Fit Coach</h3><p>Answers come from your own training and nutrition log.</p></div></div>
+        
+        <div class="bdemo">
+          
+          <div class="chat" id="bChat" aria-live="polite"></div>
+          
+          <div class="chips" id="bChips">
+            
+            <button type="button" data-q="0">What is my workout today?</button>
+            
+            <button type="button" data-q="1">What should I eat tonight?</button>
+            
+            <button type="button" data-q="2">How was my week?</button>
+          
+          </div>
+          
+          <p class="bnote">These are sample answers. In the app, Fit Coach answers from your real data.</p>
+        
+        </div>
+      
+      </article>
+
+      
+
+      <article class="bcard reveal">
+        
+        <div class="bhead"><span class="bico">📍</span><div><h3>Draw your route</h3><p>Slide the distance and watch the route and time change.</p></div></div>
+        
+        <div class="bdemo">
+          
+          <svg id="bRoute" viewBox="0 0 300 200" class="broute" role="img" aria-label="Sample route"></svg>
+          
+          <label class="brange">Distance <b id="bKmOut">5 km</b><input id="bKm" type="range" min="1" max="30" step="0.5" value="5"></label>
+          
+          <p class="bnote" id="bRouteStat" aria-live="polite"></p>
+        
+        </div>
+      
+      </article>
+
+      
+
+      <article class="bcard span2 bmore reveal">
+        
+        <div class="bhead"><div><h3>There is more</h3><p>Every topic has its own section.</p></div></div>
+        
+        <div class="blinks">
+          
+          <a href="/en/detail#yapay-zeka">AI and data</a>
+          
+          <a href="/en/detail#hedef-yolculugu">Goal journey</a>
+          
+          <a href="/en/detail#rota">Hedefit Routes</a>
+          
+          <a href="/en/detail#akilli-saat">Smart watch</a>
+          
+          <a href="/en/detail#tablet">Tablet and foldable</a>
+          
+          <a href="/en/detail#gorevler">Quests and XP</a>
+          
+          <a href="/en/detail#galeri">Screenshots</a>
+          
+          <a href="/en/detail#dene">Muscle atlas and tools</a>
+        
+        </div>
+      
+      </article>
     
     </div>
   
@@ -485,856 +609,6 @@
 
 
 <!-- 5 ÖZELLİK -->
-
-<section class="section features" id="ozellikler">
-  
-  <div class="wrap">
-    
-    <p class="eyebrow reveal">Five sections, one flow</p>
-    
-    <h2 class="reveal">You'll know what to do <span class="hl">today.</span></h2>
-  
-  </div>
-
-  
-
-  <article class="feat wrap" id="f-antrenman">
-    
-    <div class="feat-copy reveal">
-      
-      <span class="big">01</span>
-      
-      <h3>Workout</h3>
-      
-      <p>Today's workout waits on the home screen. Every exercise comes with an animated preview; during the workout you mark your sets with one tap or log them in detail.</p>
-      
-      <ul class="ticks">
-        
-        <li><b>Quick mode:</b> tap sets and the rest timer starts on its own; the card turns green when complete</li>
-        
-        <li><b>Detailed mode:</b> exercise animation, weight and reps, effort (RPE), set type (warm-up, super, drop…) and stopwatch</li>
-        
-        <li>An atlas of 600+ exercises with muscle and equipment filters</li>
-        
-        <li>Muscle atlas: see which area you trained and how much this week</li>
-        
-        <li>Quick workouts, ready programs, your own program or an AI program</li>
-        
-        <li>A full-body program even with only dumbbells or only a resistance band at home</li>
-        
-        <li>A program that refreshes weekly or monthly: main lifts stay fixed, accessories rotate; you're notified when a new block starts</li>
-        
-        <li>Equipment scanning with the camera</li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="feat-shots reveal">
-      
-      <div class="phone"><img loading="lazy" src="/assets/shots-en/hareketler.jpg" alt="Workout program: six exercises with animated previews" width="560" height="1244"></div>
-      
-      <div class="phone back"><img loading="lazy" src="/assets/shots-en/seans-hizli.jpg" alt="Workout session, quick mode: mark sets, the rest timer runs" width="560" height="1244"></div>
-    
-    </div>
-  
-  </article>
-
-  
-
-  <article class="feat flip wrap" id="f-beslenme">
-    
-    <div class="feat-copy reveal">
-      
-      <span class="big">02</span>
-      
-      <h3>Nutrition</h3>
-      
-      <p>Calorie ring, protein–carb–fat bars and water tracking on one screen. Type your meal and its calories are calculated from a Turkish-cuisine database; or photograph your plate.</p>
-      
-      <ul class="ticks">
-        
-        <li>Smart meal add by text or photo</li>
-        
-        <li>About 300 food and drink entries: by grams, pieces, spoons, bowls or slices</li>
-        
-        <li>If we're unsure about a value (e.g. did you weigh the rice raw or cooked?), we tell you why before you save</li>
-        
-        <li>Calorie adjustment for workout days and activity</li>
-        
-        <li>Fiber and micronutrient tracking, weekly meal plan</li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="feat-shots reveal">
-      
-      <div class="phone"><img loading="lazy" src="/assets/shots-en/beslenme.jpg" alt="Nutrition screen: calorie ring and macro bars" width="560" height="1244"></div>
-      
-      <div class="phone back"><img loading="lazy" src="/assets/shots-en/ogunler.jpg" alt="Meal list" width="560" height="1244"></div>
-    
-    </div>
-  
-  </article>
-
-  
-
-  <article class="feat wrap" id="f-kardiyo">
-    
-    <div class="feat-copy reveal">
-      
-      <span class="big">03</span>
-      
-      <h3>Cardio &amp; Hedef<span lang="en">it</span> Routes</h3>
-      
-      <p>Pick your machine and tweak its settings live; the calories you burn are added to your daily total. Outdoors, record your route with GPS, or even plan it in advance.</p>
-      
-      <ul class="ticks">
-        
-        <li>6 cardio machines: treadmill, bike, elliptical, rower, stair climber, outdoors</li>
-        
-        <li>GPS tracking for running, walking, trail running, hiking, cycling and skiing</li>
-        
-        <li>Route planning by time or distance: loop or A → B</li>
-        
-        <li>Ready cardio programs like HIIT, hill climb and bike sprints</li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="feat-shots reveal">
-      
-      <div class="phone"><img loading="lazy" src="/assets/shots-en/kosubandi.jpg" alt="Treadmill session: time ring, speed and incline" width="560" height="1244"></div>
-      
-      <div class="phone back"><img loading="lazy" src="/assets/shots-en/rota.jpg" alt="Map of a recorded run route" width="560" height="1244"></div>
-    
-    </div>
-  
-  </article>
-
-  
-
-  <article class="feat flip wrap" id="f-ilerleme">
-    
-    <div class="feat-copy reveal">
-      
-      <span class="big">04</span>
-      
-      <h3>Progress</h3>
-      
-      <p>See which days you trained, your streak and weekly workout time on the calendar. In the goal journey, your path to your target weight is split into milestones.</p>
-      
-      <ul class="ticks">
-        
-        <li>7D, 30D, 90D, 1Y and All ranges</li>
-        
-        <li>Activity calendar, streak and weekly time chart</li>
-        
-        <li>Three pace options: slow, balanced, fast; a target date for each</li>
-        
-        <li>Water, protein and step targets</li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="feat-shots reveal">
-      
-      <div class="phone"><img loading="lazy" src="/assets/shots-en/istatistik.jpg" alt="Progress screen: workout count, streak and activity calendar" width="560" height="1244"></div>
-      
-      <div class="phone back"><img loading="lazy" src="/assets/shots-en/hedef.jpg" alt="Goal journey: pace options" width="560" height="1244"></div>
-    
-    </div>
-  
-  </article>
-
-  
-
-  <article class="feat wrap" id="f-koc">
-    
-    <div class="feat-copy reveal">
-      
-      <span class="big">05</span>
-      
-      <h3>Fit Coach</h3>
-      
-      <p>Ask whatever comes to mind about training, nutrition or progress. Start with ready questions or write your own.</p>
-      
-      <ul class="ticks">
-        
-        <li>Daily question allowance by plan: Guest 3, Free 5, Plus 20, Premium 40; on free accounts, XP earned from quests increases it</li>
-        
-        <li>Answers based on your data: today's workout, dinner, weekly review</li>
-        
-        <li>Much higher allowance on Plus and Premium; <a href="/en/plans">see the plans</a></li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="feat-shots reveal">
-      
-      <div class="phone"><img loading="lazy" src="/assets/shots-en/koc.jpg" alt="Fit Coach chat screen" width="560" height="1244"></div>
-      
-      <div class="phone back"><img loading="lazy" src="/assets/shots-en/program.jpg" alt="Create program: Create with Hedefit AI" width="560" height="1244"></div>
-    
-    </div>
-  
-  </article>
-
-</section>
-
-
-
-<!-- HEDEF YOLCULUĞU -->
-
-<section class="section journey" id="hedef-yolculugu">
-  
-  <div class="wrap jgrid">
-    
-    <div class="jcopy">
-      
-      <p class="eyebrow reveal">Goal journey</p>
-      
-      <h2 class="reveal">Your goal, <span class="hl">a dated path.</span></h2>
-      
-      <p class="lead reveal">Lose weight, build muscle or maintain your shape. Choose your goal; Hedefit calculates your weekly pace, finish date and milestones. Change your choice and the roadmap is redrawn instantly.</p>
-      
-      <div class="seg reveal" role="tablist" aria-label="Goal type" id="goalSeg">
-        
-        <button type="button" role="tab" data-g="lose" aria-selected="true"><b>Lose weight</b><small>Cut fat</small></button>
-        
-        <button type="button" role="tab" data-g="gain" aria-selected="false"><b>Build muscle</b><small>Controlled gain</small></button>
-        
-        <button type="button" role="tab" data-g="keep" aria-selected="false"><b>Maintain</b><small>Your current weight</small></button>
-      
-      </div>
-      
-      <div class="seg reveal" role="tablist" aria-label="Pace selection" id="tempoSeg">
-        
-        <button type="button" role="tab" data-t="0" aria-selected="false"><b>Slow</b><small id="tm0">0.51 kg/wk</small></button>
-        
-        <button type="button" role="tab" data-t="1" aria-selected="true"><b>Balanced</b><small id="tm1">0.77 kg/wk</small></button>
-        
-        <button type="button" role="tab" data-t="2" aria-selected="false"><b>Fast</b><small id="tm2">1.02 kg/wk</small></button>
-      
-      </div>
-      
-      <ul class="ticks reveal">
-        
-        <li>Milestones: 25%, 50%, 75% and the target weight, each with a date</li>
-        
-        <li><b>Weight loss</b> (a pace that minimizes muscle loss), <b>muscle gain</b> (controlled weight gain that limits fat gain) and <b>shape maintenance</b> goals</li>
-        
-        <li>Water, protein and step targets, with sources shown</li>
-        
-        <li>As you add measurements, your real progress is drawn over the planned path</li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="jpanel card-lg reveal" id="journey">
-      
-      <p class="jp-label" id="jLabel">WEIGHT LOSS</p>
-      
-      <div class="jp-top">
-        
-        <div><small>NOW</small><div class="jp-kg"><b id="jKg">102.0</b><i>kg</i></div></div>
-        
-        <div class="jp-badge" id="jBadge">16 weeks</div>
-        
-        <div class="jp-goal"><small>GOAL</small><div class="jp-kg"><b id="jTo">90.0</b><i>kg</i></div></div>
-      
-      </div>
-      
-      <svg viewBox="0 0 600 270" class="jchart" role="img" aria-label="Planned weight path: from 102 kg to 90 kg">
-        
-        <defs><linearGradient id="jfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fe02a" stop-opacity=".28"/><stop offset="1" stop-color="#6fe02a" stop-opacity="0"/></linearGradient>
-          
-          <clipPath id="jclip"><rect id="jclipRect" x="0" y="0" width="0" height="270"/></clipPath></defs>
-        
-        <g class="jgrid-l"><line x1="30" y1="40" x2="580" y2="40"/><line x1="30" y1="110" x2="580" y2="110"/><line x1="30" y1="180" x2="580" y2="180"/><line x1="30" y1="250" x2="580" y2="250"/></g>
-        
-        <path class="jplan" d="M30 40 L570 232"/>
-        
-        <g clip-path="url(#jclip)"><path d="M30 40 L570 232 L570 250 L30 250 Z" fill="url(#jfill)"/></g>
-        
-        <path class="jline" id="jLine" d="M30 40 L570 232"/>
-        
-        <g id="jMiles"></g>
-        
-        <circle class="jdot" id="jDot" r="8" cx="30" cy="40"/>
-      
-      </svg>
-      
-      <div class="jmiles" id="jMileList"></div>
-      
-      <div class="jstats">
-        
-        <div><small>WEEKLY PACE</small><b id="jRate">0.77 kg</b></div>
-        
-        <div><small>DURATION</small><b id="jWeeks">16 weeks</b></div>
-        
-        <div><small>BMI</small><b id="jBmi">31,5 <i>→ 27,8</i></b></div>
-      
-      </div>
-      
-      <p class="fine" id="jNote">Example: 102 kg, 180 cm. Hedefit calculates values from your profile.</p>
-    
-    </div>
-  
-  </div>
-
-</section>
-
-
-
-<!-- HEDEFIT ROTA -->
-
-<section class="section rota" id="rota">
-  
-  <div class="wrap jgrid flipgrid">
-    
-    <div class="rmap card-lg reveal" id="routeDemo">
-      
-      <div class="r-chips" role="tablist" aria-label="Activity selection">
-        
-        <button type="button" role="tab" data-a="run" aria-selected="true">Run</button>
-        
-        <button type="button" role="tab" data-a="bike" aria-selected="false">Bike</button>
-        
-        <button type="button" role="tab" data-a="hike" aria-selected="false">Hiking</button>
-      
-      </div>
-      
-      <div class="r-stage"><span class="r-step on" data-s="0">Plan</span><span class="r-step" data-s="1">Record</span><span class="r-step" data-s="2">Finish</span></div>
-      
-      <div class="r-canvas">
-        
-        <svg viewBox="0 0 400 300" id="rSvg" role="img" aria-label="Route drawn on a map">
-          
-          <defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-          
-          <path class="m-water" d="M0 250 C60 230 110 270 180 262 C250 254 300 290 400 270 L400 300 L0 300 Z"/>
-          
-          <rect class="m-park" x="236" y="26" width="96" height="62" rx="16"/><rect class="m-park" x="20" y="120" width="54" height="76" rx="14"/>
-          
-          <g class="m-road"><path d="M0 70 L400 90"/><path d="M0 170 L400 150"/><path d="M110 0 L130 300"/><path d="M270 0 L250 300"/><path d="M0 230 L400 214"/></g>
-          
-          <path class="r-plan" id="rPlan" d=""/>
-          
-          <path class="r-live" id="rLive" d="" filter="url(#glow)"/>
-          
-          <circle class="r-start" id="rStart" r="7"/><circle class="r-pulse" id="rPulse" r="10"/><circle class="r-dot" id="rDot" r="6"/>
-        
-        </svg>
-        
-        <div class="r-plancard" id="rPlanCard"><small>PLAN ROUTE</small><b>Loop · <span id="rPlanGoal">30 min</span></b><span class="r-gen">Route created ✓</span></div>
-        
-        <div class="r-done" id="rDone"><span>✓</span> Saved</div>
-      
-      </div>
-      
-      <div class="r-stats">
-        
-        <div><small>DURATION</small><b id="rTime">00:00:00</b></div>
-        
-        <div><small>DISTANCE</small><b><span id="rKm">0,00</span>  <i>km</i></b></div>
-        
-        <div><small id="rPaceLbl">PACE</small><b id="rPace">–</b></div>
-        
-        <div><small>CALORIES</small><b id="rKcal">0</b></div>
-      
-      </div>
-      
-      <p class="fine">Example records. Calories are calculated with the app's formula.</p>
-    
-    </div>
-    
-    <div class="jcopy">
-      
-      <p class="eyebrow reveal">Hedef<span lang="en">it</span> Routes</p>
-      
-      <h2 class="reveal">Plan, record, <span class="hl">repeat.</span></h2>
-      
-      <p class="lead reveal">Plan a loop or A → B route by time or distance. GPS recording continues in the background; turn off the screen and focus on your run.</p>
-      
-      <ol class="steps reveal">
-        
-        <li data-s="0"><b>Plan</b><span>Pick a start, set a time or distance goal and let Hedefit draw the route.</span></li>
-        
-        <li data-s="1"><b>Record</b><span>Time, distance, pace and calories flow live. Recording continues in the background.</span></li>
-        
-        <li data-s="2"><b>Finish and reuse</b><span>The activity is saved; reuse a route you liked in your next workout.</span></li>
-      
-      </ol>
-      
-      <p class="chips-line reveal">Run · Walk · Trail run · Hiking · Cycling · Skiing</p>
-    
-    </div>
-  
-  </div>
-  
-  <div class="wrap sharecards">
-    
-    <p class="eyebrow reveal">Share card</p>
-    
-    <h3 class="reveal">Make your run <span class="hl">worth sharing</span> </h3>
-    
-    <p class="lead reveal">Generate a visual from a finished activity with one tap: three templates (Map, Minimal, Energy), story or standard format and a live preview.</p>
-    
-    <div class="share-row reveal">
-      
-      <figure class="sc map"><svg viewBox="0 0 200 300" aria-hidden="true"><path class="sr" pathLength="1" d="M40 200 C30 150 60 110 100 104 C140 98 150 140 168 128 C190 112 188 170 160 200 C136 226 70 236 52 220"/><circle cx="52" cy="220" r="5"/></svg><div class="sc-k">5,20<small>km</small></div><div class="sc-m"><span>28:00</span><span>5:23 /km</span><span>322 kcal</span></div><figcaption>Map</figcaption></figure>
-      
-      <figure class="sc minimal"><div class="sc-k huge">5,20<small>km</small></div><div class="sc-m"><span>28:00</span><span>5:23 /km</span></div><div class="sc-t">Morning run</div><figcaption>Minimal</figcaption></figure>
-      
-      <figure class="sc energy"><div class="sc-k huge">5,20<small>km</small></div><div class="sc-m"><span>28:00</span><span>5:23 /km</span><span>322 kcal</span></div><div class="sc-t">Morning run</div><figcaption>Energy</figcaption></figure>
-    
-    </div>
-    
-    <p class="fine reveal">Example display; illustrations inspired by the in-app templates.</p>
-  
-  </div>
-
-</section>
-
-
-
-<!-- AKILLI SAAT -->
-
-<section class="section watch" id="akilli-saat">
-  
-  <div class="wrap jgrid">
-    
-    <div class="jcopy">
-      
-      <p class="eyebrow reveal">Smart watch · coming soon</p>
-      
-      <h2 class="reveal">Leave your phone. <span class="hl">Control it from your wrist.</span></h2>
-      
-      <p class="lead reveal">Hedefit is coming to your watch too. Add water, finish your set, watch the rest timer and record your run, all from your wrist. Designed for Wear OS and Apple Watch.</p>
-      
-      <div class="seg two reveal" role="tablist" aria-label="Watch platform" id="wPlat">
-        
-        <button type="button" role="tab" data-p="wear" aria-selected="true"><b>Wear OS</b><small>Round face</small></button>
-        
-        <button type="button" role="tab" data-p="apple" aria-selected="false"><b>Apple Watch</b><small>Digital Crown</small></button>
-      
-      </div>
-      
-      <ol class="wlist reveal" id="wList"></ol>
-      
-      <p class="note reveal">The watch app pairs with your phone and uses the same account. Your watch's health data can also be transferred via Health Connect (Samsung, Garmin, Xiaomi, Amazfit, Pixel Watch / Fitbit).</p>
-    
-    </div>
-    
-    <div class="wstage reveal" id="watchStage">
-      
-      <div class="wdev round" id="wDev" aria-live="polite"><span class="wcrown" aria-hidden="true"></span><div class="wface2" id="wFace"></div></div>
-      
-      <div class="wdots" id="wDots" role="tablist" aria-label="Watch screens"></div>
-      
-      <p class="fine">Design preview; the app is in development. Values are examples.</p>
-    
-    </div>
-  
-  </div>
-
-</section>
-
-
-
-<!-- TABLET & KATLANABİLİR -->
-
-<section class="section tablet" id="tablet">
-  
-  <div class="wrap jgrid flipgrid">
-    
-    <div class="tabframe reveal" aria-label="Side-by-side workout layout on a tablet (example display)">
-      
-      <div class="tab-body">
-        
-        <figure><img loading="lazy" src="/assets/shots-en/hareketler.jpg" alt="Exercise list" width="560" height="1244"></figure>
-        
-        <figure><img loading="lazy" src="/assets/shots-en/seans-detay.jpg" alt="Set screen" width="560" height="1244"></figure>
-      
-      </div>
-      
-      <p class="fine">Example: tablet held in landscape. Screenshots are from the phone.</p>
-    
-    </div>
-    
-    <div class="jcopy">
-      
-      <p class="eyebrow reveal">Tablet and foldable</p>
-      
-      <h2 class="reveal">Put it on the stand, <span class="hl">split the screen.</span></h2>
-      
-      <p class="lead reveal">Turn your tablet into a workout stand: held in landscape, the exercise list and set screen sit side by side; held upright, they stack. Your hands on the weights, your eyes on one screen.</p>
-      
-      <ul class="ticks reveal">
-        
-        <li><b>Tablet stand mode:</b> a workout screen split side by side in landscape and stacked in portrait</li>
-        
-        <li><b>Wide-screen navigation:</b> expanded navigation instead of the bottom bar on screens 700 dp and wider</li>
-        
-        <li><b>Foldable phones:</b> adapt to the wide layout when unfolded; stand mode opens only on tablets, because foldables are used outdoors with GPS</li>
-        
-        <li>Rotate the screen any way you like; there's no orientation lock</li>
-      
-      </ul>
-    
-    </div>
-  
-  </div>
-
-</section>
-
-
-
-<!-- HIZLI İŞLEMLER -->
-
-<section class="section quick">
-  
-  <div class="wrap">
-    
-    <p class="eyebrow reveal">Quick actions</p>
-    
-    <h2 class="reveal">Everything is <span class="hl">one tap</span> away.</h2>
-    
-    <div class="qgrid reveal">
-      
-      <div>Exercise Atlas</div><div>Cardio</div><div>Game</div><div>Hedefit Routes</div><div>Add meal</div><div>Start workout</div><div>Friends</div><div>Smart watch</div>
-    
-    </div>
-    
-    <p class="note reveal">Customize the home screen; keep your most-used shortcuts on top.</p>
-  
-  </div>
-
-</section>
-
-
-
-<!-- GÖREVLER & XP -->
-
-<section class="section quests" id="gorevler">
-  
-  <div class="wrap jgrid">
-    
-    <div class="jcopy">
-      
-      <p class="eyebrow reveal">Quests, XP and achievements</p>
-      
-      <h2 class="reveal">Habit becomes <span class="hl">a game.</span></h2>
-      
-      <p class="lead reveal">Earn XP from workouts, steps, routes and goals; level up, keep your streak, unlock achievements. New quests wait for you every day.</p>
-      
-      <ul class="ticks reveal">
-        
-        <li><b>Daily quests:</b> 100 XP in total. Workout +40, step goal +40; routes give +10 XP per kilometer</li>
-        
-        <li><b>Weekly goal</b> +100 XP and <b>weekly challenge</b> +250 XP</li>
-        
-        <li><b>Achievements:</b> each 100 XP; common, rare and epic levels (like 100K Club, 21.1, 42.2)</li>
-        
-        <li><b>Streak</b> and level progress; on free accounts, XP you earn also raises your daily Fit Coach question allowance</li>
-        
-        <li><b>Game mode:</b> a mini-game played with dumbbell, barbell, squat and pull-up moves; in cardio, a virtual route and racing your record</li>
-      
-      </ul>
-    
-    </div>
-    
-    <div class="xpcard card-lg reveal" id="xpCard">
-      
-      <div class="xp-top">
-        
-        <div class="xp-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="xr-bg" cx="60" cy="60" r="50"/><circle class="xr" cx="60" cy="60" r="50"/></svg><b>Lv 3</b></div>
-        
-        <div><small>THIS WEEK</small><b class="xp-big">240 <i>XP</i></b><span class="streak">🔥 12-day streak</span></div>
-      
-      </div>
-      
-      <div class="xp-day"><small>TODAY'S QUESTS</small>
-        
-        <div class="xq done"><span class="chk">✓</span>Complete a workout<b>+40 XP</b></div>
-        
-        <div class="xq done"><span class="chk">✓</span>Hit your step goal<b>+40 XP</b></div>
-        
-        <div class="xq"><span class="chk"></span>Remaining quest of the day<b>+20 XP</b></div>
-        
-        <div class="xbar"><i style="--w:80%"></i></div><em>80 / 100 XP</em>
-      
-      </div>
-      
-      <div class="badges">
-        
-        <div class="badge common"><b>100K Club</b><small>Common</small></div>
-        
-        <div class="badge rare"><b>21.1</b><small>Rare</small></div>
-        
-        <div class="badge epic"><b>42.2</b><small>Epic</small></div>
-      
-      </div>
-      
-      <p class="fine">Example display; quests change every day.</p>
-    
-    </div>
-  
-  </div>
-
-</section>
-
-
-
-<!-- SOSYAL -->
-
-<section class="section social" id="sosyal">
-  
-  <div class="wrap">
-    
-    <p class="eyebrow reveal">Better together</p>
-    
-    <h2 class="reveal">You're not alone. <span class="hl">Race your friends.</span></h2>
-    
-    <p class="lead reveal">Add friends, compete on the weekly XP leaderboard, see who did what in the feed and start shared challenges: by XP, workout count or distance.</p>
-    
-    <div class="social-row reveal">
-      
-      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/sosyal-friends.jpg" alt="Friends list" width="560" height="1244"></div><figcaption>Friends</figcaption></figure>
-      
-      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/sosyal-feed.jpg" alt="Activity feed" width="560" height="1244"></div><figcaption>Feed</figcaption></figure>
-      
-      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/sosyal-board.jpg" alt="Weekly XP leaderboard" width="560" height="1244"></div><figcaption>Leaderboard</figcaption></figure>
-      
-      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/sosyal-challenges.jpg" alt="Challenges" width="560" height="1244"></div><figcaption>Challenges</figcaption></figure>
-    
-    </div>
-    
-    <p class="fine reveal">Social screens are design mock-ups; names and numbers are examples.</p>
-  
-  </div>
-
-</section>
-
-
-
-<!-- GALERİ -->
-
-<!-- KENDİN DENE -->
-
-<section class="section try" id="dene">
-  
-  <div class="wrap">
-    
-    <p class="eyebrow reveal">Try it yourself</p>
-    
-    <h2 class="reveal">Get a taste <span class="hl">before you install.</span></h2>
-    
-    <p class="lead reveal">Hedefit’s calculations run on the site too. Work out your goal, explore the muscle atlas, browse a streak calendar, sketch a route. It all stays in your browser; nothing is saved.</p>
-    
-    <div class="seg four reveal" role="tablist" aria-label="Tools" id="tryTabs">
-      
-      <button type="button" role="tab" data-t="calc" aria-selected="true"><b>Hedef</b><small>Calories and time</small></button>
-      
-      <button type="button" role="tab" data-t="atlas" aria-selected="false"><b>Muscle atlas</b><small>Exercises</small></button>
-      
-      <button type="button" role="tab" data-t="streak" aria-selected="false"><b>Streak</b><small>30 days</small></button>
-      
-      <button type="button" role="tab" data-t="route" aria-selected="false"><b>Routes</b><small>Distance and time</small></button>
-    
-    </div>
-
-    
-
-    <div class="tpanel reveal" data-p="calc">
-      
-      <form class="tform" id="calcForm" novalidate>
-        
-        <label>Sex<select name="sex"><option value="m">Male</option><option value="f">Female</option><option value="x">Prefer not to say</option></select></label>
-        
-        <label>Age<input name="age" type="number" inputmode="numeric" min="14" max="90" value="30"></label>
-        
-        <label>Height (cm)<input name="height" type="number" inputmode="numeric" min="120" max="230" value="175"></label>
-        
-        <label>Weight (kg)<input name="weight" type="number" inputmode="decimal" min="35" max="250" step="0.1" value="95"></label>
-        
-        <label>Target weight (kg)<input name="target" type="number" inputmode="decimal" min="35" max="250" step="0.1" value="80"></label>
-        
-        <label>Pace<select name="pace"><option value="easy" selected>Easy</option><option value="steady">Balanced</option><option value="hard">Fast</option></select></label>
-        
-        <label>Workouts per week<select name="days"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
-        
-        <label>Session length<select name="mins"><option value="30">30 min</option><option value="45" selected>45 min</option><option value="60">60 min</option></select></label>
-      
-      </form>
-      
-      <div class="tout" id="calcOut" aria-live="polite"></div>
-      
-      <p class="fine left">These are estimates, not medical advice. The pace is capped at 1% of body weight per week. In the app this is set up automatically from your height, weight and goal.</p>
-    
-    </div>
-
-    
-
-    <div class="tpanel reveal" data-p="atlas" hidden>
-      
-      <div class="atlas-grid">
-        
-        <div class="atlas-fig"><svg id="atlasSvg" viewBox="0 0 440 400" role="img" aria-label="Front and back body diagram"></svg><div class="atlas-lbl"><span>FRONT</span><span>BACK</span></div></div>
-        
-        <div class="atlas-info" id="atlasInfo" aria-live="polite"></div>
-      
-      </div>
-      
-      <p class="fine left">A schematic view. The atlas in the app shows the estimated training load for each muscle from the sets you complete.</p>
-    
-    </div>
-
-    
-
-    <div class="tpanel reveal" data-p="streak" hidden>
-      
-      <div class="sk-top"><div><b id="skStreak">12</b><small>day streak</small></div><div><b id="skActive">0</b><small>active days in 30</small></div></div>
-      
-      <div class="sk-grid" id="skGrid" role="grid" aria-label="Last 30 days"></div>
-      
-      <div class="sk-day" id="skDay" aria-live="polite"></div>
-      
-      <p class="fine left">Sample data.</p>
-    
-    </div>
-
-    
-
-    <div class="tpanel reveal" data-p="route" hidden>
-      
-      <div class="rt-grid">
-        
-        <div class="rt-fig"><svg id="rtSvg" viewBox="0 0 300 220" role="img" aria-label="Sample route"></svg></div>
-        
-        <div class="rt-ctl">
-          
-          <div class="seg three" role="tablist" aria-label="Activity" id="rtKind">
-            
-            <button type="button" data-k="run" aria-selected="true"><b>Run</b></button>
-            
-            <button type="button" data-k="walk" aria-selected="false"><b>Walk</b></button>
-            
-            <button type="button" data-k="bike" aria-selected="false"><b>Bike</b></button>
-          
-          </div>
-          
-          <label class="rt-range">Distance <b id="rtKmOut">5 km</b><input id="rtKm" type="range" min="1" max="30" step="0.5" value="5"></label>
-          
-          <div class="rt-stats">
-            
-            <div><b id="rtTime">–</b><small>Time</small></div>
-            
-            <div><b id="rtPace">–</b><small id="rtPaceL">Pace</small></div>
-            
-            <div><b id="rtKcal">–</b><small>Calories</small></div>
-          
-          </div>
-        
-        </div>
-      
-      </div>
-      
-      <p class="fine left">Estimates (for 70 kg, average pace). The app records your route with GPS and shows the real figures.</p>
-    
-    </div>
-  
-  </div>
-
-</section>
-
-
-
-<section class="section gallery" id="galeri">
-  
-  <div class="wrap"><p class="eyebrow reveal">Screens</p><h2 class="reveal">From inside <span class="hl">the app.</span></h2></div>
-  
-  <div class="gal-track" tabindex="0" aria-label="App screens, scroll horizontally">
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots/home.jpg" alt="Home screen"  width="560" height="1244"></div><figcaption>Home screen</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/hareketler.jpg" alt="Workout" width="560" height="1244"></div><figcaption>Workout</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/seans-hizli.jpg" alt="Workout session, quick mode" width="560" height="1244"></div><figcaption>Workout · quick mode</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/seans-detay.jpg" alt="Workout session, detailed mode" width="560" height="1244"></div><figcaption>Workout · detailed mode</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots/kas.jpg" alt="Muscle atlas" width="560" height="1244"></div><figcaption>Muscle atlas</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/atlas.jpg" alt="Exercise atlas" width="560" height="1244"></div><figcaption>Exercise atlas</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/beslenme.jpg" alt="Nutrition" width="560" height="1244"></div><figcaption>Nutrition</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/kardiyo-prog.jpg" alt="Cardio programs" width="560" height="1244"></div><figcaption>Cardio programs</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/kosubandi.jpg" alt="Treadmill" width="560" height="1244"></div><figcaption>Treadmill</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/rotaplan.jpg" alt="Plan route" width="560" height="1244"></div><figcaption>Plan route</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/rota.jpg" alt="Route details" width="560" height="1244"></div><figcaption>Route details</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/hedef.jpg" alt="Goal journey" width="560" height="1244"></div><figcaption>Goal journey</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/istatistik.jpg" alt="Progress" width="560" height="1244"></div><figcaption>Progress</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/oyun.jpg" alt="Game mode" width="560" height="1244"></div><figcaption>Game mode</figcaption></figure>
-    
-    <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/koc.jpg" alt="Fit Coach" width="560" height="1244"></div><figcaption>Fit Coach</figcaption></figure>
-  
-  </div>
-
-</section>
-
-
-
-<!-- GÜVEN -->
-
-<section class="section trust" id="guven">
-  
-  <div class="wrap">
-    
-    <p class="eyebrow reveal">Privacy and trust</p>
-    
-    <h2 class="reveal">Your data <span class="hl">stays yours.</span></h2>
-    
-    <p class="lead reveal">Health data is sensitive. We built Hedefit accordingly.</p>
-    
-    <div class="trust-grid">
-      
-      <article class="reveal"><h3>We don't sell it</h3><p>Your data is never sold. Your health and nutrition data is not shared for advertising.</p></article>
-      
-      <article class="reveal"><h3>Deleting is one tap</h3><p>You can permanently delete your account and all data tied to it from the app. If you prefer, freeze it first or reset only your progress data.</p></article>
-      
-      <article class="reveal"><h3>Location only on routes</h3><p>Your location is used only when you start a recording with Hedefit Routes, and only for the duration of the recording.</p></article>
-      
-      <article class="reveal"><h3>Your photos aren't stored</h3><p>Meal and equipment photos are processed only for analysis; they are not stored on our servers.</p></article>
-      
-      <article class="reveal"><h3>AI doesn't make up your goal</h3><p>Your calorie and macro targets are calculated from your profile with formulas. AI works where an estimate is needed, and your data is not used to train models.</p></article>
-      
-      <article class="reveal"><h3>The social side is yours</h3><p>Friends see only your XP and activity summary; your meals and measurements stay hidden. You can hide yourself from username search if you like.</p></article>
-    
-    </div>
-    
-    <p class="note reveal"><a href="/en/privacy">Read the privacy policy and KVKK notice →</a></p>
-  
-  </div>
-
-</section>
-
-
-
-<!-- PLANLAR ÖZETİ -->
 
 <section class="section plan-teaser" id="planlar">
   
@@ -1474,7 +748,7 @@
     
     <nav aria-label="Footer menu">
       
-      <a href="#yapay-zeka">AI</a><a href="#ozellikler">Features</a><a href="#sss">FAQ</a><a href="/en/plans">Plans</a><a href="/en/privacy">Privacy</a><a href="/en/support">Support</a><a href="/en/delete-account">Delete account</a>
+      <a href="/en/detail">Details</a><a href="#dene">Try</a><a href="#sss">FAQ</a><a href="/en/plans">Plans</a><a href="/en/privacy">Privacy</a><a href="/en/support">Support</a><a href="/en/delete-account">Delete account</a>
     
     </nav>
     
@@ -1486,11 +760,11 @@
 
 </footer>
 
+
 <script src="/main.js"></script>
-<script src="/anim.js"></script>
 <script src="/phone.js"></script>
-<script src="/watch.js"></script>
 <script src="/tools.js"></script>
+<script src="/bento.js"></script>
 </body>
 
 </html>
