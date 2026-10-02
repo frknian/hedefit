@@ -25,14 +25,13 @@
   }
 
   /* ---------- Paylaş ---------- */
-  const share = $('#shareBtn');
-  if (share) share.addEventListener('click', async () => {
+  $$('.share').forEach(btn => btn.addEventListener('click', async () => {
     const data = { title: 'Hedefit', text: t('Hedefit: antrenman, öğün ve yapay zekâ koçu tek uygulamada.', 'Hedefit: workouts, meals and an AI coach in one app.'), url: location.origin + (EN ? '/en/' : '/') };
-    const msg = $('#shareMsg');
+    const msg = btn.parentElement.querySelector('.share-msg');
     try { if (navigator.share) { await navigator.share(data); return; } } catch { return; }
     try { await navigator.clipboard.writeText(data.url); msg.textContent = t('Bağlantı kopyalandı.', 'Link copied.'); }
     catch { msg.textContent = data.url; }
-  });
+  }));
 
   /* ---------- Plan bulucu (planlar sayfası) ---------- */
   const fin = $('#finder');
