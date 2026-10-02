@@ -729,6 +729,9 @@ class HedefitRepository(
                 confidence = item.optDouble("confidence", .7),
                 portionQuantity = item.optDouble("quantity").takeIf { it.isFinite() && it > 0 },
                 portionUnit = item.optString("unit").takeIf { it.isNotBlank() && it != "null" },
+                needsConfirmation = item.optBoolean("needsConfirmation"),
+                warning = item.optString("warning").takeIf { it.isNotBlank() && it != "null" },
+                warningCode = item.optString("warningCode").takeIf { it.isNotBlank() && it != "null" },
             )
         }
     }
@@ -753,6 +756,9 @@ class HedefitRepository(
             ironMg = nutrition.optDouble("ironMg"),
             vitaminCMg = nutrition.optDouble("vitaminCMg"),
             confidence = item.optDouble("confidence", response.optDouble("confidence", .5)),
+            needsConfirmation = item.optBoolean("needsConfirmation"),
+            warning = item.optString("warning").takeIf { it.isNotBlank() && it != "null" },
+            warningCode = item.optString("warningCode").takeIf { it.isNotBlank() && it != "null" },
         )
     }
 

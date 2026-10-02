@@ -304,6 +304,12 @@ data class NutritionEstimateData(
     /** Household portion the parser recognised ("3" + "dilim"); grams are derived from it. */
     val portionQuantity: Double? = null,
     val portionUnit: String? = null,
+    /** True when the server wants the person to look at this item before saving it. */
+    val needsConfirmation: Boolean = false,
+    /** Server message (Turkish) for [warningCode]; shown only when the code is unknown to this app version. */
+    val warning: String? = null,
+    /** Stable reason: approximate_amount, cooked_assumed, not_in_catalogue or ai_estimate. */
+    val warningCode: String? = null,
 )
 
 data class CoachActionData(

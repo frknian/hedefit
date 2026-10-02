@@ -1476,8 +1476,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             _state.update { it.copy(nutritionBusy = true, transientMessage = null) }
+            val estimate = runCatching { repository.estimateNutrition(food, grams) }.getOrElse { error ->
+                _state.update { it.copy(nutritionBusy = false, transientMessage = friendlyError(error)) }
+                return@launch
+            }
+            // A low-confidence estimate is shown for review (with its warning) instead of being saved blindly.
+            if (estimate.needsConfirmation) {
+                _state.update { it.copy(nutritionBusy = false, photoNutritionResults = listOf(estimate), mealReviewSource = "text", mealReviewMeal = meal) }
+                return@launch
+            }
             runCatching {
-                val estimate = repository.estimateNutrition(food, grams)
                 repository.addNutrition(estimate, meal)
             }.onSuccess { log ->
                 _state.update { current ->
