@@ -528,7 +528,7 @@ details a{color:var(--g)}
 .pt-card:hover{border-color:var(--g);transform:translateY(-4px)}
 .pt-card h3{margin-bottom:10px}
 .pt-card p{color:#b5beca;font-size:.95rem}
-.pt-card.feat{border-color:rgba(111,224,42,.5)}
+.pt-card.top{border-color:rgba(111,224,42,.5)}
 .pt-cta{display:grid;align-content:center;justify-items:start}
 @media (max-width:960px){.pt-row{grid-template-columns:1fr}}
 
