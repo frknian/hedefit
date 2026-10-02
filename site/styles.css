@@ -677,3 +677,23 @@ details a{color:var(--g)}
 @media (prefers-reduced-motion:reduce){.sc .sr{animation:none;stroke-dashoffset:0}.xpcard .xr{transition:none;stroke-dashoffset:90}.xpcard .xbar i{transition:none;width:var(--w)}}
 
 .sc.map svg{transform:translateY(-38px)}
+
+/* ---- yayın bildirimi formu ---- */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.notify-link{margin-top:18px;font-size:.92rem}
+.notify-link a{color:var(--g);font-weight:600;text-decoration:none}
+.notify-link a:hover{text-decoration:underline}
+.notify{margin-top:34px;width:min(520px,100%);text-align:left;display:grid;gap:12px;background:rgba(6,19,10,.12);border-radius:22px;padding:22px}
+.nf-title{font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:1.7rem;line-height:1}
+.nf-row{display:flex;gap:10px}
+.notify input[type=email]{flex:1;min-width:0;background:#fff;color:#06130a;border:2px solid transparent;border-radius:12px;padding:13px 14px;font:inherit}
+.notify input[type=email]:focus{outline:none;border-color:#06130a}
+.notify .btn{background:#06130a;color:var(--g);border:0;cursor:pointer;font:700 1rem var(--body);padding:13px 20px;border-radius:12px}
+.notify .btn:disabled{opacity:.6;cursor:wait}
+.nf-consent{display:flex;gap:10px;align-items:flex-start;font-size:.8rem;line-height:1.4;cursor:pointer}
+.nf-consent input{margin-top:3px;width:18px;height:18px;accent-color:#06130a;flex:none}
+.nf-consent a{color:#06130a;font-weight:700}
+.nf-msg{min-height:1.2em;font-size:.88rem;font-weight:600}
+.nf-msg[data-ok="0"]{color:#7a1313}
+@media (max-width:520px){.nf-row{flex-direction:column}.notify .btn{width:100%}}

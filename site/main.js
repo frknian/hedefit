@@ -72,4 +72,24 @@
     });
     stage.addEventListener('mouseleave', () => { tilt.style.transform = ''; });
   }
+
+  // Yayın bildirimi formu → /api/subscribe (Worker + KV)
+  const form = document.getElementById('notify');
+  if (form) {
+    const msg = form.querySelector('.nf-msg'), btn = form.querySelector('button');
+    const say = (t, ok) => { msg.textContent = t; msg.dataset.ok = ok ? '1' : '0'; };
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { say('Geçerli bir e-posta adresi yaz.', false); form.email.focus(); return; }
+      if (!form.consent.checked) { say('Devam etmek için onay kutusunu işaretle.', false); return; }
+      btn.disabled = true; say('Gönderiliyor…', true);
+      try {
+        const r = await fetch('/api/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, consent: true, website: form.website.value }) });
+        if (r.ok) { say('Teşekkürler! Hedefit yayınlandığında sana tek bir e-posta göndereceğiz.', true); form.reset(); }
+        else say(r.status === 429 ? 'Çok fazla deneme yapıldı, biraz sonra tekrar dene.' : 'Kaydedilemedi, lütfen tekrar dene.', false);
+      } catch { say('Bağlantı hatası, lütfen tekrar dene.', false); }
+      btn.disabled = false;
+    });
+  }
 })();

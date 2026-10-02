@@ -103,6 +103,9 @@ privacy = f"""{HEAD.format(path="/gizlilik", title="Gizlilik politikası", desc=
     {render(parse("PRIVACY_POLICY"))}
     <h2 id="kvkk-tr">KVKK Aydınlatma Metni</h2>
     {render(parse("KVKK_NOTICE"))}
+    <h2 id="bulten">Web sitesi: yayın bildirimi listesi</h2>
+    <p>Sitedeki “Yayınlanınca haber ver” formunu doldurursan, yalnızca <b>e-posta adresin</b>, kayıt zamanın ve rastgele bir çıkış kodun saklanır. Amaç: Hedefit mağazalarda yayınlandığında sana tek bir e-posta ile haber vermek. Hukuki sebep: açık rızan.</p>
+    <p>Veri, Cloudflare altyapısında (Workers KV) tutulur ve başka kimseyle paylaşılmaz; başka bir amaçla kullanılmaz. Gönderim denemelerini sınırlamak için IP adresinin yalnızca özeti ve yalnızca 60 saniye süreyle kullanılır. Veriyi, bildirimi gönderene veya senin çıkmana kadar saklarız. Çıkmak için bildirim e-postasındaki bağlantıyı kullanabilir ya da <a href="mailto:{CONTACT}">{CONTACT}</a> adresine yazabilirsin.</p>
   </section>
 
   <section data-en hidden>
@@ -111,6 +114,8 @@ privacy = f"""{HEAD.format(path="/gizlilik", title="Gizlilik politikası", desc=
     {render(parse("PRIVACY_POLICY_EN"))}
     <h2 id="kvkk-en">KVKK Privacy Notice</h2>
     {render(parse("KVKK_NOTICE_EN"))}
+    <h2 id="newsletter">Website: launch notification list</h2>
+    <p>If you submit the “Notify me at launch” form on the website, only your <b>email address</b>, the time of signup and a random unsubscribe code are stored, to email you once when Hedefit is published on the app stores. Legal basis: your explicit consent. The data is kept on Cloudflare (Workers KV), is not shared and is not used for anything else. To limit abuse, only a hash of your IP address is used, for 60 seconds. We keep it until the notification is sent or you opt out, via the link in the email or by writing to <a href="mailto:{CONTACT}">{CONTACT}</a>.</p>
   </section>
 </main>
 {FOOT}
