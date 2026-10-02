@@ -681,9 +681,11 @@ details a{color:var(--g)}
 /* ---- yayın bildirimi formu ---- */
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
-.notify-link{margin-top:18px;font-size:.92rem}
-.notify-link a{color:var(--g);font-weight:600;text-decoration:none}
-.notify-link a:hover{text-decoration:underline}
+.notify-link{margin-top:20px;font-size:.92rem}
+.notify-link a{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;background:var(--g);color:#06130a;font-weight:800;font-size:1rem;border-radius:999px;text-decoration:none;box-shadow:0 0 0 0 rgba(111,224,42,.5);animation:nlpulse 2.6s ease-out infinite;transition:transform .2s}
+.notify-link a:hover{transform:translateY(-2px)}
+@keyframes nlpulse{70%{box-shadow:0 0 0 14px rgba(111,224,42,0)}100%{box-shadow:0 0 0 0 rgba(111,224,42,0)}}
+@media (prefers-reduced-motion:reduce){.notify-link a{animation:none}}
 .notify{margin-top:34px;width:min(520px,100%);text-align:left;display:grid;gap:12px;background:rgba(6,19,10,.12);border-radius:22px;padding:22px}
 .nf-title{font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:1.7rem;line-height:1}
 .nf-row{display:flex;gap:10px}
