@@ -1506,7 +1506,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         repository.sendChat(listOf(text to true), _state.value.dashboard, locale).text
 
     /** Saatten sesle yemek kaydı: metni çözümler, öğüne ekler ve kısa özet döner. */
-    suspend fun logFoodForWatch(text: String): String {
+    suspend fun logFoodForWatch(text: String, locale: String = "tr"): String {
         if (!canAddMeals()) throw IllegalStateException("Bugünkü öğün hakkın doldu.")
         val items = repository.parseMealText(text)
         require(items.isNotEmpty()) { "Yemek anlaşılamadı." }
@@ -1514,7 +1514,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val meal = when (hour) { in 4..10 -> "Kahvaltı"; in 11..15 -> "Öğle yemeği"; in 16..21 -> "Akşam yemeği"; else -> "Atıştırmalık" }
         val logs = repository.savePhotoNutrition(items, meal, "text")
         _state.update { current -> current.copy(dashboard = current.dashboard?.copy(nutritionLogs = logs + current.dashboard.nutritionLogs)) }
-        return logs.joinToString(", ") { it.name } + " · " + logs.sumOf { it.calories } + " kcal"
+        val summary = logs.joinToString(", ") { it.name } + " · " + logs.sumOf { it.calories } + " kcal"
+        // No review screen on the watch: say what was assumed so the person can correct it on the phone.
+        return NutritionWarning.watchReply(summary, items, en = locale == "en")
     }
 
     fun sendChat(text: String, locale: String = "tr", workoutContext: WorkoutCoachContext? = null) {
