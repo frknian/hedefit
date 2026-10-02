@@ -12,6 +12,19 @@
     el.querySelector('small').textContent = EN ? 'GET' : 'İNDİR';
   });
 
+  // Logoya basınca en üste çık (sabit başlık #top hedefi bazı tarayıcılarda kaydırmaz)
+  document.querySelectorAll('a.brand[href="#top"]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const from = scrollY, t0 = performance.now(), d = Math.min(900, 250 + from / 4);
+    const h = document.documentElement; h.style.scrollBehavior = 'auto';
+    if (reduce || from < 2 || document.hidden) { scrollTo(0, 0); h.style.scrollBehavior = ''; }
+    else {
+      const step = t => { const p = Math.min(1, (t - t0) / d); scrollTo(0, Math.round(from * (1 - (1 - Math.pow(1 - p, 3))))); if (p < 1) requestAnimationFrame(step); else h.style.scrollBehavior = ''; };
+      requestAnimationFrame(step);
+    }
+    history.replaceState(null, '', location.pathname + location.search);
+  }));
+
   // Scroll reveal
   const io = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
