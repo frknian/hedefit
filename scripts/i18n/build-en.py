@@ -22,7 +22,7 @@ OUT = {"index.html": "index.html", "planlar.html": "plans.html", "gizlilik.html"
        "destek.html": "support.html", "hesap-silme.html": "delete-account.html"}
 LINKS = {"index.html": "/en/", "planlar.html": "/en/plans", "gizlilik.html": "/en/privacy",
          "destek.html": "/en/support", "hesap-silme.html": "/en/delete-account"}
-ASSETS = ("styles.css", "main.js", "anim.js", "phone.js", "watch.js", "page.js")
+ASSETS = ("styles.css", "main.js", "anim.js", "phone.js", "watch.js", "page.js", "tools.js")
 missing = []
 CURRENT = [None]
 

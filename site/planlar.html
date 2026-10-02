@@ -39,6 +39,31 @@
   <p class="lead">Hedefit’i ücretsiz başlat. Daha fazla Fit Koç sorusu, fotoğraftan kalori, tüm hareketler ve reklamsız deneyim için Plus ya da Premium’a geç.</p>
 </section>
 
+<section class="wrap finder" id="finder">
+  <h2>Hangisi <span class="hl">sana uygun?</span></h2>
+  <p class="lead">Üç soruyu cevapla, önerelim.</p>
+  <div class="fgrid">
+    <fieldset><legend>Günde kaç Fit Koç sorusu sorarsın?</legend>
+      <label><input type="radio" name="coach" value="0" checked><span>1–5</span></label>
+      <label><input type="radio" name="coach" value="1"><span>6–20</span></label>
+      <label><input type="radio" name="coach" value="2"><span>21–40</span></label></fieldset>
+    <fieldset><legend>Günde kaç öğünü fotoğraftan analiz edersin?</legend>
+      <label><input type="radio" name="photo" value="0" checked><span>0–1</span></label>
+      <label><input type="radio" name="photo" value="1"><span>2–3</span></label>
+      <label><input type="radio" name="photo" value="2"><span>4–15</span></label></fieldset>
+    <fieldset><legend>Kaç kendi programın olsun?</legend>
+      <label><input type="radio" name="prog" value="0" checked><span>0–2</span></label>
+      <label><input type="radio" name="prog" value="1"><span>3–5</span></label>
+      <label><input type="radio" name="prog" value="2"><span>6 ve üzeri</span></label></fieldset>
+    <fieldset class="needs"><legend>İstediğin özellikler</legend>
+      <label><input type="checkbox" name="need" value="1"><span>Reklamsız</span></label>
+      <label><input type="checkbox" name="need" value="1"><span>Öğün planlayıcı</span></label>
+      <label><input type="checkbox" name="need" value="2"><span>Bölgesel program</span></label>
+      <label><input type="checkbox" name="need" value="2"><span>Sınırsız beslenme geçmişi</span></label></fieldset>
+  </div>
+  <div id="finderOut" aria-live="polite"></div>
+</section>
+
 <section class="wrap pcards">
   <article class="pcard">
     <header><h2>Plus</h2><p>Daha çok yapay zekâ, reklamsız.</p></header>
@@ -116,5 +141,6 @@
 <nav aria-label="Alt menü"><a href="index.html">Ana sayfa</a><a href="planlar.html">Planlar</a><a href="gizlilik.html">Gizlilik</a><a href="destek.html">Destek</a><a href="hesap-silme.html">Hesap silme</a></nav>
 <p>© <span id="yr">2026</span> Hedefit</p></div></footer>
 <script src="page.js"></script>
+<script src="tools.js"></script>
 </body>
 </html>

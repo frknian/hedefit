@@ -80,6 +80,56 @@
 
 
 
+<section class="wrap finder" id="finder">
+  
+  <h2>Which one <span class="hl">fits you?</span></h2>
+  
+  <p class="lead">Answer a few questions and we will suggest one.</p>
+  
+  <div class="fgrid">
+    
+    <fieldset><legend>How many AI coach questions do you ask a day?</legend>
+      
+      <label><input type="radio" name="coach" value="0" checked><span>1–5</span></label>
+      
+      <label><input type="radio" name="coach" value="1"><span>6–20</span></label>
+      
+      <label><input type="radio" name="coach" value="2"><span>21–40</span></label></fieldset>
+    
+    <fieldset><legend>How many meals a day do you analyse from a photo?</legend>
+      
+      <label><input type="radio" name="photo" value="0" checked><span>0–1</span></label>
+      
+      <label><input type="radio" name="photo" value="1"><span>2–3</span></label>
+      
+      <label><input type="radio" name="photo" value="2"><span>4–15</span></label></fieldset>
+    
+    <fieldset><legend>How many programs of your own do you want?</legend>
+      
+      <label><input type="radio" name="prog" value="0" checked><span>0–2</span></label>
+      
+      <label><input type="radio" name="prog" value="1"><span>3–5</span></label>
+      
+      <label><input type="radio" name="prog" value="2"><span>6 or more</span></label></fieldset>
+    
+    <fieldset class="needs"><legend>Features you want</legend>
+      
+      <label><input type="checkbox" name="need" value="1"><span>Ad-free</span></label>
+      
+      <label><input type="checkbox" name="need" value="1"><span>Meal planner</span></label>
+      
+      <label><input type="checkbox" name="need" value="2"><span>Regional program</span></label>
+      
+      <label><input type="checkbox" name="need" value="2"><span>Unlimited nutrition history</span></label></fieldset>
+  
+  </div>
+  
+  <div id="finderOut" aria-live="polite"></div>
+
+</section>
+
+
+
 <section class="wrap pcards">
   
   <article class="pcard">
@@ -232,6 +282,7 @@
 
 <p>© <span id="yr">2026</span> Hedefit</p></div></footer>
 <script src="/page.js"></script>
+<script src="/tools.js"></script>
 </body>
 
 </html>

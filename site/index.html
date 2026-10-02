@@ -562,6 +562,71 @@
 </section>
 
 <!-- GALERİ -->
+<!-- KENDİN DENE -->
+<section class="section try" id="dene">
+  <div class="wrap">
+    <p class="eyebrow reveal">Kendin dene</p>
+    <h2 class="reveal">Uygulamayı açmadan <span class="hl">bir tat al.</span></h2>
+    <p class="lead reveal">Hedefit’in hesapları sitede de çalışır. Hedefini hesapla, kas atlasını gez, seri takvimine bak, rotanı çiz. Hepsi tarayıcında kalır; hiçbir şey kaydedilmez.</p>
+    <div class="seg four reveal" role="tablist" aria-label="Araçlar" id="tryTabs">
+      <button type="button" role="tab" data-t="calc" aria-selected="true"><b>Hedef</b><small>Kalori ve süre</small></button>
+      <button type="button" role="tab" data-t="atlas" aria-selected="false"><b>Kas atlası</b><small>Hareketler</small></button>
+      <button type="button" role="tab" data-t="streak" aria-selected="false"><b>Seri</b><small>30 gün</small></button>
+      <button type="button" role="tab" data-t="route" aria-selected="false"><b>Rota</b><small>Mesafe ve süre</small></button>
+    </div>
+
+    <div class="tpanel reveal" data-p="calc">
+      <form class="tform" id="calcForm" novalidate>
+        <label>Cinsiyet<select name="sex"><option value="m">Erkek</option><option value="f">Kadın</option><option value="x">Belirtmek istemiyorum</option></select></label>
+        <label>Yaş<input name="age" type="number" inputmode="numeric" min="14" max="90" value="30"></label>
+        <label>Boy (cm)<input name="height" type="number" inputmode="numeric" min="120" max="230" value="175"></label>
+        <label>Kilo (kg)<input name="weight" type="number" inputmode="decimal" min="35" max="250" step="0.1" value="95"></label>
+        <label>Hedef kilo (kg)<input name="target" type="number" inputmode="decimal" min="35" max="250" step="0.1" value="80"></label>
+        <label>Tempo<select name="pace"><option value="easy" selected>Rahat</option><option value="steady">Dengeli</option><option value="hard">Hızlı</option></select></label>
+        <label>Haftada antrenman<select name="days"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
+        <label>Seans süresi<select name="mins"><option value="30">30 dk</option><option value="45" selected>45 dk</option><option value="60">60 dk</option></select></label>
+      </form>
+      <div class="tout" id="calcOut" aria-live="polite"></div>
+      <p class="fine left">Tahmini değerlerdir; tıbbi tavsiye değildir. Hız, kilonun haftada en fazla %1’iyle sınırlanır. Uygulamada bu hesap boyun, kilon ve hedefinle otomatik kurulur.</p>
+    </div>
+
+    <div class="tpanel reveal" data-p="atlas" hidden>
+      <div class="atlas-grid">
+        <div class="atlas-fig"><svg id="atlasSvg" viewBox="0 0 440 400" role="img" aria-label="Ön ve arka vücut şeması"></svg><div class="atlas-lbl"><span>ÖN</span><span>ARKA</span></div></div>
+        <div class="atlas-info" id="atlasInfo" aria-live="polite"></div>
+      </div>
+      <p class="fine left">Şematik gösterimdir. Uygulamadaki atlas, tamamladığın setlerden her kas için tahmini antrenman yükünü gösterir.</p>
+    </div>
+
+    <div class="tpanel reveal" data-p="streak" hidden>
+      <div class="sk-top"><div><b id="skStreak">12</b><small>günlük seri</small></div><div><b id="skActive">0</b><small>30 günde aktif gün</small></div></div>
+      <div class="sk-grid" id="skGrid" role="grid" aria-label="Son 30 gün"></div>
+      <div class="sk-day" id="skDay" aria-live="polite"></div>
+      <p class="fine left">Örnek veridir.</p>
+    </div>
+
+    <div class="tpanel reveal" data-p="route" hidden>
+      <div class="rt-grid">
+        <div class="rt-fig"><svg id="rtSvg" viewBox="0 0 300 220" role="img" aria-label="Örnek rota"></svg></div>
+        <div class="rt-ctl">
+          <div class="seg three" role="tablist" aria-label="Aktivite" id="rtKind">
+            <button type="button" data-k="run" aria-selected="true"><b>Koşu</b></button>
+            <button type="button" data-k="walk" aria-selected="false"><b>Yürüyüş</b></button>
+            <button type="button" data-k="bike" aria-selected="false"><b>Bisiklet</b></button>
+          </div>
+          <label class="rt-range">Mesafe <b id="rtKmOut">5 km</b><input id="rtKm" type="range" min="1" max="30" step="0.5" value="5"></label>
+          <div class="rt-stats">
+            <div><b id="rtTime">–</b><small>Süre</small></div>
+            <div><b id="rtPace">–</b><small id="rtPaceL">Tempo</small></div>
+            <div><b id="rtKcal">–</b><small>Kalori</small></div>
+          </div>
+        </div>
+      </div>
+      <p class="fine left">Tahminî değerlerdir (70 kg için, ortalama tempo). Uygulama rotanı GPS ile kaydeder ve gerçek ölçüleri gösterir.</p>
+    </div>
+  </div>
+</section>
+
 <section class="section gallery" id="galeri">
   <div class="wrap"><p class="eyebrow reveal">Ekranlar</p><h2 class="reveal">Uygulamanın <span class="hl">içinden.</span></h2></div>
   <div class="gal-track" tabindex="0" aria-label="Uygulama ekranları, yatay kaydırın">
@@ -619,6 +684,9 @@
   <div class="wrap narrow">
     <p class="eyebrow reveal">Sık sorulanlar</p>
     <h2 class="reveal">Aklındaki <span class="hl">sorular.</span></h2>
+    <label class="sr" for="faqQ">Sorularda ara</label>
+    <input class="faq-q reveal" id="faqQ" type="search" placeholder="Sorularda ara…" autocomplete="off">
+    <p class="faq-none" id="faqNone" hidden>Eşleşen soru yok. Destek sayfasından bize yazabilirsin.</p>
     <details class="reveal" open><summary>Hedefit ücretsiz mi?</summary>
       <p>Evet, ücretsiz başlayabilirsin. Antrenman, beslenme ve ilerleme takibi ücretsizdir. Fit Koç’a Misafir hesapta günlük 3, ücretsiz hesapta 5 soru hakkın var; görevlerden kazandığın XP bunu artırır. Daha yüksek limitler, tüm hareketler ve reklamsız deneyim için Plus ve Premium planları vardır; ayrıntılar <a href="planlar.html">planlar sayfasında</a>. Fiyatlar mağaza sayfalarında yayınlanacaktır.</p></details>
     <details class="reveal"><summary>Verilerim nerede, kim görebilir?</summary>
@@ -648,6 +716,7 @@
       <a class="store" aria-disabled="true" data-store="google-play" role="link" tabindex="0"><span><small>YAKINDA</small>Google Play</span></a>
       <a class="store" aria-disabled="true" data-store="app-store" role="link" tabindex="0"><span><small>YAKINDA</small>App Store</span></a>
     </div>
+    <p class="share-row"><button type="button" class="share" id="shareBtn">Arkadaşına gönder</button> <span id="shareMsg" role="status" aria-live="polite"></span></p>
     <form class="notify" id="notify" novalidate>
       <p class="nf-title">Yayınlanınca haber ver</p>
       <div class="nf-row">
@@ -678,5 +747,6 @@
 <script src="anim.js"></script>
 <script src="phone.js"></script>
 <script src="watch.js"></script>
+<script src="tools.js"></script>
 </body>
 </html>
