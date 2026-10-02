@@ -14,7 +14,7 @@
   const S = {
     home:      { t: 'Ana ekran', d: 'Bugünün antrenmanı, hedef yolculuğu ve günlük dengen tek bakışta.', tab: 'home' },
     antrenman: { img: 'hareketler', t: 'Antrenman', d: 'Her hareket animasyonlu önizlemeyle gelir; set ve tekrarı dokunarak ayarla.', a: '#f-antrenman', tab: 'antrenman' },
-    beslenme:  { img: 'beslenme', t: 'Beslenme', d: 'Kalori halkası, makrolar ve su. Öğünü yaz ya da fotoğrafla, yapay zekâ hesaplasın.', a: '#f-beslenme', tab: 'beslenme' },
+    beslenme:  { img: 'beslenme', t: 'Beslenme', d: 'Kalori halkası, makrolar ve su. Öğünü yaz, kalorisi veritabanından hesaplansın; ya da fotoğrafla.', a: '#f-beslenme', tab: 'beslenme' },
     ilerleme:  { img: 'istatistik', t: 'İlerleme', d: 'Aktivite takvimi, seri ve haftalık süre. 7G’den Tümü’ne.', a: '#f-ilerleme', tab: 'ilerleme' },
     koc:       { img: 'koc', t: 'Fit Koç', d: 'Antrenman, beslenme ve ilerleme sorularını senin verine göre yanıtlar.', a: '#f-koc', tab: 'koc' },
     seans:     { img: 'seans-hizli', t: 'Antrenman seansı', d: 'Setlere dokun, dinlenme sayacı kendiliğinden başlar. İstersen detaylı moda geç.', a: '#f-antrenman' },
