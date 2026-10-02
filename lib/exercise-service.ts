@@ -344,6 +344,7 @@ export function getExercisesForProfile(
   equipmentText: string,
   environmentText = "",
   trainingStyleText = "",
+  limit = PROMPT_CATALOG_LIMIT,
 ): AIExerciseContext[] {
   const owned = equipmentText.toLocaleLowerCase("tr-TR");
   // "Spor salonunda" ortamı, kullanıcının salondaki her ekipmana eriştiği
@@ -369,5 +370,5 @@ export function getExercisesForProfile(
     if (fullGymAccess) return true;
     const synonyms = EQUIPMENT_TAG_SYNONYMS[tag];
     return synonyms ? synonyms.some((word) => owned.includes(word)) : false;
-  }));
+  }), limit);
 }

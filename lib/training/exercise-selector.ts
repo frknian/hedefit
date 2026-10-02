@@ -10,6 +10,8 @@ import type {
   StandardizedExercise,
   TrainingProfile,
 } from "./types.ts";
+import { getCoreEntry } from "./core-pool.ts";
+import { seededUnit } from "./rotation.ts";
 
 /** TrainingProfile.goal -> RepDB-derived StandardizedExercise.goalCompatibility vocabulary. */
 const GOAL_TO_COMPATIBILITY: Record<GoalType, string> = {
@@ -18,6 +20,30 @@ const GOAL_TO_COMPATIBILITY: Record<GoalType, string> = {
   weight_loss: "fat_loss",
   endurance: "endurance",
   general_fitness: "general_fitness",
+};
+
+// Rotation weights, tuned against the other score terms (pattern match 40,
+// compound 30, loaded equipment 20–25): enough to reshuffle near-equal
+// accessories, never enough to override equipment fit or the main lifts.
+// Raised from 35: with rotation penalising recently done accessories, repeated main
+// lifts would otherwise refill the freed budgets and recur on several days of one plan.
+const CROSS_SESSION_REPEAT_PENALTY = 55;
+const STAPLE_BONUS = 6;
+// Main lifts win near-ties against rotating accessories for the same muscle budget
+// (a row beats a rear-delt fly for a back slot even when the jitter favours the fly).
+const MAIN_ROLE_BONUS = 10;
+const RECENT_ACCESSORY_PENALTY = 40;
+const ROTATION_JITTER = 25;
+// A second move from the same slot in one session is redundant (two flat
+// presses, two squats); steer the next budget to a different slot instead.
+const SAME_SLOT_IN_SESSION_PENALTY = 45;
+
+// Vertical and horizontal pulls (and pushes) are interchangeable when the
+// person's equipment has no move for the exact pattern: a home dumbbell user has
+// no pulldown, but a row still fills the "back / vertical pull" budget.
+const SAME_FAMILY_PATTERN_BONUS = 25;
+const PATTERN_FAMILY: Partial<Record<MovementPattern, string>> = {
+  vertical_pull: "pull", horizontal_pull: "pull", vertical_push: "push", horizontal_push: "push",
 };
 
 const LOADED_EQUIPMENT = ["dumbbell", "kettlebell", "barbell", "machine", "cable"];
@@ -79,6 +105,7 @@ export function selectExerciseForBudget(
   usedPatternsInSession: Set<MovementPattern>,
   order: number,
   previouslyUsedIdsAcrossSessions?: Set<string>,
+  usedSlotsInSession?: Set<string>,
 ): StandardizedExercise | null {
   // Step 1: Filter eligible exercises
   const eligible = catalog.filter((ex) => {
@@ -137,13 +164,41 @@ export function selectExerciseForBudget(
     return null;
   }
 
+  // Prefer the curated core pool; fall back to the whole eligible set only when
+  // the pool has nothing for this muscle under the person's equipment/limits.
+  // Metcon-style fillers (jumping jacks, burpees…) only suit conditioning-minded
+  // goals; in a hypertrophy/strength session they would pad a calf or core budget.
+  const strengthFocused = profile.goal === "hypertrophy" || profile.goal === "strength";
+  const coreEligible = eligible.filter((ex) => {
+    const entry = getCoreEntry(ex.id);
+    return entry && !(strengthFocused && entry.slot === "conditioning");
+  });
+  const candidates = coreEligible.length > 0 ? coreEligible : eligible;
+  const recent = profile.recentExerciseIds?.length ? new Set(profile.recentExerciseIds) : null;
+
   // Step 2: Score candidates based on compound priority, pattern match, user request, and pattern diversity
-  const scored = eligible.map((exercise) => {
+  const scored = candidates.map((exercise) => {
     let score = 0;
+
+    // Core-pool slots: staples lead by default; accessories rotate (main lifts
+    // stay put so progressive overload keeps its reference), recently done
+    // accessories step back, and a per-block seed reshuffles near-ties.
+    const core = getCoreEntry(exercise.id);
+    if (core) {
+      if (usedSlotsInSession?.has(core.slot)) score -= SAME_SLOT_IN_SESSION_PENALTY;
+      if (core.tier === "staple") score += STAPLE_BONUS;
+      if (core.role === "main") score += MAIN_ROLE_BONUS;
+      if (core.role !== "main") {
+        if (recent?.has(exercise.id)) score -= RECENT_ACCESSORY_PENALTY;
+        if (profile.rotationSeed) score += seededUnit(profile.rotationSeed, exercise.id) * ROTATION_JITTER;
+      }
+    }
 
     // Preferred movement pattern match
     if (preferredPattern && exercise.movementPattern === preferredPattern) {
       score += 40;
+    } else if (preferredPattern && PATTERN_FAMILY[preferredPattern] && PATTERN_FAMILY[preferredPattern] === PATTERN_FAMILY[exercise.movementPattern]) {
+      score += SAME_FAMILY_PATTERN_BONUS;
     }
 
     // Compound priority in early exercise slots
@@ -168,7 +223,7 @@ export function selectExerciseForBudget(
 
     // Penalize exercises already used in previous sessions of the plan to promote variety across days
     if (previouslyUsedIdsAcrossSessions && previouslyUsedIdsAcrossSessions.has(exercise.id)) {
-      score -= 35;
+      score -= CROSS_SESSION_REPEAT_PENALTY;
     }
 
     // Foundation exercise preference
@@ -208,6 +263,7 @@ export function selectExercisesForSession(
   const instances: PlannedExerciseInstance[] = [];
   const selectedIds = new Set<string>();
   const usedPatterns = new Set<MovementPattern>();
+  const usedSlots = new Set<string>();
 
   slot.muscleBudgets.forEach((budget, index) => {
     const exercise = selectExerciseForBudget(
@@ -219,10 +275,13 @@ export function selectExercisesForSession(
       usedPatterns,
       index,
       previouslyUsedIdsAcrossSessions,
+      usedSlots,
     );
 
     if (exercise) {
       selectedIds.add(exercise.id);
+      const coreSlot = getCoreEntry(exercise.id)?.slot;
+      if (coreSlot) usedSlots.add(coreSlot);
       usedPatterns.add(exercise.movementPattern);
       const { reps, restSeconds } = determineRepAndRest(exercise, profile);
 

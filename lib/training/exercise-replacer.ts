@@ -22,6 +22,7 @@ import {
   isDifficultySuitable,
   determineRepAndRest,
 } from "./exercise-selector.ts";
+import { coreSlotMates, isCoreExercise } from "./core-pool.ts";
 
 export type ReplacementReason =
   | "too_hard"
@@ -52,10 +53,18 @@ export function replaceExercise(
   discomfortArea?: LimitationArea,
   catalogOverride?: StandardizedExercise[],
 ): ExerciseReplacementResult | null {
-  const catalog = catalogOverride || getStandardizedCatalog();
-  const current = getStandardizedExerciseById(currentExerciseId) || catalog.find((e) => e.id === currentExerciseId);
+  const baseCatalog = catalogOverride || getStandardizedCatalog();
+  const current = getStandardizedExerciseById(currentExerciseId) || baseCatalog.find((e) => e.id === currentExerciseId);
 
   if (!current) return null;
+
+  // Every branch below takes the first match, so ordering the catalog is how
+  // replacements stay inside the curated pool: same-slot alternatives first,
+  // then other core moves, then the rest of the atlas (stable sort keeps the
+  // existing order within each tier).
+  const slotMates = new Set(coreSlotMates(current.id));
+  const replacementRank = (exercise: StandardizedExercise) => (slotMates.has(exercise.id) ? 0 : isCoreExercise(exercise.id) ? 1 : 2);
+  const catalog = [...baseCatalog].sort((a, b) => replacementRank(a) - replacementRank(b));
 
   const currentMuscle = current.primaryMuscles[0] || "quadriceps";
   const usedIds = new Set(sessionExerciseIds);

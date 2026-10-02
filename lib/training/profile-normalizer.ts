@@ -176,6 +176,11 @@ export function normalizeTrainingProfile(payload: Record<string, unknown>): Trai
 
   const userRequestedExercises = Array.isArray(payload.requestedExercises) ? payload.requestedExercises.map(safeString).filter(Boolean) : [];
 
+  const rotationSeed = safeString(payload.rotationSeed).slice(0, 80) || undefined;
+  const recentExerciseIds = Array.isArray(payload.recentExerciseIds)
+    ? payload.recentExerciseIds.map(safeString).filter((id) => /^[a-zA-Z0-9_-]{1,80}$/.test(id)).slice(0, 400)
+    : undefined;
+
   const rawFingerprint = JSON.stringify({
     goal,
     fitnessLevel,
@@ -207,5 +212,7 @@ export function normalizeTrainingProfile(payload: Record<string, unknown>): Trai
     weightKg: safeNumber(payload.weight),
     userRequestedExercises,
     clientFingerprint,
+    rotationSeed,
+    recentExerciseIds,
   };
 }
