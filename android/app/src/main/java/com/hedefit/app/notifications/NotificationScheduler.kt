@@ -14,10 +14,18 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.hedefit.app.MainActivity
 import com.hedefit.app.R
+import com.hedefit.app.gym.PlanRotation
+import com.hedefit.app.gym.PlanRotationPeriod
 import com.hedefit.app.ui.settings.AppPreferences
+import com.hedefit.app.ui.settings.AppPreferencesStore
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 
 private const val CHANNEL_ID = "hedefit_routines"
+private const val NEW_BLOCK_REQUEST_CODE = 790
+private const val NEW_BLOCK_NOTIFICATION_ID = 1202
+private const val NEW_BLOCK_HOUR = 9
 
 class NotificationScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -41,6 +49,34 @@ class NotificationScheduler(private val context: Context) {
             }
             alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, first.timeInMillis, AlarmManager.INTERVAL_DAY * 7, pending)
         }
+        scheduleNewBlock(preferences)
+    }
+
+    /**
+     * One-shot reminder at 09:00 on the first day of the next training block
+     * (Monday for weekly, the 1st for monthly). It re-arms itself when it fires and
+     * whenever the app opens; it follows the same notifications switch as routines.
+     */
+    fun scheduleNewBlock(preferences: AppPreferences) {
+        cancelNewBlock()
+        if (!preferences.notificationsEnabled) return
+        createChannel(context)
+        val period = PlanRotationPeriod.fromKey(preferences.planRotation)
+        val start = PlanRotation.nextBlockStart(period, LocalDate.now())
+        val triggerAt = start.atTime(NEW_BLOCK_HOUR, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val pending = PendingIntent.getBroadcast(
+            context, NEW_BLOCK_REQUEST_CODE, Intent(context, NewBlockNotificationReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+    }
+
+    private fun cancelNewBlock() {
+        val pending = PendingIntent.getBroadcast(
+            context, NEW_BLOCK_REQUEST_CODE, Intent(context, NewBlockNotificationReceiver::class.java),
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+        )
+        if (pending != null) alarmManager.cancel(pending)
     }
 
     fun cancelAll() {
@@ -51,6 +87,7 @@ class NotificationScheduler(private val context: Context) {
             )
             if (pending != null) alarmManager.cancel(pending)
         }
+        cancelNewBlock()
     }
 }
 
@@ -71,6 +108,35 @@ class RoutineNotificationReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
         NotificationManagerCompat.from(context).notify(1201, notification)
+    }
+}
+
+class NewBlockNotificationReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val preferences = AppPreferencesStore(context).read()
+        // One-shot alarm: arm the following block first so a missing permission never ends the chain.
+        NotificationScheduler(context).scheduleNewBlock(preferences)
+        if (!preferences.notificationsEnabled) return
+        createChannel(context)
+        if (android.os.Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        val en = preferences.language == "en"
+        val weekly = PlanRotationPeriod.fromKey(preferences.planRotation) == PlanRotationPeriod.Weekly
+        val openApp = PendingIntent.getActivity(
+            context, 901, Intent(context, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle(if (en) "A new training block is ready" else "Yeni antrenman bloğun hazır")
+            .setContentText(
+                if (en) "A new ${if (weekly) "week" else "month"} has started. Refresh your accessory exercises."
+                else "Yeni ${if (weekly) "hafta" else "ay"} başladı. Yardımcı hareketlerini yenile.",
+            )
+            .setContentIntent(openApp)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+        NotificationManagerCompat.from(context).notify(NEW_BLOCK_NOTIFICATION_ID, notification)
     }
 }
 

@@ -108,6 +108,7 @@ fun ProfileSettingsScreen(
     var showDelete by remember { mutableStateOf(false) }
     var showShortcut by remember { mutableStateOf(false) }
     var showUnits by remember { mutableStateOf(false) }
+    var showPlanRotation by remember { mutableStateOf(false) }
     var avatarError by remember { mutableStateOf<String?>(null) }
     var profileError by remember { mutableStateOf<ProfileValidationError?>(null) }
     val context = LocalContext.current
@@ -234,6 +235,14 @@ fun ProfileSettingsScreen(
                         CardDivider()
                         SettingsRowContent(Icons.Default.Straighten, if (en) "Measurement units" else "Ölçü birimleri", if (preferences.unitSystem == "imperial") "Imperial • lb, in, mi, fl oz" else "${if (en) "Metric" else "Metrik"} • kg, cm, km, ml", onClick = { showUnits = true }, tint = HedefitColors.Lime)
                         CardDivider()
+                        SettingsRowContent(
+                            Icons.Default.Autorenew,
+                            if (en) "Program renewal" else "Program yenileme",
+                            if (preferences.planRotation == "weekly") (if (en) "Every week • new exercises each Monday" else "Her hafta • her Pazartesi yeni hareketler")
+                            else (if (en) "Every month • new exercises on the 1st" else "Her ay • ayın 1'inde yeni hareketler"),
+                            onClick = { showPlanRotation = true }, tint = HedefitColors.Lime,
+                        )
+                        CardDivider()
                         SettingsRowContent(Icons.Default.Notifications, if (en) "Notification calendar" else "Bildirim takvimi", "", onOpenNotifications, HedefitColors.Lime)
                         CardDivider()
                         SettingsRowContent(Icons.Default.School, if (en) "Getting started guide" else "Başlangıç rehberi", "", onReplayGuide, HedefitColors.Lime)
@@ -292,6 +301,7 @@ fun ProfileSettingsScreen(
         onAddCustom = { config -> com.hedefit.app.widgets.CustomWidgetConfigStore.writePending(widgetContext, config); onAddShortcut("widget_custom") },
         onAddShortcut = { onAddShortcut(it) },
     )
+    if (showPlanRotation) PlanRotationDialog(preferences.planRotation, en, { showPlanRotation = false }) { period -> onPreferencesChange(preferences.copy(planRotation = period)); showPlanRotation = false }
     if (showUnits) MeasurementUnitsDialog(preferences.unitSystem, en, { showUnits = false }) { system -> onPreferencesChange(preferences.copy(unitSystem = system)); showUnits = false }
 }
 
@@ -371,6 +381,34 @@ private fun prepareAvatar(context: android.content.Context, uri: Uri): ByteArray
         stream.toByteArray()
     }
 }.getOrNull()
+
+@Composable
+private fun PlanRotationDialog(selected: String, en: Boolean, onDismiss: () -> Unit, onSelect: (String) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (en) "Program renewal" else "Program yenileme") },
+        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                if (en) "How often should Hedefit offer a fresh block of exercises? Your main lifts stay the same so you keep progressing; accessories rotate."
+                else "Hedefit ne sıklıkla yeni bir hareket bloğu önersin? Ana hareketlerin ilerlemen için aynı kalır; yardımcı hareketler döner.",
+                color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium,
+            )
+            listOf(
+                Triple("weekly", if (en) "Weekly" else "Haftalık", if (en) "A new block every Monday" else "Her Pazartesi yeni blok"),
+                Triple("monthly", if (en) "Monthly" else "Aylık", if (en) "A new block on the 1st of each month" else "Her ayın 1'inde yeni blok"),
+            ).forEach { (key, title, subtitle) ->
+                HedefitCard(Modifier.fillMaxWidth(), onClick = { onSelect(key) }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected == key, onClick = { onSelect(key) })
+                        Column { Text(title, style = MaterialTheme.typography.titleMedium); Text(subtitle, color = HedefitColors.TextSecondary) }
+                    }
+                }
+            }
+        } },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } },
+    )
+}
 
 @Composable
 private fun MeasurementUnitsDialog(selected: String, en: Boolean, onDismiss: () -> Unit, onSelect: (String) -> Unit) {

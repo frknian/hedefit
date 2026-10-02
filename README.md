@@ -45,6 +45,34 @@ Tam lisans metni: `data/RepDB_LICENSE-DATA.md`. Eski free-exercise-db kataloğu
 egzersiz ID'lerini çözebilmesi için `lib/exercise-service.ts` içinde salt-okunur
 bir yedek olarak tutulur; aktif katalogda veya aramada görünmez.
 
+### Çekirdek hareket havuzu
+
+Atlas (601 hareket) arama, elle kayıt ve geçmiş için olduğu gibi kalır. Program
+üretimi ise `data/core-exercises.json` içindeki küratörlü havuzdan seçer: slot
+başına (ör. "dikey çekiş") birbirinin yerine geçebilen 3–11 hareket, ilk ikisi
+*staple*. Ana kaldırışlar (squat, press, çekiş…) ilerleme için bloklar arasında
+sabit kalır; yardımcı, core ve kondisyon hareketleri kullanıcının seçtiği
+dönemde (haftalık: her Pazartesi, aylık: her ayın 1'i; istek alanları
+`rotationPeriod` ve `localDate`) kullanıcıya özel tohumla ve son 8 haftada
+yapılan hareketlere göre döner (`lib/training/rotation.ts`,
+`lib/training/exercise-selector.ts`). Hiçbiri AI çağrısı gerektirmez. Yanıttaki
+`rotation` alanı bloğun başlangıç ve bitiş gününü verir; Android bu dönemi
+ayarlardan seçtirir, blok geçince "Yeni blok hazır" kartı ve bildirim gösterir.
+
+RepDB dosyası (`data/exercises.json`) import script'iyle yeniden üretildiği için
+ek hareketler ayrı tutulur: `data/exercises-supplement.json`
+(`scripts/build-exercise-supplement.mjs`), `lib/exercise-records.ts` ikisini
+birleştirir. Yalnız direnç bandı ya da yalnız dambılı olan ev kullanıcısının tüm
+vücudu çalışabilmesi için band sırt/biceps/triceps/omuz hareketleri ve birkaç
+dambıl hareketi buradadır. Görseli olmayanlar `mediaStatus: "missing"` işaretlidir;
+`public/exercise-images/<id>/start.webp` ve `peak.webp` eklenip script yeniden
+çalıştırılınca "complete" olur.
+
+Havuzu değiştirmek için `scripts/build-core-exercises.mjs` içindeki `SLOTS`
+düzenlenir ve `node scripts/build-core-exercises.mjs` çalıştırılır; script
+`data/core-exercises.json` ve okunabilir `data/core-exercises.md` dosyalarını
+üretir, kapsam boşluklarını (az alternatif, evde yapılamayan slot…) raporlar.
+
 ## Canlı ortam
 
 Backend Cloudflare Workers üzerinde yayınlanır:

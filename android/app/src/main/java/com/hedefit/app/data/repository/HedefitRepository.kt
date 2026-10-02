@@ -231,7 +231,7 @@ class HedefitRepository(
         rest.update("profiles", "id=eq.$userId", JSONObject().put("account_status", "active").put("frozen_at", JSONObject.NULL))
     }
 
-    suspend fun generatePlan(profile: ProfileData, feedback: WorkoutFeedbackData? = null): List<WorkoutExerciseData> {
+    suspend fun generatePlan(profile: ProfileData, feedback: WorkoutFeedbackData? = null, rotationPeriod: String = "monthly"): List<WorkoutExerciseData> {
         val body = JSONObject()
             .put("age", profile.age ?: JSONObject.NULL)
             .put("gender", profile.gender)
@@ -242,6 +242,10 @@ class HedefitRepository(
             .put("goal", profile.goal)
             .put("history", JSONArray(profile.historyAnswers))
             .put("locale", "tr")
+            // New-block cadence: the server rotates accessories per block and needs the
+            // person's own calendar day so a block rolls over at THEIR midnight.
+            .put("rotationPeriod", if (rotationPeriod == "weekly") "weekly" else "monthly")
+            .put("localDate", LocalDate.now().toString())
         if (feedback != null) body.put("adaptation", JSONObject()
             .put("difficulty", feedback.difficulty)
             .put("fatigue", feedback.fatigue)
@@ -725,6 +729,9 @@ class HedefitRepository(
                 confidence = item.optDouble("confidence", .7),
                 portionQuantity = item.optDouble("quantity").takeIf { it.isFinite() && it > 0 },
                 portionUnit = item.optString("unit").takeIf { it.isNotBlank() && it != "null" },
+                needsConfirmation = item.optBoolean("needsConfirmation"),
+                warning = item.optString("warning").takeIf { it.isNotBlank() && it != "null" },
+                warningCode = item.optString("warningCode").takeIf { it.isNotBlank() && it != "null" },
             )
         }
     }
@@ -749,6 +756,9 @@ class HedefitRepository(
             ironMg = nutrition.optDouble("ironMg"),
             vitaminCMg = nutrition.optDouble("vitaminCMg"),
             confidence = item.optDouble("confidence", response.optDouble("confidence", .5)),
+            needsConfirmation = item.optBoolean("needsConfirmation"),
+            warning = item.optString("warning").takeIf { it.isNotBlank() && it != "null" },
+            warningCode = item.optString("warningCode").takeIf { it.isNotBlank() && it != "null" },
         )
     }
 
@@ -1225,6 +1235,7 @@ class HedefitRepository(
         trainingDays = item.optJSONArray("training_days")?.let { days -> buildList {
             for (index in 0 until days.length()) days.optJSONObject(index)?.let { day -> add(WorkoutProgramDayData(day.optInt("weekday").coerceIn(1, 7), day.optString("title").take(60))) }
         } }.orEmpty(),
+        updatedAt = item.optString("updated_at").takeIf { it.isNotBlank() && it != "null" },
     )
 
     private fun parseSessions(array: JSONArray): List<WorkoutSessionData> = buildList {

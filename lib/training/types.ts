@@ -67,6 +67,10 @@ export interface TrainingProfile {
   weightKg?: number;
   userRequestedExercises: string[];
   clientFingerprint: string;
+  /** Seed for accessory rotation; absent = fully deterministic staples-first selection. */
+  rotationSeed?: string;
+  /** Exercise ids done in the last weeks; accessories among them are de-prioritised. */
+  recentExerciseIds?: string[];
 }
 
 export interface StandardizedExercise {

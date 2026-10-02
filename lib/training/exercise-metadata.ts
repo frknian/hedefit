@@ -4,7 +4,7 @@
 // legacy free-exercise-db catalog kept addressable for old workout logs (see
 // data/legacy-exercises.json + lib/exercise-service.ts's migration fallback).
 
-import exerciseData from "../../data/exercises.json" with { type: "json" };
+import { exerciseRecords as exerciseData } from "../exercise-records.ts";
 import repdbTags from "../../data/exercises-repdb-tags.json" with { type: "json" };
 import type {
   FitnessLevel,

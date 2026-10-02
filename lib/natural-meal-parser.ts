@@ -17,7 +17,13 @@ import {
   normalizeTurkishText,
 } from "./turkish-food-database.ts";
 import { containsPromptInjection } from "./nutrition-parser.ts";
-import { matchDefaultFood } from "./default-food-catalog.ts";
+import { defaultFoodPhrases, matchDefaultFood } from "./default-food-catalog.ts";
+
+// JavaScript'in \b'si ASCII dışı harfleri "kelime karakteri" saymaz; "kaşığı", "avuç", "üç",
+// "öğlen" gibi sözcüklerde sınır ya hiç bulunmaz ya yanlış yerde bulunur. Türkçe metinde
+// sınırlar bu önce/sonra bakışlarıyla kurulur (u bayrağıyla birlikte).
+const WORD_BEFORE = "(?<![\\p{L}\\p{N}])";
+const WORD_AFTER = "(?![\\p{L}\\p{N}])";
 
 export interface ParsedMealResult {
   items: ResolvedFood[];
@@ -105,6 +111,14 @@ const COMMON_UNITS = [
   "tava",
   "sikim",
   "sıkım",
+  "ölçü",
+  "olcu",
+  "kadeh",
+  "kare",
+  "top",
+  "paket",
+  "küp",
+  "kup",
 ];
 
 // Konuşma dili dolgu kelimeleri
@@ -153,7 +167,7 @@ export function parseMealTextLocally(text: string): ResolvedFood[] | null {
 
   // Temizle: gereksiz dolgu kelimeleri
   for (const filler of FILLER_WORDS) {
-    const reg = new RegExp(`\\b${filler}\\b`, "gi");
+    const reg = new RegExp(`${WORD_BEFORE}${filler}${WORD_AFTER}`, "giu");
     workingText = workingText.replace(reg, " ");
   }
 
@@ -223,7 +237,7 @@ function extractQuantityAndFood(text: string): {
   // Önce birleşik kalıplar: "bir buçuk", "yarım", "çeyrek"
   const fractionMatch = clean.match(/^(bir\s+bucuk|bir\s+buçuk|1[.,]5|yarim|yarım|ceyrek|çeyrek)\b/i);
   if (fractionMatch) {
-    const key = fractionMatch[1].toLowerCase();
+    const key = fractionMatch[1].toLocaleLowerCase("tr-TR");
     quantity = TURKISH_NUMBERS[key] ?? 1;
     clean = clean.slice(fractionMatch[0].length).trim();
   } else {
@@ -234,9 +248,9 @@ function extractQuantityAndFood(text: string): {
       clean = clean.slice(numMatch[0].length).trim();
     } else {
       // Kelime olarak sayı ("iki", "üç", "bir")
-      const wordMatch = clean.match(/^(bir|bi|iki|uc|üç|dort|dört|bes|beş|alti|altı|yedi|sekiz|dokuz|on|az|biraz|bol|bolca)\b/i);
+      const wordMatch = clean.match(new RegExp(`^(bir|bi|iki|uc|üç|dort|dört|bes|beş|alti|altı|yedi|sekiz|dokuz|on|az|biraz|bol|bolca)${WORD_AFTER}`, "iu"));
       if (wordMatch) {
-        const key = wordMatch[1].toLowerCase();
+        const key = wordMatch[1].toLocaleLowerCase("tr-TR");
         quantity = TURKISH_NUMBERS[key] ?? 1;
         clean = clean.slice(wordMatch[0].length).trim();
       }
@@ -245,7 +259,7 @@ function extractQuantityAndFood(text: string): {
 
   // 3. Birim tespiti (ör: "dilim", "tabak", "kase", "porsiyon", "avuç", "kepçe", "adet", "tane", "bardak")
   for (const u of COMMON_UNITS) {
-    const unitReg = new RegExp(`^${u}\\b`, "i");
+    const unitReg = new RegExp(`^${u}${WORD_AFTER}`, "iu");
     if (unitReg.test(clean)) {
       unit = u;
       clean = clean.replace(unitReg, " ").trim();
@@ -281,13 +295,16 @@ function foodWords(words: string[]): string[] {
   return words.filter((w, i) => !isQuantityWord(w) && !(UNIT_WORDS.has(w) && i > 0 && isQuantityWord(words[i - 1])));
 }
 
+// Katalogda yalnız temel katalogda bulunan yiyecekler de ("süt", "kola", "tereyağı")
+// yeni bir yiyeceğin başlangıcı sayılmalı; yoksa "muz süt" tek parça kalıp süt düşüyordu.
+const CATALOGUE_PHRASES: Set<string> = new Set([...KNOWN_FOOD_PHRASES, ...defaultFoodPhrases()]);
+const KNOWN_FIRST_WORDS: Set<string> = new Set([...CATALOGUE_PHRASES].map((phrase) => phrase.split(" ")[0]));
+
 const isKnownPhrase = (phrase: string) => phrase.length > 0 && (KNOWN_FOOD_PHRASES.has(phrase) || matchDefaultFood(phrase) !== null);
-const isPrefixOfKnown = (phrase: string) => { for (const known of KNOWN_FOOD_PHRASES) if (known.startsWith(`${phrase} `)) return true; return false; };
+const isPrefixOfKnown = (phrase: string) => { for (const known of CATALOGUE_PHRASES) if (known.startsWith(`${phrase} `)) return true; return false; };
 
 function startsKnownFood(word: string): boolean {
-  if (isQuantityWord(word)) return true;
-  for (const phrase of KNOWN_FOOD_PHRASES) if (phrase.split(" ")[0] === word) return true;
-  return false;
+  return isQuantityWord(word) || KNOWN_FIRST_WORDS.has(word);
 }
 
 export function trySegmentByDatabase(text: string): string[] {

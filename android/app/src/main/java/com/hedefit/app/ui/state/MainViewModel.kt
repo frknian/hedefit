@@ -3,6 +3,9 @@ package com.hedefit.app.ui.state
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.hedefit.app.gym.PlanRotation
+import com.hedefit.app.gym.PlanRotationPeriod
+import com.hedefit.app.ui.settings.PlanRotationStore
 import com.hedefit.app.data.auth.AuthRepository
 import com.hedefit.app.data.auth.AuthSession
 import com.hedefit.app.data.auth.AuthState
@@ -48,6 +51,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlinx.coroutines.Job
@@ -173,6 +178,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val healthConnect = HealthConnectManager(application)
     private val stepRepository = StepRepository(application, healthConnect)
     private val offlineQueue = OfflineQueueStore(application)
+    private val planRotationStore = PlanRotationStore(application)
+    private var planRotationPeriod = "monthly"
     private val waterUpdateMutex = Mutex()
 
     private val _state = MutableStateFlow(MainUiState())
@@ -509,7 +516,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun adaptPlan(feedback: WorkoutFeedbackData) {
         val profile = _state.value.dashboard?.profile ?: return
         viewModelScope.launch {
-            runCatching { repository.generatePlan(profile, feedback) }.onSuccess { workouts ->
+            runCatching { repository.generatePlan(profile, feedback, planRotationPeriod) }.onSuccess { workouts ->
                 _state.update { current -> current.copy(dashboard = current.dashboard?.copy(workouts = workouts), transientMessage = "Fit Koç geri bildirimine göre sonraki planı uyarladı.") }
             }
         }
@@ -1418,14 +1425,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Kept in sync with the "plan renewal" setting so every plan request carries the chosen cadence. */
+    fun setPlanRotationPeriod(key: String) { planRotationPeriod = if (key == "weekly") "weekly" else "monthly" }
+
+    /**
+     * True when the active AI program was generated in an earlier block (week or
+     * month, per [period]) than today. The day this device generated it wins;
+     * otherwise the program's own server timestamp stands in.
+     */
+    fun newBlockDue(period: PlanRotationPeriod): Boolean {
+        val active = _state.value.dashboard?.workoutPrograms?.firstOrNull { it.isActive } ?: return false
+        if (active.source != "assessment") return false
+        val generatedOn = planRotationStore.generatedOn(authRepository.userId())
+            ?: active.updatedAt?.let { runCatching { OffsetDateTime.parse(it).atZoneSameInstant(ZoneId.systemDefault()).toLocalDate() }.getOrNull() }
+        return PlanRotation.isDue(period, generatedOn, LocalDate.now())
+    }
+
     fun generatePlan() {
         val profile = _state.value.dashboard?.profile ?: return
         if (_state.value.planGenerating) return
         viewModelScope.launch {
             _state.update { it.copy(planGenerating = true, transientMessage = null) }
             val existingId = _state.value.dashboard?.workoutPrograms?.firstOrNull { it.source == "assessment" }?.id
-            runCatching { repository.generatePlan(profile).let { workouts -> repository.saveProgram("Kişisel Atlas Programım", "assessment", profile.goal, workouts, existingId ?: java.util.UUID.randomUUID().toString(), showOnHome = true) } }
+            runCatching { repository.generatePlan(profile, rotationPeriod = planRotationPeriod).let { workouts -> repository.saveProgram("Kişisel Atlas Programım", "assessment", profile.goal, workouts, existingId ?: java.util.UUID.randomUUID().toString(), showOnHome = true) } }
                 .onSuccess { program ->
+                    planRotationStore.markGenerated(authRepository.userId())
                     _state.update { current ->
                         current.copy(
                             planGenerating = false,
@@ -1452,8 +1476,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             _state.update { it.copy(nutritionBusy = true, transientMessage = null) }
+            val estimate = runCatching { repository.estimateNutrition(food, grams) }.getOrElse { error ->
+                _state.update { it.copy(nutritionBusy = false, transientMessage = friendlyError(error)) }
+                return@launch
+            }
+            // A low-confidence estimate is shown for review (with its warning) instead of being saved blindly.
+            if (estimate.needsConfirmation) {
+                _state.update { it.copy(nutritionBusy = false, photoNutritionResults = listOf(estimate), mealReviewSource = "text", mealReviewMeal = meal) }
+                return@launch
+            }
             runCatching {
-                val estimate = repository.estimateNutrition(food, grams)
                 repository.addNutrition(estimate, meal)
             }.onSuccess { log ->
                 _state.update { current ->
@@ -1775,9 +1807,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             val existingAssessment = _state.value.dashboard?.workoutPrograms?.firstOrNull { it.source == "assessment" }
             runCatching {
-                val workouts = repository.generatePlan(profile)
+                val workouts = repository.generatePlan(profile, rotationPeriod = planRotationPeriod)
                 repository.saveProgram("Kişisel Atlas Programım", "assessment", profile.goal, workouts, existingAssessment?.id ?: java.util.UUID.randomUUID().toString(), showOnHome = true)
             }.onSuccess { program ->
+                planRotationStore.markGenerated(authRepository.userId())
                 _state.update { current ->
                     current.copy(
                         profileSaving = false,

@@ -168,9 +168,13 @@ export function profileSignals(payload: Record<string, unknown>) {
 }
 
 import { generateWorkoutPlan } from "../../../lib/training/plan-orchestrator.ts";
+import { loadRecentExerciseIds, normalizeRotationPeriod, resolveRotationDate, rotationInfo, rotationSeed } from "../../../lib/training/rotation.ts";
 
-export function buildLocalPlan(signals: ReturnType<typeof profileSignals>, catalog: unknown[], locale: "tr" | "en"): GeneratedPlan {
-  const plan = generateWorkoutPlan(signals, catalog, locale);
+/** Variety inputs for the deterministic planner; omitted = fully reproducible staples-first plan. */
+export type PlanVariety = { rotationSeed?: string; recentExerciseIds?: string[] };
+
+export function buildLocalPlan(signals: ReturnType<typeof profileSignals>, catalog: unknown[], locale: "tr" | "en", variety: PlanVariety = {}): GeneratedPlan {
+  const plan = generateWorkoutPlan({ ...signals, ...variety }, catalog, locale);
   return {
     title: plan.title,
     profileSummary: plan.profileSummary,
@@ -242,6 +246,21 @@ export async function POST(request: Request) {
   const exerciseCatalog = verifiedClientCatalog.length
     ? verifiedClientCatalog
     : getExercisesForProfile(/salon|gym/i.test(environment), equipment, environment, trainingStyles);
+  // Yerel (deterministik) plan LLM isteminin 240'lık kırpılmış kataloğuyla değil,
+  // kullanıcının yapabildiği TÜM hareketlerle çalışır: kırpma yalnız istem
+  // boyutu içindir ve çekirdek havuzun yarısını eliyordu (rotasyon alanı daralırdı).
+  const localCatalog = verifiedClientCatalog.length
+    ? verifiedClientCatalog
+    : getExercisesForProfile(/salon|gym/i.test(environment), equipment, environment, trainingStyles, Number.POSITIVE_INFINITY);
+  // Çeşitlilik: kullanıcının seçtiği dönem (haftalık/aylık) başına değişen tohum +
+  // son haftalarda yapılan hareketler. Blok, kullanıcının kendi takvim gününe göre döner.
+  const rotationPeriod = normalizeRotationPeriod(payload.rotationPeriod);
+  const rotationDate = resolveRotationDate(payload.localDate);
+  const rotation = rotationInfo(rotationPeriod, rotationDate);
+  const variety: PlanVariety = {
+    rotationSeed: rotationSeed(auth.user.id, rotationPeriod, rotationDate, payload.rotationSeed),
+    recentExerciseIds: await loadRecentExerciseIds(request),
+  };
   const locale = payload.locale === "en" ? "en" : "tr";
   const profile = { ...payload };
   delete profile.photoDataUrl;
@@ -251,9 +270,9 @@ export async function POST(request: Request) {
   // Hareket seçimi her zaman doğrulanmış Hareket Atlası'nda kalır. OpenAI,
   // 15 cevabı yorumlayıp açıklama ve ilerleme metnini kişiselleştirebilir;
   // katalog dışı bir hareket ya da yanlış ekipman öneremez.
-  const atlasPlan = buildLocalPlan(signals, exerciseCatalog, locale);
+  const atlasPlan = buildLocalPlan(signals, localCatalog, locale, variety);
   if (!hasRemoteProvider()) {
-    return Response.json({ ...atlasPlan, profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
+    return Response.json({ ...atlasPlan, rotation, profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
   }
   const usage = await checkAndConsumeUsage(request, "plan", auth.user.id);
   if ("error" in usage) return usage.error;
@@ -357,7 +376,7 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
     }
     if (plan.workouts.length < 3) {
       if (Number.isFinite(usage.limit)) await refundUsage(auth.user.id, "plan");
-      return Response.json({ ...buildLocalPlan(signals, exerciseCatalog, locale), profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
+      return Response.json({ ...atlasPlan, rotation, profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
     }
     // Uzak modelin metinsel koçluğunu korurken programın kendisini Atlas'tan
     // gelen güvenli, ekipman ve sakatlık filtreli seçimle sabit tut.
@@ -369,13 +388,13 @@ Tam olarak ${signals.exerciseCount} farklı hareket seç. Her workout için kata
       safetyNote: plan.safetyNote || atlasPlan.safetyNote,
       analysis: plan.analysis || atlasPlan.analysis,
       progression: plan.progression?.length ? plan.progression : atlasPlan.progression,
-      profileFingerprint: signals.fingerprint,
+      rotation, profileFingerprint: signals.fingerprint,
       model: result.model,
       atlasLocked: true,
     });
   } catch (error) {
     console.error("AI plan generation error", error);
     if (Number.isFinite(usage.limit)) await refundUsage(auth.user.id, "plan");
-    return Response.json({ ...buildLocalPlan(signals, exerciseCatalog, locale), profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
+    return Response.json({ ...atlasPlan, rotation, profileFingerprint: signals.fingerprint, model: "hedefit-deterministic-v1", fallback: true });
   }
 }

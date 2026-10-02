@@ -46,6 +46,10 @@ export async function POST(request: Request) {
         estimatedGrams: item.grams,
         confidence: item.confidence,
         needsConfirmation: item.needsConfirmation,
+        // Per-item reason (and a stable code so clients can localise it): without these
+        // the app could not tell WHICH item needs a second look or why.
+        warning: item.warning,
+        warningCode: item.warningCode,
         source: item.source,
         verified: item.verified,
         nutrition: {
@@ -140,6 +144,7 @@ export async function POST(request: Request) {
         estimatedGrams: item.grams,
         confidence: item.confidence,
         needsConfirmation: item.confidence < 0.75,
+        ...(item.confidence < 0.75 ? { warning: "Değerler tarife ve markaya göre değişebilen yapay zekâ tahminidir.", warningCode: "ai_estimate" } : {}),
         nutrition: {
           calories: item.calories,
           protein: item.protein,

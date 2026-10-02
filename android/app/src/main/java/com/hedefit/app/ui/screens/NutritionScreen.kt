@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -74,6 +75,7 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FitnessCenter
 import com.hedefit.app.ui.components.HfPill
+import com.hedefit.app.ui.state.NutritionWarning
 import com.hedefit.app.ui.components.HfDivider
 import com.hedefit.app.ui.components.HfIconBadge
 import com.hedefit.app.ui.components.HfPrimaryButton
@@ -1261,6 +1263,15 @@ private fun portionUnitLabel(unit: String?, en: Boolean): String = when (unit) {
 
 private data class EditablePhotoFood(val original: NutritionEstimateData, val name: String, val gramsText: String, val included: Boolean = true)
 
+/** One-line "check this item" note under a food in the review dialog. */
+@Composable
+private fun EstimateWarningLine(text: String, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Top) {
+        Icon(Icons.Default.Warning, null, tint = HedefitColors.Warning, modifier = Modifier.size(16.dp))
+        Text(text, color = HedefitColors.Warning, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
 @Composable
 private fun PhotoNutritionReviewDialog(
     detected: List<NutritionEstimateData>, busy: Boolean, en: Boolean,
@@ -1290,10 +1301,8 @@ private fun PhotoNutritionReviewDialog(
                         val quantity = (food.gramsText.replace(',', '.').toDoubleOrNull() ?: food.original.grams) / perUnit
                         val step = if (portionStepHalf(food.original.portionUnit)) .5 else 1.0
                         fun setQuantity(q: Double) { foods = foods.toMutableList().also { it[index] = food.copy(gramsText = (perUnit * q).toInt().toString()) } }
-                        Row(
-                            Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(14.dp)).padding(horizontal = 6.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
+                        Column(Modifier.fillMaxWidth().background(HedefitColors.SurfaceHigh, RoundedCornerShape(14.dp))) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(food.included, onCheckedChange = { checked -> foods = foods.toMutableList().also { it[index] = food.copy(included = checked) } })
                             Column(Modifier.weight(1f)) {
                                 Text(food.name, fontWeight = FontWeight.Bold, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -1302,6 +1311,8 @@ private fun PhotoNutritionReviewDialog(
                             IconButton(onClick = { setQuantity((quantity - step).coerceAtLeast(step)) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Remove, if (en) "Less" else "Azalt") }
                             Text("${formatPortion(quantity)} ${portionUnitLabel(food.original.portionUnit, en)}", fontWeight = FontWeight.ExtraBold, modifier = Modifier.width(72.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             IconButton(onClick = { setQuantity(quantity + step) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Add, if (en) "More" else "Artır") }
+                        }
+                        NutritionWarning.text(food.original, en)?.let { EstimateWarningLine(it, Modifier.padding(start = 14.dp, end = 14.dp, bottom = 9.dp)) }
                         }
                         return@items
                     }
@@ -1312,6 +1323,7 @@ private fun PhotoNutritionReviewDialog(
                         }
                         OutlinedTextField(food.gramsText, { grams -> foods = foods.toMutableList().also { it[index] = food.copy(gramsText = grams.filter { c -> c.isDigit() || c == '.' || c == ',' }.take(7)) } }, Modifier.fillMaxWidth(), label = { Text(if (fromText) (if (en) "Amount (g)" else "Miktar (g)") else if (en) "Estimated amount (g)" else "Tahmini miktar (g)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
                         value?.let { Text("${it.calories} kcal • P ${it.protein.toInt()} g • K ${it.carbs.toInt()} g • Y ${it.fat.toInt()} g • Lif ${it.fiber.toInt()} g", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall); Text("Na ${it.sodiumMg.toInt()} mg • K ${it.potassiumMg.toInt()} mg • Ca ${it.calciumMg.toInt()} mg • Fe ${"%.1f".format(it.ironMg)} mg • C ${it.vitaminCMg.toInt()} mg", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall) }
+                        NutritionWarning.text(food.original, en)?.let { EstimateWarningLine(it) }
                     }
                 }
             }

@@ -45,6 +45,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -222,6 +223,10 @@ fun WorkoutPlanScreen(
     profile: ProfileData? = null,
     performances: List<WorkoutExercisePerformanceData> = emptyList(),
     catalog: List<ExerciseCatalogData> = emptyList(),
+    /** The active AI program belongs to an earlier week/month than today (per the renewal setting). */
+    newBlockDue: Boolean = false,
+    rotationPeriod: String = "monthly",
+    onStartNewBlock: () -> Unit = {},
 ) {
     val en = language == "en"
     var showRegional by remember { mutableStateOf(false) }
@@ -237,7 +242,7 @@ fun WorkoutPlanScreen(
     val listState = rememberLazyListState()
     val scrollScope = rememberCoroutineScope()
     val activeProgram = programs.firstOrNull { it.isActive }
-    val programDetailIndex = if (hasActiveWorkout) 2 else 1
+    val programDetailIndex = 1 + (if (hasActiveWorkout) 1 else 0) + (if (newBlockDue) 1 else 0)
     var page by rememberSaveable { mutableStateOf<String?>(null) }
     var showAllExercises by remember { mutableStateOf(false) }
     LaunchedEffect(activeProgram?.id, pendingScrollProgramId) {
@@ -296,6 +301,25 @@ fun WorkoutPlanScreen(
             }
             if (hasActiveWorkout) item {
                 HfNavRow(Icons.Default.PlayArrow, HedefitColors.Lime, if (en) "Workout in progress" else "Antrenman devam ediyor", if (en) "Tap to resume without losing your sets" else "Setlerini kaybetmeden devam et", onResumeWorkout)
+            }
+            if (newBlockDue) item(key = "new-block") {
+                HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            HfIconBadge(Icons.Default.Autorenew, HedefitColors.Lime, 44.dp, 22.dp, 14.dp)
+                            Column(Modifier.weight(1f)) {
+                                Text(if (en) "A new block is ready" else "Yeni blok hazır", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                                Text(
+                                    if (rotationPeriod == "weekly") (if (en) "A new week has started. Refresh your accessories to keep training fresh." else "Yeni hafta başladı. Antrenmanın sıkıcı olmaması için yardımcı hareketlerini yenile.")
+                                    else (if (en) "A new month has started. Refresh your accessories to keep training fresh." else "Yeni ay başladı. Antrenmanın sıkıcı olmaması için yardımcı hareketlerini yenile."),
+                                    color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                        }
+                        Text(if (en) "Your main lifts stay the same so you keep progressing." else "Ana hareketlerin ilerlemen için aynı kalır.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                        HfPrimaryButton(if (generating) (if (en) "Preparing…" else "Hazırlanıyor…") else (if (en) "Start new block" else "Yeni bloğu başlat"), { if (!generating) onStartNewBlock() }, Modifier.fillMaxWidth(), Icons.Default.Autorenew)
+                    }
+                }
             }
             item(key = "active-program-detail") {
                 if (loading && workouts.isEmpty()) {

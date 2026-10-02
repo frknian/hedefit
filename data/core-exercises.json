@@ -1,0 +1,3212 @@
+{
+  "status": "approved",
+  "note": "Onaylı çekirdek havuz. Atlas (data/exercises.json) değişmez; plan üretimi yalnız bu havuzdan seçer. Her slotun ilk iki hareketi 'staple'dır.",
+  "summary": {
+    "slots": 29,
+    "strength": 206,
+    "warmup": 7,
+    "cooldown": 13
+  },
+  "slots": [
+    {
+      "key": "chest_press",
+      "label": "Göğüs · yatay itiş",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "bench-press",
+          "name": "Barbell Bench Press",
+          "nameTr": "Halter Bench Press",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "db-bench-press",
+          "name": "Dumbbell Bench Press",
+          "nameTr": "Dambıl Bench Press",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "chest-press-machine",
+          "name": "Machine Chest Press",
+          "nameTr": "Makine Göğüs Press",
+          "level": "beginner",
+          "equipment": "chest_press_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "smith-machine-bench-press",
+          "name": "Smith Machine Bench Press",
+          "nameTr": "Smith Makinede Bench Press",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "cable-chest-press",
+          "name": "Cable Chest Press",
+          "nameTr": "Kablo Göğüs Press",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "push-up",
+          "name": "Push-Up",
+          "nameTr": "Şınav",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "knee-push-ups",
+          "name": "Knee Push Ups",
+          "nameTr": "Dizüstü Şınav",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-floor-press",
+          "name": "Dumbbell Floor Press",
+          "nameTr": "Dambıl Floor Press",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-chest-press",
+          "name": "Band Chest Press",
+          "nameTr": "Bantlı Göğüs Press",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "wide-grip-push-ups",
+          "name": "Wide Grip Push Ups",
+          "nameTr": "Geniş Şınav",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 10,
+        "home": 6,
+        "gymOnly": 4,
+        "beginner": 8,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "chest_incline",
+      "label": "Üst göğüs · eğimli itiş",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "incline-db-press",
+          "name": "Incline Dumbbell Press",
+          "nameTr": "Dambıl Eğimli Bench Press",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "incline-bench-press",
+          "name": "Incline Barbell Bench Press",
+          "nameTr": "Halter Eğimli Bench Press",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "smith-machine-incline-bench-press",
+          "name": "Smith Machine Incline Bench Press",
+          "nameTr": "Smith Makinede Eğimli Bench Press",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "incline-push-ups",
+          "name": "Incline Push-Up",
+          "nameTr": "Eğimli Şınav (Eller Yüksekte)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "decline-push-up",
+          "name": "Decline Push-Up",
+          "nameTr": "Ayaklar Yüksekte Şınav",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 5,
+        "home": 3,
+        "gymOnly": 2,
+        "beginner": 2,
+        "intermediate": 3
+      }
+    },
+    {
+      "key": "chest_fly",
+      "label": "Göğüs · açış (izolasyon)",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "db-fly",
+          "name": "Dumbbell Fly",
+          "nameTr": "Dambıl Fly",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "cable-fly",
+          "name": "Cable Fly",
+          "nameTr": "Kablo Fly (Crossover)",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "machine-chest-fly",
+          "name": "Machine Chest Fly",
+          "nameTr": "Makine Göğüs Fly",
+          "level": "beginner",
+          "equipment": "chest_fly_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "pec-deck",
+          "name": "Pec Deck",
+          "nameTr": "Pec Deck (Makine Fly)",
+          "level": "beginner",
+          "equipment": "pec_deck",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-chest-fly",
+          "name": "Band Chest Fly",
+          "nameTr": "Bantlı Göğüs Fly",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-floor-fly",
+          "name": "Dumbbell Floor Fly",
+          "nameTr": "Dambıl Yerde Göğüs Fly",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-db-svend-press",
+          "name": "Single Dumbbell Svend Press",
+          "nameTr": "Tek Dambıl Svend Press",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "home": 4,
+        "gymOnly": 3,
+        "beginner": 6,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "vertical_press",
+      "label": "Omuz · dikey itiş",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "dumbbell-shoulder-press",
+          "name": "Dumbbell Shoulder Press",
+          "nameTr": "Dambıl Omuz Press",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "ohp",
+          "name": "Barbell Overhead Press",
+          "nameTr": "Halter Overhead Press",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "seated-db-press",
+          "name": "Seated Dumbbell Shoulder Press",
+          "nameTr": "Oturarak Dambıl Omuz Press",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "machine-shoulder-press",
+          "name": "Machine Shoulder Press",
+          "nameTr": "Makine Omuz Press",
+          "level": "beginner",
+          "equipment": "shoulder_press_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "smith-machine-shoulder-press",
+          "name": "Smith Machine Shoulder Press",
+          "nameTr": "Smith Makinede Omuz Press",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "arnold-press",
+          "name": "Arnold Press",
+          "nameTr": "Dambıl Arnold Press",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "pike-push-ups",
+          "name": "Pike Push Ups",
+          "nameTr": "Pike Şınav",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-shoulder-press",
+          "name": "Band Shoulder Press",
+          "nameTr": "Bantlı Omuz Press",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-push-press",
+          "name": "Dumbbell Push Press",
+          "nameTr": "Dambıl Push Press",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 9,
+        "home": 6,
+        "gymOnly": 3,
+        "beginner": 5,
+        "intermediate": 4
+      }
+    },
+    {
+      "key": "lateral_raise",
+      "label": "Omuz · yan kaldırış",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "lateral-raise",
+          "name": "Dumbbell Lateral Raise",
+          "nameTr": "Dambıl Yana Kaldırma (Lateral Raise)",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "cable-lateral-raise",
+          "name": "Cable Lateral Raise",
+          "nameTr": "Kablo Yana Kaldırma",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "seated-dumbbell-lateral-raise",
+          "name": "Seated Dumbbell Lateral Raise",
+          "nameTr": "Oturarak Dambıl Yana Kaldırma",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "plate-loaded-lateral-raise",
+          "name": "Plate-Loaded Lateral Raise",
+          "nameTr": "Makine Yana Kaldırma",
+          "level": "beginner",
+          "equipment": "plate_loaded_lateral_raise_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-lateral-raise",
+          "name": "Band Lateral Raise",
+          "nameTr": "Bantlı Yan Omuz Kaldırış",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 5,
+        "home": 3,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "rear_delt",
+      "label": "Arka omuz / üst sırt",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "face-pull",
+          "name": "Cable Face Pull",
+          "nameTr": "Kablo Face Pull",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "rear-delt-fly",
+          "name": "Rear Delt Fly",
+          "nameTr": "Dambıl Arka Omuz Fly",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "dumbbell-reverse-fly",
+          "name": "Dumbbell Reverse Fly",
+          "nameTr": "Dambıl Reverse Fly",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-pull-apart",
+          "name": "Band Pull Apart",
+          "nameTr": "Bantla Pull-Apart",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "trx-face-pull",
+          "name": "TRX Face Pull",
+          "nameTr": "TRX Face Pull",
+          "level": "beginner",
+          "equipment": "suspension_trainer",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-rear-delt-fly",
+          "name": "Band Rear Delt Fly",
+          "nameTr": "Bantlı Arka Omuz Fly",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-face-pull",
+          "name": "Band Face Pull",
+          "nameTr": "Bantlı Face Pull",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-face-pull",
+          "name": "Dumbbell Face Pull",
+          "nameTr": "Dambıl Face Pull",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 8,
+        "home": 7,
+        "gymOnly": 1,
+        "beginner": 6,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "traps",
+      "label": "Trapez",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "db-shrug",
+          "name": "Dumbbell Shrug",
+          "nameTr": "Dambıl Shrug",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "shrug",
+          "name": "Barbell Shrug",
+          "nameTr": "Halter Shrug",
+          "level": "beginner",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "kettlebell-shrug",
+          "name": "Kettlebell Shrug",
+          "nameTr": "Girya Shrug",
+          "level": "beginner",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "smith-machine-shrug",
+          "name": "Smith Machine Shrug",
+          "nameTr": "Smith Makinede Shrug",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 4,
+        "home": 2,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 0
+      }
+    },
+    {
+      "key": "triceps_compound",
+      "label": "Arka kol · bileşik",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "close-grip-db-bench-press",
+          "name": "Close-Grip Dumbbell Bench Press",
+          "nameTr": "Dar Tutuş Dambıl Bench Press",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "close-grip-bench-press",
+          "name": "Close-Grip Bench Press",
+          "nameTr": "Dar Tutuş Halter Bench Press",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "bench-dips",
+          "name": "Bench Dips",
+          "nameTr": "Sehpada Dips (Bench Dips)",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "diamond-push-ups",
+          "name": "Diamond Push Ups",
+          "nameTr": "Elmas Şınav",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "assisted-dips",
+          "name": "Machine Assisted Dips",
+          "nameTr": "Makine Destekli Dips",
+          "level": "beginner",
+          "equipment": "dip_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dips",
+          "name": "Chest Dips",
+          "nameTr": "Paralel Barda Dips",
+          "level": "intermediate",
+          "equipment": "dip_station",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "close-grip-push-ups",
+          "name": "Close Grip Push Ups",
+          "nameTr": "Dar Şınav",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "home": 4,
+        "gymOnly": 3,
+        "beginner": 1,
+        "intermediate": 6
+      }
+    },
+    {
+      "key": "triceps_isolation",
+      "label": "Arka kol · izolasyon",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "tricep-pushdown",
+          "name": "Cable Tricep Pushdown",
+          "nameTr": "Kablo Triceps Pushdown",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "overhead-tricep-extension",
+          "name": "Overhead Tricep Extension",
+          "nameTr": "Tek Dambıl Baş Üstü Triceps Extension",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "v-bar-tricep-pushdown",
+          "name": "V-Bar Tricep Pushdown",
+          "nameTr": "V Tutamakla Kablo Triceps Pushdown",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "db-skull-crusher",
+          "name": "Dumbbell Skull Crusher",
+          "nameTr": "Dambıl Skull Crusher",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "tricep-kickback",
+          "name": "Dumbbell Tricep Kickback",
+          "nameTr": "Dambıl Triceps Kickback",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "machine-triceps-extension",
+          "name": "Machine Triceps Extension",
+          "nameTr": "Makine Triceps Extension",
+          "level": "beginner",
+          "equipment": "tricep_extension_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-arm-tricep-pushdown",
+          "name": "Single Arm Tricep Pushdown",
+          "nameTr": "Tek Kol Kablo Triceps Pushdown",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-triceps-pushdown",
+          "name": "Band Triceps Pushdown",
+          "nameTr": "Bantlı Triceps Pushdown",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-overhead-triceps-extension",
+          "name": "Band Overhead Triceps Extension",
+          "nameTr": "Bantlı Baş Üstü Triceps Uzatma",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-tricep-extension",
+          "name": "Dumbbell Tricep Extension",
+          "nameTr": "Dambıl Baş Üstü Triceps Extension",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-arm-dumbbell-overhead-tricep-extension",
+          "name": "Single-Arm Dumbbell Overhead Tricep Extension",
+          "nameTr": "Tek Kol Dambıl Baş Üstü Triceps Extension",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 11,
+        "home": 7,
+        "gymOnly": 4,
+        "beginner": 9,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "vertical_pull",
+      "label": "Sırt · dikey çekiş",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "lat-pulldown",
+          "name": "Lat Pulldown",
+          "nameTr": "Lat Pulldown",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "pull-up",
+          "name": "Pull-Up",
+          "nameTr": "Barfiks",
+          "level": "intermediate",
+          "equipment": "pull_up_bar",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "v-bar-lat-pulldown",
+          "name": "V-Bar Lat Pulldown",
+          "nameTr": "V Tutamakla Lat Pulldown",
+          "level": "beginner",
+          "equipment": "lat_pulldown_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "close-grip-lat-pulldown",
+          "name": "Close Grip Lat Pulldown",
+          "nameTr": "Dar Tutuş Lat Pulldown",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "chin-ups",
+          "name": "Chin-Ups",
+          "nameTr": "Chin-Up (Ters Tutuş Barfiks)",
+          "level": "intermediate",
+          "equipment": "pull_up_bar",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "neutral-grip-pull-ups",
+          "name": "Neutral Grip Pull Ups",
+          "nameTr": "Nötr Tutuş Barfiks",
+          "level": "intermediate",
+          "equipment": "pull_up_bar",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "assisted-pull-ups",
+          "name": "Assisted Pull Ups",
+          "nameTr": "Makine Destekli Barfiks",
+          "level": "beginner",
+          "equipment": "assisted_pullup_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-assisted-pull-ups",
+          "name": "Band Assisted Pull Ups",
+          "nameTr": "Bant Destekli Barfiks",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "straight-arm-pulldown",
+          "name": "Straight-Arm Pulldown",
+          "nameTr": "Kablo Düz Kol Pulldown",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-lat-pulldown",
+          "name": "Band Lat Pulldown",
+          "nameTr": "Bantlı Lat Pulldown",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-straight-arm-pulldown",
+          "name": "Band Straight-Arm Pulldown",
+          "nameTr": "Bantlı Düz Kol Pulldown",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 11,
+        "home": 6,
+        "gymOnly": 5,
+        "beginner": 6,
+        "intermediate": 5
+      }
+    },
+    {
+      "key": "horizontal_pull",
+      "label": "Sırt · yatay çekiş",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "seated-cable-row",
+          "name": "Seated Cable Row",
+          "nameTr": "Oturarak Kablo Kürek Çekiş",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "bent-over-db-row",
+          "name": "Bent-Over Dumbbell Row",
+          "nameTr": "Dambılla Öne Eğilerek Kürek Çekiş",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "single-arm-db-row",
+          "name": "Single-Arm Dumbbell Row",
+          "nameTr": "Tek Kol Dambıl Kürek Çekiş",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "barbell-row",
+          "name": "Bent-Over Barbell Row",
+          "nameTr": "Halterle Öne Eğilerek Kürek Çekiş",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "chest-supported-db-row",
+          "name": "Chest-Supported Dumbbell Row",
+          "nameTr": "Eğimli Sehpada Dambıl Kürek Çekiş",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "t-bar-row",
+          "name": "T-Bar Row",
+          "nameTr": "T-Bar Row",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "chest-supported-smith-machine-row",
+          "name": "Chest-Supported Smith Machine Row",
+          "nameTr": "Smith Makinede Göğüs Destekli Kürek Çekiş",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "kneeling-cable-row",
+          "name": "Kneeling Cable Row",
+          "nameTr": "Diz Üstü Kablo Kürek Çekiş",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "trx-row",
+          "name": "TRX Row",
+          "nameTr": "TRX Kürek Çekiş",
+          "level": "beginner",
+          "equipment": "suspension_trainer",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "inverted-row",
+          "name": "Inverted Row",
+          "nameTr": "Halterle Ters Kürek Çekiş (Inverted Row)",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "one-arm-kettlebell-row",
+          "name": "One Arm Kettlebell Row",
+          "nameTr": "Tek Kol Girya Kürek Çekiş",
+          "level": "intermediate",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-seated-row",
+          "name": "Band Seated Row",
+          "nameTr": "Bantlı Oturarak Kürek Çekişi",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-bent-over-row",
+          "name": "Band Bent-Over Row",
+          "nameTr": "Bantlı Eğilerek Kürek Çekişi",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-single-arm-row",
+          "name": "Band Single-Arm Row",
+          "nameTr": "Bantlı Tek Kol Kürek Çekişi",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 14,
+        "home": 8,
+        "gymOnly": 6,
+        "beginner": 9,
+        "intermediate": 5
+      }
+    },
+    {
+      "key": "squat",
+      "label": "Bacak · squat",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "squat",
+          "name": "Barbell Back Squat",
+          "nameTr": "Halter Squat",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "goblet-squat",
+          "name": "Goblet Squat",
+          "nameTr": "Goblet Squat",
+          "level": "beginner",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "db-squat",
+          "name": "Dumbbell Squat",
+          "nameTr": "Dambıl Squat",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "front-squat",
+          "name": "Front Squat",
+          "nameTr": "Halter Front Squat",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "leg-press",
+          "name": "Leg Press",
+          "nameTr": "Leg Press",
+          "level": "beginner",
+          "equipment": "leg_press",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "hack-squat",
+          "name": "Hack Squat",
+          "nameTr": "Hack Squat Makinesi",
+          "level": "intermediate",
+          "equipment": "hack_squat",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "bodyweight-squat",
+          "name": "Bodyweight Squat",
+          "nameTr": "Squat (Vücut Ağırlığı)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "trx-squat",
+          "name": "TRX Squat",
+          "nameTr": "TRX Squat",
+          "level": "beginner",
+          "equipment": "suspension_trainer",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-front-squat",
+          "name": "Dumbbell Front Squat",
+          "nameTr": "Dambıl Front Squat",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "db-sumo-squat",
+          "name": "Dumbbell Sumo Squat",
+          "nameTr": "Dambıl Sumo Squat",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "banded-squat",
+          "name": "Banded Squat",
+          "nameTr": "Bantlı Squat",
+          "level": "beginner",
+          "equipment": "loop_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 11,
+        "home": 7,
+        "gymOnly": 4,
+        "beginner": 7,
+        "intermediate": 4
+      }
+    },
+    {
+      "key": "quad_isolation",
+      "label": "Ön bacak · izolasyon",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "leg-extension",
+          "name": "Leg Extension",
+          "nameTr": "Leg Extension (Makine)",
+          "level": "beginner",
+          "equipment": "leg_extension",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "single-leg-extension",
+          "name": "Single Leg Extension",
+          "nameTr": "Tek Bacak Leg Extension (Makine)",
+          "level": "intermediate",
+          "equipment": "leg_extension",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "banded-terminal-knee-extension",
+          "name": "Banded Terminal Knee Extension",
+          "nameTr": "Bantlı Diz Kilitleme (TKE)",
+          "level": "beginner",
+          "equipment": "loop_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "reverse-nordic-curl",
+          "name": "Reverse Nordic Curl",
+          "nameTr": "Ters Nordic Curl",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "wall-sit",
+          "name": "Wall Sit",
+          "nameTr": "Duvarda Oturma (Wall Sit)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 5,
+        "home": 3,
+        "gymOnly": 2,
+        "beginner": 3,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "hinge",
+      "label": "Arka bacak · kalça menteşesi",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "romanian-deadlift",
+          "name": "Romanian Deadlift",
+          "nameTr": "Halter Romanian Deadlift",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "dumbbell-romanian-deadlift",
+          "name": "Dumbbell Romanian Deadlift",
+          "nameTr": "Dambıl Romanian Deadlift",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "deadlift",
+          "name": "Barbell Deadlift",
+          "nameTr": "Halter Deadlift",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-deadlift",
+          "name": "Dumbbell Deadlift",
+          "nameTr": "Dambıl Deadlift",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "kettlebell-deadlift",
+          "name": "Kettlebell Deadlift",
+          "nameTr": "Girya Deadlift",
+          "level": "beginner",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "smith-machine-rdl",
+          "name": "Smith Machine Romanian Deadlift",
+          "nameTr": "Smith Makinede Romanian Deadlift",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-leg-romanian-deadlift",
+          "name": "Single Leg Romanian Deadlift",
+          "nameTr": "Dambıl Tek Bacak Romanian Deadlift",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "banded-romanian-deadlift",
+          "name": "Banded Romanian Deadlift",
+          "nameTr": "Bantlı Romanian Deadlift",
+          "level": "beginner",
+          "equipment": "loop_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-pull-through",
+          "name": "Band Pull-Through",
+          "nameTr": "Bantlı Pull-Through",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "db-kickstand-deadlift",
+          "name": "Dumbbell Kickstand Deadlift",
+          "nameTr": "Dambıl Kickstand Deadlift",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 10,
+        "home": 7,
+        "gymOnly": 3,
+        "beginner": 6,
+        "intermediate": 4
+      }
+    },
+    {
+      "key": "hamstring_curl",
+      "label": "Arka bacak · curl",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "leg-curl",
+          "name": "Lying Leg Curl",
+          "nameTr": "Yatarak Leg Curl (Makine)",
+          "level": "beginner",
+          "equipment": "leg_curl",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "seated-leg-curl",
+          "name": "Seated Leg Curl",
+          "nameTr": "Oturarak Leg Curl (Makine)",
+          "level": "beginner",
+          "equipment": "leg_curl",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "ball-leg-curl",
+          "name": "Stability Ball Leg Curl",
+          "nameTr": "Pilates Topuyla Leg Curl",
+          "level": "intermediate",
+          "equipment": "stability_ball",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "trx-hamstring-curl",
+          "name": "TRX Hamstring Curl",
+          "nameTr": "TRX Hamstring Curl",
+          "level": "intermediate",
+          "equipment": "suspension_trainer",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "banded-standing-curl",
+          "name": "Banded Standing Leg Curl",
+          "nameTr": "Bantlı Ayakta Leg Curl",
+          "level": "beginner",
+          "equipment": "loop_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-seated-hamstring-curl",
+          "name": "Band Seated Hamstring Curl",
+          "nameTr": "Bantlı Oturarak Leg Curl",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 6,
+        "home": 4,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "glute_bridge",
+      "label": "Kalça · köprü / thrust",
+      "role": "main",
+      "exercises": [
+        {
+          "id": "hip-thrust",
+          "name": "Barbell Hip Thrust",
+          "nameTr": "Halter Hip Thrust",
+          "level": "intermediate",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "glute-bridge",
+          "name": "Glute Bridge",
+          "nameTr": "Kalça Köprüsü",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "dumbbell-hip-thrust",
+          "name": "Dumbbell Hip Thrust",
+          "nameTr": "Dambıl Hip Thrust",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-leg-glute-bridge",
+          "name": "Single Leg Glute Bridge",
+          "nameTr": "Tek Bacak Kalça Köprüsü",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "smith-machine-hip-thrust",
+          "name": "Smith Machine Hip Thrust",
+          "nameTr": "Smith Makinede Hip Thrust",
+          "level": "beginner",
+          "equipment": "smith_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "banded-hip-thrust",
+          "name": "Banded Hip Thrust",
+          "nameTr": "Bantlı Hip Thrust",
+          "level": "beginner",
+          "equipment": "loop_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 6,
+        "home": 4,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "glute_abduction",
+      "label": "Kalça · dış/iç bacak",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "cable-kickback",
+          "name": "Cable Glute Kickback",
+          "nameTr": "Kablo Kalça Kickback",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "hip-abduction",
+          "name": "Machine Hip Abduction",
+          "nameTr": "Makine Kalça Açma (Abductor)",
+          "level": "beginner",
+          "equipment": "hip_abduction_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "banded-lateral-walk",
+          "name": "Banded Lateral Walk",
+          "nameTr": "Bantlı Yan Yürüyüş",
+          "level": "beginner",
+          "equipment": "loop_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "side-lying-hip-abduction",
+          "name": "Side-Lying Hip Abduction",
+          "nameTr": "Yan Yatarak Bacak Açma",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "hip-adduction",
+          "name": "Hip Adduction",
+          "nameTr": "Makine Kalça Kapama (Adductor)",
+          "level": "intermediate",
+          "equipment": "hip_adduction_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "glute-kickback",
+          "name": "Glute Kickback",
+          "nameTr": "Dört Ayak Kalça Kickback",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "clamshells",
+          "name": "Clamshells",
+          "nameTr": "Clamshell",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "home": 4,
+        "gymOnly": 3,
+        "beginner": 5,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "lunge",
+      "label": "Bacak · tek bacak / lunge",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "db-lunge",
+          "name": "Dumbbell Lunge",
+          "nameTr": "Dambıl Lunge",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "walking-lunge",
+          "name": "Walking Lunge",
+          "nameTr": "Yürüyerek Lunge",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "reverse-lunge",
+          "name": "Reverse Lunge",
+          "nameTr": "Dambıl Geri Lunge",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "bulgarian-split-squat",
+          "name": "Bulgarian Split Squat",
+          "nameTr": "Dambıl Bulgar Split Squat",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "bodyweight-reverse-lunge",
+          "name": "Bodyweight Reverse Lunge",
+          "nameTr": "Geri Lunge",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "step-ups",
+          "name": "Step Ups",
+          "nameTr": "Basamağa Çıkma (Step-Up)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-split-squat",
+          "name": "Dumbbell Split Squat",
+          "nameTr": "Dambıl Split Squat",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "home": 7,
+        "gymOnly": 0,
+        "beginner": 3,
+        "intermediate": 4
+      }
+    },
+    {
+      "key": "calves",
+      "label": "Baldır",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "standing-calf-raise",
+          "name": "Standing Calf Raise",
+          "nameTr": "Ayakta Baldır Makinesi",
+          "level": "beginner",
+          "equipment": "standing_calf_raise_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "seated-calf-raise",
+          "name": "Seated Calf Raise",
+          "nameTr": "Oturarak Baldır Makinesi",
+          "level": "beginner",
+          "equipment": "seated_calf_raise_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "bodyweight-calf-raise",
+          "name": "Bodyweight Calf Raise",
+          "nameTr": "Baldır Kaldırma",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-leg-calf-raise",
+          "name": "Single Leg Calf Raise",
+          "nameTr": "Tek Bacak Baldır Kaldırma",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-calf-raise",
+          "name": "Dumbbell Calf Raise",
+          "nameTr": "Dambılla Baldır Kaldırma",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-calf-raise",
+          "name": "Band Calf Raise",
+          "nameTr": "Bantlı Baldır Kaldırış",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 6,
+        "home": 4,
+        "gymOnly": 2,
+        "beginner": 5,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "biceps_curl",
+      "label": "Ön kol · biceps curl",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "bicep-curl",
+          "name": "Dumbbell Bicep Curl",
+          "nameTr": "Dambıl Biceps Curl",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "barbell-curl",
+          "name": "Barbell Curl",
+          "nameTr": "Halter Biceps Curl",
+          "level": "beginner",
+          "equipment": "barbell",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "ez-bar-curl",
+          "name": "EZ-Bar Curl",
+          "nameTr": "EZ Bar Curl",
+          "level": "beginner",
+          "equipment": "ez_bar",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "cable-curl",
+          "name": "Cable Curl",
+          "nameTr": "Kablo Biceps Curl",
+          "level": "beginner",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "machine-bicep-curl",
+          "name": "Machine Bicep Curl",
+          "nameTr": "Makine Biceps Curl",
+          "level": "beginner",
+          "equipment": "bicep_curl_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "preacher-curl",
+          "name": "Preacher Curl",
+          "nameTr": "EZ Bar Preacher Curl",
+          "level": "beginner",
+          "equipment": "ez_bar",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "incline-db-curl",
+          "name": "Incline Dumbbell Curl",
+          "nameTr": "Eğimli Sehpada Dambıl Curl",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "concentration-curl",
+          "name": "Concentration Curl",
+          "nameTr": "Dambıl Konsantrasyon Curl",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-biceps-curl",
+          "name": "Band Biceps Curl",
+          "nameTr": "Bantlı Biceps Curl",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "seated-dumbbell-curl",
+          "name": "Seated Dumbbell Curl",
+          "nameTr": "Oturarak Dambıl Curl",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "zottman-curl",
+          "name": "Zottman Curl",
+          "nameTr": "Dambıl Zottman Curl",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 11,
+        "home": 6,
+        "gymOnly": 5,
+        "beginner": 9,
+        "intermediate": 2
+      }
+    },
+    {
+      "key": "hammer_brachialis",
+      "label": "Ön kol · hammer / brachialis",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "hammer-curl",
+          "name": "Dumbbell Hammer Curl",
+          "nameTr": "Dambıl Hammer Curl",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "cable-hammer-curl",
+          "name": "Cable Hammer Curl",
+          "nameTr": "Kablo Hammer Curl",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "cross-body-hammer-curl",
+          "name": "Cross Body Hammer Curl",
+          "nameTr": "Dambıl Çapraz Hammer Curl",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "ez-bar-reverse-curl",
+          "name": "EZ-Bar Reverse Curl",
+          "nameTr": "EZ Bar Ters Tutuş Curl",
+          "level": "beginner",
+          "equipment": "ez_bar",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-hammer-curl",
+          "name": "Band Hammer Curl",
+          "nameTr": "Bantlı Hammer Curl",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "single-arm-hammer-curl",
+          "name": "Single-Arm Hammer Curl",
+          "nameTr": "Tek Kol Dambıl Hammer Curl",
+          "level": "intermediate",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 6,
+        "home": 4,
+        "gymOnly": 2,
+        "beginner": 3,
+        "intermediate": 3
+      }
+    },
+    {
+      "key": "forearm_grip",
+      "label": "Önkol / kavrama",
+      "role": "accessory",
+      "exercises": [
+        {
+          "id": "dumbbell-wrist-curl",
+          "name": "Dumbbell Wrist Curl",
+          "nameTr": "Dambıl Bilek Curl",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "dead-hang",
+          "name": "Dead Hang",
+          "nameTr": "Barda Asılı Durma",
+          "level": "beginner",
+          "equipment": "pull_up_bar",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "db-reverse-wrist-curl",
+          "name": "Dumbbell Reverse Wrist Curl",
+          "nameTr": "Dambıl Ters Bilek Curl",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 3,
+        "home": 3,
+        "gymOnly": 0,
+        "beginner": 3,
+        "intermediate": 0
+      }
+    },
+    {
+      "key": "core_stability",
+      "label": "Core · stabilite",
+      "role": "core",
+      "exercises": [
+        {
+          "id": "plank",
+          "name": "Plank",
+          "nameTr": "Plank",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "dead-bug",
+          "name": "Dead Bug",
+          "nameTr": "Dead Bug (Ölü Böcek)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "bird-dog",
+          "name": "Bird-Dog",
+          "nameTr": "Bird Dog (Kuş-Köpek)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "high-plank",
+          "name": "High Plank",
+          "nameTr": "Düz Kol Plank",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "hollow-body-hold",
+          "name": "Hollow Body Hold",
+          "nameTr": "Hollow Body Bekletme",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "ab-wheel-rollout",
+          "name": "Ab Wheel Rollout",
+          "nameTr": "Karın Tekerleği (Ab Wheel)",
+          "level": "intermediate",
+          "equipment": "ab_wheel",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "trx-plank",
+          "name": "TRX Plank",
+          "nameTr": "TRX Plank",
+          "level": "intermediate",
+          "equipment": "suspension_trainer",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "home": 7,
+        "gymOnly": 0,
+        "beginner": 4,
+        "intermediate": 3
+      }
+    },
+    {
+      "key": "core_flexion",
+      "label": "Core · karın bükme",
+      "role": "core",
+      "exercises": [
+        {
+          "id": "crunches",
+          "name": "Crunches",
+          "nameTr": "Crunch",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "cable-crunch",
+          "name": "Cable Crunch",
+          "nameTr": "Kablo Crunch",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "reverse-crunches",
+          "name": "Reverse Crunches",
+          "nameTr": "Ters Crunch",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "machine-seated-crunch",
+          "name": "Machine Seated Crunch",
+          "nameTr": "Makine Crunch",
+          "level": "beginner",
+          "equipment": "ab_crunch_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "bicycle-crunch",
+          "name": "Bicycle Crunch",
+          "nameTr": "Bisiklet Crunch",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 5,
+        "home": 3,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "leg_raise",
+      "label": "Core · bacak kaldırma",
+      "role": "core",
+      "exercises": [
+        {
+          "id": "hanging-knee-raise",
+          "name": "Hanging Knee Raise",
+          "nameTr": "Barda Asılı Diz Çekme",
+          "level": "beginner",
+          "equipment": "pull_up_bar",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "lying-leg-raise",
+          "name": "Lying Leg Raise",
+          "nameTr": "Yatarak Bacak Kaldırma",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "captains-chair-knee-raise",
+          "name": "Captain's Chair Knee Raise",
+          "nameTr": "Dips İstasyonunda Diz Çekme",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "hanging-leg-raise",
+          "name": "Hanging Leg Raise",
+          "nameTr": "Barda Asılı Bacak Kaldırma",
+          "level": "intermediate",
+          "equipment": "pull_up_bar",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "flutter-kicks",
+          "name": "Flutter Kicks",
+          "nameTr": "Flutter Kick (Çırpma)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 5,
+        "home": 4,
+        "gymOnly": 1,
+        "beginner": 4,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "obliques",
+      "label": "Core · yan / rotasyon",
+      "role": "core",
+      "exercises": [
+        {
+          "id": "side-plank",
+          "name": "Side Plank",
+          "nameTr": "Yan Plank",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "cable-pallof-press",
+          "name": "Cable Pallof Press",
+          "nameTr": "Kablo Pallof Press",
+          "level": "intermediate",
+          "equipment": "cable",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "russian-twist",
+          "name": "Russian Twist",
+          "nameTr": "Russian Twist",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "dumbbell-side-bend",
+          "name": "Dumbbell Side Bend",
+          "nameTr": "Dambılla Yana Eğilme",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "cross-body-crunch",
+          "name": "Cross-Body Crunch",
+          "nameTr": "Çapraz Crunch",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "band-pallof-press",
+          "name": "Band Pallof Press",
+          "nameTr": "Bantlı Pallof Press",
+          "level": "beginner",
+          "equipment": "resistance_band",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 6,
+        "home": 5,
+        "gymOnly": 1,
+        "beginner": 5,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "lower_back",
+      "label": "Alt sırt",
+      "role": "core",
+      "exercises": [
+        {
+          "id": "back-extension",
+          "name": "Back Extension",
+          "nameTr": "Hiperekstansiyon (Bel Sehpası)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "superman",
+          "name": "Superman",
+          "nameTr": "Superman",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "reverse-plank",
+          "name": "Reverse Plank",
+          "nameTr": "Ters Plank",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "machine-back-extension",
+          "name": "Machine Back Extension",
+          "nameTr": "Makine Bel Extension",
+          "level": "beginner",
+          "equipment": "back_extension_machine",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 4,
+        "home": 2,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 0
+      }
+    },
+    {
+      "key": "carry",
+      "label": "Taşıma / kavrama",
+      "role": "conditioning",
+      "exercises": [
+        {
+          "id": "dumbbell-farmers-walk",
+          "name": "Dumbbell Farmer's Walk",
+          "nameTr": "Dambıl Farmer Walk",
+          "level": "beginner",
+          "equipment": "dumbbell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "kettlebell-farmers-walk",
+          "name": "Kettlebell Farmer's Walk",
+          "nameTr": "Girya Farmer Walk",
+          "level": "intermediate",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "suitcase-carry",
+          "name": "Suitcase Carry",
+          "nameTr": "Tek Taraflı Taşıma (Suitcase Carry)",
+          "level": "beginner",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 3,
+        "home": 3,
+        "gymOnly": 0,
+        "beginner": 2,
+        "intermediate": 1
+      }
+    },
+    {
+      "key": "conditioning",
+      "label": "Kondisyon / tam vücut",
+      "role": "conditioning",
+      "exercises": [
+        {
+          "id": "kettlebell-swing",
+          "name": "Kettlebell Swing",
+          "nameTr": "Girya Swing",
+          "level": "intermediate",
+          "equipment": "kettlebell",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "staple"
+        },
+        {
+          "id": "burpees",
+          "name": "Burpees",
+          "nameTr": "Burpee",
+          "level": "intermediate",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "cardio",
+          "tier": "staple"
+        },
+        {
+          "id": "mountain-climbers",
+          "name": "Mountain Climbers",
+          "nameTr": "Mountain Climber (Dağ Tırmanışı)",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "cardio",
+          "tier": "variation"
+        },
+        {
+          "id": "jump-rope",
+          "name": "Jump Rope",
+          "nameTr": "İp Atlama",
+          "level": "beginner",
+          "equipment": "jump_rope",
+          "environment": [
+            "home",
+            "gym"
+          ],
+          "category": "cardio",
+          "tier": "variation"
+        },
+        {
+          "id": "medicine-ball-slam",
+          "name": "Medicine Ball Slam",
+          "nameTr": "Sağlık Topu Slam",
+          "level": "beginner",
+          "equipment": "slam_ball",
+          "environment": [
+            "gym"
+          ],
+          "category": "strength",
+          "tier": "variation"
+        },
+        {
+          "id": "battle-ropes",
+          "name": "Battle Ropes",
+          "nameTr": "Battle Rope Dalgalar",
+          "level": "intermediate",
+          "equipment": "battle_rope",
+          "environment": [
+            "gym"
+          ],
+          "category": "cardio",
+          "tier": "variation"
+        },
+        {
+          "id": "jumping-jacks",
+          "name": "Jumping Jacks",
+          "nameTr": "Jumping Jack",
+          "level": "beginner",
+          "equipment": "bodyweight",
+          "environment": [
+            "home",
+            "outdoor",
+            "gym"
+          ],
+          "category": "cardio",
+          "tier": "variation"
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "home": 5,
+        "gymOnly": 2,
+        "beginner": 4,
+        "intermediate": 3
+      }
+    }
+  ],
+  "warmup": [
+    {
+      "id": "cat-cow",
+      "name": "Cat-Cow",
+      "nameTr": "Kedi-İnek",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "bird-dog",
+      "name": "Bird-Dog",
+      "nameTr": "Bird Dog (Kuş-Köpek)",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "jumping-jacks",
+      "name": "Jumping Jacks",
+      "nameTr": "Jumping Jack",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "high-knees",
+      "name": "High Knees",
+      "nameTr": "Yüksek Diz Koşusu",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "downward-dog-to-plank",
+      "name": "Downward Dog to Plank",
+      "nameTr": "Aşağı Bakan Köpekten Plank",
+      "level": "intermediate",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "thread-the-needle",
+      "name": "Thread the Needle",
+      "nameTr": "İğneye İplik Geçirme Esnemesi",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "half-kneeling-hip-flexor-rock",
+      "name": "Half-Kneeling Hip Flexor Rock",
+      "nameTr": "Yarım Diz Kalça Önü Sallanma",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    }
+  ],
+  "cooldown": [
+    {
+      "id": "childs-pose",
+      "name": "Child's Pose",
+      "nameTr": "Çocuk Pozu",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "downward-dog",
+      "name": "Downward-Facing Dog",
+      "nameTr": "Aşağı Bakan Köpek",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "kneeling-hip-flexor-stretch",
+      "name": "Kneeling Hip Flexor Stretch",
+      "nameTr": "Diz Üstü Kalça Önü Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "pigeon-stretch",
+      "name": "Pigeon Stretch",
+      "nameTr": "Güvercin Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "standing-calf-stretch",
+      "name": "Standing Calf Stretch",
+      "nameTr": "Ayakta Baldır Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "standing-quad-stretch",
+      "name": "Standing Quad Stretch",
+      "nameTr": "Ayakta Ön Bacak Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "doorway-chest-stretch",
+      "name": "Doorway Chest Stretch",
+      "nameTr": "Kapı Aralığında Göğüs Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "cross-body-shoulder-stretch",
+      "name": "Cross-Body Shoulder Stretch",
+      "nameTr": "Çapraz Omuz Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "overhead-triceps-stretch",
+      "name": "Overhead Triceps Stretch",
+      "nameTr": "Baş Üstü Arka Kol Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "bench-hamstring-stretch",
+      "name": "Bench Hamstring Stretch",
+      "nameTr": "Sehpada Arka Bacak Esneme",
+      "level": "beginner",
+      "equipment": "flat_bench"
+    },
+    {
+      "id": "supine-spinal-twist",
+      "name": "Supine Spinal Twist",
+      "nameTr": "Sırtüstü Omurga Dönüşü",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "knee-to-chest-stretch",
+      "name": "Knee-to-Chest Stretch",
+      "nameTr": "Dizi Göğse Çekme Esnemesi",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    },
+    {
+      "id": "neck-side-stretch",
+      "name": "Neck Side Stretch",
+      "nameTr": "Boyun Yan Esneme",
+      "level": "beginner",
+      "equipment": "bodyweight"
+    }
+  ]
+}
