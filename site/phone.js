@@ -1,6 +1,10 @@
 /* Hero telefonu: gerçek uygulamayı taklit eden, kaydırılabilir ve dokunulabilir demo.
    Giriş turu kendiliğinden gezer; kullanıcı dokununca durur, 15 sn sessizlikte sürer. */
 (() => {
+  const EN = document.documentElement.lang === 'en';
+  const t = (tr, en) => (EN ? en : tr);
+  // İngilizce arayüzlü ekran görüntüsü olanlar (site/assets/shots-en); diğerleri Türkçe arayüzlü kalır.
+  const EN_SHOTS = new Set(['atlas', 'beslenme', 'hareketler', 'istatistik', 'ogunler', 'rota', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
   const app = document.getElementById('heroApp');
   if (!app) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -12,19 +16,19 @@
 
   // id → { img, başlık, açıklama, bölüm bağlantısı, sekme }
   const S = {
-    home:      { t: 'Ana ekran', d: 'Bugünün antrenmanı, hedef yolculuğu ve günlük dengen tek bakışta.', tab: 'home' },
-    antrenman: { img: 'hareketler', t: 'Antrenman', d: 'Her hareket animasyonlu önizlemeyle gelir; set ve tekrarı dokunarak ayarla.', a: '#f-antrenman', tab: 'antrenman' },
-    beslenme:  { img: 'beslenme', t: 'Beslenme', d: 'Kalori halkası, makrolar ve su. Öğünü yaz, kalorisi veritabanından hesaplansın; ya da fotoğrafla.', a: '#f-beslenme', tab: 'beslenme' },
-    ilerleme:  { img: 'istatistik', t: 'İlerleme', d: 'Aktivite takvimi, seri ve haftalık süre. 7G’den Tümü’ne.', a: '#f-ilerleme', tab: 'ilerleme' },
-    koc:       { img: 'koc', t: 'Fit Koç', d: 'Antrenman, beslenme ve ilerleme sorularını senin verine göre yanıtlar.', a: '#f-koc', tab: 'koc' },
-    seans:     { img: 'seans-hizli', t: 'Antrenman seansı', d: 'Setlere dokun, dinlenme sayacı kendiliğinden başlar. İstersen detaylı moda geç.', a: '#f-antrenman' },
-    hedef:     { img: 'hedef', t: 'Hedef yolculuğu', d: 'Hedef kilon için tempo seç; tarihin ve ara hedeflerin hesaplansın.', a: '#hedef-yolculugu' },
-    atlas:     { img: 'atlas', t: 'Hareket Atlası', d: '600’den fazla hareket; kas, ekipman ve seviyeye göre filtrele.', a: '#f-antrenman' },
-    kardiyo:   { img: 'kardiyo-prog', t: 'Kardiyo', d: '6 makine ve hazır programlar: HIIT, tepe tırmanışı, bisiklet sprintleri.', a: '#f-kardiyo' },
-    oyun:      { img: 'oyun', t: 'Oyun modu', d: 'Sanal rota, rekorunla yarış ve hedef görevleri.', a: '#galeri' },
-    rota:      { img: 'rota', t: 'Hedefit Rota', d: 'GPS ile kaydet, rotanı planla ve tekrar kullan.', a: '#rota' },
-    ogunler:   { img: 'ogunler', t: 'Öğün ekle', d: 'Metinle ya da fotoğrafla akıllı öğün ekleme.', a: '#yapay-zeka' },
-    arkadaslar:{ img: 'sosyal-friends', t: 'Arkadaşlar', d: 'Sıralama, akış ve ortak meydan okumalar.', a: '#sosyal' },
+    home:      { t: t('Ana ekran', 'Home screen'), d: t('Bugünün antrenmanı, hedef yolculuğu ve günlük dengen tek bakışta.', 'Today\'s workout, goal journey and daily balance at a glance.'), tab: 'home' },
+    antrenman: { img: 'hareketler', t: t('Antrenman', 'Workout'), d: t('Her hareket animasyonlu önizlemeyle gelir; set ve tekrarı dokunarak ayarla.', 'Every exercise comes with an animated preview; adjust sets and reps with a tap.'), a: '#f-antrenman', tab: 'antrenman' },
+    beslenme:  { img: 'beslenme', t: t('Beslenme', 'Nutrition'), d: t('Kalori halkası, makrolar ve su. Öğünü yaz, kalorisi veritabanından hesaplansın; ya da fotoğrafla.', 'Calorie ring, macros and water. Type your meal and its calories are calculated from the database, or photograph it.'), a: '#f-beslenme', tab: 'beslenme' },
+    ilerleme:  { img: 'istatistik', t: t('İlerleme', 'Progress'), d: t('Aktivite takvimi, seri ve haftalık süre. 7G’den Tümü’ne.', 'Activity calendar, streak and weekly time. From 7D to All.'), a: '#f-ilerleme', tab: 'ilerleme' },
+    koc:       { img: 'koc', t: t('Fit Koç', 'Fit Coach'), d: t('Antrenman, beslenme ve ilerleme sorularını senin verine göre yanıtlar.', 'Answers your training, nutrition and progress questions using your own data.'), a: '#f-koc', tab: 'koc' },
+    seans:     { img: 'seans-hizli', t: t('Antrenman seansı', 'Workout session'), d: t('Setlere dokun, dinlenme sayacı kendiliğinden başlar. İstersen detaylı moda geç.', 'Tap sets and the rest timer starts on its own. Switch to detailed mode if you like.'), a: '#f-antrenman' },
+    hedef:     { img: 'hedef', t: t('Hedef yolculuğu', 'Goal journey'), d: t('Hedef kilon için tempo seç; tarihin ve ara hedeflerin hesaplansın.', 'Pick a pace for your target weight; your date and milestones are calculated.'), a: '#hedef-yolculugu' },
+    atlas:     { img: 'atlas', t: t('Hareket Atlası', 'Exercise Atlas'), d: t('600’den fazla hareket; kas, ekipman ve seviyeye göre filtrele.', '600+ exercises; filter by muscle, equipment and level.'), a: '#f-antrenman' },
+    kardiyo:   { img: 'kardiyo-prog', t: t('Kardiyo', 'Cardio'), d: t('6 makine ve hazır programlar: HIIT, tepe tırmanışı, bisiklet sprintleri.', '6 machines and ready programs: HIIT, hill climb, bike sprints.'), a: '#f-kardiyo' },
+    oyun:      { img: 'oyun', t: t('Oyun modu', 'Game mode'), d: t('Sanal rota, rekorunla yarış ve hedef görevleri.', 'A virtual route, racing your record and goal quests.'), a: '#galeri' },
+    rota:      { img: 'rota', t: t('Hedefit Rota', 'Hedefit Routes'), d: t('GPS ile kaydet, rotanı planla ve tekrar kullan.', 'Record with GPS, plan your route and reuse it.'), a: '#rota' },
+    ogunler:   { img: 'ogunler', t: t('Öğün ekle', 'Add meal'), d: t('Metinle ya da fotoğrafla akıllı öğün ekleme.', 'Smart meal add by text or photo.'), a: '#yapay-zeka' },
+    arkadaslar:{ img: 'sosyal-friends', t: t('Arkadaşlar', 'Friends'), d: t('Sıralama, akış ve ortak meydan okumalar.', 'Leaderboard, feed and shared challenges.'), a: '#sosyal' },
   };
   const TABS = ['home', 'antrenman', 'beslenme', 'ilerleme', 'koc'];
   const home = views.querySelector('[data-v="home"]');
@@ -35,7 +39,7 @@
     if (!s.img) return;
     const v = document.createElement('section');
     v.className = 'view view-img' + (s.tab ? ' crop' : ''); v.dataset.v = id;
-    v.innerHTML = `<img src="assets/shots/${s.img}.jpg" alt="${s.t} ekranı" width="560" height="1244" loading="lazy">`;
+    v.innerHTML = `<img src="/assets/shots${EN && EN_SHOTS.has(s.img) ? '-en' : ''}/${s.img}.jpg" alt="${s.t}${t(' ekranı', ' screen')}" width="560" height="1244" loading="lazy">`;
     views.appendChild(v);
   });
   const viewOf = id => views.querySelector(`[data-v="${id}"]`);
@@ -78,14 +82,26 @@
   const rings = home.querySelectorAll('.rg');
   const setRings = on => rings.forEach(r => r.querySelector('.fg').style.strokeDashoffset = on ? 138.2 * (1 - +r.dataset.p) : 138.2);
   const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  const goalAt = p => { kg.textContent = (95 - 15 * p).toFixed(1) + ' kg'; wk.textContent = Math.max(0, Math.round(20 * (1 - p))) + ' hafta kaldı'; bar.style.width = (p * 100) + '%'; };
+  // Üç hedef türü sırayla: kilo ver (95→80), kas kazan (70→74), formu koru (80).
+  const PG = [
+    { from: 95, to: 80, weeks: 20, text: w => w + t(' hafta kaldı', ' weeks left') },
+    { from: 70, to: 74, weeks: 16, text: w => w + t(' hafta kaldı', ' weeks left') },
+    { from: 80, to: 80, weeks: 0, text: () => t('Bakım', 'Maintain') },
+  ];
+  let pgi = 0;
+  const apTo = document.getElementById('apTo');
+  const goalAt = p => {
+    const g = PG[pgi];
+    kg.textContent = (g.from + (g.to - g.from) * p).toFixed(1) + ' kg'; apTo.textContent = g.to.toFixed(1) + ' kg';
+    wk.textContent = g.text(Math.max(0, Math.round(g.weeks * (1 - p)))); bar.style.width = (p * 100) + '%';
+  };
   let visible = false, raf = 0, t0 = 0, ringsOn = false;
   const frame = now => {
     if (!visible) return;
     if (!t0) t0 = now;
     const ms = now - t0, T = 5200, H = 2400;
     goalAt(ease(Math.min(1, ms / T)));
-    if (ms > T + H) t0 = 0;
+    if (ms > T + H) { t0 = 0; pgi = (pgi + 1) % PG.length; }
     raf = requestAnimationFrame(frame);
   };
   if (reduce) { goalAt(1); setRings(true); }

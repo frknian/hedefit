@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -183,7 +185,34 @@ class MainActivity : ComponentActivity() {
                 var activeWorkout by rememberSaveable { mutableStateOf(activeWorkoutStore.hasRecoverable()) }
                 var activeWorkoutExercises by remember { mutableStateOf(activeWorkoutStore.read()?.exercises) }
                 var workoutSummary by remember { mutableStateOf<WorkoutSummary?>(null) }
-                var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
+                var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true && !com.hedefit.app.ui.layout.detectTablet(this@MainActivity) -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
+                // Tablet ev/ofis cihazıdır: Rota girişleri antrenman standını (büyük sayaçlı aktif antrenman) açar.
+                // Katlanan telefonlar GPS ile dışarıda kullanıldığı için Rota'yı korur.
+                val isTablet = com.hedefit.app.ui.layout.rememberIsTablet()
+                var workoutStoreVersion by remember { mutableIntStateOf(0) }
+                fun openRouteOrStand() {
+                    if (!isTablet) { utilityPage = UtilityPage.Route; return }
+                    if (activeWorkoutStore.hasRecoverable()) {
+                        activeWorkoutExercises = activeWorkoutStore.read()?.exercises
+                        mainViewModel.loadPreviousPerformance(activeWorkoutExercises)
+                        activeWorkout = true
+                    } else if (!uiState.dashboard?.workouts.isNullOrEmpty()) {
+                        activeWorkoutStore.clear(); activeWorkoutExercises = null
+                        mainViewModel.loadPreviousPerformance()
+                        activeWorkout = true
+                    } else mainViewModel.showTransientMessage(com.hedefit.app.ui.i18n.tr("Önce bir antrenman programı oluştur.", "Create a workout program first."))
+                }
+                // Başka bir cihazda (telefon, katlanan, tablet) süren antrenmanı bu cihaza taşır.
+                fun pullRemoteWorkout() {
+                    if (activeWorkout) return
+                    mainViewModel.pullActiveWorkout(activeWorkoutStore.deviceId) { raw -> if (activeWorkoutStore.importRemote(raw)) workoutStoreVersion++ }
+                }
+                LaunchedEffect(uiState.dashboard != null) { if (uiState.dashboard != null) pullRemoteWorkout() }
+                DisposableEffect(Unit) {
+                    val observer = androidx.lifecycle.LifecycleEventObserver { _, event -> if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) pullRemoteWorkout() }
+                    lifecycle.addObserver(observer)
+                    onDispose { lifecycle.removeObserver(observer) }
+                }
                 var googleCredentialBusy by remember { mutableStateOf(false) }
                 var offerCardioFinisher by remember { mutableStateOf(false) }
                 val dailyStreak = remember { com.hedefit.app.ui.components.DailyStreak.touch(this@MainActivity) }
@@ -435,6 +464,7 @@ class MainActivity : ComponentActivity() {
                                 emoji = if (prs.isNotEmpty()) "🏆" else "💪",
                             ))
                             mainViewModel.completeDetailedWorkout(seconds, calories, sets, feedback, activeWorkoutExercises)
+                            mainViewModel.clearRemoteActiveWorkout()
                             activeWorkout = false
                             activeWorkoutExercises = null
                             adMobManager.showAtNaturalTransition(uiState.limits().interstitialAds)
@@ -449,9 +479,11 @@ class MainActivity : ComponentActivity() {
                         chatBusy = uiState.chatBusy,
                         onSendChatMessage = { msg, ctx -> mainViewModel.sendChat(msg, preferences.language, ctx) },
                         onExecuteCoachAction = mainViewModel::executeCoachAction,
+                        onSnapshotSaved = mainViewModel::pushActiveWorkout,
                         onSkip = { postpone ->
                             val program = uiState.dashboard?.workoutPrograms?.firstOrNull { it.isActive }
                             mainViewModel.skipTodayWorkout(postpone, program?.id, program?.name, preferences.language)
+                            mainViewModel.clearRemoteActiveWorkout()
                             activeWorkout = false
                             activeWorkoutExercises = null
                         },
@@ -695,7 +727,7 @@ class MainActivity : ComponentActivity() {
                             AppDestination.Home -> HomeScreen(padding, expanded, uiState.dashboard, uiState.avatarPreview, uiState.dataLoading, uiState.dataError, onRetry = mainViewModel::refreshAll, onSignOut = {
                                 scope.launch { googleSignIn.clearCredentialState() }
                                 mainViewModel.signOut()
-                            }, onOpenProfile = { utilityPage = UtilityPage.Profile }, onOpenCalendar = { utilityPage = UtilityPage.Calendar }, onOpenRoute = { utilityPage = UtilityPage.Route },
+                            }, onOpenProfile = { utilityPage = UtilityPage.Profile }, onOpenCalendar = { utilityPage = UtilityPage.Calendar }, onOpenRoute = ::openRouteOrStand,
                                 onOpenGoal = { utilityPage = UtilityPage.GoalJourney },
                                 onOpenNutrition = { selected = AppDestination.Nutrition },
                                 onOpenProgram = { programId ->
@@ -732,10 +764,10 @@ class MainActivity : ComponentActivity() {
                             )
                             AppDestination.Workout -> WorkoutPlanScreen(padding, expanded, uiState.dashboard?.workouts.orEmpty(), uiState.dashboard?.workoutPrograms.orEmpty(), uiState.exerciseLibrary, uiState.exerciseLibraryBusy, uiState.dataLoading, uiState.planGenerating, mainViewModel::generatePlan, onStartWorkout = {
                                 if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
-                            }, hasActiveWorkout = activeWorkoutStore.hasRecoverable(), onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            }, hasActiveWorkout = remember(workoutStoreVersion, activeWorkout) { activeWorkoutStore.hasRecoverable() }, onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenCardio = { utilityPage = UtilityPage.Cardio },
-                                onOpenRoute = { utilityPage = UtilityPage.Route },
+                                onOpenRoute = ::openRouteOrStand,
                                 newBlockDue = mainViewModel.newBlockDue(PlanRotationPeriod.fromKey(preferences.planRotation)),
                                 rotationPeriod = preferences.planRotation,
                                 onStartNewBlock = mainViewModel::generatePlan,
@@ -748,6 +780,7 @@ class MainActivity : ComponentActivity() {
                                 onSelectProgram = mainViewModel::activateProgram,
                                 onRemoveProgram = mainViewModel::deleteProgram,
                                 onCopyProgram = mainViewModel::copyProgram,
+                                onRenameProgram = mainViewModel::renameProgram,
                                 onUpdateExercise = mainViewModel::updateWorkoutExercise,
                                 onReplaceExercise = mainViewModel::replaceWorkoutExercise,
                                 onRemoveExercise = mainViewModel::removeWorkoutExercise,
@@ -862,7 +895,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                         "startOutdoor" -> {
-                                            utilityPage = UtilityPage.Route
+                                            openRouteOrStand()
                                         }
                                         "suggestMeal" -> {
                                             selected = AppDestination.Nutrition

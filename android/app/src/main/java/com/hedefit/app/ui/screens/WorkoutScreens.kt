@@ -196,6 +196,7 @@ fun WorkoutPlanScreen(
     onSelectProgram: (WorkoutProgramData) -> Unit,
     onRemoveProgram: (WorkoutProgramData) -> Unit,
     onCopyProgram: (WorkoutProgramData) -> Unit,
+    onRenameProgram: (WorkoutProgramData, String) -> Unit = { _, _ -> },
     onUpdateExercise: (WorkoutExerciseData) -> Unit,
     onReplaceExercise: (String, WorkoutExerciseData) -> Unit,
     onRemoveExercise: (String) -> Unit,
@@ -232,6 +233,8 @@ fun WorkoutPlanScreen(
     var showRegional by remember { mutableStateOf(false) }
     var selectedRegional by remember { mutableStateOf<Pair<String, String>?>(null) }
     var removingProgram by remember { mutableStateOf<WorkoutProgramData?>(null) }
+    var renamingProgram by remember { mutableStateOf<WorkoutProgramData?>(null) }
+    var renameText by remember { mutableStateOf("") }
     var editingExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
     var previewExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
     var replacingExercise by remember { mutableStateOf<WorkoutExerciseData?>(null) }
@@ -382,7 +385,8 @@ fun WorkoutPlanScreen(
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Muscles you trained" else "Çalışan kasların", { page = "muscles" }, Modifier.weight(1f).fillMaxHeight())
-                        HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        if (com.hedefit.app.ui.layout.rememberIsTablet()) HfActionTile(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Workout Stand" else "Antrenman Standı", if (en) "Big timer, set counter, video" else "Büyük zamanlayıcı, set sayacı, video", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        else HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.Add, HedefitColors.Lime, if (en) "Log activity" else "Antrenman ekle", if (en) "Sport, distance, pace" else "Spor, mesafe, tempo", onOpenActivityLog, Modifier.weight(1f).fillMaxHeight())
@@ -405,6 +409,7 @@ fun WorkoutPlanScreen(
                         chevron = false,
                     ) {
                         if (program.isActive) HfPill(if (en) "ACTIVE" else "AKTİF")
+                        IconButton(onClick = { renamingProgram = program; renameText = programDisplayName(program, en) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.Edit, if (en) "Rename program" else "Programı yeniden adlandır", tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp)) }
                         IconButton(onClick = { onCopyProgram(program) }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, if (en) "Copy program" else "Programı kopyala", tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp)) }
                         IconButton(onClick = { removingProgram = program }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.DeleteOutline, if (en) "Remove program" else "Programı kaldır", tint = HedefitColors.TextMuted, modifier = Modifier.size(19.dp)) }
                     }
@@ -412,6 +417,15 @@ fun WorkoutPlanScreen(
             }
             item { HfNavRow(Icons.Default.Add, HedefitColors.TextSecondary, if (en) "Create a new program" else "Yeni program oluştur", if (en) "With AI, from a template or your own" else "AI ile, hazır şablondan veya kendin", { page = "hub" }) }
         }
+    }
+    renamingProgram?.let { program ->
+        AlertDialog(
+            onDismissRequest = { renamingProgram = null },
+            title = { Text(if (en) "Rename program" else "Program adını değiştir") },
+            text = { OutlinedTextField(value = renameText, onValueChange = { renameText = it.take(60) }, singleLine = true, label = { Text(if (en) "Program name" else "Program adı") }) },
+            confirmButton = { TextButton(enabled = renameText.isNotBlank(), onClick = { onRenameProgram(program, renameText); renamingProgram = null }) { Text(if (en) "Save" else "Kaydet") } },
+            dismissButton = { TextButton(onClick = { renamingProgram = null }) { Text(if (en) "Cancel" else "Vazgeç") } },
+        )
     }
     removingProgram?.let { program ->
         AlertDialog(
@@ -826,9 +840,11 @@ internal fun DetailedActiveWorkoutScreen(
     onSendChatMessage: (String, WorkoutCoachContext?) -> Unit = { _, _ -> },
     onExecuteCoachAction: (CoachActionData) -> Unit = {},
     onSkip: (postpone: Boolean) -> Unit = {},
+    onSnapshotSaved: (org.json.JSONObject, String) -> Unit = { _, _ -> },
 ) {
     val en = language == "en"
     val context = LocalContext.current
+    val standMode = com.hedefit.app.ui.layout.rememberIsTablet()
     val sessionStore = remember { ActiveWorkoutStore(context.applicationContext) }
     val restNotifier = remember { AndroidRestCompletionNotifier(context.applicationContext) }
     val restored = remember { sessionStore.read() }
@@ -896,6 +912,12 @@ internal fun DetailedActiveWorkoutScreen(
             startedAt, sessionExercises, exerciseIndex, currentSet, weight, reps, rpe, setType, note,
             completedSetStates.mapNotNull(::savedWorkoutSet), restDeadlineEpochMs, if (restTimerPaused) restSeconds else 0,
         ))
+    }
+
+    // Aynı anlığı kısa bir gecikmeyle hesaba da yazar; telefon, katlanan ve tablet arasında kaldığı yerden devam için.
+    LaunchedEffect(exerciseIndex, currentSet, weight, reps, rpe, setType, note, completedSetStates, restDeadlineEpochMs, restTimerPaused) {
+        delay(1_500)
+        sessionStore.read()?.let { onSnapshotSaved(com.hedefit.app.gym.snapshotToJson(it), sessionStore.deviceId) }
     }
 
     LaunchedEffect(timerSeconds, timerRunning, paused) {
@@ -978,7 +1000,25 @@ internal fun DetailedActiveWorkoutScreen(
                     TextButton(onClick = { paused = false }) { Text(if (en) "Resume" else "Devam et", color = HedefitColors.Lime) }
                 }
             }
-            if (isWide) {
+            if (standMode) {
+                StandWorkoutLayout(
+                    exercises = sessionExercises, exerciseIndex = exerciseIndex,
+                    completedSets = completedSetStates.mapNotNull(::savedWorkoutSet),
+                    currentSet = currentSet, totalSets = totalSets, weight = weight, reps = reps, rpe = rpe, setType = setType,
+                    restSeconds = restSeconds, restTimerPaused = restTimerPaused, timerSeconds = timerSeconds, timerRunning = timerRunning,
+                    previous = previousPerformance[exercise?.id].orEmpty(), personalRecord = personalRecord,
+                    saving = saving || paused, isLastSet = currentSet >= totalSets && exerciseIndex >= sessionExercises.lastIndex,
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 16.dp),
+                    onWeight = { weightTouched = true; weight = (weight + it).coerceAtLeast(0) },
+                    onReps = { reps = (reps + it).coerceAtLeast(1) },
+                    onRpe = { rpe = it }, onSetType = { setType = it },
+                    onSkipRest = { restSeconds = 0; restDeadlineEpochMs = 0L; restTimerPaused = false; restNotifier.cancel() },
+                    onAddRest = { restSeconds += 30; restDeadlineEpochMs = if (restTimerPaused) 0L else adjustedRestDeadline(restDeadlineEpochMs, System.currentTimeMillis(), 30); if (!restTimerPaused) restNotifier.schedule(restDeadlineEpochMs) },
+                    onToggleRest = { restTimerPaused = !restTimerPaused; if (restTimerPaused) { restDeadlineEpochMs = 0L; restNotifier.cancel() } else { restDeadlineEpochMs = System.currentTimeMillis() + restSeconds * 1_000L; restNotifier.schedule(restDeadlineEpochMs) } },
+                    onTimer = { seconds -> timerSeconds = seconds; timerRunning = seconds > 0 }, onToggleTimer = { timerRunning = !timerRunning },
+                    onComplete = ::recordSetAndContinue, onSkipExercise = ::skipExercise, onOpenReplacement = { showReplacementSheet = true },
+                )
+            } else if (isWide) {
                 Row(
                     Modifier.fillMaxWidth().widthIn(max = 1040.dp).weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(22.dp),

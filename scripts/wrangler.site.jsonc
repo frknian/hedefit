@@ -1,11 +1,19 @@
 {
-  // Tanıtım sitesi: yalnız statik dosyalardan oluşan Worker (workers.dev; özel alan adı Cloudflare panelinden bu Worker'a bağlanır).
+  // Tanıtım sitesi: statik varlıklar + "yayınlanınca haber ver" formu için küçük bir Worker.
+  // (workers.dev; özel alan adı Cloudflare panelinden bu Worker'a bağlanır)
   "name": "hedefit-site",
+  "main": "site-worker/index.js",
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "assets": {
     "directory": "../.site-dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "html_handling": "auto-trailing-slash"
-  }
+    "html_handling": "auto-trailing-slash",
+    // Yalnız API istekleri Worker'a gider; statik sayfalar doğrudan varlıklardan sunulur.
+    "run_worker_first": ["/api/*"]
+  },
+  "kv_namespaces": [
+    { "binding": "SUBSCRIBERS", "id": "54d069666b4547938bd93aa9b49f1be1" }
+  ]
 }

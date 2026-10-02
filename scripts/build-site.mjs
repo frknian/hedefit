@@ -32,7 +32,7 @@ for (const f of walk(out)) {
   if (s.includes("__SITE_URL__")) { writeFileSync(f, s.replaceAll("__SITE_URL__", base)); replaced++; }
 }
 
-const pages = ["/", "/planlar", "/gizlilik", "/destek", "/hesap-silme"];
+const pages = ["/", "/planlar", "/gizlilik", "/destek", "/hesap-silme", "/en/", "/en/plans", "/en/privacy", "/en/support", "/en/delete-account"];
 const today = new Date().toISOString().slice(0, 10);
 writeFileSync(join(out, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
