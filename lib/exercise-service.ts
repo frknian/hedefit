@@ -1,4 +1,4 @@
-import exerciseData from "../data/exercises.json" with { type: "json" };
+import { exerciseRecords as exerciseData } from "./exercise-records.ts";
 import legacyExerciseData from "../data/legacy-exercises.json" with { type: "json" };
 import { translateExerciseLabel, translateExerciseName } from "./exercise-translations.ts";
 import type { AIExerciseContext, Exercise, ExerciseFilters } from "@/types/exercise";
@@ -51,7 +51,7 @@ export function normalizeExercise(value: unknown): Exercise | null {
     instructions: safeList(item.instructions, 12, 1200),
     category: safeText(item.category, "strength"),
     images: safeList(item.images, 4).map(safeImage).filter((image): image is string => Boolean(image)),
-    source: item.source === "legacy" ? "legacy" : "repdb",
+    source: item.source === "legacy" ? "legacy" : item.source === "supplement" ? "supplement" : "repdb",
     sourceExerciseId: safeText(item.sourceExerciseId) || undefined,
     bodyPart: safeText(item.bodyPart) || undefined,
     goalCompatibility: safeList(item.goalCompatibility, 10, 40),
