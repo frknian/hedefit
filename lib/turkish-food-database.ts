@@ -750,7 +750,7 @@ export const TURKISH_FOOD_DATABASE: TurkishFood[] = [
     calciumMg: 55,
     ironMg: 2.6,
     vitaminCMg: 3,
-    aliases: ["kuru fasulye", "kuru fasülye", "kurufasulye", "fasulye yemeği", "kuru"],
+    aliases: ["kuru fasulye", "kuru fasülye", "kurufasulye", "fasulye yemeği"],
     portions: [
       { name: "1 porsiyon", unit: "porsiyon", grams: 250, isDefault: true },
       { name: "1 tabak", unit: "tabak", grams: 300 },

@@ -8,6 +8,8 @@ export type DefaultFood = {
   carbohydrates: number;
   fat: number;
   fiber: number;
+  /** Realistic gram weights per unit (accent-folded unit names); beats the generic unit table. */
+  portions?: Record<string, number>;
 };
 
 // A small, always-available base catalogue. Values are generic per-100 g
@@ -87,6 +89,28 @@ const DEFAULT_FOODS: DefaultFood[] = [
 }));
 
 import { TURKISH_FOOD_DATABASE, normalizeTurkishText } from "./turkish-food-database.ts";
+import { ALIAS_ADDITIONS, EXTRA_FOODS, PORTION_OVERRIDES } from "./default-food-extras.ts";
+
+for (const extra of EXTRA_FOODS) {
+  DEFAULT_FOODS.push({
+    id: extra.id,
+    name: extra.name,
+    nameEn: extra.name,
+    aliases: extra.aliases,
+    calories: extra.calories,
+    protein: extra.protein,
+    carbohydrates: extra.carbohydrates,
+    fat: extra.fat,
+    fiber: extra.fiber,
+    portions: extra.portions,
+  });
+}
+for (const food of DEFAULT_FOODS) {
+  const more = ALIAS_ADDITIONS[food.id];
+  if (more) food.aliases = [...new Set([...food.aliases, ...more])];
+  const portions = PORTION_OVERRIDES[food.id];
+  if (portions) food.portions = portions;
+}
 
 // Merge items from TURKISH_FOOD_DATABASE into DEFAULT_FOODS
 const existingIds = new Set(DEFAULT_FOODS.map((f) => f.id));
@@ -174,19 +198,70 @@ export function searchDefaultFoods(query: string, limit = 12, locale: "tr" | "en
     .map(({ food }) => food);
 }
 
-/** Exact phrase matcher used before remote AI nutrition estimation. */
-export function matchDefaultFood(query: string): DefaultFood | null {
+/** Trailing preparation words that are part of a catalogue name but rarely typed ("Dana kıyma, pişmiş"). */
+const NAME_DESCRIPTORS = new Set(["pismis", "haslanmis", "yagsiz", "suda", "kizarmis", "kavrulmus"]);
+
+function stripDescriptors(phrase: string): string {
+  const words = phrase.split(" ");
+  while (words.length > 1 && NAME_DESCRIPTORS.has(words[words.length - 1])) words.pop();
+  return words.join(" ");
+}
+
+type CatalogPhrase = { food: DefaultFood; phrase: string; ownName: boolean };
+let phraseIndex: CatalogPhrase[] | null = null;
+
+/** Every name and alias of every entry (plus the name without its preparation words), accent-folded. */
+function catalogPhrases(): CatalogPhrase[] {
+  if (phraseIndex) return phraseIndex;
+  phraseIndex = DEFAULT_FOODS.flatMap((food) => [food.name, ...food.aliases].flatMap((label, index) => {
+    const phrase = normalize(label);
+    const stripped = stripDescriptors(phrase);
+    const entries: CatalogPhrase[] = [{ food, phrase, ownName: index === 0 }];
+    if (stripped !== phrase) entries.push({ food, phrase: stripped, ownName: false });
+    return entries;
+  }));
+  return phraseIndex;
+}
+
+/** First words of every catalogue name/alias; lets the meal splitter recognise foods that only live here ("süt"). */
+export function defaultFoodPhrases(): Set<string> {
+  return new Set(catalogPhrases().map(({ phrase }) => phrase).filter((phrase) => phrase.length >= 3));
+}
+
+/** Quantity words and units are not part of the food's name. */
+function cleanQuery(query: string): string {
   // Kullanıcılar sıkça "2 adet", "200 gram" gibi miktarı yemek adının
   // başına ya da ortasına yazar. Miktar porsiyon hesabında ayrı ele alınır;
   // katalog eşleşmesinde yemek adını bozmasına izin vermeyiz.
-  const clean = normalize(query)
+  return normalize(query)
     .replace(/\b\d+(?:[.,]\d+)?\s*(?:adet|tane|gram|gr|g|ml|porsiyon)?\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Exact phrase matcher used before remote AI nutrition estimation. */
+export function matchDefaultFood(query: string): DefaultFood | null {
+  const clean = cleanQuery(query);
   // Parents carry their variants' names as aliases, so an entry whose own name
   // matches must win over a parent that only lists it as an alias.
-  return DEFAULT_FOODS
-    .flatMap((food) => [food.name, ...food.aliases].map((label, index) => ({ food, phrase: normalize(label), ownName: index === 0 })))
+  return catalogPhrases()
     .filter(({ phrase }) => phrase.length >= 3 && phrase === clean)
     .sort((a, b) => Number(b.ownName) - Number(a.ownName) || b.phrase.length - a.phrase.length)[0]?.food ?? null;
 }
+
+/**
+ * Looser second chance for short free text ("ızgara tavuk göğsü tabağı", "bir
+ * bardak soğuk kola"): the longest catalogue name or alias that appears as whole
+ * words. Skipped for long sentences, where a stray word would pick a wrong food.
+ */
+export function matchDefaultFoodLoose(query: string): DefaultFood | null {
+  const clean = cleanQuery(query);
+  if (!clean || clean.split(" ").length > 5) return null;
+  const padded = ` ${clean} `;
+  return catalogPhrases()
+    .filter(({ phrase }) => phrase.length >= 4 && padded.includes(` ${phrase} `))
+    .sort((a, b) => b.phrase.length - a.phrase.length || Number(b.ownName) - Number(a.ownName))[0]?.food ?? null;
+}
+
+/** All default foods (used by data-quality tests). */
+export const listDefaultFoods = (): readonly DefaultFood[] => DEFAULT_FOODS;
