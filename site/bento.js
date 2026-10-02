@@ -233,4 +233,22 @@
       document.documentElement.classList.add('lock'); dlg.showModal();
     });
   })();
+  /* --- Mobilde yana kaydırma noktaları --- */
+  (() => {
+    const cards = $$('.bcard', root); if (cards.length < 2) return;
+    const dots = document.createElement('div'); dots.className = 'bdots'; dots.setAttribute('aria-hidden', 'true');
+    cards.forEach((c, i) => { const b = document.createElement('button'); b.type = 'button'; b.tabIndex = -1; b.addEventListener('click', () => c.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', inline: 'center', block: 'nearest' })); dots.appendChild(b); });
+    root.after(dots);
+    const mark = i => $$('button', dots).forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
+    let raf = 0;
+    root.addEventListener('scroll', () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const mid = root.scrollLeft + root.clientWidth / 2;
+        let best = 0, d = Infinity; cards.forEach((c, i) => { const x = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (x < d) { d = x; best = i; } });
+        mark(best);
+      });
+    }, { passive: true });
+    mark(0);
+  })();
 })();

@@ -917,3 +917,20 @@ html.embed [hidden]{display:none!important}
 .mtile:hover i{transform:translateX(3px)}
 @media (max-width:900px){.mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.mgrid{grid-template-columns:minmax(0,1fr)}}
+
+/* Mobilde yana kaydırmalı şeritler */
+.bdots{display:none}
+@media (max-width:700px){
+  .bgrid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:26px -16px 0;padding:4px 16px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .bgrid::-webkit-scrollbar{display:none}
+  .bcard,.bcard.span2{flex:0 0 86%;grid-column:auto;scroll-snap-align:center}
+  .bdots{display:flex;justify-content:center;gap:7px;margin-top:6px}
+  .bdots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:#3a434d;cursor:pointer;transition:width .2s,background .2s}
+  .bdots button[aria-current="true"]{width:22px;border-radius:99px;background:var(--g)}
+  .mgrid{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-template-rows:repeat(2,auto);grid-auto-columns:78%;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:4px 16px 10px;scrollbar-width:none}
+  .mgrid::-webkit-scrollbar{display:none}
+  .mtile{scroll-snap-align:start}
+  .try .seg.four{display:flex;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;max-width:none;margin-inline:-16px;padding-inline:10px;border-radius:0;border-inline:0}
+  .try .seg.four::-webkit-scrollbar{display:none}
+  .try .seg.four button{flex:0 0 auto;min-width:112px;scroll-snap-align:center}
+}
