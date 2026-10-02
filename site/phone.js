@@ -3,6 +3,8 @@
 (() => {
   const EN = document.documentElement.lang === 'en';
   const t = (tr, en) => (EN ? en : tr);
+  // İngilizce arayüzlü ekran görüntüsü olanlar (site/assets/shots-en); diğerleri Türkçe arayüzlü kalır.
+  const EN_SHOTS = new Set(['atlas', 'hareketler', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
   const app = document.getElementById('heroApp');
   if (!app) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -37,7 +39,7 @@
     if (!s.img) return;
     const v = document.createElement('section');
     v.className = 'view view-img' + (s.tab ? ' crop' : ''); v.dataset.v = id;
-    v.innerHTML = `<img src="/assets/shots/${s.img}.jpg" alt="${s.t}${t(' ekranı', ' screen')}" width="560" height="1244" loading="lazy">`;
+    v.innerHTML = `<img src="/assets/shots${EN && EN_SHOTS.has(s.img) ? '-en' : ''}/${s.img}.jpg" alt="${s.t}${t(' ekranı', ' screen')}" width="560" height="1244" loading="lazy">`;
     views.appendChild(v);
   });
   const viewOf = id => views.querySelector(`[data-v="${id}"]`);

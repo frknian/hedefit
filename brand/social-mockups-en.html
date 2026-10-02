@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hedefit social screens</title>
+<style>
+:root{
+  --bg:#0a0c0f; --card:#14181f; --card2:#1b212b; --line:#232a35;
+  --text:#f4f6f8; --muted:#8a95a5; --green:#7dc862; --green-d:#1e2f20;
+  --blue:#38bdf8; --yellow:#fbbf24; --red:#f87171; --purple:#a78bfa;
+}
+*{box-sizing:border-box;margin:0}
+body{background:#050607;font-family:Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+.gallery{display:flex;flex-wrap:wrap;gap:32px;padding:32px;justify-content:center}
+.phone{width:360px;height:800px;background:var(--bg);position:relative;overflow:hidden;border-radius:0}
+.gallery .phone{border-radius:28px;outline:1px solid var(--line)}
+.status{display:flex;justify-content:space-between;padding:12px 22px 0;font-size:13px;font-weight:500}
+.status i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--text);margin-left:6px}
+.head{display:flex;align-items:center;gap:12px;padding:22px 14px 12px}
+.back{width:40px;height:40px;border-radius:20px;background:var(--card);display:grid;place-items:center;font-size:20px}
+h1{font-size:26px;font-weight:700;flex:1}
+.plus{width:40px;height:40px;border-radius:20px;background:var(--card);color:var(--green);display:grid;place-items:center;font-size:24px}
+.row{margin:0 14px 10px;background:var(--card);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px}
+.ico{width:40px;height:40px;border-radius:12px;background:var(--green-d);color:var(--green);display:grid;place-items:center;font-size:18px;flex:none}
+.ico.red{background:#33191b;color:var(--red)} .ico.blue{background:#10303f;color:var(--blue)}
+.ico.yellow{background:#33290f;color:var(--yellow)} .ico.purple{background:#26203d;color:var(--purple)}
+.t{flex:1;min-width:0;font-weight:600;font-size:15px}
+.t small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.xp{background:#203a22;color:var(--green);border-radius:10px;padding:5px 9px;font-size:12px;font-weight:700;flex:none}
+.tabs{display:flex;margin:0 14px 14px;background:var(--card);border-radius:16px;padding:4px}
+.tabs b{flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--muted);border-radius:12px}
+.tabs b.on{background:var(--green);color:#0a0c0f}
+.search{margin:0 14px 16px;border:1px solid var(--line);border-radius:12px;padding:15px 16px;color:var(--muted);font-size:14px}
+.sec{margin:6px 14px 10px;font-size:14px;font-weight:700}
+.av{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none;color:#0a0c0f}
+.rank{width:28px;height:28px;border-radius:14px;background:var(--card2);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--muted);flex:none}
+.rank.g{background:var(--yellow);color:#0a0c0f} .rank.s{background:#cbd5e1;color:#0a0c0f} .rank.b{background:#d19a66;color:#0a0c0f}
+.me{outline:1.5px solid var(--green)}
+.pts{font-weight:700;color:var(--green);font-size:15px}
+.bar{height:6px;border-radius:3px;background:var(--card2);margin-top:8px;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:3px;background:var(--blue)}
+.chal{margin:0 14px 12px;background:var(--card);border-radius:20px;padding:14px}
+.chal .top{display:flex;gap:12px;align-items:center}
+.pill{font-size:11px;font-weight:700;border-radius:8px;padding:4px 8px;background:#10303f;color:var(--blue)}
+.nav{position:absolute;left:14px;right:14px;bottom:22px;height:60px;border-radius:30px;background:var(--card);border:1px solid var(--line);display:flex;justify-content:space-around;align-items:center}
+.nav span{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;color:var(--muted);font-size:18px}
+.nav span.on{background:var(--green-d);color:var(--green)}
+.cap{text-align:center;color:var(--muted);font-size:13px;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const av=(c,t)=>`<div class="av" style="background:${c}">${t}</div>`;
+const status='<div class="status"><span>9:41</span><span><i></i><i></i><i></i></span></div>';
+const head=(t,extra='')=>`<div class="head"><div class="back">←</div><h1>${t}</h1>${extra}</div>`;
+const tabs=(on)=>`<div class="tabs">${['Friends','Feed','Leaderboard'].map((x,i)=>`<b class="${i===on?'on':''}">${x}</b>`).join('')}</div>`;
+const nav=`<div class="nav"><span>⌂</span><span>🏋</span><span>🍴</span><span>▮</span><span>🤖</span></div>`;
+const challengeLink=`<div class="row"><div class="ico red">🏆</div><div class="t">Challenges</div><span style="color:var(--muted)">›</span></div>`;
+
+const screens={
+friends:()=>`${status}${head('Friends')}${challengeLink}${tabs(0)}
+ <div class="search">Search by username…</div>
+ <div class="sec">Incoming requests</div>
+ <div class="row">${av('#fbbf24','CK')}<div class="t">Can<small>@can.kilic</small></div><div class="xp" style="background:var(--green);color:#0a0c0f">Accept</div></div>
+ <div class="sec">Your friends</div>
+ <div class="row">${av('#7dc862','AY')}<div class="t">Ayşe<small>@ayse.kosar</small></div><span style="color:var(--muted)">⋮</span></div>
+ <div class="row">${av('#38bdf8','ME')}<div class="t">Mert<small>@mert.fit</small></div><span style="color:var(--muted)">⋮</span></div>
+ <div class="row">${av('#a78bfa','EL')}<div class="t">Elif<small>@elif.hareket</small></div><span style="color:var(--muted)">⋮</span></div>${nav}`,
+feed:()=>`${status}${head('Friends')}${challengeLink}${tabs(1)}
+ <div class="row"><div class="ico">🏋</div><div class="t">Ayşe completed a workout<small>2 hours ago</small></div><div class="xp">+50 XP</div></div>
+ <div class="row"><div class="ico blue">🏃</div><div class="t">Elif completed a route<small>5 hours ago · 7.1 km</small></div><div class="xp">+80 XP</div></div>
+ <div class="row"><div class="ico yellow">⚡</div><div class="t">Mert hit his weekly goal<small>Yesterday</small></div><div class="xp">+100 XP</div></div>
+ <div class="row"><div class="ico purple">★</div><div class="t">Ayşe earned an achievement<small>Yesterday · 7-day streak</small></div><div class="xp">+150 XP</div></div>
+ <div class="row"><div class="ico">🏋</div><div class="t">Elif completed a workout<small>2 days ago</small></div><div class="xp">+50 XP</div></div>
+ <div class="row"><div class="ico blue">🚴</div><div class="t">Mert completed a route<small>3 days ago · 12 km</small></div><div class="xp">+80 XP</div></div>${nav}`,
+board:()=>`${status}${head('Friends')}${challengeLink}${tabs(2)}
+ <div class="sec">This week · XP leaderboard</div>
+ <div class="row">${'<div class="rank g">1</div>'}${av('#7dc862','AY')}<div class="t">Ayşe</div><div class="pts">820 XP</div></div>
+ <div class="row me">${'<div class="rank s">2</div>'}${av('#f4f6f8','FU')}<div class="t">You</div><div class="pts">640 XP</div></div>
+ <div class="row">${'<div class="rank b">3</div>'}${av('#a78bfa','EL')}<div class="t">Elif</div><div class="pts">590 XP</div></div>
+ <div class="row">${'<div class="rank">4</div>'}${av('#38bdf8','ME')}<div class="t">Mert</div><div class="pts">410 XP</div></div>${nav}`,
+challenges:()=>`${status}${head('Challenges','<div class="plus">+</div>')}
+ <div class="sec" style="font-size:18px">Active</div>
+ <div class="chal"><div class="top"><div class="ico blue">🏃</div><div class="t">50 km run of the week<small>Distance (km) · 50 goal · 4 participants</small></div><span class="pill">4 days left</span></div>
+   <div class="bar"><span style="width:62%"></span></div>
+   <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><span style="color:var(--muted)">Your progress: 31.2 km</span><b style="color:var(--blue)">See leaderboard</b></div></div>
+ <div class="chal"><div class="top"><div class="ico">🏋</div><div class="t">5 workouts in 7 days<small>Workouts · 5 goal · 3 participants</small></div><span class="pill" style="background:var(--green-d);color:var(--green)">5 days left</span></div>
+   <div class="bar"><span style="width:60%;background:var(--green)"></span></div>
+   <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><span style="color:var(--muted)">Your progress: 3 / 5</span><b style="color:var(--green)">See leaderboard</b></div></div>
+ <div class="sec" style="font-size:18px;margin-top:16px">Invitations</div>
+ <div class="chal"><div class="top"><div class="ico yellow">⚡</div><div class="t">Weekend XP race<small>Ayşe invited you</small></div></div>
+   <div style="display:flex;gap:10px;margin-top:12px"><div style="flex:1;text-align:center;padding:10px;border-radius:12px;background:var(--green);color:#0a0c0f;font-weight:700;font-size:13px">Join</div><div style="flex:1;text-align:center;padding:10px;border-radius:12px;background:var(--card2);color:var(--muted);font-weight:700;font-size:13px">Decline</div></div></div>${nav}`,
+};
+const names={friends:'Arkadaşlar',feed:'Akış',board:'Sıralama',challenges:'Challenges'};
+const h=location.hash.slice(1);
+const root=document.getElementById('root');
+if(screens[h]){root.innerHTML=`<div class="phone">${screens[h]()}</div>`;}
+else{root.className='gallery';root.innerHTML=Object.keys(screens).map(k=>`<div><div class="phone">${screens[k]()}</div><div class="cap">${names[k]}</div></div>`).join('');}
+</script>
+</body>
+</html>

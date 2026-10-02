@@ -56,6 +56,8 @@ def links(h):
         if url in LINKS:
             if url == "gizlilik.html": frag = {"#bulten": "#newsletter", "#kvkk-tr": "#kvkk-en"}.get(frag, frag)
             return f'{m.group(1)}="{LINKS[url]}{frag}"'
+        if url.startswith("assets/shots/") and (SITE / "assets/shots-en" / url.rsplit("/", 1)[1]).exists():
+            return f'{m.group(1)}="/assets/shots-en/{url.rsplit("/", 1)[1]}{frag}"'      # İngilizce arayüzlü ekran görüntüsü
         if url.startswith("assets/") or url in ASSETS: return f'{m.group(1)}="/{url}{frag}"'
         return m.group(0)
     return re.sub(r'\b(href|src)="([^"]*)"', href, h)
