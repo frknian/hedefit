@@ -1,4 +1,5 @@
 (() => {
+  const EN = document.documentElement.lang === 'en';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -8,7 +9,7 @@
     const url = STORES[el.dataset.store];
     if (!url) { el.addEventListener('click', e => e.preventDefault()); return; }
     el.href = url; el.removeAttribute('aria-disabled'); el.removeAttribute('role'); el.style.cursor = 'pointer';
-    el.querySelector('small').textContent = 'İNDİR';
+    el.querySelector('small').textContent = EN ? 'GET' : 'İNDİR';
   });
 
   // Scroll reveal
@@ -31,7 +32,7 @@
   document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
 
   // AI demo: yazma + sonuç
-  const text = '2 dilim tam buğday ekmeği, omlet';
+  const text = EN ? '2 slices of whole wheat bread, omelette' : '2 dilim tam buğday ekmeği, omlet';
   const typed = document.getElementById('typed');
   const result = document.getElementById('aiResult');
   const kcal = result.querySelector('[data-to]');
@@ -81,14 +82,14 @@
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const email = form.email.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { say('Geçerli bir e-posta adresi yaz.', false); form.email.focus(); return; }
-      if (!form.consent.checked) { say('Devam etmek için onay kutusunu işaretle.', false); return; }
-      btn.disabled = true; say('Gönderiliyor…', true);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { say(EN ? 'Enter a valid email address.' : 'Geçerli bir e-posta adresi yaz.', false); form.email.focus(); return; }
+      if (!form.consent.checked) { say(EN ? 'Tick the consent box to continue.' : 'Devam etmek için onay kutusunu işaretle.', false); return; }
+      btn.disabled = true; say(EN ? 'Sending…' : 'Gönderiliyor…', true);
       try {
         const r = await fetch('/api/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, consent: true, website: form.website.value }) });
-        if (r.ok) { say('Teşekkürler! Hedefit yayınlandığında sana tek bir e-posta göndereceğiz.', true); form.reset(); }
-        else say(r.status === 429 ? 'Çok fazla deneme yapıldı, biraz sonra tekrar dene.' : 'Kaydedilemedi, lütfen tekrar dene.', false);
-      } catch { say('Bağlantı hatası, lütfen tekrar dene.', false); }
+        if (r.ok) { say(EN ? 'Thank you! We will send you a single email when Hedefit is published.' : 'Teşekkürler! Hedefit yayınlandığında sana tek bir e-posta göndereceğiz.', true); form.reset(); }
+        else say(r.status === 429 ? (EN ? 'Too many attempts, please try again shortly.' : 'Çok fazla deneme yapıldı, biraz sonra tekrar dene.') : (EN ? 'Could not save, please try again.' : 'Kaydedilemedi, lütfen tekrar dene.'), false);
+      } catch { say(EN ? 'Connection error, please try again.' : 'Bağlantı hatası, lütfen tekrar dene.', false); }
       btn.disabled = false;
     });
   }

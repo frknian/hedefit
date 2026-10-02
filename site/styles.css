@@ -697,3 +697,7 @@ details a{color:var(--g)}
 .nf-msg{min-height:1.2em;font-size:.88rem;font-weight:600}
 .nf-msg[data-ok="0"]{color:#7a1313}
 @media (max-width:520px){.nf-row{flex-direction:column}.notify .btn{width:100%}}
+
+/* ---- dil değiştirici ---- */
+.lang-switch{display:inline-block;margin-right:10px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);text-decoration:none;font-size:.78rem;font-weight:700;letter-spacing:.06em;transition:color .2s,border-color .2s}
+.lang-switch:hover{color:var(--g);border-color:var(--g)}

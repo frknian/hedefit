@@ -2,9 +2,12 @@
    Ekranda değilken durur; "hareketi azalt" açıksa son kareyi sabit gösterir. */
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EN = document.documentElement.lang === 'en';
+  const t = (tr, en) => (EN ? en : tr);
+  const DEC = EN ? '.' : ',';
   const $ = id => document.getElementById(id);
   const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  const fmt = (n, d = 2) => n.toFixed(d).replace('.', ',');
+  const fmt = (n, d = 2) => n.toFixed(d).replace('.', DEC);
   const hms = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60].map(v => String(v).padStart(2, '0')).join(':');
 
   /** Bir öğe görünürken çalışan, zaman tabanlı döngü. tick(ms) → bitti ise true. */
@@ -29,9 +32,9 @@
   if (hg) {
     const line = $('hgLine'), dot = $('hgDot'), kg = $('hgKg'), to = $('hgTo'), lab = $('hgLabel'), note = $('hgNote');
     const HG = [
-      { label: 'KİLO VERME', from: 95, to: 80, d: 'M6 8 L174 48', note: '20 hafta · Dengeli tempo' },
-      { label: 'KAS KAZANMA', from: 70, to: 74, d: 'M6 48 L174 8', note: '16 hafta · Kontrollü artış' },
-      { label: 'FORMU KORUMA', from: 80, to: 80, d: 'M6 28 L174 28', note: 'Bakım kalorisi · Düzenli antrenman' },
+      { label: t('KİLO VERME', 'WEIGHT LOSS'), from: 95, to: 80, d: 'M6 8 L174 48', note: t('20 hafta · Dengeli tempo', '20 weeks · Balanced pace') },
+      { label: t('KAS KAZANMA', 'MUSCLE GAIN'), from: 70, to: 74, d: 'M6 48 L174 8', note: t('16 hafta · Kontrollü artış', '16 weeks · Controlled gain') },
+      { label: t('FORMU KORUMA', 'MAINTENANCE'), from: 80, to: 80, d: 'M6 28 L174 28', note: t('Bakım kalorisi · Düzenli antrenman', 'Maintenance calories · Regular training') },
     ];
     let gi = 0, L = 0, cur = HG[0];
     const set = () => {
@@ -71,11 +74,11 @@
     const START = new Date(2026, 9, 1), HEIGHT = 1.8;
     // Hız oranları uygulamadaki GoalPace ile aynı (haftalık vücut ağırlığı oranı).
     const GOALS = {
-      lose: { label: 'KİLO VERME', from: 102, to: 90, pct: [.005, .0075, .01], note: 'Örnek: 102 kg, 180 cm. Haftada vücut ağırlığının %0,5–1\'i kas kaybını en aza indirir.' },
-      gain: { label: 'KAS KAZANMA', from: 70, to: 74, pct: [.0025, .00375, .005], note: 'Örnek: 70 kg, 180 cm. Haftada %0,25–0,5 kilo alımı kas kazanımını yağ artışına göre en iyi dengeler.' },
-      keep: { label: 'FORMU KORUMA', from: 80, to: 80, pct: null, note: 'Örnek: 80 kg, 180 cm. Kilonu korurken beslenme ve antrenman düzenini sürdürürsün.' },
+      lose: { label: t('KİLO VERME', 'WEIGHT LOSS'), from: 102, to: 90, pct: [.005, .0075, .01], note: t('Örnek: 102 kg, 180 cm. Haftada vücut ağırlığının %0,5–1\'i kas kaybını en aza indirir.', 'Example: 102 kg, 180 cm. Losing 0.5–1% of body weight per week minimizes muscle loss.') },
+      gain: { label: t('KAS KAZANMA', 'MUSCLE GAIN'), from: 70, to: 74, pct: [.0025, .00375, .005], note: t('Örnek: 70 kg, 180 cm. Haftada %0,25–0,5 kilo alımı kas kazanımını yağ artışına göre en iyi dengeler.', 'Example: 70 kg, 180 cm. Gaining 0.25–0.5% per week best balances muscle gain against fat gain.') },
+      keep: { label: t('FORMU KORUMA', 'MAINTENANCE'), from: 80, to: 80, pct: null, note: t('Örnek: 80 kg, 180 cm. Kilonu korurken beslenme ve antrenman düzenini sürdürürsün.', 'Example: 80 kg, 180 cm. You keep your weight while sustaining your nutrition and training routine.') },
     };
-    const KEEP_CHIPS = [['KALORİ', 'Bakım', 'kalori düzeyi'], ['ADIM', '7.000', 'günlük hedef'], ['SU', 'Hedefine göre', 'her gün'], ['ANTRENMAN', 'Düzenli', 'haftalık plan']];
+    const KEEP_CHIPS = EN ? [['CALORIES', 'Maintenance', 'calorie level'], ['STEPS', '7,000', 'daily goal'], ['WATER', 'Per your goal', 'every day'], ['WORKOUTS', 'Regular', 'weekly plan']] : [['KALORİ', 'Bakım', 'kalori düzeyi'], ['ADIM', '7.000', 'günlük hedef'], ['SU', 'Hedefine göre', 'her gün'], ['ANTRENMAN', 'Düzenli', 'haftalık plan']];
     const X0 = 30, X1 = 570, Y0 = 40, Y1 = 232, YM = 136;
     const line = $('jLine'), dot = $('jDot'), clip = $('jclipRect'), kg = $('jKg'), badge = $('jBadge');
     const miles = $('jMiles'), list = $('jMileList');
@@ -84,11 +87,11 @@
     const nodes = FR.map(() => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('class', 'mile'); c.setAttribute('r', 9); miles.appendChild(c); return c; });
     const chips = FR.map(() => { const d = document.createElement('div'); list.appendChild(d); return d; });
     let goal = 'lose', tempo = 1, p = 0, L = 1;
-    const fmtKg = n => n.toFixed(1), fmtC = n => n.toFixed(2).replace('.', ',');
-    const bmi = w => (w / (HEIGHT * HEIGHT)).toFixed(1).replace('.', ',');
+    const fmtKg = n => n.toFixed(1), fmtC = n => n.toFixed(2).replace('.', DEC);
+    const bmi = w => (w / (HEIGHT * HEIGHT)).toFixed(1).replace('.', DEC);
     const yAt = f => goal === 'lose' ? Y0 + (Y1 - Y0) * f : goal === 'gain' ? Y1 - (Y1 - Y0) * f : YM;
     const weeksFor = () => { const g = GOALS[goal]; const rate = Math.max(.1, g.from * g.pct[tempo]); return Math.ceil(Math.abs(g.to - g.from) / rate); };
-    const dateOf = (w, f) => new Date(START.getTime() + w * 7 * f * 86400000).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    const dateOf = (w, f) => new Date(START.getTime() + w * 7 * f * 86400000).toLocaleDateString(EN ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'short' });
     const geometry = () => {
       const d = `M${X0} ${yAt(0)} L${X1} ${yAt(1)}`;
       line.setAttribute('d', d); plan.setAttribute('d', d); area.setAttribute('d', `${d} L${X1} 250 L${X0} 250 Z`);
@@ -106,19 +109,19 @@
     const labels = () => {
       const g = GOALS[goal], keep = goal === 'keep';
       $('jLabel').textContent = g.label; $('jTo').textContent = fmtKg(g.to); $('jNote').textContent = g.note;
-      jp.querySelector('.jchart').setAttribute('aria-label', keep ? `Form koruma: ${fmtKg(g.from)} kilo` : `Planlanan kilo yolu: ${g.from} kilodan ${g.to} kiloya`);
+      jp.querySelector('.jchart').setAttribute('aria-label', keep ? t(`Form koruma: ${fmtKg(g.from)} kilo`, `Maintenance: ${fmtKg(g.from)} kg`) : t(`Planlanan kilo yolu: ${g.from} kilodan ${g.to} kiloya`, `Planned weight path: from ${g.from} kg to ${g.to} kg`));
       $('tempoSeg').classList.toggle('off', keep);
       $('tempoSeg').setAttribute('aria-disabled', String(keep));
-      [0, 1, 2].forEach(i => { $('tm' + i).textContent = keep ? '—' : fmtC(g.from * g.pct[i]) + ' kg/hf'; });
+      [0, 1, 2].forEach(i => { $('tm' + i).textContent = keep ? '—' : fmtC(g.from * g.pct[i]) + t(' kg/hf', ' kg/wk'); });
       if (keep) {
-        $('jRate').textContent = '0 kg'; $('jWeeks').textContent = 'Sürekli'; badge.textContent = 'Bakım';
+        $('jRate').textContent = '0 kg'; $('jWeeks').textContent = t('Sürekli', 'Ongoing'); badge.textContent = t('Bakım', 'Maintain');
         $('jBmi').innerHTML = bmi(g.from);
         KEEP_CHIPS.forEach((c, i) => { chips[i].innerHTML = `<small>${c[0]}</small><b>${c[1]}</b><span>${c[2]}</span>`; });
       } else {
         const w = weeksFor();
-        $('jRate').textContent = fmtC(g.from * g.pct[tempo]) + ' kg'; $('jWeeks').textContent = w + ' hafta'; badge.textContent = w + ' hafta';
+        $('jRate').textContent = fmtC(g.from * g.pct[tempo]) + ' kg'; $('jWeeks').textContent = w + t(' hafta', ' weeks'); badge.textContent = w + t(' hafta', ' weeks');
         $('jBmi').innerHTML = `${bmi(g.from)} <i>→ ${bmi(g.to)}</i>`;
-        FR.forEach((f, i) => { chips[i].innerHTML = `<small>${f === 1 ? 'HEDEF' : '%' + f * 100}</small><b>${fmtKg(g.from + (g.to - g.from) * f)} kg</b><span>${dateOf(w, f)}</span>`; });
+        FR.forEach((f, i) => { chips[i].innerHTML = `<small>${f === 1 ? t('HEDEF', 'GOAL') : (EN ? f * 100 + '%' : '%' + f * 100)}</small><b>${fmtKg(g.from + (g.to - g.from) * f)} kg</b><span>${dateOf(w, f)}</span>`; });
       }
       badge.classList.add('bump'); setTimeout(() => badge.classList.remove('bump'), 260);
     };
@@ -143,9 +146,9 @@
   const rd = $('routeDemo');
   if (rd) {
     const ACT = {
-      run:  { path: 'M70 232 C58 164 88 112 150 102 C214 92 232 142 282 122 C342 98 362 152 332 202 C302 252 202 266 140 252 C102 244 76 244 70 232 Z', plan: ['Dönüşlü', '30 dk'], sec: 1680, km: 5.2, kcal: 62, metric: ['TEMPO', s => hms2(s)], start: [70, 232] },
-      bike: { path: 'M52 226 C48 140 112 70 204 68 C304 66 364 122 352 192 C340 262 250 272 190 240 C140 214 98 272 52 226 Z', plan: ['Dönüşlü', '20 km'], sec: 3060, km: 18.4, kcal: 28, metric: ['HIZ', (s, km) => fmt(km / (s / 3600), 1) + ' <i>km/sa</i>'], start: [52, 226] },
-      hike: { path: 'M48 252 C92 202 58 162 120 150 C182 138 152 92 212 80 C272 68 250 130 302 120 C344 112 342 72 362 48', plan: ['A → B', '8 km'], sec: 5700, km: 7.8, kcal: 45, metric: ['TEMPO', (s, km) => hms2(s / km) + ' <i>/km</i>'], start: [48, 252] },
+      run:  { path: 'M70 232 C58 164 88 112 150 102 C214 92 232 142 282 122 C342 98 362 152 332 202 C302 252 202 266 140 252 C102 244 76 244 70 232 Z', plan: [t('Dönüşlü', 'Loop'), t('30 dk', '30 min')], sec: 1680, km: 5.2, kcal: 62, metric: [t('TEMPO', 'PACE'), s => hms2(s)], start: [70, 232] },
+      bike: { path: 'M52 226 C48 140 112 70 204 68 C304 66 364 122 352 192 C340 262 250 272 190 240 C140 214 98 272 52 226 Z', plan: [t('Dönüşlü', 'Loop'), '20 km'], sec: 3060, km: 18.4, kcal: 28, metric: [t('HIZ', 'SPEED'), (s, km) => fmt(km / (s / 3600), 1) + t(' <i>km/sa</i>', ' <i>km/h</i>')], start: [52, 226] },
+      hike: { path: 'M48 252 C92 202 58 162 120 150 C182 138 152 92 212 80 C272 68 250 130 302 120 C344 112 342 72 362 48', plan: ['A → B', '8 km'], sec: 5700, km: 7.8, kcal: 45, metric: [t('TEMPO', 'PACE'), (s, km) => hms2(s / km) + ' <i>/km</i>'], start: [48, 252] },
     };
     function hms2(sPerKm) { const m = Math.floor(sPerKm / 60), s = Math.round(sPerKm % 60); return `${m}:${String(s).padStart(2, '0')}`; }
     ACT.run.metric[1] = (s, km) => hms2(s / km) + ' <i>/km</i>';

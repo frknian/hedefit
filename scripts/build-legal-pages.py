@@ -62,6 +62,9 @@ HEAD = """<!doctype html>
 <meta name="description" content="{desc}">
 <meta name="theme-color" content="#0a0a0a">
 <link rel="canonical" href="__SITE_URL__{path}">
+<link rel="alternate" hreflang="tr" href="__SITE_URL__{path}">
+<link rel="alternate" hreflang="en" href="__SITE_URL__{en_path}">
+<link rel="alternate" hreflang="x-default" href="__SITE_URL__{path}">
 <meta property="og:site_name" content="Hedefit">
 <meta property="og:locale" content="tr_TR">
 <meta property="og:type" content="website">
@@ -77,7 +80,7 @@ HEAD = """<!doctype html>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="legal">
-<header class="nav"><a class="brand" href="index.html"><img src="assets/brand/icon.png" alt="" width="36" height="36"><span>HEDEFIT</span></a><a class="btn btn-sm" href="index.html">Ana sayfa</a></header>
+<header class="nav"><a class="brand" href="index.html"><img src="assets/brand/icon.png" alt="" width="36" height="36"><span>HEDEFIT</span></a><a class="lang-switch" href="{en_path}" hreflang="en" lang="en">EN</a><a class="btn btn-sm" href="index.html">Ana sayfa</a></header>
 """
 FOOT = """<footer class="footer"><div class="wrap foot">
 <nav aria-label="Alt menü"><a href="index.html">Ana sayfa</a><a href="planlar.html">Planlar</a><a href="gizlilik.html">Gizlilik</a><a href="destek.html">Destek</a><a href="hesap-silme.html">Hesap silme</a></nav>
@@ -85,7 +88,7 @@ FOOT = """<footer class="footer"><div class="wrap foot">
 <script src="page.js"></script>
 """
 
-privacy = f"""{HEAD.format(path="/gizlilik", title="Gizlilik politikası", desc="Hedefit gizlilik politikası ve KVKK aydınlatma metni: hangi verileri işliyoruz, kimlerle paylaşıyoruz, haklarını nasıl kullanırsın.")}
+privacy = f"""{HEAD.format(path="/gizlilik", en_path="/en/privacy", title="Gizlilik politikası", desc="Hedefit gizlilik politikası ve KVKK aydınlatma metni: hangi verileri işliyoruz, kimlerle paylaşıyoruz, haklarını nasıl kullanırsın.")}
 <main class="doc">
   <p class="eyebrow">Hukuki</p>
   <h1>Gizlilik <span class="hl">politikası</span></h1>
@@ -122,7 +125,7 @@ privacy = f"""{HEAD.format(path="/gizlilik", title="Gizlilik politikası", desc=
 </body></html>
 """
 
-support = f"""{HEAD.format(path="/destek", title="Destek", desc="Hedefit destek: hesap, giriş, izinler, Fit Koç hakları ve veri talepleri için sık sorulanlar ve iletişim.")}
+support = f"""{HEAD.format(path="/destek", en_path="/en/support", title="Destek", desc="Hedefit destek: hesap, giriş, izinler, Fit Koç hakları ve veri talepleri için sık sorulanlar ve iletişim.")}
 <main class="doc">
   <p class="eyebrow">Destek</p>
   <h1>Size nasıl <span class="hl">yardımcı</span> olalım?</h1>
