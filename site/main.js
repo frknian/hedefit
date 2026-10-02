@@ -31,7 +31,7 @@
   document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
 
   // AI demo: yazma + sonuç
-  const text = '2 dilim tam buğday ekmeği, 2 yumurtalı omlet';
+  const text = '2 dilim tam buğday ekmeği, omlet';
   const typed = document.getElementById('typed');
   const result = document.getElementById('aiResult');
   const kcal = result.querySelector('[data-to]');
