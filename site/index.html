@@ -85,7 +85,7 @@
               </div>
               <h4>Hedef yolculuğu</h4>
               <button type="button" class="a-card goalc" data-go="hedef">
-                <div class="gc-row"><div><small>ŞİMDİ</small><b id="apKg">95.0 kg</b></div><span class="pill" id="apWk">20 hafta kaldı</span><div class="gr"><small>HEDEF</small><b>80.0 kg</b></div></div>
+                <div class="gc-row"><div><small>ŞİMDİ</small><b id="apKg">95.0 kg</b></div><span class="pill" id="apWk">20 hafta kaldı</span><div class="gr"><small>HEDEF</small><b id="apTo">80.0 kg</b></div></div>
                 <div class="gbar"><span id="apBar"></span></div>
               </button>
               <h4>Günlük denge</h4>
@@ -123,10 +123,10 @@
         </div>
       </div>
     <div class="float card goal f1" id="heroGoal">
-      <small>HEDEF YOLCULUĞU</small>
-      <div class="hg-now"><b id="hgKg">95.0</b><i>kg</i><span class="hg-arrow">→</span><b class="g">80.0</b><i>kg</i></div>
+      <small id="hgLabel">KİLO VERME</small>
+      <div class="hg-now"><b id="hgKg">95.0</b><i>kg</i><span class="hg-arrow">→</span><b class="g" id="hgTo">80.0</b><i>kg</i></div>
       <svg viewBox="0 0 180 56" class="hg-chart" aria-hidden="true"><line class="hg-base" x1="4" y1="52" x2="176" y2="52"/><path class="hg-line" id="hgLine" d="M6 8 L174 48"/><circle class="hg-dot" id="hgDot" r="4.5" cx="6" cy="8"/><circle class="hg-end" cx="174" cy="48" r="3.5"/></svg>
-      <em>20 hafta · Dengeli tempo</em>
+      <em id="hgNote">20 hafta · Dengeli tempo</em>
     </div>
     <div class="float card rings f2">
       <small>GÜNLÜK DENGE</small>
@@ -332,24 +332,30 @@
     <div class="jcopy">
       <p class="eyebrow reveal">Hedef yolculuğu</p>
       <h2 class="reveal">Hedefin, <span class="hl">tarihli bir yol.</span></h2>
-      <p class="lead reveal">Hedef kilonu seç; Hedefit haftalık hızını, bitiş tarihini ve ara hedeflerini hesaplasın. Tempoyu değiştirdiğinde yol haritası anında yeniden çizilir.</p>
+      <p class="lead reveal">Kilo ver, kas kazan ya da formunu koru. Hedefini seç; Hedefit haftalık hızını, bitiş tarihini ve ara hedeflerini hesaplasın. Seçimini değiştirdiğinde yol haritası anında yeniden çizilir.</p>
+      <div class="seg reveal" role="tablist" aria-label="Hedef türü" id="goalSeg">
+        <button type="button" role="tab" data-g="lose" aria-selected="true"><b>Kilo ver</b><small>Yağı azalt</small></button>
+        <button type="button" role="tab" data-g="gain" aria-selected="false"><b>Kas kazan</b><small>Kontrollü artış</small></button>
+        <button type="button" role="tab" data-g="keep" aria-selected="false"><b>Formu koru</b><small>Mevcut kilon</small></button>
+      </div>
       <div class="seg reveal" role="tablist" aria-label="Tempo seçimi" id="tempoSeg">
-        <button type="button" role="tab" data-t="0" aria-selected="false"><b>Yavaş</b><small>0,51 kg/hf</small></button>
-        <button type="button" role="tab" data-t="1" aria-selected="true"><b>Dengeli</b><small>0,77 kg/hf</small></button>
-        <button type="button" role="tab" data-t="2" aria-selected="false"><b>Hızlı</b><small>1,02 kg/hf</small></button>
+        <button type="button" role="tab" data-t="0" aria-selected="false"><b>Yavaş</b><small id="tm0">0,51 kg/hf</small></button>
+        <button type="button" role="tab" data-t="1" aria-selected="true"><b>Dengeli</b><small id="tm1">0,77 kg/hf</small></button>
+        <button type="button" role="tab" data-t="2" aria-selected="false"><b>Hızlı</b><small id="tm2">1,02 kg/hf</small></button>
       </div>
       <ul class="ticks reveal">
         <li>Ara hedefler: %25, %50, %75 ve hedef kilo; her biri için tarih</li>
-        <li>Kilo verme, koruma ve alma hedefleri</li>
+        <li><b>Kilo verme</b> (kas kaybını en aza indiren hız), <b>kas kazanımı</b> (yağ artışını sınırlayan kontrollü kilo alımı) ve <b>form koruma</b> hedefleri</li>
         <li>Su, protein ve adım hedefleri; kaynakları gösterilir</li>
         <li>Ölçüm ekledikçe gerçek ilerleme planlanan yolun üzerine çizilir</li>
       </ul>
     </div>
     <div class="jpanel card-lg reveal" id="journey">
+      <p class="jp-label" id="jLabel">KİLO VERME</p>
       <div class="jp-top">
         <div><small>ŞİMDİ</small><div class="jp-kg"><b id="jKg">102.0</b><i>kg</i></div></div>
         <div class="jp-badge" id="jBadge">16 hafta</div>
-        <div class="jp-goal"><small>HEDEF</small><div class="jp-kg"><b>90.0</b><i>kg</i></div></div>
+        <div class="jp-goal"><small>HEDEF</small><div class="jp-kg"><b id="jTo">90.0</b><i>kg</i></div></div>
       </div>
       <svg viewBox="0 0 600 270" class="jchart" role="img" aria-label="Planlanan kilo yolu: 102 kilodan 90 kiloya">
         <defs><linearGradient id="jfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6fe02a" stop-opacity=".28"/><stop offset="1" stop-color="#6fe02a" stop-opacity="0"/></linearGradient>
@@ -365,9 +371,9 @@
       <div class="jstats">
         <div><small>HAFTALIK TEMPO</small><b id="jRate">0,77 kg</b></div>
         <div><small>SÜRE</small><b id="jWeeks">16 hafta</b></div>
-        <div><small>VKİ</small><b>31,5 <i>→ 27,8</i></b></div>
+        <div><small>VKİ</small><b id="jBmi">31,5 <i>→ 27,8</i></b></div>
       </div>
-      <p class="fine">Örnek: 102 kg, 180 cm. Hedefit değerleri profiline göre hesaplar.</p>
+      <p class="fine" id="jNote">Örnek: 102 kg, 180 cm. Hedefit değerleri profiline göre hesaplar.</p>
     </div>
   </div>
 </section>

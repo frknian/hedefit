@@ -593,3 +593,8 @@ details a{color:var(--g)}
 .tab-body figure{border-radius:20px;overflow:hidden;background:#0a0c0f;min-height:0}
 .tab-body img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
 @media (max-width:520px){.tab-body{border-radius:24px;padding:10px;gap:8px}.tab-body figure{border-radius:14px}}
+
+/* ---- hedef türü seçici ---- */
+.seg + .seg{margin-top:12px}
+.seg.off{opacity:.45;pointer-events:none}
+.jp-label{font-size:.7rem;letter-spacing:.16em;color:var(--g);font-weight:700;margin-bottom:10px}

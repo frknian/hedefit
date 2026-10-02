@@ -78,14 +78,26 @@
   const rings = home.querySelectorAll('.rg');
   const setRings = on => rings.forEach(r => r.querySelector('.fg').style.strokeDashoffset = on ? 138.2 * (1 - +r.dataset.p) : 138.2);
   const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  const goalAt = p => { kg.textContent = (95 - 15 * p).toFixed(1) + ' kg'; wk.textContent = Math.max(0, Math.round(20 * (1 - p))) + ' hafta kaldı'; bar.style.width = (p * 100) + '%'; };
+  // Üç hedef türü sırayla: kilo ver (95→80), kas kazan (70→74), formu koru (80).
+  const PG = [
+    { from: 95, to: 80, weeks: 20, text: w => w + ' hafta kaldı' },
+    { from: 70, to: 74, weeks: 16, text: w => w + ' hafta kaldı' },
+    { from: 80, to: 80, weeks: 0, text: () => 'Bakım' },
+  ];
+  let pgi = 0;
+  const apTo = document.getElementById('apTo');
+  const goalAt = p => {
+    const g = PG[pgi];
+    kg.textContent = (g.from + (g.to - g.from) * p).toFixed(1) + ' kg'; apTo.textContent = g.to.toFixed(1) + ' kg';
+    wk.textContent = g.text(Math.max(0, Math.round(g.weeks * (1 - p)))); bar.style.width = (p * 100) + '%';
+  };
   let visible = false, raf = 0, t0 = 0, ringsOn = false;
   const frame = now => {
     if (!visible) return;
     if (!t0) t0 = now;
     const ms = now - t0, T = 5200, H = 2400;
     goalAt(ease(Math.min(1, ms / T)));
-    if (ms > T + H) t0 = 0;
+    if (ms > T + H) { t0 = 0; pgi = (pgi + 1) % PG.length; }
     raf = requestAnimationFrame(frame);
   };
   if (reduce) { goalAt(1); setRings(true); }
