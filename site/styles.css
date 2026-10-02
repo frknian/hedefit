@@ -861,3 +861,45 @@ details a{color:var(--g)}
 .blinks a:hover{background:var(--g);color:#06130a}
 @media (max-width:900px){.bgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.bcard.span2{grid-column:1/-1}}
 @media (max-width:600px){.bgrid{grid-template-columns:minmax(0,1fr)}.bgoal{grid-template-columns:repeat(3,1fr)}}
+
+/* Kütüphane ve arkadaşlar kartları */
+.lib-q{background:var(--bg2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;width:100%}
+.lib-q:focus{outline:2px solid var(--g);outline-offset:1px}
+.lib-chips{gap:6px}
+.lib-chips button{padding:6px 12px;font-size:.8rem}
+.lib-chips button[aria-pressed="true"]{background:var(--g);border-color:var(--g);color:#06130a}
+.lib-list{list-style:none;display:grid;gap:6px}
+.lib-list button{width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 12px;color:var(--text);font:inherit;cursor:pointer;display:grid;gap:1px;transition:border-color .2s}
+.lib-list button:hover,.lib-list button[aria-expanded="true"]{border-color:rgba(111,224,42,.5)}
+.lib-list small{color:var(--muted);font-size:.76rem}
+.lib-list p{margin:6px 4px 2px;color:var(--muted);font-size:.85rem}
+.lib-none{color:var(--muted);font-size:.9rem;padding:8px}
+.feed,.lb{list-style:none;display:grid;gap:8px}
+.feed li{display:flex;gap:10px;align-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.feed i{flex:none;width:34px;height:34px;border-radius:50%;background:var(--gd);color:var(--g);display:grid;place-items:center;font-style:normal;font-weight:800}
+.feed small{display:block;color:var(--muted);font-size:.74rem}
+.feed b{font-weight:700}
+.lb li{display:grid;grid-template-columns:20px 58px 1fr auto;gap:8px;align-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:.88rem}
+.lb li.me{border-color:rgba(111,224,42,.55);background:var(--gd)}
+.lb em{font-style:normal;color:var(--muted);font-weight:700}
+.lb b{font-size:.8rem}
+.chal{display:grid;gap:8px}
+.cr{display:grid;grid-template-columns:48px 1fr auto;gap:8px;align-items:center;font-size:.88rem}
+.cr b{font-size:.82rem}
+.sbtn{background:var(--g);color:#06130a;border:0;border-radius:12px;padding:10px 14px;font:700 .9rem var(--body);cursor:pointer;align-self:flex-start}
+.sbtn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.blinks.more{margin-top:20px;align-items:center}
+.blinks.more b{color:var(--muted);font-weight:600;margin-right:4px}
+
+/* Açılır pencere ve gömülü ayrıntı görünümü */
+html.lock{overflow:hidden}
+.more-dlg{border:1px solid var(--line);border-radius:24px;background:var(--bg);color:var(--text);padding:0;width:min(1100px,94vw);height:min(86vh,900px);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.more-dlg::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
+.more-dlg iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+.more-x{position:absolute;top:12px;right:14px;z-index:2;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(16,18,20,.9);color:var(--text);font-size:1.05rem;cursor:pointer}
+.more-x:hover{border-color:var(--g);color:var(--g)}
+.more-x:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media (max-width:600px){.more-dlg{width:100vw;height:100dvh;max-width:100vw;max-height:100dvh;border-radius:0;border:0}}
+html.embed body.embed-body{background:var(--bg)}
+html.embed .section{padding-top:56px}
+html.embed [hidden]{display:none!important}

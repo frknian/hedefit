@@ -269,19 +269,38 @@
         </div>
       </article>
 
-      <article class="bcard span2 bmore reveal">
-        <div class="bhead"><div><h3>Daha fazlası var</h3><p>Her başlık kendi sayfasında anlatılıyor.</p></div></div>
-        <div class="blinks">
-          <a href="detay.html#yapay-zeka">Yapay zekâ ve veri</a>
-          <a href="detay.html#hedef-yolculugu">Hedef yolculuğu</a>
-          <a href="detay.html#rota">Hedefit Rota</a>
-          <a href="detay.html#akilli-saat">Akıllı saat</a>
-          <a href="detay.html#tablet">Tablet ve katlanabilir</a>
-          <a href="detay.html#gorevler">Görevler ve XP</a>
-          <a href="detay.html#galeri">Ekran görüntüleri</a>
-          <a href="detay.html#dene">Kas atlası ve araçlar</a>
+      <article class="bcard reveal">
+        <div class="bhead"><span class="bico">📚</span><div><h3>Hareket kütüphanesi</h3><p>600’den fazla hareketten küçük bir örnek.</p></div></div>
+        <div class="bdemo">
+          <label class="sr" for="libQ">Hareket ara</label>
+          <input class="lib-q" id="libQ" type="search" placeholder="Hareket ara…" autocomplete="off">
+          <div class="chips lib-chips" id="libChips" role="group" aria-label="Kas grubu"></div>
+          <ul class="lib-list" id="libList" aria-live="polite"></ul>
         </div>
       </article>
+
+      <article class="bcard reveal">
+        <div class="bhead"><span class="bico">👥</span><div><h3>Arkadaşlarınla birlikte</h3><p>Akışı izle, XP sıralamasında yarış, meydan oku.</p></div></div>
+        <div class="bdemo">
+          <div class="seg three bmode" id="socTabs" role="tablist" aria-label="Sosyal">
+            <button type="button" data-s="feed" aria-selected="true"><b>Akış</b></button>
+            <button type="button" data-s="board" aria-selected="false"><b>Sıralama</b></button>
+            <button type="button" data-s="chal" aria-selected="false"><b>Meydan okuma</b></button>
+          </div>
+          <div class="soc" id="socBody" aria-live="polite"></div>
+        </div>
+      </article>
+    </div>
+    <div class="blinks more reveal"><b>Daha fazlası:</b>
+      <a href="detay.html#yapay-zeka">Yapay zekâ ve veri</a>
+      <a href="detay.html#hedef-yolculugu">Hedef yolculuğu</a>
+      <a href="detay.html#rota">Hedefit Rota</a>
+      <a href="detay.html#akilli-saat">Akıllı saat</a>
+      <a href="detay.html#tablet">Tablet ve katlanabilir</a>
+      <a href="detay.html#gorevler">Görevler ve XP</a>
+      <a href="detay.html#sosyal">Sosyal</a>
+      <a href="detay.html#galeri">Ekran görüntüleri</a>
+      <a href="detay.html#dene">Kas atlası ve araçlar</a>
     </div>
   </div>
 </section>
@@ -380,6 +399,11 @@
   </div>
 </footer>
 
+
+<dialog class="more-dlg" id="moreDlg" aria-label="Ayrıntılar">
+  <button type="button" class="more-x" aria-label="Kapat">✕</button>
+  <iframe title="Ayrıntılar" src="about:blank"></iframe>
+</dialog>
 
 <script src="main.js"></script>
 <script src="phone.js"></script>

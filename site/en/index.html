@@ -540,31 +540,69 @@
 
       
 
-      <article class="bcard span2 bmore reveal">
+      <article class="bcard reveal">
         
-        <div class="bhead"><div><h3>There is more</h3><p>Every topic has its own section.</p></div></div>
+        <div class="bhead"><span class="bico">📚</span><div><h3>Exercise library</h3><p>A small sample of 600+ exercises.</p></div></div>
         
-        <div class="blinks">
+        <div class="bdemo">
           
-          <a href="/en/detail#yapay-zeka">AI and data</a>
+          <label class="sr" for="libQ">Search exercises</label>
           
-          <a href="/en/detail#hedef-yolculugu">Goal journey</a>
+          <input class="lib-q" id="libQ" type="search" placeholder="Search exercises…" autocomplete="off">
           
-          <a href="/en/detail#rota">Hedefit Routes</a>
+          <div class="chips lib-chips" id="libChips" role="group" aria-label="Muscle group"></div>
           
-          <a href="/en/detail#akilli-saat">Smart watch</a>
-          
-          <a href="/en/detail#tablet">Tablet and foldable</a>
-          
-          <a href="/en/detail#gorevler">Quests and XP</a>
-          
-          <a href="/en/detail#galeri">Screenshots</a>
-          
-          <a href="/en/detail#dene">Muscle atlas and tools</a>
+          <ul class="lib-list" id="libList" aria-live="polite"></ul>
         
         </div>
       
       </article>
+
+      
+
+      <article class="bcard reveal">
+        
+        <div class="bhead"><span class="bico">👥</span><div><h3>Together with friends</h3><p>Follow the feed, climb the XP board, start a challenge.</p></div></div>
+        
+        <div class="bdemo">
+          
+          <div class="seg three bmode" id="socTabs" role="tablist" aria-label="Social">
+            
+            <button type="button" data-s="feed" aria-selected="true"><b>Feed</b></button>
+            
+            <button type="button" data-s="board" aria-selected="false"><b>Leaderboard</b></button>
+            
+            <button type="button" data-s="chal" aria-selected="false"><b>Challenge</b></button>
+          
+          </div>
+          
+          <div class="soc" id="socBody" aria-live="polite"></div>
+        
+        </div>
+      
+      </article>
+    
+    </div>
+    
+    <div class="blinks more reveal"><b>More:</b>
+      
+      <a href="/en/detail#yapay-zeka">AI and data</a>
+      
+      <a href="/en/detail#hedef-yolculugu">Goal journey</a>
+      
+      <a href="/en/detail#rota">Hedefit Routes</a>
+      
+      <a href="/en/detail#akilli-saat">Smart watch</a>
+      
+      <a href="/en/detail#tablet">Tablet and foldable</a>
+      
+      <a href="/en/detail#gorevler">Quests and XP</a>
+      
+      <a href="/en/detail#sosyal">Social</a>
+      
+      <a href="/en/detail#galeri">Screenshots</a>
+      
+      <a href="/en/detail#dene">Muscle atlas and tools</a>
     
     </div>
   
@@ -760,6 +798,17 @@
 
 </footer>
 
+
+
+
+
+<dialog class="more-dlg" id="moreDlg" aria-label="Details">
+  
+  <button type="button" class="more-x" aria-label="Close">✕</button>
+  
+  <iframe title="Details" src="about:blank"></iframe>
+
+</dialog>
 
 <script src="/main.js"></script>
 <script src="/phone.js"></script>

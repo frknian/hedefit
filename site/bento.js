@@ -134,4 +134,103 @@
     };
     km.addEventListener('input', draw); draw();
   })();
+  /* --- Hareket kütüphanesi --- */
+  (() => {
+    const L = [
+      ['chest', 'Bench press', 'Bench press', ['Halter', 'Barbell'], ['Orta', 'Intermediate'], ['Kürek kemiklerini geride tut, bar göğsün alt kısmına insin.', 'Keep the shoulder blades back; lower the bar to the lower chest.']],
+      ['chest', 'Şınav', 'Push-up', ['Vücut ağırlığı', 'Bodyweight'], ['Başlangıç', 'Beginner'], ['Gövdeyi düz bir çizgide tut, dirsekler 45° açıyla.', 'Keep the body in one line, elbows at about 45°.']],
+      ['chest', 'Kablo crossover', 'Cable crossover', ['Kablo', 'Cable'], ['Orta', 'Intermediate'], ['Kolları hafif bükük tut, göğüsü sıkarak birleştir.', 'Keep a slight elbow bend and squeeze the chest together.']],
+      ['back', 'Barfiks', 'Pull-up', ['Vücut ağırlığı', 'Bodyweight'], ['İleri', 'Advanced'], ['Dirsekleri cebe doğru çek, omuzları kulaktan uzak tut.', 'Drive the elbows toward your pockets, shoulders away from the ears.']],
+      ['back', 'Lat pulldown', 'Lat pulldown', ['Makine', 'Machine'], ['Başlangıç', 'Beginner'], ['Barı göğsünün üstüne çek, gövdeyi sallama.', 'Pull the bar to the upper chest without swinging.']],
+      ['back', 'Barbell row', 'Barbell row', ['Halter', 'Barbell'], ['Orta', 'Intermediate'], ['Belini nötr tut, barı göbeğe doğru çek.', 'Keep the spine neutral and row toward the navel.']],
+      ['legs', 'Squat', 'Squat', ['Halter', 'Barbell'], ['Orta', 'Intermediate'], ['Dizler ayak ucuyla aynı hizada, topuklar yerde.', 'Knees track over the toes, heels stay down.']],
+      ['legs', 'Romanian deadlift', 'Romanian deadlift', ['Halter', 'Barbell'], ['Orta', 'Intermediate'], ['Kalçayı geri it, bar bacağa yakın insin.', 'Push the hips back; keep the bar close to the legs.']],
+      ['legs', 'Leg press', 'Leg press', ['Makine', 'Machine'], ['Başlangıç', 'Beginner'], ['Dizleri kilitleme, belini yastıktan kaldırma.', 'Do not lock the knees or lift the lower back off the pad.']],
+      ['shoulders', 'Askıda omuz presi', 'Overhead press', ['Dumbbell', 'Dumbbell'], ['Orta', 'Intermediate'], ['Karnı sıkı tut, kolları kulak hizasında uzat.', 'Brace the core and press to full extension by the ears.']],
+      ['shoulders', 'Yan omuz kaldırma', 'Lateral raise', ['Dumbbell', 'Dumbbell'], ['Başlangıç', 'Beginner'], ['Dirsekler hafif bükük, omuz hizasında dur.', 'Slight elbow bend; stop at shoulder height.']],
+      ['arms', 'Hammer curl', 'Hammer curl', ['Dumbbell', 'Dumbbell'], ['Başlangıç', 'Beginner'], ['Dirsekleri gövdeye sabitle, yavaş indir.', 'Pin the elbows to your sides and lower slowly.']],
+      ['arms', 'Triceps pushdown', 'Triceps pushdown', ['Kablo', 'Cable'], ['Başlangıç', 'Beginner'], ['Dirsekler sabit, alt noktada sık.', 'Elbows fixed; squeeze at the bottom.']],
+      ['core', 'Plank', 'Plank', ['Vücut ağırlığı', 'Bodyweight'], ['Başlangıç', 'Beginner'], ['Kalça düşmesin, nefesi tutma.', 'Do not let the hips sag; keep breathing.']],
+      ['core', 'Asılı bacak kaldırma', 'Hanging leg raise', ['Vücut ağırlığı', 'Bodyweight'], ['İleri', 'Advanced'], ['Sallanmadan, karından kontrol ederek kaldır.', 'Lift with the abs, no swinging.']],
+    ];
+    const G = { all: ['Tümü', 'All'], chest: ['Göğüs', 'Chest'], back: ['Sırt', 'Back'], legs: ['Bacak', 'Legs'], shoulders: ['Omuz', 'Shoulders'], arms: ['Kol', 'Arms'], core: ['Karın', 'Core'] };
+    const q = $('#libQ'), chips = $('#libChips'), list = $('#libList');
+    let grp = 'all', open = null;
+    Object.keys(G).forEach(k => { const b = document.createElement('button'); b.type = 'button'; b.dataset.g = k; b.textContent = G[k][EN ? 1 : 0]; b.setAttribute('aria-pressed', String(k === 'all')); chips.appendChild(b); });
+    const norm = s => s.toLocaleLowerCase(EN ? 'en' : 'tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i');
+    const draw = () => {
+      const f = norm(q.value.trim()); list.innerHTML = '';
+      const rows = L.filter(x => (grp === 'all' || x[0] === grp) && (!f || norm(x[EN ? 2 : 1]).includes(f))).slice(0, 5);
+      if (!rows.length) { const li = document.createElement('li'); li.className = 'lib-none'; li.textContent = t('Eşleşen hareket yok.', 'No matching exercise.'); list.appendChild(li); return; }
+      rows.forEach(x => {
+        const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
+        const name = x[EN ? 2 : 1]; b.setAttribute('aria-expanded', String(open === name));
+        b.innerHTML = '<b></b><small></small>'; b.firstChild.textContent = name; b.lastChild.textContent = `${G[x[0]][EN ? 1 : 0]} · ${x[3][EN ? 1 : 0]} · ${x[4][EN ? 1 : 0]}`;
+        b.addEventListener('click', () => { open = open === name ? null : name; draw(); });
+        li.appendChild(b);
+        if (open === name) { const p = document.createElement('p'); p.textContent = x[5][EN ? 1 : 0]; li.appendChild(p); }
+        list.appendChild(li);
+      });
+    };
+    chips.addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; grp = b.dataset.g; open = null; $$('button', chips).forEach(x => x.setAttribute('aria-pressed', String(x === b))); draw(); });
+    q.addEventListener('input', () => { open = null; draw(); });
+    draw();
+  })();
+
+  /* --- Arkadaşlar --- */
+  (() => {
+    const body = $('#socBody');
+    const me = { n: t('Sen', 'You'), xp: 320, me: true };
+    const board = [{ n: 'Elif', xp: 540 }, { n: 'Mert', xp: 470 }, me, { n: 'Zeynep', xp: 290 }, { n: 'Can', xp: 210 }];
+    const chal = { me: 14, fr: 17, goal: 30 };
+    let tab = 'feed';
+    const FEED = [
+      ['E', 'Elif', t('5,2 km koştu', 'ran 5.2 km'), t('2 sa önce', '2 h ago')],
+      ['M', 'Mert', t('Bacak antrenmanını tamamladı', 'finished a leg workout'), t('4 sa önce', '4 h ago')],
+      ['Z', 'Zeynep', t('12 günlük seriye ulaştı', 'reached a 12-day streak'), t('dün', 'yesterday')],
+    ];
+    const draw = () => {
+      body.innerHTML = '';
+      if (tab === 'feed') {
+        const ul = document.createElement('ul'); ul.className = 'feed';
+        FEED.forEach(([a, n, w, ago]) => { const li = document.createElement('li'); li.innerHTML = '<i></i><div><b></b> <span></span><small></small></div>'; li.firstChild.textContent = a; li.querySelector('b').textContent = n; li.querySelector('span').textContent = w; li.querySelector('small').textContent = ago; ul.appendChild(li); });
+        body.appendChild(ul);
+      } else if (tab === 'board') {
+        const rows = [...board].sort((x, y) => y.xp - x.xp), top = rows[0].xp;
+        const ul = document.createElement('ul'); ul.className = 'lb';
+        rows.forEach((r, i) => { const li = document.createElement('li'); if (r.me) li.className = 'me'; li.innerHTML = '<em></em><span></span><div class="mbar"><i></i></div><b></b>'; li.querySelector('em').textContent = i + 1; li.querySelector('span').textContent = r.n; li.querySelector('i').style.setProperty('--w', Math.round(r.xp / top * 100) + '%'); li.querySelector('b').textContent = r.xp + ' XP'; ul.appendChild(li); });
+        const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'sbtn'; btn.textContent = t('Antrenmanı bitir (+40 XP)', 'Finish a workout (+40 XP)');
+        btn.addEventListener('click', () => { me.xp += 40; draw(); });
+        body.append(ul, btn);
+      } else {
+        const wrap = document.createElement('div'); wrap.className = 'chal';
+        const h = document.createElement('p'); h.className = 'bnote'; h.textContent = t('Haftalık 30 km · Elif ile', 'Weekly 30 km · vs Elif'); wrap.appendChild(h);
+        [[t('Sen', 'You'), chal.me, true], ['Elif', chal.fr, false]].forEach(([n, v, mine]) => { const r = document.createElement('div'); r.className = 'cr' + (mine ? ' me' : ''); r.innerHTML = '<span></span><div class="mbar"><i></i></div><b></b>'; r.querySelector('span').textContent = n; r.querySelector('i').style.setProperty('--w', Math.min(100, Math.round(v / chal.goal * 100)) + '%'); r.querySelector('b').textContent = num(v, v % 1 ? 1 : 0) + ' km'; wrap.appendChild(r); });
+        const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'sbtn'; btn.textContent = t('+5 km koştum', 'I ran +5 km');
+        btn.addEventListener('click', () => { chal.me = Math.min(chal.goal, chal.me + 5); draw(); });
+        const res = document.createElement('p'); res.className = 'bnote'; res.textContent = chal.me >= chal.goal ? t('Meydan okumayı kazandın!', 'You won the challenge!') : chal.me > chal.fr ? t('Öndesin.', 'You are ahead.') : t('Elif önde, yetişebilirsin.', 'Elif leads; you can catch up.');
+        body.append(wrap, btn, res);
+      }
+    };
+    $('#socTabs').addEventListener('click', e => { const b = e.target.closest('button[data-s]'); if (!b) return; tab = b.dataset.s; $$('#socTabs button').forEach(x => x.setAttribute('aria-selected', String(x === b))); draw(); });
+    draw();
+  })();
+  /* --- "Daha fazlası": ayrıntı sayfasını açılır pencerede göster --- */
+  (() => {
+    const dlg = $('#moreDlg'); if (!dlg || !dlg.showModal) return;
+    const frame = $('iframe', dlg);
+    const close = () => { dlg.close(); };
+    $('.more-x', dlg).addEventListener('click', close);
+    dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+    dlg.addEventListener('close', () => { frame.src = 'about:blank'; document.documentElement.classList.remove('lock'); });
+    document.addEventListener('click', e => {
+      const a = e.target.closest('.blinks a'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      const [path, hash] = a.getAttribute('href').split('#');
+      frame.src = path + '?embed=1#' + (hash || '');
+      frame.title = a.textContent;
+      dlg.setAttribute('aria-label', a.textContent);
+      document.documentElement.classList.add('lock'); dlg.showModal();
+    });
+  })();
 })();
