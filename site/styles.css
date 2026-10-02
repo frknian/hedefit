@@ -703,3 +703,4 @@ details a{color:var(--g)}
 /* ---- dil değiştirici ---- */
 .lang-switch{display:inline-block;margin-right:10px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);text-decoration:none;font-size:.78rem;font-weight:700;letter-spacing:.06em;transition:color .2s,border-color .2s}
 .lang-switch:hover{color:var(--g);border-color:var(--g)}
+@media (max-width:960px){.nav .lang-switch{margin-left:auto;margin-right:0}.nav{gap:10px}}
