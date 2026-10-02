@@ -323,7 +323,7 @@ class MainActivity : ComponentActivity() {
                     com.hedefit.app.wear.WearInbox.asks.collect { ask ->
                         launch {
                             val result = runCatching {
-                                if (ask.mode == "food") mainViewModel.logFoodForWatch(ask.text) else mainViewModel.askCoachForWatch(ask.text, preferences.language)
+                                if (ask.mode == "food") mainViewModel.logFoodForWatch(ask.text, preferences.language) else mainViewModel.askCoachForWatch(ask.text, preferences.language)
                             }
                             com.hedefit.app.wear.WearSync.reply(this@MainActivity, ask.nodeId, ask.id, result.isSuccess, result.getOrElse { it.message ?: "Hata" })
                         }

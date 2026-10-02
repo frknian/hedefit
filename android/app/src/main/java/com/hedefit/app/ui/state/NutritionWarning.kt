@@ -19,6 +19,22 @@ object NutritionWarning {
         return if (confidence < LOW_CONFIDENCE) known("low_confidence", en) else null
     }
 
+    /**
+     * Reply for a food logged by voice from the watch. Voice logging saves straight away (there is
+     * no review screen), so flagged items are called out in the reply instead: it is the person's
+     * only chance to notice, for example, that cooked weight was assumed.
+     *
+     * The summary always comes first; the watch shows at most 600 characters.
+     */
+    fun watchReply(summary: String, items: List<NutritionEstimateData>, en: Boolean, maxWarnings: Int = 2): String {
+        val warned = items.mapNotNull { item -> text(item, en)?.let { item.name to it } }.distinctBy { it.second }
+        if (warned.isEmpty()) return summary
+        val shown = warned.take(maxWarnings).joinToString("\n") { (name, warning) -> "⚠ $name: $warning" }
+        val more = if (warned.size > maxWarnings) " (+${warned.size - maxWarnings})" else ""
+        val hint = if (en) "Check it on your phone." else "Telefonda kontrol et."
+        return "$summary\n$shown$more\n$hint"
+    }
+
     private fun known(code: String?, en: Boolean): String? = when (code) {
         "approximate_amount" -> if (en) "Amount is approximate; check it before saving." else "Miktar yaklaşık tahmin edildi; kaydetmeden önce kontrol et."
         "cooked_assumed" -> if (en) "Cooked weight assumed. If you weighed it raw or dry, type “çiğ” before the food (e.g. çiğ pirinç); calories are about 2.5x higher."
