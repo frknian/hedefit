@@ -77,6 +77,7 @@ import com.hedefit.app.health.HealthConnectManager
 import com.hedefit.app.steps.StepSource
 import com.hedefit.app.ads.AdMobManager
 import com.hedefit.app.gym.ActiveWorkoutStore
+import com.hedefit.app.gym.PlanRotationPeriod
 import com.hedefit.app.gym.WorkoutSummary
 import com.hedefit.app.gym.detectPersonalRecord
 
@@ -132,6 +133,9 @@ class MainActivity : ComponentActivity() {
             val activeWorkoutStore = remember { ActiveWorkoutStore(this@MainActivity) }
             var preferences by remember { mutableStateOf(preferencesStore.read()) }
             com.hedefit.app.ui.i18n.AppLang.en = preferences.language == "en"
+            LaunchedEffect(preferences.planRotation) { mainViewModel.setPlanRotationPeriod(preferences.planRotation) }
+            // The new-block alarm is one-shot: re-arm it whenever the app opens.
+            LaunchedEffect(Unit) { notificationScheduler.scheduleNewBlock(preferences) }
             var adsAllowed by remember { mutableStateOf(false) }
 
             fun updatePreferences(next: com.hedefit.app.ui.settings.AppPreferences) {
@@ -732,6 +736,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenCardio = { utilityPage = UtilityPage.Cardio },
                                 onOpenRoute = { utilityPage = UtilityPage.Route },
+                                newBlockDue = mainViewModel.newBlockDue(PlanRotationPeriod.fromKey(preferences.planRotation)),
+                                rotationPeriod = preferences.planRotation,
+                                onStartNewBlock = mainViewModel::generatePlan,
                                 onGenerateRegional = { muscle, label, connected -> mainViewModel.generateRegionalPlan(muscle, label, connected, preferences.language) },
                                 onLoadRegional = { muscle -> mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", category = "strength", locale = preferences.language) },
                                 onGenerateQuickWorkout = { regions, duration, fatigue, environment, owned, level -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, owned, level, preferences.language) },

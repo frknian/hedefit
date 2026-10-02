@@ -60,6 +60,8 @@ data class WorkoutProgramData(
     val isActive: Boolean,
     val showOnHome: Boolean = false,
     val trainingDays: List<WorkoutProgramDayData> = emptyList(),
+    /** Server timestamp (ISO-8601) of the last save/activation; fallback for the "new block" check. */
+    val updatedAt: String? = null,
 )
 
 data class WorkoutSessionData(

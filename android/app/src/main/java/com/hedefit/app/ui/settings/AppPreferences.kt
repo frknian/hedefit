@@ -18,6 +18,8 @@ data class AppPreferences(
     val accentHue: Float = 106f,
     val welcomeGuideSeen: Boolean = false,
     val homeQuickActions: List<String> = DEFAULT_QUICK_ACTIONS,
+    /** How often a fresh AI training block is offered: "weekly" or "monthly" (default). */
+    val planRotation: String = "monthly",
 ) {
     companion object {
         val DEFAULT_QUICK_ACTIONS = listOf("nutrition", "cardio", "route", "sleep", "coach", "atlas", "curlgame")
@@ -43,6 +45,7 @@ class AppPreferencesStore(context: Context) {
         unitSystem = preferences.getString("unit_system", "metric").let { if (it == "imperial") "imperial" else "metric" },
         accentHue = preferences.getFloat("accent_hue", 106f).coerceIn(0f, 360f),
         welcomeGuideSeen = preferences.getBoolean("welcome_guide_seen", false),
+        planRotation = preferences.getString("plan_rotation", "monthly").let { if (it == "weekly") "weekly" else "monthly" },
         // Kardiyo ve dambıl oyunu sonradan eklendi: kayıtlı listesi olanlara bir kez eklenir.
         homeQuickActions = preferences.getString("home_quick_actions", null)
             ?.split(',')?.filter(String::isNotBlank)?.takeIf { it.isNotEmpty() }
@@ -67,6 +70,7 @@ class AppPreferencesStore(context: Context) {
             .putFloat("accent_hue", value.accentHue.coerceIn(0f, 360f))
             .putBoolean("welcome_guide_seen", value.welcomeGuideSeen)
             .putString("home_quick_actions", value.homeQuickActions.joinToString(","))
+            .putString("plan_rotation", if (value.planRotation == "weekly") "weekly" else "monthly")
             .apply()
     }
 }
