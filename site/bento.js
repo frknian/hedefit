@@ -224,12 +224,12 @@
     dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
     dlg.addEventListener('close', () => { frame.src = 'about:blank'; document.documentElement.classList.remove('lock'); });
     document.addEventListener('click', e => {
-      const a = e.target.closest('.blinks a'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      const a = e.target.closest('.mtile'); if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
       e.preventDefault();
       const [path, hash] = a.getAttribute('href').split('#');
       frame.src = path + '?embed=1#' + (hash || '');
-      frame.title = a.textContent;
-      dlg.setAttribute('aria-label', a.textContent);
+      const ttl = $('b', a).textContent; frame.title = ttl;
+      dlg.setAttribute('aria-label', ttl);
       document.documentElement.classList.add('lock'); dlg.showModal();
     });
   })();

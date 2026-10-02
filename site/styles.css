@@ -903,3 +903,17 @@ html.lock{overflow:hidden}
 html.embed body.embed-body{background:var(--bg)}
 html.embed .section{padding-top:56px}
 html.embed [hidden]{display:none!important}
+
+/* Daha fazlasını keşfet */
+.more{margin-top:48px}
+.more h3{font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:clamp(1.8rem,4vw,2.6rem);margin-bottom:16px}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mtile{position:relative;display:grid;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px 48px 18px 18px;color:var(--text);text-decoration:none;transition:transform .2s,border-color .2s,background .2s}
+.mtile:hover,.mtile:focus-visible{transform:translateY(-3px);border-color:var(--g);background:var(--card2);outline:none}
+.mtile .mi{width:42px;height:42px;border-radius:12px;background:var(--gd);display:grid;place-items:center;font-size:1.3rem;margin-bottom:8px}
+.mtile b{font-size:1.05rem}
+.mtile small{color:var(--muted);font-size:.84rem}
+.mtile i{position:absolute;right:16px;top:50%;translate:0 -50%;width:34px;height:34px;border-radius:50%;background:var(--g);color:#06130a;display:grid;place-items:center;font-style:normal;font-weight:800;transition:transform .2s}
+.mtile:hover i{transform:translateX(3px)}
+@media (max-width:900px){.mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.mgrid{grid-template-columns:minmax(0,1fr)}}
