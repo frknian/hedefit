@@ -228,7 +228,7 @@ fun HomeScreen(
             }
             item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler", if (en) "Customize" else "Özelleştir") { editingQuickActions = true } }
             item {
-                val catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" }, onOpenFriends)
+                val catalog = quickActionCatalog(en, com.hedefit.app.ui.layout.rememberIsTablet(), data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" }, onOpenFriends)
                 val active = quickActions.mapNotNull(catalog::get).ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS.mapNotNull(catalog::get) }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     active.chunked(2).forEach { row ->
@@ -259,7 +259,7 @@ fun HomeScreen(
     }
     if (editingQuickActions && data != null) QuickActionPickerDialog(
         en = en,
-        catalog = quickActionCatalog(en, data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+        catalog = quickActionCatalog(en, com.hedefit.app.ui.layout.rememberIsTablet(), data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}, {}),
         selected = quickActions.ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS },
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
@@ -270,6 +270,7 @@ private class QuickAction(val icon: androidx.compose.ui.graphics.vector.ImageVec
 
 private fun quickActionCatalog(
     en: Boolean,
+    tablet: Boolean,
     data: DashboardData,
     onOpenNutrition: () -> Unit,
     onOpenRoute: () -> Unit,
@@ -289,7 +290,9 @@ private fun quickActionCatalog(
     onOpenFriends: () -> Unit,
 ): Map<String, QuickAction> = linkedMapOf(
     "nutrition" to QuickAction(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition),
-    "route" to QuickAction(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
+    // Tablet ev/ofis cihazıdır: GPS rotası yerine antrenman standı açılır (onOpenRoute tablette standı başlatır).
+    "route" to if (tablet) QuickAction(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Workout Stand" else "Antrenman Standı", if (en) "Big timer, sets and video" else "Büyük zamanlayıcı, set ve video", onOpenRoute)
+    else QuickAction(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS run or walk" else "GPS ile koşu, yürüyüş", onOpenRoute),
     "sleep" to QuickAction(Icons.Default.Bedtime, HedefitColors.Lime, if (en) "Log sleep" else "Uyku gir", if (data.sleepMinutes > 0) (if (en) "Last night: ${data.sleepMinutes / 60}h ${data.sleepMinutes % 60}m" else "Dün gece: ${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk") else if (en) "Not logged yet" else "Henüz girilmedi", onSleep),
     "coach" to QuickAction(Icons.Default.AutoAwesome, HedefitColors.Lime, if (en) "Ask Fit Coach" else "FitKoç'a sor", if (en) "Training and nutrition" else "Antrenman ve beslenme", onOpenCoach),
     "workout" to QuickAction(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Start workout" else "Antrenmanı başlat", if (en) "Jump into today's plan" else "Bugünün planına atla", { onOpenProgram(data.workoutPrograms.firstOrNull { it.isActive }?.id) }),

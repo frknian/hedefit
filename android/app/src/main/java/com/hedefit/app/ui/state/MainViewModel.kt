@@ -1086,6 +1086,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(activeChallengeId = null, challengeProgress = emptyList()) }
     }
 
+    /** Yerel anlığı hesaba taşır; çevrimdışıysa sessizce geçer, bir sonraki yazımda yeniden denenir. */
+    fun pushActiveWorkout(snapshot: org.json.JSONObject, deviceId: String) {
+        viewModelScope.launch { runCatching { repository.pushActiveWorkout(snapshot, deviceId) } }
+    }
+
+    fun clearRemoteActiveWorkout() {
+        viewModelScope.launch { runCatching { repository.clearActiveWorkout() } }
+    }
+
+    /** Başka cihazda süren antrenman varsa JSON'unu döndürür. */
+    fun pullActiveWorkout(ownDeviceId: String, onFound: (String) -> Unit) {
+        viewModelScope.launch { runCatching { repository.fetchActiveWorkout(ownDeviceId) }.getOrNull()?.let(onFound) }
+    }
+
     fun loadPreviousPerformance(requestedExercises: List<com.hedefit.app.data.model.WorkoutExerciseData>? = null) {
         val exercises = requestedExercises ?: _state.value.dashboard?.workouts.orEmpty()
         viewModelScope.launch { runCatching { repository.loadPreviousPerformance(exercises) }.onSuccess { previous -> _state.update { it.copy(previousPerformance = previous) } } }

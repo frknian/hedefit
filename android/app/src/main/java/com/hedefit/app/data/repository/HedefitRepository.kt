@@ -77,6 +77,27 @@ class HedefitRepository(
     private val api: HedefitApiClient,
 ) {
     private val rawHttp = com.hedefit.app.data.network.JsonHttpClient()
+
+    /** Devam eden antrenmanı hesaba yazar; başka bir cihaz kaldığı yerden sürdürebilsin diye. */
+    suspend fun pushActiveWorkout(snapshot: JSONObject, deviceId: String) {
+        rest.upsert(
+            "active_workout_sessions",
+            JSONObject().put("user_id", requireNotNull(auth.userId())).put("snapshot", snapshot).put("device_id", deviceId)
+                .put("saved_at", snapshot.optLong("savedAt")).put("updated_at", Instant.now().toString()),
+            "user_id",
+        )
+    }
+
+    /** Başka bir cihazın yazdığı aktif antrenman; yoksa ya da bu cihazın kendi kaydıysa null. */
+    suspend fun fetchActiveWorkout(ownDeviceId: String): String? {
+        val row = rest.select("active_workout_sessions", "select=snapshot,device_id&user_id=eq.${requireNotNull(auth.userId())}").optJSONObject(0) ?: return null
+        if (row.optString("device_id") == ownDeviceId) return null
+        return row.optJSONObject("snapshot")?.toString()
+    }
+
+    suspend fun clearActiveWorkout() {
+        rest.delete("active_workout_sessions", "user_id=eq.${requireNotNull(auth.userId())}")
+    }
     suspend fun saveRoute(snapshot: RouteSnapshot, activityType: String, title: String) {
         saveRoutePayload(routePayload(snapshot, activityType, title))
     }

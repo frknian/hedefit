@@ -69,20 +69,23 @@ fun ActiveWorkoutScreen(
     onSendChatMessage: (String, WorkoutCoachContext?) -> Unit = { _, _ -> },
     onExecuteCoachAction: (CoachActionData) -> Unit = {},
     onSkip: (postpone: Boolean) -> Unit = {},
+    onSnapshotSaved: (org.json.JSONObject, String) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
+    val tablet = com.hedefit.app.ui.layout.rememberIsTablet()
     val prefs = remember { context.getSharedPreferences(MODE_PREFS, Context.MODE_PRIVATE) }
     var quick by remember { mutableStateOf(prefs.getBoolean("quick", true)) }
     fun setQuick(value: Boolean) { quick = value; prefs.edit().putBoolean("quick", value).apply() }
-    if (quick) {
+    // Tablet standı her zaman ayrıntılı (büyük sayaçlı) akışı kullanır; hızlı mod telefon içindir.
+    if (quick && !tablet) {
         QuickWorkoutScreen(exercises, saving, onBack, onFinish, onDetailed = { setQuick(false) }, onSkip = onSkip)
     } else {
         Box(Modifier.fillMaxSize()) {
             DetailedActiveWorkoutScreen(
                 onBack, exercises, previousPerformance, saving, language, onFinish, onRequestReplacementCandidate,
-                onApplyReplacementCandidate, replacementCandidate, replacementBusy, chatMessages, chatBusy, onSendChatMessage, onExecuteCoachAction, onSkip,
+                onApplyReplacementCandidate, replacementCandidate, replacementBusy, chatMessages, chatBusy, onSendChatMessage, onExecuteCoachAction, onSkip, onSnapshotSaved,
             )
-            Surface(
+            if (!tablet) Surface(
                 onClick = { setQuick(true) },
                 color = HedefitColors.Lime, shape = RoundedCornerShape(50),
                 modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 90.dp),

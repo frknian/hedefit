@@ -382,7 +382,8 @@ fun WorkoutPlanScreen(
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Muscles you trained" else "Çalışan kasların", { page = "muscles" }, Modifier.weight(1f).fillMaxHeight())
-                        HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        if (com.hedefit.app.ui.layout.rememberIsTablet()) HfActionTile(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Workout Stand" else "Antrenman Standı", if (en) "Big timer, set counter, video" else "Büyük zamanlayıcı, set sayacı, video", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        else HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.Add, HedefitColors.Lime, if (en) "Log activity" else "Antrenman ekle", if (en) "Sport, distance, pace" else "Spor, mesafe, tempo", onOpenActivityLog, Modifier.weight(1f).fillMaxHeight())
@@ -826,9 +827,11 @@ internal fun DetailedActiveWorkoutScreen(
     onSendChatMessage: (String, WorkoutCoachContext?) -> Unit = { _, _ -> },
     onExecuteCoachAction: (CoachActionData) -> Unit = {},
     onSkip: (postpone: Boolean) -> Unit = {},
+    onSnapshotSaved: (org.json.JSONObject, String) -> Unit = { _, _ -> },
 ) {
     val en = language == "en"
     val context = LocalContext.current
+    val standMode = com.hedefit.app.ui.layout.rememberIsTablet()
     val sessionStore = remember { ActiveWorkoutStore(context.applicationContext) }
     val restNotifier = remember { AndroidRestCompletionNotifier(context.applicationContext) }
     val restored = remember { sessionStore.read() }
@@ -896,6 +899,12 @@ internal fun DetailedActiveWorkoutScreen(
             startedAt, sessionExercises, exerciseIndex, currentSet, weight, reps, rpe, setType, note,
             completedSetStates.mapNotNull(::savedWorkoutSet), restDeadlineEpochMs, if (restTimerPaused) restSeconds else 0,
         ))
+    }
+
+    // Aynı anlığı kısa bir gecikmeyle hesaba da yazar; telefon, katlanan ve tablet arasında kaldığı yerden devam için.
+    LaunchedEffect(exerciseIndex, currentSet, weight, reps, rpe, setType, note, completedSetStates, restDeadlineEpochMs, restTimerPaused) {
+        delay(1_500)
+        sessionStore.read()?.let { onSnapshotSaved(com.hedefit.app.gym.snapshotToJson(it), sessionStore.deviceId) }
     }
 
     LaunchedEffect(timerSeconds, timerRunning, paused) {
@@ -978,7 +987,25 @@ internal fun DetailedActiveWorkoutScreen(
                     TextButton(onClick = { paused = false }) { Text(if (en) "Resume" else "Devam et", color = HedefitColors.Lime) }
                 }
             }
-            if (isWide) {
+            if (standMode) {
+                StandWorkoutLayout(
+                    exercises = sessionExercises, exerciseIndex = exerciseIndex,
+                    completedSets = completedSetStates.mapNotNull(::savedWorkoutSet),
+                    currentSet = currentSet, totalSets = totalSets, weight = weight, reps = reps, rpe = rpe, setType = setType,
+                    restSeconds = restSeconds, restTimerPaused = restTimerPaused, timerSeconds = timerSeconds, timerRunning = timerRunning,
+                    previous = previousPerformance[exercise?.id].orEmpty(), personalRecord = personalRecord,
+                    saving = saving || paused, isLastSet = currentSet >= totalSets && exerciseIndex >= sessionExercises.lastIndex,
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 16.dp),
+                    onWeight = { weightTouched = true; weight = (weight + it).coerceAtLeast(0) },
+                    onReps = { reps = (reps + it).coerceAtLeast(1) },
+                    onRpe = { rpe = it }, onSetType = { setType = it },
+                    onSkipRest = { restSeconds = 0; restDeadlineEpochMs = 0L; restTimerPaused = false; restNotifier.cancel() },
+                    onAddRest = { restSeconds += 30; restDeadlineEpochMs = if (restTimerPaused) 0L else adjustedRestDeadline(restDeadlineEpochMs, System.currentTimeMillis(), 30); if (!restTimerPaused) restNotifier.schedule(restDeadlineEpochMs) },
+                    onToggleRest = { restTimerPaused = !restTimerPaused; if (restTimerPaused) { restDeadlineEpochMs = 0L; restNotifier.cancel() } else { restDeadlineEpochMs = System.currentTimeMillis() + restSeconds * 1_000L; restNotifier.schedule(restDeadlineEpochMs) } },
+                    onTimer = { seconds -> timerSeconds = seconds; timerRunning = seconds > 0 }, onToggleTimer = { timerRunning = !timerRunning },
+                    onComplete = ::recordSetAndContinue, onSkipExercise = ::skipExercise, onOpenReplacement = { showReplacementSheet = true },
+                )
+            } else if (isWide) {
                 Row(
                     Modifier.fillMaxWidth().widthIn(max = 1040.dp).weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(22.dp),
