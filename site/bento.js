@@ -251,4 +251,14 @@
     }, { passive: true });
     mark(0);
   })();
+  /* --- Açılır karşılaştırma ("Dört uygulama yerine bir") --- */
+  (() => {
+    const cmp = $('#cmp'), btn = $('#cmpToggle'); if (!cmp || !btn) return;
+    const label = open => t(open ? 'Daha az göster' : 'Tüm farkları göster', open ? 'Show less' : 'Show all differences');
+    btn.textContent = label(false);
+    btn.addEventListener('click', () => {
+      const open = cmp.classList.toggle('collapsed') === false;
+      btn.setAttribute('aria-expanded', String(open)); btn.textContent = label(open);
+    });
+  })();
 })();

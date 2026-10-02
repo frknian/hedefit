@@ -934,3 +934,67 @@ html.embed [hidden]{display:none!important}
   .try .seg.four::-webkit-scrollbar{display:none}
   .try .seg.four button{flex:0 0 auto;min-width:112px;scroll-snap-align:center}
 }
+
+/* Kaydırılan şeritlerdeki gizli etiketler ekran dışına taşıp sayfayı genişletmesin */
+.bgrid,.mgrid,.pcards,.pt-row{position:relative}
+
+/* Açılır karşılaştırma */
+.compare.collapsed .col.extra{display:none}
+.cmp-toggle{display:block;margin:16px auto 0;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:12px 22px;font:700 .95rem var(--body);cursor:pointer;transition:border-color .2s,color .2s}
+.cmp-toggle:hover{border-color:var(--g);color:var(--g)}
+.cmp-toggle::after{content:" ↓"}
+.cmp-toggle[aria-expanded="true"]::after{content:" ↑"}
+.cmp-toggle:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ===== MOBİL TASARIM (telefon): kompakt, tek elde gezilen düzen ===== */
+@media (max-width:700px){
+  :root{--gut:16px}
+  .section{padding:44px 0}
+  h2{font-size:clamp(2rem,9.5vw,2.6rem);margin-bottom:12px}
+  .lead{font-size:.98rem}
+  .eyebrow{margin-bottom:10px}
+
+  /* Hero: başlık + düğmeler + telefon, taşan kart/boşluk yok */
+  .hero{padding:86px 0 28px;gap:6px}
+  .hero h1{font-size:clamp(2.5rem,12vw,3.3rem)}
+  .hero .lead{font-size:.96rem;margin-top:12px}
+  .stores{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+  .store{padding:10px 12px;gap:8px;border-radius:12px}
+  .store svg{width:22px;height:22px}
+  .store span{font-size:.95rem}
+  .notify-link{margin-top:14px}
+  .notify-link a{display:flex;justify-content:center;width:100%}
+  .proof{margin-top:22px;gap:6px 18px;font-size:.8rem}
+  .proof b{font-size:1.6rem}
+  .hero-stage{margin-top:6px;min-height:0}
+  .phone-zone{margin:6px auto 4px!important;zoom:1}
+  .phone-zone .float{display:none}
+  .hero-phone,.phone-zone .hero-phone{transform:none}
+  .hero-device{gap:8px}
+
+  /* Bölümler */
+  .how-steps{gap:10px}
+  .compare{margin-top:22px;border-radius:18px}
+  .col{grid-template-columns:1fr 1fr}
+  .col>*{padding:12px 14px;font-size:.9rem}
+  .col>span{grid-column:1/-1;padding-bottom:0}
+  .col.head span{display:none}
+  .faq summary{padding:14px 0}
+
+  /* Plan kartları: yan yana kaydırmalı, aynı boyda */
+  .pcards,.pt-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:24px -16px 0;padding:14px 16px 8px;max-width:none;scrollbar-width:none;align-items:stretch}
+  .pcards::-webkit-scrollbar,.pt-row::-webkit-scrollbar{display:none}
+  .pcards{width:100%;margin:24px 0 0;padding:14px 16px 8px;scroll-padding-inline:16px}
+  .pcard,.pt-card{flex:0 0 84%;scroll-snap-align:center;transform:none!important;margin:0}
+  .pcard{padding:22px}
+  .pcard:hover,.pt-card:hover{transform:none}
+  .pcard.featured{border-width:1.5px}
+  .pt-cta{flex:0 0 84%;display:grid;align-items:center;scroll-snap-align:center}
+  .pt-cta .btn{display:block;text-align:center}
+  .plans-hero{padding-top:96px}
+
+  /* Bildirim formu */
+  .cta{padding:48px 0}
+  .notify{padding:16px;margin-top:22px}
+  .nf-title{font-size:1.4rem}
+}
