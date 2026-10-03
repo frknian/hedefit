@@ -331,8 +331,9 @@ class RouteTrackingService : Service() {
             HedefitWidgetData.writeRoute(this, store.resume())
         }
         if (!store.read().tracking) store.start()
-        startForeground(NOTIFICATION_ID, notification(store.read()))
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        // Konum izni arada geri alındıysa "location" türlü önplan servisi SecurityException ile çöker.
+        val promoted = runCatching { startForeground(NOTIFICATION_ID, notification(store.read())) }.isSuccess
+        if (!promoted || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             store.stop(); stopSelf(); return START_NOT_STICKY
         }
         if (store.read().paused) return START_STICKY

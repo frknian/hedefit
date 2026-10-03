@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import androidx.health.services.client.ExerciseUpdateCallback
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.data.Availability
@@ -93,17 +94,36 @@ class ExerciseService : Service() {
     }
 
     private fun start(kind: WorkoutKind) {
-        startForeground(NOTIFICATION_ID, notification(kind))
+        // İzin yoksa önplan servisi SecurityException ile çöker: yalnız verilen izinlerin türleriyle başlat.
+        val grants = currentGrants(this)
+        val types = foregroundTypes(grants, kind.outdoor)
+        val promoted = types != 0 && runCatching {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification(kind), types)
+        }.isSuccess
+        if (!promoted) {
+            // Aktivite, izin kontrolünden sonra servisi başlatır; buraya düşmek yarış/iptal durumudur.
+            stopSelf()
+            return
+        }
         state.value = ExerciseUi(active = true, kind = kind)
         sets.value = emptyList()
         startMillis = System.currentTimeMillis()
         scope.launch {
-            val supported = client.getCapabilitiesAsync().await().getExerciseTypeCapabilities(kind.type).supportedDataTypes
-            val wanted = setOf(DataType.HEART_RATE_BPM, DataType.CALORIES_TOTAL, DataType.DISTANCE_TOTAL).filter { it in supported }.toSet()
-            client.setUpdateCallback(callback)
-            client.startExerciseAsync(
-                ExerciseConfig.builder(kind.type).setDataTypes(wanted).setIsGpsEnabled(kind.outdoor).setIsAutoPauseAndResumeEnabled(false).build()
-            ).await()
+            // Health Services hatası (sensör yok, izin geri alındı) uygulamayı çökertmemeli.
+            val started = runCatching {
+                val supported = client.getCapabilitiesAsync().await().getExerciseTypeCapabilities(kind.type).supportedDataTypes
+                val wanted = setOf(DataType.HEART_RATE_BPM, DataType.CALORIES_TOTAL, DataType.DISTANCE_TOTAL).filter { it in supported }.toSet()
+                client.setUpdateCallback(callback)
+                client.startExerciseAsync(
+                    ExerciseConfig.builder(kind.type).setDataTypes(wanted).setIsGpsEnabled(gpsAllowed(grants, kind.outdoor)).setIsAutoPauseAndResumeEnabled(false).build()
+                ).await()
+            }.isSuccess
+            if (!started) {
+                state.value = state.value.copy(active = false)
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return@launch
+            }
             tickElapsed()
         }
     }

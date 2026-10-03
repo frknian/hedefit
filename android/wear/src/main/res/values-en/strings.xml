@@ -6,6 +6,7 @@
     <string name="comp_streak">Streak</string>
     <string name="phone_not_connected">Phone not connected.</string>
     <string name="no_reply">No reply. Hedefit must be open on your phone.</string>
+    <string name="workout_permission_needed">Workouts need the activity recognition or heart rate permission.</string>
     <string name="no_speech">Speech recognition isn\'t available on this watch.</string>
     <string name="tile_steps">%1$s steps</string>
     <string name="tile_streak">%1$d-day streak</string>
