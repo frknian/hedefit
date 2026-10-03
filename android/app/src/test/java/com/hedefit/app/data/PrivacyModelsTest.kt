@@ -64,6 +64,14 @@ class PrivacyModelsTest {
         assertFalse(onlyHealth.has("cross_border_consent_at"))
     }
 
+    @Test fun memoryExtractionOnlyForRealModelRepliesAndMeaningfulMessages() {
+        assertTrue(com.hedefit.app.data.model.shouldExtractMemory("ai", "koşmayı sevmiyorum"))
+        assertFalse(com.hedefit.app.data.model.shouldExtractMemory("local", "koşmayı sevmiyorum"))
+        assertFalse(com.hedefit.app.data.model.shouldExtractMemory("safety", "koşmayı sevmiyorum"))
+        assertFalse(com.hedefit.app.data.model.shouldExtractMemory("ai", "merhaba"))
+        assertFalse(com.hedefit.app.data.model.shouldExtractMemory("ai", "   kısa   "))
+    }
+
     @Test fun withdrawalPatchRequiresAtLeastOneConsent() {
         try {
             consentWithdrawalPatch(health = false, crossBorder = false, nowIso = "T")

@@ -1582,12 +1582,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     val now = _state.value
                     if (now.isGuest && now.chatUsageLimit != null && (now.chatUsageUsed ?: 0) >= now.chatUsageLimit) showSaveAccountPrompt(SaveAccountTrigger.CoachLimit)
+                    rememberFromChat(clean, reply.source, locale)
                 }
                 .onFailure { error ->
                     val message = friendlyError(error)
                     _state.update { it.copy(chatBusy = false, chatMessages = it.chatMessages + ChatMessageState("Fit Koç şu anda yanıtı tamamlayamadı: $message", false), transientMessage = message) }
                     if (_state.value.isGuest && (message.contains("limit", true) || message.contains("hak", true))) showSaveAccountPrompt(SaveAccountTrigger.CoachLimit)
                 }
+        }
+    }
+
+    /**
+     * Yanıt ekrana basıldıktan sonra, arka planda: mesajda kalıcı bir tercih/kısıt varsa sunucu kısa bir not
+     * çıkarıp hesabına bağlı saklar (Ayarlar → Koç hafızası'ndan görülüp silinir). Kota/ön eleme sunucudadır;
+     * hata sohbeti etkilemez.
+     */
+    private fun rememberFromChat(message: String, replySource: String, locale: String) {
+        if (!com.hedefit.app.data.model.shouldExtractMemory(replySource, message)) return
+        viewModelScope.launch {
+            val saved = repository.extractCoachMemory(message, locale)
+            // Ekran açıkken eski liste kalmasın; sonraki açılışta yeniden yüklenir.
+            if (saved > 0) _state.update { it.copy(aiMemories = null) }
         }
     }
 

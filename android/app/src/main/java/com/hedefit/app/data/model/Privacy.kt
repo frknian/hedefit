@@ -75,3 +75,11 @@ fun consentWithdrawalPatch(health: Boolean, crossBorder: Boolean, nowIso: String
     if (crossBorder) patch.put("cross_border_consent_at", "")
     return patch
 }
+
+/**
+ * Sohbet mesajından hafıza çıkarımı denenmeli mi? Yalnız gerçek modelin ("ai") yanıtladığı, anlamlı
+ * uzunluktaki mesajlar için: güvenlik katmanı/yerel yedek yanıtlarında ve kısa mesajlarda boşuna istek
+ * atılmaz. Asıl ön eleme (tercih olabilecek mesaj mı) ve günlük kota sunucudadır.
+ */
+fun shouldExtractMemory(replySource: String, message: String): Boolean =
+    replySource == "ai" && message.trim().length >= 8

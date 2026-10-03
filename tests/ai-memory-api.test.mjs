@@ -79,3 +79,92 @@ test("ai/memory: kimliksiz istek 401", async () => {
     restoreEnv();
   }
 });
+
+// ---- POST /api/ai/memory (sohbetten hafıza çıkarımı) -------------------------------
+
+import { providerRegistry } from "../lib/ai/providers/registry.ts";
+import { withUsageMock } from "./helpers/auth.mjs";
+
+function memoryProvider(memories, calls) {
+  return {
+    id: "openai-compatible", kind: "remote", isAvailable: async () => true,
+    generateText: async () => { throw new Error("metin üretimi beklenmiyordu"); },
+    generateObject: async (request) => { calls.model += 1; calls.lastPrompt = request.prompt; return { object: { memories }, provider: "openai-compatible", model: "test", latencyMs: 1 }; },
+  };
+}
+
+async function postMemory({ message, memories = [], allowed = true, upsertStatus = 201, apiKey = "test-key" }) {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousKey = process.env.OPENAI_API_KEY;
+  if (apiKey) process.env.OPENAI_API_KEY = apiKey; else delete process.env.OPENAI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const calls = { model: 0, usage: 0, refunds: 0, upserts: [] };
+  providerRegistry.reset([memoryProvider(memories, calls)]);
+  const base = withUsageMock({ planTier: "plus", isPremium: false, allowed }, (url, init) => {
+    const href = String(url);
+    if (href.includes("/rpc/refund_usage_counter_for_user")) { calls.refunds += 1; return Response.json(null); }
+    if (href.includes("/rest/v1/ai_memories")) { calls.upserts.push(JSON.parse(String(init.body))); return new Response(null, { status: upsertStatus }); }
+    throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
+  });
+  globalThis.fetch = async (url, init) => { if (String(url).includes("/rpc/check_and_consume_usage")) calls.usage += 1; return base(url, init); };
+  try {
+    const route = await import(`../app/api/ai/memory/route.ts?test=${Date.now()}${Math.random()}`);
+    const response = await route.POST(authorizedRequest("http://localhost/api/ai/memory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, locale: "tr" }) }));
+    return { response, json: await response.json(), calls };
+  } finally {
+    globalThis.fetch = previousFetch;
+    providerRegistry.reset();
+    if (previousKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previousKey;
+    restoreEnv();
+  }
+}
+
+test("ai/memory POST: tercih içermeyen mesaj için model çağrılmaz ve kota harcanmaz", async () => {
+  const { json, calls } = await postMemory({ message: "bugün kaç kalorim kaldı acaba" });
+  assert.deepEqual(json, { saved: 0 });
+  assert.equal(calls.model, 0);
+  assert.equal(calls.usage, 0);
+});
+
+test("ai/memory POST: kalıcı tercih içeren mesajdan not çıkarılır ve kullanıcıya bağlı kaydedilir", async () => {
+  const { json, calls } = await postMemory({ message: "koşmayı sevmiyorum ama yürüyüşü seviyorum", memories: [{ type: "exercise_preference", key: "koşu", value: "sevmiyor", confidence: 0.9 }] });
+  assert.deepEqual(json, { saved: 1 });
+  assert.equal(calls.model, 1);
+  assert.equal(calls.usage, 1);
+  assert.equal(calls.upserts.length, 1);
+  assert.equal(calls.upserts[0][0].memory_key, "koşu");
+  assert.match(calls.upserts[0][0].user_id, /^00000000-0000-4000-8000-/);
+  assert.equal(calls.refunds, 0);
+});
+
+test("ai/memory POST: model not çıkarmazsa kota iade edilir", async () => {
+  const { json, calls } = await postMemory({ message: "koşmayı sevmiyorum", memories: [] });
+  assert.deepEqual(json, { saved: 0 });
+  assert.equal(calls.refunds, 1);
+  assert.equal(calls.upserts.length, 0);
+});
+
+test("ai/memory POST: kayıt başarısızsa kota iade edilir", async () => {
+  const { json, calls } = await postMemory({ message: "koşmayı sevmiyorum", memories: [{ type: "exercise_preference", key: "koşu", value: "sevmiyor", confidence: 0.9 }], upsertStatus: 500 });
+  assert.deepEqual(json, { saved: 0 });
+  assert.equal(calls.refunds, 1);
+});
+
+test("ai/memory POST: günlük hafıza kotası dolduysa model çağrılmaz", async () => {
+  const { json, calls } = await postMemory({ message: "koşmayı sevmiyorum", allowed: false });
+  assert.deepEqual(json, { saved: 0 });
+  assert.equal(calls.model, 0);
+});
+
+test("ai/memory POST: uzak sağlayıcı yoksa sessizce 0 döner, kota harcanmaz", async () => {
+  const { json, calls } = await postMemory({ message: "koşmayı sevmiyorum", apiKey: "" });
+  assert.deepEqual(json, { saved: 0 });
+  assert.equal(calls.usage, 0);
+});
+
+test("ai/memory POST: aşırı uzun mesaj modele 600 karakterle sınırlanarak gider", async () => {
+  const long = "koşmayı sevmiyorum " + "x".repeat(2000);
+  const { calls } = await postMemory({ message: long, memories: [] });
+  assert.ok(calls.lastPrompt.length < 1500, "istem makul boyutta kalmalı");
+  assert.ok(!calls.lastPrompt.includes("x".repeat(700)), "600 karakterden uzun kısım modele gitmemeli");
+});

@@ -352,6 +352,15 @@ class HedefitRepository(
         api.delete("/api/ai/memory?all=true").requireSuccess("Hafıza silinemedi.")
     }
 
+    /**
+     * Sohbet mesajından kalıcı tercih çıkarımını sunucuda tetikler (ikinci, ücretli bir model çağrısı;
+     * yanıt gösterildikten SONRA, arka planda çağrılır). Kaydedilen not sayısını döner; başarısızlık sessizdir.
+     */
+    suspend fun extractCoachMemory(message: String, locale: String): Int = runCatching {
+        api.post("/api/ai/memory", JSONObject().put("message", message.trim().take(600)).put("locale", locale))
+            .takeIf { it.isSuccessful }?.jsonObject()?.optInt("saved", 0) ?: 0
+    }.getOrDefault(0)
+
     suspend fun consentStatus() = auth.consentStatus()
 
     suspend fun withdrawConsents(health: Boolean, crossBorder: Boolean) = auth.withdrawConsents(health, crossBorder)
