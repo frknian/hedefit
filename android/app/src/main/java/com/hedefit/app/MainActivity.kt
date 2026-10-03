@@ -121,6 +121,8 @@ class MainActivity : ComponentActivity() {
         mainViewModel.syncHealthIfConnected()
         // Misafir e-posta bağladıysa, doğrulama bağlantısından dönüşte hesabı kalıcı say.
         mainViewModel.refreshGuestStatus()
+        // Play'deki aktif abonelikleri (doğrulanamamış / başka cihazdan) sunucuya yeniden doğrulat.
+        mainViewModel.restorePurchases()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -514,6 +516,12 @@ class MainActivity : ComponentActivity() {
                             onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
                             isGuest = uiState.isGuest,
                             tier = uiState.tier(),
+                            billing = uiState.billing,
+                            onLoadBilling = mainViewModel::loadBillingOffers,
+                            onPurchasePlan = { productId, basePlanId -> mainViewModel.purchasePlan(this@MainActivity, productId, basePlanId) },
+                            onManageSubscription = {
+                                startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=$packageName")))
+                            },
                             onSaveAccount = { mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.Manual) },
                             onOpenNotifications = { utilityPage = UtilityPage.Notifications },
                             onOpenWearables = { utilityPage = UtilityPage.Wearables },

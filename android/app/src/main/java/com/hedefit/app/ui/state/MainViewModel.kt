@@ -3,6 +3,11 @@ package com.hedefit.app.ui.state
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.hedefit.app.billing.BILLING_PRODUCTS
+import com.hedefit.app.billing.BillingEvent
+import com.hedefit.app.billing.BillingManager
+import com.hedefit.app.billing.BillingUiState
+import com.hedefit.app.billing.VerifyOutcome
 import com.hedefit.app.gym.PlanRotation
 import com.hedefit.app.gym.PlanRotationPeriod
 import com.hedefit.app.ui.settings.PlanRotationStore
@@ -160,6 +165,7 @@ data class MainUiState(
     val challengeProgressBusy: Boolean = false,
     val challengeProgress: List<ChallengeProgressEntryData> = emptyList(),
     val activeChallengeId: String? = null,
+    val billing: BillingUiState = BillingUiState(),
 ) {
     val isGuest: Boolean get() = (auth as? AuthState.SignedIn)?.session?.user?.isAnonymous == true
 }
@@ -182,10 +188,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var planRotationPeriod = "monthly"
     private val waterUpdateMutex = Mutex()
 
+    private val billingManager = BillingManager(application) { event -> handleBillingEvent(event) }
+    private var billingRestored = false
+
     private val _state = MutableStateFlow(MainUiState())
     val state: StateFlow<MainUiState> = _state.asStateFlow()
 
     override fun onCleared() {
+        billingManager.release()
         stepRepository.stop()
         super.onCleared()
     }
@@ -1921,6 +1931,102 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .onFailure { error -> _state.update { it.copy(accountBusy = false, transientMessage = friendlyError(error)) } }
         }
     }
+
+    // ---- Google Play Billing -------------------------------------------------
+
+    private fun updateBilling(transform: (BillingUiState) -> BillingUiState) {
+        _state.update { it.copy(billing = transform(it.billing)) }
+    }
+
+    /** Paketler penceresi açılırken fiyatları ve (hak sahibiyse) ücretsiz deneme teklifini yükler. */
+    fun loadBillingOffers() {
+        if (_state.value.billing.loading) return
+        updateBilling { it.copy(loading = true, loadFailed = false) }
+        viewModelScope.launch {
+            val offers = billingManager.loadOffers()
+            updateBilling { if (offers == null) it.copy(loading = false, loadFailed = true) else it.copy(loading = false, offers = offers) }
+        }
+    }
+
+    fun purchasePlan(activity: android.app.Activity, productId: String, basePlanId: String) {
+        val state = _state.value
+        val userId = authRepository.userId()
+        val offer = state.billing.offers[productId]?.firstOrNull { it.basePlanId == basePlanId }
+        if (state.billing.busy || offer == null || userId == null || state.isGuest) return
+        updateBilling { it.copy(busy = true, message = null) }
+        viewModelScope.launch {
+            val opened = billingManager.launch(activity, offer, userId)
+            if (!opened) {
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Satın alma şu an başlatılamadı. Google Play'i kontrol edip yeniden dene.", "Couldn't start the purchase. Check Google Play and try again.")) }
+            }
+            // Pencere açıldıysa sonucu handleBillingEvent işler (busy orada kapanır).
+        }
+    }
+
+    /**
+     * Açılışta Play'deki aktif abonelikleri sunucuya yeniden doğrulatır: önceki oturumda
+     * doğrulanamayan (ağ koptu) veya başka cihazdan alınan abonelikleri kurtarır. Sunucu
+     * idempotenttir. Oturum başına bir kez çalışır; misafirde çalışmaz.
+     */
+    fun restorePurchases() {
+        if (billingRestored || _state.value.isGuest || authRepository.userId() == null) return
+        billingRestored = true
+        viewModelScope.launch {
+            val owned = billingManager.ownedPurchases()
+                ?.filter { it.purchaseState == com.android.billingclient.api.Purchase.PurchaseState.PURCHASED }
+                .orEmpty()
+            if (owned.isNotEmpty()) verifyPurchases(owned, userInitiated = false)
+        }
+    }
+
+    private fun handleBillingEvent(event: BillingEvent) {
+        when (event) {
+            is BillingEvent.Purchased -> viewModelScope.launch { verifyPurchases(event.purchases, userInitiated = true) }
+            is BillingEvent.PendingPayment ->
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Ödemen onay bekliyor. Tamamlanınca planın otomatik açılır.", "Your payment is pending. Your plan unlocks automatically once it completes.")) }
+            BillingEvent.Canceled -> updateBilling { it.copy(busy = false) }
+            BillingEvent.AlreadyOwned -> {
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Bu aboneliğe zaten sahipsin. Planın güncelleniyor…", "You already have this subscription. Updating your plan…")) }
+                billingRestored = false
+                restorePurchases()
+            }
+            is BillingEvent.Failed ->
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Satın alma tamamlanamadı. Ücret alınmadıysa yeniden dene.", "The purchase didn't complete. If you weren't charged, try again.")) }
+        }
+    }
+
+    private suspend fun verifyPurchases(purchases: List<com.android.billingclient.api.Purchase>, userInitiated: Boolean) {
+        var granted = false
+        var rejected = false
+        var retry = false
+        var pending = false
+        for (purchase in purchases) {
+            val productId = purchase.products.firstOrNull { it in BILLING_PRODUCTS } ?: continue
+            when (val outcome = repository.verifyPlaySubscription(productId, purchase.purchaseToken)) {
+                is VerifyOutcome.Granted -> if (outcome.entitled) granted = true
+                VerifyOutcome.Pending -> pending = true
+                VerifyOutcome.Rejected -> rejected = true
+                VerifyOutcome.Retry -> retry = true
+            }
+        }
+        if (granted) refreshAll()
+        // Sessiz geri yükleme yalnız başarıyı duyurur; kullanıcının başlattığı akış her sonucu bildirir.
+        val message = when {
+            granted -> com.hedefit.app.ui.i18n.tr("Planın aktif! Teşekkürler.", "Your plan is active! Thank you.")
+            !userInitiated -> null
+            pending -> com.hedefit.app.ui.i18n.tr("Ödemen onay bekliyor. Tamamlanınca planın otomatik açılır.", "Your payment is pending. Your plan unlocks automatically once it completes.")
+            rejected -> com.hedefit.app.ui.i18n.tr("Bu satın alma hesabına bağlanamadı. Sorun sürerse destekle iletişime geç.", "This purchase couldn't be linked to your account. Contact support if this persists.")
+            retry -> com.hedefit.app.ui.i18n.tr("Satın alma alındı ama doğrulanamadı. Uygulamayı yeniden açtığında otomatik denenir.", "Purchase received but couldn't be verified yet. We'll retry when you reopen the app.")
+            else -> null
+        }
+        // Doğrulanamayan (Retry) satın alma Play'de onaysız kalır ve bir sonraki açılışta
+        // restorePurchases ile tekrar denenir; sunucu onaylamadan Google 3 gün içinde iade eder.
+        if (retry && !granted) billingRestored = false
+        updateBilling { it.copy(busy = false, message = message) }
+        if (granted) _state.update { it.copy(transientMessage = message) }
+    }
+
+    fun clearBillingMessage() = updateBilling { it.copy(message = null) }
 
     fun consumeTransientMessage() {
         _state.update { it.copy(transientMessage = null) }

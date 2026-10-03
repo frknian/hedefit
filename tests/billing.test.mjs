@@ -285,3 +285,7 @@ test("billing/verify: aşırı istek hız sınırına takılır", async () => {
   }
   assert.equal(last.response.status, 429);
 });
+
+test("obfuscatedAccountId: Android ile aynı sabit vektör (iki taraf birbirinden sapmamalı)", async () => {
+  assert.equal(await obfuscatedAccountId("abc"), "52b17cb67e7f44d81142e5a009d0917c24c255cd2c2f014917b5ce4a47e30644");
+});

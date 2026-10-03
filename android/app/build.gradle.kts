@@ -120,6 +120,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:25.4.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.play:review-ktx:2.0.2")
+    implementation("com.android.billingclient:billing:8.3.0")
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
     implementation("androidx.compose.ui:ui")

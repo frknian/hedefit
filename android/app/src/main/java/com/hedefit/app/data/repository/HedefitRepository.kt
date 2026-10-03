@@ -340,6 +340,16 @@ class HedefitRepository(
             .requireSuccess("Hesap silinemedi.")
     }
 
+    /**
+     * Play satın alma jetonunu sunucuya doğrulatır (/api/billing/verify). Plan yalnız sunucuda,
+     * Google'dan doğrulanarak yazılır; ağ hatası [VerifyOutcome.Retry] olarak döner, fırlatmaz.
+     */
+    suspend fun verifyPlaySubscription(productId: String, purchaseToken: String): com.hedefit.app.billing.VerifyOutcome =
+        runCatching {
+            val response = api.post("/api/billing/verify", JSONObject().put("productId", productId).put("purchaseToken", purchaseToken))
+            com.hedefit.app.billing.parseVerifyResponse(response.status, response.body)
+        }.getOrDefault(com.hedefit.app.billing.VerifyOutcome.Retry)
+
     suspend fun recordWorkout(
         exercises: List<WorkoutExerciseData>,
         sets: List<WorkoutSetInput>,

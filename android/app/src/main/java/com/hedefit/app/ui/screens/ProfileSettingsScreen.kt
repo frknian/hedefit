@@ -93,9 +93,22 @@ fun ProfileSettingsScreen(
     isGuest: Boolean = false,
     onSaveAccount: () -> Unit = {},
     tier: com.hedefit.app.ui.state.Tier = com.hedefit.app.ui.state.Tier.Free,
+    billing: com.hedefit.app.billing.BillingUiState = com.hedefit.app.billing.BillingUiState(),
+    onLoadBilling: () -> Unit = {},
+    onPurchasePlan: (String, String) -> Unit = { _, _ -> },
+    onManageSubscription: () -> Unit = {},
 ) {
     var showPlans by remember { mutableStateOf(false) }
-    if (showPlans) PlansSheet(tier) { showPlans = false }
+    if (showPlans) PlansSheet(
+        current = tier,
+        billing = billing,
+        isGuest = isGuest,
+        onLoadOffers = onLoadBilling,
+        onPurchase = onPurchasePlan,
+        onManage = onManageSubscription,
+        onSaveAccount = onSaveAccount,
+        onDismiss = { showPlans = false },
+    )
     val en = preferences.language == "en"
     var showShare by remember { mutableStateOf(false) }
     var name by remember(profile) { mutableStateOf(profile.displayName) }
