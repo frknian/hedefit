@@ -92,7 +92,7 @@ internal val PRIVACY_POLICY = listOf(
     ),
     LegalSection(
         "Reklamlar",
-        "Ücretsiz sürümde Google AdMob reklamları gösterilebilir. Kişiselleştirilmiş reklam tercihini ilk açılıştaki izin ekranından yönetebilirsin. Sağlık ve beslenme verilerin reklam amacıyla paylaşılmaz.",
+        "Ücretsiz sürümde Google AdMob reklamları gösterilebilir. Kişiselleştirilmiş reklam tercihini ilk açılıştaki izin ekranından yönetebilirsin. Ödüllü reklam izleyerek ek soru hakkı kazandığında, ödülü doğrulamak için hesabına ait rastgele kimliğin ve ödülün türü Google'a iletilir. Sağlık ve beslenme verilerin reklam amacıyla paylaşılmaz.",
     ),
     LegalSection(
         "İzinler",
@@ -202,7 +202,7 @@ internal val PRIVACY_POLICY_EN = listOf(
     ),
     LegalSection(
         "Ads",
-        "The free version may show Google AdMob ads. You can manage personalized ad preferences on the consent screen at first launch. Your health and nutrition data is never shared for advertising.",
+        "The free version may show Google AdMob ads. You can manage personalized ad preferences on the consent screen at first launch. When you earn an extra question by watching a rewarded ad, a random identifier of your account and the reward type are sent to Google to verify the reward. Your health and nutrition data is never shared for advertising.",
     ),
     LegalSection(
         "Permissions",

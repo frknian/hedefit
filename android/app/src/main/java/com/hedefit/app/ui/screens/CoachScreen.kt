@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import com.hedefit.app.ui.components.ScreenContainer
@@ -89,6 +90,9 @@ fun CoachScreen(
     onExecuteAction: (com.hedefit.app.data.model.CoachActionData) -> Unit = {},
     usageUsed: Int? = null,
     usageLimit: Int? = null,
+    rewardedAvailable: Boolean = false,
+    rewardBusy: Boolean = false,
+    onWatchAd: () -> Unit = {},
 ) {
     val en = language == "en"
     var input by remember { mutableStateOf("") }
@@ -114,6 +118,23 @@ fun CoachScreen(
                     usageUsed = usageUsed,
                     usageLimit = usageLimit,
                 )
+                // Günlük hak bittiyse (ücretsiz/misafir): kısa reklamla +1 soru. Hak sunucuda, imzalı AdMob
+                // doğrulamasıyla verilir; günde en fazla 3.
+                if (rewardedAvailable && usageLimit != null && usageUsed != null && usageUsed >= usageLimit) {
+                    Spacer(Modifier.height(8.dp))
+                    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                if (en) "You've used today's questions. Watch a short ad for +1 question." else "Bugünkü soru hakkın bitti. Kısa bir reklam izleyerek +1 soru kazan.",
+                                Modifier.weight(1f), color = HedefitColors.TextSecondary, fontSize = 13.sp,
+                            )
+                            Button(
+                                onClick = onWatchAd, enabled = !rewardBusy,
+                                colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
+                            ) { Text(if (rewardBusy) (if (en) "Please wait…" else "Bekle…") else (if (en) "Watch ad" else "Reklam izle"), fontWeight = FontWeight.Bold) }
+                        }
+                    }
+                }
                 Spacer(Modifier.height(6.dp))
                 CoachConversation(messages, busy, input, { input = it }, send, onSendMessage, onOpenPlan, onExecuteAction, data, Modifier.weight(1f), en, coachName)
             }

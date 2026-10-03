@@ -116,6 +116,7 @@ data class MainUiState(
     val consentRequired: Boolean = false,
     val consentBusy: Boolean = false,
     val consentError: String? = null,
+    val rewardAdBusy: Boolean = false,
     val aiMemories: List<com.hedefit.app.data.model.AiMemoryItem>? = null,
     val aiMemoryBusy: Boolean = false,
     val aiMemoryError: String? = null,
@@ -1885,6 +1886,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteBodyMeasurement(measurement: BodyMeasurementData) {
+        if (_state.value.measurementSaving) return
+        viewModelScope.launch {
+            _state.update { it.copy(measurementSaving = true, transientMessage = null) }
+            runCatching { repository.deleteBodyMeasurement(measurement.date) }
+                .onSuccess {
+                    _state.update { current ->
+                        current.copy(
+                            measurementSaving = false,
+                            dashboard = current.dashboard?.copy(
+                                measurements = current.dashboard.measurements.filterNot { it.date.take(10) == measurement.date.take(10) },
+                            ),
+                            transientMessage = "Ölçüm kaydı silindi.",
+                        )
+                    }
+                }
+                .onFailure { error -> _state.update { it.copy(measurementSaving = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
     fun saveBodyMeasurement(measurement: BodyMeasurementData) {
         if (_state.value.measurementSaving) return
         viewModelScope.launch {
@@ -2116,6 +2137,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             loadAfterConsent()
+        }
+    }
+
+    // ---- Ödüllü reklam (sunucu doğrulamalı) ---------------------------------------------
+
+    /**
+     * Reklamı göstermeden önce: bugünkü bonus tavanına ulaşıldıysa kullanıcıyı boşuna reklam izletme.
+     * Dönüş: mevcut bonus sayısı (reklam sonrası karşılaştırma için); gösterilmemeli ise null.
+     */
+    suspend fun prepareRewardedAd(feature: String): Int? {
+        if (authRepository.userId() == null || _state.value.rewardAdBusy) return null
+        val bonus = repository.adBonusToday(feature)
+        if (bonus == null) {
+            _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Şu an reklam ödülü kontrol edilemiyor. Biraz sonra dene.", "Can't check the ad reward right now. Try again shortly.")) }
+            return null
+        }
+        if (bonus.first >= bonus.second) {
+            _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Bugünkü reklam ödülü sınırına ulaştın. Yarın yeniden dene.", "You've reached today's ad reward limit. Try again tomorrow.")) }
+            return null
+        }
+        _state.update { it.copy(rewardAdBusy = true) }
+        return bonus.first
+    }
+
+    fun userIdForAds(): String? = authRepository.userId()
+
+    fun cancelRewardedAd() {
+        _state.update { it.copy(rewardAdBusy = false) }
+    }
+
+    /**
+     * Reklam bitti. Hak Google'ın SUNUCUYA ilettiği imzalı doğrulamayla verilir (birkaç saniye sürebilir);
+     * burada bonus artana kadar yoklanır ve artınca yerel sayaç güncellenir. Artmazsa kullanıcıya
+     * "henüz işlenmedi" denir; hak sonradan işlenirse bir sonraki soruda zaten uygulanır.
+     */
+    fun awaitAdReward(feature: String, baseline: Int) {
+        viewModelScope.launch {
+            var granted = 0
+            repeat(8) { attempt ->
+                if (granted > 0) return@repeat
+                kotlinx.coroutines.delay(if (attempt == 0) 1_500L else 2_000L)
+                val bonus = repository.adBonusToday(feature)?.first
+                if (bonus != null && bonus > baseline) granted = bonus - baseline
+            }
+            _state.update { current ->
+                val message = if (granted > 0) com.hedefit.app.ui.i18n.tr("+$granted soru hakkı eklendi!", "+$granted question added!")
+                else com.hedefit.app.ui.i18n.tr("Reklam doğrulaması henüz işlenmedi. Birkaç saniye sonra yeniden dene; hakkın işlenince otomatik eklenir.", "The ad reward hasn't been verified yet. Try again in a few seconds; it's added automatically once verified.")
+                current.copy(
+                    rewardAdBusy = false,
+                    chatUsageLimit = if (granted > 0 && feature == "chat") current.chatUsageLimit?.plus(granted) else current.chatUsageLimit,
+                    transientMessage = message,
+                )
+            }
         }
     }
 

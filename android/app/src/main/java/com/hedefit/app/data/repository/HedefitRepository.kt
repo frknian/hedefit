@@ -361,6 +361,14 @@ class HedefitRepository(
             .takeIf { it.isSuccessful }?.jsonObject()?.optInt("saved", 0) ?: 0
     }.getOrDefault(0)
 
+    /** Bugünkü reklam bonusu ve günlük tavan (sunucudan; yalnız okur). Hata/ağ yoksa null. */
+    suspend fun adBonusToday(feature: String): Pair<Int, Int>? = runCatching {
+        val response = api.get("/api/ads/reward?feature=$feature")
+        if (!response.isSuccessful) return@runCatching null
+        val json = response.jsonObject()
+        json.optInt("bonusCount", 0) to json.optInt("maxBonus", 3)
+    }.getOrNull()
+
     suspend fun consentStatus() = auth.consentStatus()
 
     suspend fun withdrawConsents(health: Boolean, crossBorder: Boolean) = auth.withdrawConsents(health, crossBorder)
@@ -507,6 +515,12 @@ class HedefitRepository(
             .put("thigh_cm", measurement.thighCm ?: JSONObject.NULL)
             .put("updated_at", Instant.now().toString())
         return parseMeasurement(rest.upsert("body_measurements", row, "user_id,measured_at"))
+    }
+
+    suspend fun deleteBodyMeasurement(date: String) {
+        val day = date.take(10)
+        require(day.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) { "Geçersiz ölçüm tarihi." }
+        rest.delete("body_measurements", "measured_at=eq.$day&user_id=eq.${requireNotNull(auth.userId())}")
     }
 
     suspend fun setWater(totalMl: Int, date: LocalDate = LocalDate.now()): Int {

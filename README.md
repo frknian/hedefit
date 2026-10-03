@@ -122,6 +122,22 @@ Google ile uzlaştırır (`lib/billing/reconcile.ts`). Migration'lar: `202610031
 `20261003140000_play_rtdn.sql`. Hesap silme, aktif abonelik varken kullanıcı onaylamadan 409 döner
 (silmek Play aboneliğini iptal etmez).
 
+## Ödüllü reklam (sunucu doğrulamalı)
+
+Ücretsiz/misafir kullanıcı günlük koç sorusu hakkı bitince kısa bir ödüllü reklam izleyip +1 soru
+kazanabilir (günde en fazla 3). Hak **yalnızca** AdMob'un imzalı SSV callback'iyle verilir; istemci
+"izledim" diyerek hak alamaz (`app/api/ads/reward` yalnızca okur).
+
+1. AdMob → Apps → Ad units → bir **Rewarded** birimi oluştur; birimin **Server-side verification**
+   callback URL'sini `https://<worker>/api/ads/ssv` yap (AdMob'daki "Verify URL" ile dene).
+2. Worker secret/değişken: `ADMOB_REWARDED_AD_UNIT_ID` (sunucu başka birimlerin callback'ini yok sayar).
+3. Android derlemesi: `ADMOB_REWARDED_AD_UNIT_ID` (Gradle property, ortam değişkeni ya da `.env`); boşsa
+   release'te "reklam izle" seçeneği gösterilmez. Debug derlemesi Google test birimini kullanır.
+4. Migration: `20261003150000_ad_rewards.sql` (`ad_reward_events`, `grant_ad_reward`, `ad_bonus_today`).
+
+Doğrulama: ECDSA P-256 imzası (`lib/ads/ssv.ts`), 24 saatten eski zaman damgası reddedilir, her
+`transaction_id` bir kez işlenir, yalnız ücretsiz plan ve etkin hesap hak alır.
+
 ## Web sitesi (tanıtım)
 
 `site/` klasörü, statik varlıklı bir Cloudflare Worker (`hedefit-site`, `scripts/wrangler.site.jsonc`) olarak yayınlanan tanıtım sitesidir; API Worker'ından ayrıdır.

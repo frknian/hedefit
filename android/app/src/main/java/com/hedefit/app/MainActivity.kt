@@ -894,6 +894,7 @@ class MainActivity : ComponentActivity() {
                                 onWeeklyWorkoutGoalChange = { updatePreferences(preferences.copy(weeklyWorkoutGoal = it)) },
                                 measurementSaving = uiState.measurementSaving,
                                 onSaveMeasurement = mainViewModel::saveBodyMeasurement,
+                                onDeleteMeasurement = mainViewModel::deleteBodyMeasurement,
                                 onDeleteRoute = mainViewModel::deleteRoute,
                                 nutritionHistory = (uiState.nutritionHistory + uiState.dashboard?.nutritionLogs.orEmpty()).distinctBy { it.id },
                                 onLoadNutritionHistory = mainViewModel::loadProgressNutrition,
@@ -944,6 +945,21 @@ class MainActivity : ComponentActivity() {
                                 },
                                 usageUsed = uiState.chatUsageUsed,
                                 usageLimit = uiState.chatUsageLimit,
+                                rewardedAvailable = adsAllowed && adMobManager.rewardedConfigured && adMobManager.rewardedReady && uiState.limits().rewardedAds,
+                                rewardBusy = uiState.rewardAdBusy,
+                                onWatchAd = {
+                                    scope.launch {
+                                        val userId = mainViewModel.userIdForAds() ?: return@launch
+                                        val baseline = mainViewModel.prepareRewardedAd("chat") ?: return@launch
+                                        val shown = adMobManager.showRewarded(
+                                            userId = userId,
+                                            feature = "chat",
+                                            onEarned = { mainViewModel.awaitAdReward("chat", baseline) },
+                                            onClosedWithoutReward = mainViewModel::cancelRewardedAd,
+                                        )
+                                        if (!shown) mainViewModel.cancelRewardedAd()
+                                    }
+                                },
                             )
                         } }
                     }
