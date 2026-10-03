@@ -13,6 +13,7 @@
 import { AiAllProvidersFailedError, AiUnsupportedRequestError } from "./errors.ts";
 import { providerRegistry } from "./providers/registry.ts";
 import { classifyError, consoleEventSink, createEvent, type AiEventSink } from "./telemetry.ts";
+import { recordAiUsage } from "./usage-log.ts";
 import type { AIProvider, AiObjectRequest, AiObjectResponse, AiRequest, AiResponse } from "./types.ts";
 
 export type RoutingMode = "auto" | "remote";
@@ -86,7 +87,7 @@ async function runChain<TResponse extends { provider: string; model: string; lat
     try {
       const response = await invoke(provider);
       const fallbackUsed = index > 0;
-      sink(createEvent({
+      const event = createEvent({
         category: request.category,
         provider: provider.id,
         model: response.model,
@@ -95,19 +96,23 @@ async function runChain<TResponse extends { provider: string; model: string; lat
         latencyMs: response.latencyMs,
         inputTokens: response.usage?.inputTokens,
         outputTokens: response.usage?.outputTokens,
-      }));
+      });
+      sink(event);
+      await recordAiUsage(event);
       return { ...response, fallbackUsed };
     } catch (error) {
       const errorKind = classifyError(error);
       // "Bu işi yapamam" bir arıza değildir; zincirde sessizce atlanır.
       const unsupported = error instanceof AiUnsupportedRequestError;
-      sink(createEvent({
+      const failure = createEvent({
         category: request.category,
         provider: provider.id,
         outcome: unsupported ? "skipped" : "error",
         fallbackUsed: index > 0,
         errorKind,
-      }));
+      });
+      sink(failure);
+      await recordAiUsage(failure);
       failures.push({ provider: provider.id, message: errorKind });
       // İPTAL YEDEKLEME SEBEBİ DEĞİLDİR.
       //

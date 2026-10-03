@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { bearerToken } from "./api-auth.ts";
+import { setAiUsageContext } from "./ai/usage-log.ts";
 
 export type UsageFeature = "chat" | "photo" | "text_nutrition" | "weekly_review" | "nutrition_advice" | "plan" | "memory";
 
@@ -115,6 +116,7 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
   // Number.POSITIVE_INFINITY'e çevrilir — çağıran taraflar zaten
   // Number.isFinite(usage.limit) ile bu durumu kontrol ediyor.
   const planTier = (["free", "plus", "pro"] as const).includes(result.plan_tier) ? result.plan_tier : "free";
+  setAiUsageContext({ userId, feature, planTier });
   return { allowed: result.allowed, used: result.current_count, limit: result.effective_limit, isPremium: planTier !== "free", planTier };
 }
 

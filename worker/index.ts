@@ -1,5 +1,6 @@
 /** Cloudflare Worker entry point for the Hedefit API. */
 import { withSecurityHeaders } from "../lib/security-headers";
+import { runWithAiUsageContext } from "../lib/ai/usage-log";
 import { handleSupabaseProxy } from "./supabase-proxy";
 
 type Env = Record<string, unknown>;
@@ -31,7 +32,10 @@ const worker = {
 
     // API yanıtları kimlik doğrulamalı olduğu için hiçbir katmanda önbelleğe alınmaz.
     const handler = await getAppRouterHandler();
-    return withSecurityHeaders(await handler.fetch(request, env, ctx), { noStore: url.pathname.startsWith("/api/") });
+    // İstek başına AI maliyet bağlamı: checkAndConsumeUsage kullanıcıyı/özelliği doldurur,
+    // router her model çağrısını bu bağlama yazar (lib/ai/usage-log.ts).
+    const response = await runWithAiUsageContext(() => handler.fetch(request, env, ctx));
+    return withSecurityHeaders(response, { noStore: url.pathname.startsWith("/api/") });
   },
 };
 
