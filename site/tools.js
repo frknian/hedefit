@@ -45,7 +45,7 @@
       const why = [];
       const L = (g, a, b, c) => [a, b, c][g];
       why.push(t(`Fit Koç: günde ${L(val('coach'), 5, 20, 40)} soruya kadar`, `AI coach: up to ${L(val('coach'), 5, 20, 40)} questions a day`));
-      why.push(t(`Fotoğraftan kalori: günde ${L(val('photo'), 1, 3, 15)} fotoğrafa kadar`, `Photo calories: up to ${L(val('photo'), 1, 3, 15)} photos a day`));
+      why.push(t(`Fotoğraftan kalori: günde ${L(val('photo'), 1, 3, 8)} fotoğrafa kadar`, `Photo calories: up to ${L(val('photo'), 1, 3, 8)} photos a day`));
       why.push(val('prog') === 0 ? t('Kendi programı: 2’ye kadar', 'Own programs: up to 2') : val('prog') === 1 ? t('Kendi programı: 5’e kadar', 'Own programs: up to 5') : t('Kendi programı: sınırsız', 'Own programs: unlimited'));
       if (need.length) why.push(t('İstediğin özellikler bu planda var', 'The features you picked are included'));
       out.innerHTML = '';

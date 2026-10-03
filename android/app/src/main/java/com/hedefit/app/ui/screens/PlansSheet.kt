@@ -43,7 +43,7 @@ fun PlansSheet(current: Tier, onDismiss: () -> Unit) {
 
             PlanCard(
                 tier = Tier.Plus, selected = selected == Tier.Plus, badge = tr("En çok tercih edilen", "Most popular"),
-                price = tr("Aylık ₺—", "₺— / month"), index = 0,
+                price = tr("Aylık ₺99 · yıllık ₺849 · ilk 7 gün ücretsiz", "₺99 / month · ₺849 / year · first 7 days free"), index = 0,
                 perks = listOf(
                     tr("Günde ${plus.dailyCoachQuestions} FitKoç sorusu", "${plus.dailyCoachQuestions} Fit Coach questions a day"),
                     tr("Sınırsız öğün kaydı", "Unlimited meal logging"),
@@ -55,7 +55,7 @@ fun PlansSheet(current: Tier, onDismiss: () -> Unit) {
             ) { selected = Tier.Plus }
             PlanCard(
                 tier = Tier.Premium, selected = selected == Tier.Premium, badge = null,
-                price = tr("Aylık ₺—", "₺— / month"), index = 1,
+                price = tr("Aylık ₺169 · yıllık ₺1.449", "₺169 / month · ₺1,449 / year"), index = 1,
                 perks = listOf(
                     tr("Plus'taki her şey", "Everything in Plus"),
                     tr("Günde ${premium.dailyCoachQuestions} FitKoç sorusu", "${premium.dailyCoachQuestions} Fit Coach questions a day"),

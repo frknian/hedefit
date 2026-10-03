@@ -367,7 +367,7 @@
  "Plus": "Plus",
  "20 Fit Koç sorusu, 3 fotoğraftan kalori, tüm hareketler, 5 kendi program, öğün planlayıcı ve reklamsız deneyim.": "20 Fit Coach questions, 3 photo calorie scans, all exercises, 5 custom programs, a meal planner and an ad-free experience.",
  "Premium": "Premium",
- "40 Fit Koç sorusu, 15 fotoğraftan kalori, sınırsız program ve öğün kaydı, bölgesel program, sınırsız geçmiş. Reklamsız.": "40 Fit Coach questions, 15 photo calorie scans, unlimited programs and meal logging, regional programs, unlimited history. Ad-free.",
+ "40 Fit Koç sorusu, 8 fotoğraftan kalori, sınırsız program ve öğün kaydı, bölgesel program, sınırsız geçmiş. Reklamsız.": "40 Fit Coach questions, 8 photo calorie scans, unlimited programs and meal logging, regional programs, unlimited history. Ad-free.",
  "Planları gör": "See plans",
  "Sık sorulanlar": "FAQ",
  "Aklındaki": "Your",
@@ -452,7 +452,7 @@
  "Yok": "No",
  "Misafir: hesap açmadan başlayan kullanıcı. Free: ücretsiz hesap. Ücretsiz hesaplarda görevlerden kazanılan XP günlük Fit Koç hakkını artırır. Yapay zekâ özellikleri tıbbi tavsiye değildir.": "Guest: a user who starts without creating an account. Free: a free account. On free accounts, XP earned from quests raises the daily Fit Coach allowance. AI features are not medical advice.",
  "Plus ile Premium arasındaki fark ne?": "What's the difference between Plus and Premium?",
- "Premium; Fit Koç’ta (40 soru), fotoğraftan kalorida (15) daha yüksek günlük hak, sınırsız kendi programı, bölgesel program ve sınırsız beslenme geçmişi sunar. Plus, çoğu kullanıcı için yeterli olan 20 soru, 3 fotoğraf, 5 program ve 90 günlük geçmişle gelir.": "Premium offers higher daily allowances for Fit Coach (40 questions) and photo calorie scans (15), unlimited custom programs, regional programs and unlimited nutrition history. Plus comes with 20 questions, 3 photos, 5 programs and 90 days of history, enough for most users.",
+ "Premium; Fit Koç’ta (40 soru), fotoğraftan kalorida (8) daha yüksek günlük hak, sınırsız kendi programı, bölgesel program ve sınırsız beslenme geçmişi sunar. Plus, çoğu kullanıcı için yeterli olan 20 soru, 3 fotoğraf, 5 program ve 90 günlük geçmişle gelir.": "Premium offers higher daily allowances for Fit Coach (40 questions) and photo calorie scans (8), unlimited custom programs, regional programs and unlimited nutrition history. Plus comes with 20 questions, 3 photos, 5 programs and 90 days of history, enough for most users.",
  "Ödemeyi ve iptali nasıl yaparım?": "How do I pay and cancel?",
  "Üyelikler Google Play ya da App Store üzerinden yönetilir; iptal için ilgili mağazanın": "Subscriptions are managed through Google Play or the App Store; to cancel, use the store's",
  "Abonelikler": "Subscriptions",
@@ -656,5 +656,9 @@
  "Kalori, süre": "Calories, time",
  "Hedef hesaplayıcı, kas atlası": "Goal calculator, muscle atlas",
  "Araçlar ve kas atlası": "Tools and muscle atlas",
- "Tüm farkları göster": "Show all differences"
+ "Tüm farkları göster": "Show all differences",
+ "₺99 / ay": "₺99 / month",
+ "₺169 / ay": "₺169 / month",
+ "Yıllık ₺849 (%28 indirim) · ilk 7 gün ücretsiz": "₺849 / year (28% off) · first 7 days free",
+ "Yıllık ₺1.449 (%28 indirim)": "₺1,449 / year (28% off)"
 }
