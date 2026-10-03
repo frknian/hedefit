@@ -22,11 +22,12 @@ internal val KVKK_NOTICE = listOf(
             "• FitKoç: bulut modunda koça yazdığın mesajlar ve sorunun yanıtlanması için gereken profil/antrenman/beslenme özeti. Sohbet geçmişi yalnızca cihazında tutulur.\n" +
             "• FitKoç hafızası: sohbetlerinden çıkarılan ya da açıkça söylediğin kısa notlar. Her not bir kategori (egzersiz, yemek, koçluk veya program tercihi; hedef; kısıt; alışkanlık; ekipman; motivasyon), kısa bir etiket ve değerden oluşur. \"Kısıt\" notları bir sakatlığa veya sağlık durumuna ilişkin bilgi içerebilir. Notlar sohbet geçmişinden farklı olarak sunucuda hesabına bağlı saklanır; kullanıcı başına en fazla 60 not tutulur.\n" +
             "• Sosyal özellikler: kullanıcı adın, görünen adın ve profil fotoğrafın; arkadaşlık kayıtların (istek durumu ve tarihleri); haftalık XP'n; etkinlik akışında görünen olaylar (antrenman tamamlama, rota mesafesi, başarım ve haftalık hedef/meydan okuma tamamlama ile kazanılan XP); ortak meydan okumalarda başlık, ölçüt, hedef, katılım durumun ve ilerlemen (XP, antrenman sayısı veya kilometre).\n" +
-            "• Cihaz ve kullanım: uygulama sürümü, hata kayıtları, günlük yapay zekâ kullanım sayacı, bildirim tercihleri; reklam gösterilen sürümde reklam kimliği.",
+            "• Abonelik: Plus/Premium planın, Google Play satın alma jetonu, abonelik durumu ve bitiş tarihi. Kart veya ödeme bilgilerine erişmeyiz; ödeme Google Play üzerinden alınır.\n" +
+            "• Cihaz ve kullanım: uygulama sürümü, hata kayıtları, günlük yapay zekâ kullanım sayacı, yapay zekâ kullanım kayıtları (özellik, plan, kullanılan model, token sayısı ve tahmini maliyet; istek ve yanıt metni içermez), bildirim tercihleri; reklam gösterilen sürümde reklam kimliği.",
     ),
     LegalSection(
         "3. İşleme amaçları",
-        "Hesabını oluşturmak ve güvenliğini sağlamak; kişisel antrenman programı, kalori ve makro hedefleri oluşturmak; antrenman, beslenme, adım, uyku ve kilo ilerlemeni takip etmek; FitKoç önerilerini ve öğün/fotoğraf analizlerini sunmak; FitKoç'un tercihlerini ve kısıtlarını hatırlayarak sana zamanla daha uygun yanıt vermesi için hafıza notlarını tutmak; rota kaydı yapmak; arkadaşlık, haftalık sıralama, etkinlik akışı ve ortak meydan okumaları işletmek; hatırlatma bildirimleri göndermek; ödül ve seviye sistemini işletmek; kullanıcı adının benzersizliğini ve uygunluğunu denetlemek; hataları gidermek ve hizmeti iyileştirmek; yasal yükümlülükleri yerine getirmek ve olası uyuşmazlıklarda haklarımızı korumak.",
+        "Hesabını oluşturmak ve güvenliğini sağlamak; kişisel antrenman programı, kalori ve makro hedefleri oluşturmak; antrenman, beslenme, adım, uyku ve kilo ilerlemeni takip etmek; FitKoç önerilerini ve öğün/fotoğraf analizlerini sunmak; FitKoç'un tercihlerini ve kısıtlarını hatırlayarak sana zamanla daha uygun yanıt vermesi için hafıza notlarını tutmak; rota kaydı yapmak; aboneliğini doğrulamak ve plan haklarını açmak, iade ve iptallerde erişimi güncellemek; yapay zekâ maliyetini ve kötüye kullanımı izlemek; arkadaşlık, haftalık sıralama, etkinlik akışı ve ortak meydan okumaları işletmek; hatırlatma bildirimleri göndermek; ödül ve seviye sistemini işletmek; kullanıcı adının benzersizliğini ve uygunluğunu denetlemek; hataları gidermek ve hizmeti iyileştirmek; yasal yükümlülükleri yerine getirmek ve olası uyuşmazlıklarda haklarımızı korumak.",
     ),
     LegalSection(
         "4. Hukuki sebepler",
@@ -38,7 +39,7 @@ internal val KVKK_NOTICE = listOf(
             "• Supabase: kimlik doğrulama, veritabanı ve profil fotoğrafı depolama.\n" +
             "• Cloudflare: uygulama sunucusu ve güvenli bağlantı altyapısı.\n" +
             "• OpenAI (ABD): bulut FitKoç yanıtları, öğün/fotoğraf analizleri ve ekipman tanıma. Gönderilen veriler (FitKoç hafıza notların dahil) yanıt üretmek için işlenir ve yapay zekâ modellerini eğitmek için kullanılmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır.\n" +
-            "• Google: Google ile giriş, reklam gösterimi (AdMob) ve izin yönetimi, uygulama içi değerlendirme; Health Connect verileri cihazında Google altyapısı üzerinden okunur.\n" +
+            "• Google: Google ile giriş, reklam gösterimi (AdMob) ve izin yönetimi, uygulama içi değerlendirme, Google Play üzerinden abonelik satın alma ve doğrulama; Health Connect verileri cihazında Google altyapısı üzerinden okunur.\n" +
             "Bu sağlayıcıların sunucuları Türkiye dışında bulunabilir. Yurt dışı aktarımlar KVKK m.9 kapsamında uygun güvencelere (standart sözleşmeler) veya açık rızana dayanılarak yapılır. Ayrıca yetkili kamu kurumlarının hukuka uygun talepleri halinde veriler paylaşılabilir.\n" +
             "Sosyal özellikleri kullandığında diğer Hedefit kullanıcılarıyla da bazı veriler paylaşılır: kullanıcı adın en az 2 karakter yazan her kullanıcı tarafından aranabilir ve arama sonucunda kullanıcı adın, görünen adın ve profil fotoğrafın görünür (Arkadaşlar ekranındaki \"Aramada görün\" ayarıyla bunu kapatabilirsin; kapalıyken aramada çıkmazsın, ancak kullanıcı adını tam olarak bilen biri yine de sana arkadaşlık isteği gönderebilir). Kabul ettiğin arkadaşların; kullanıcı adını, görünen adını, profil fotoğrafını, haftalık XP'ni ve etkinlik akışındaki olayları (antrenman tamamlama, rota mesafesi, başarım, haftalık hedef tamamlama ve kazanılan XP) görür. Ortak meydan okumada katılımcılar birbirinin ilerlemesini (XP, antrenman sayısı veya kilometre) görür. Öğün, ölçüm, kilo, sağlık ve konum kayıtların arkadaşlarınla paylaşılmaz.",
     ),
@@ -48,7 +49,7 @@ internal val KVKK_NOTICE = listOf(
     ),
     LegalSection(
         "7. Saklama ve silme",
-        "Veriler hesabın açık olduğu sürece saklanır. \"Hesabı kalıcı sil\" işlemiyle hesabın ve ilişkili verilerin silinir; yasal saklama yükümlülüğü olan kayıtlar yalnızca bu süre boyunca tutulur. \"İlerlemeyi sıfırla\" kayıtlarını siler, \"Hesabı dondur\" verilerini koruyarak erişimi durdurur. Fotoğraf analizleri saklanmaz; FitKoç sohbeti yalnızca cihazındadır ve uygulamadan temizlenebilir. FitKoç hafıza notları ile arkadaşlık ve meydan okuma kayıtların hesabını sildiğinde silinir. Hafıza notlarının hesabını silmeden kaldırılmasını istersen $LEGAL_CONTACT adresine yazabilirsin.",
+        "Veriler hesabın açık olduğu sürece saklanır. \"Hesabı kalıcı sil\" işlemiyle hesabın ve ilişkili verilerin silinir; yasal saklama yükümlülüğü olan kayıtlar yalnızca bu süre boyunca tutulur. \"İlerlemeyi sıfırla\" kayıtlarını siler, \"Hesabı dondur\" verilerini koruyarak erişimi durdurur. Fotoğraf analizleri saklanmaz; FitKoç sohbeti yalnızca cihazındadır ve uygulamadan temizlenebilir. FitKoç hafıza notları, abonelik kayıtları ile arkadaşlık ve meydan okuma kayıtların hesabını sildiğinde silinir. Yapay zekâ kullanım kayıtları ayrıca en fazla 180 gün sonra silinir. Hesabı silmek Google Play aboneliğini iptal etmez; aboneliği Google Play'den ayrıca iptal etmelisin. Hafıza notlarının hesabını silmeden kaldırılmasını istersen $LEGAL_CONTACT adresine yazabilirsin.",
     ),
     LegalSection(
         "8. Haklarınız (KVKK m.11)",
@@ -79,11 +80,15 @@ internal val PRIVACY_POLICY = listOf(
     ),
     LegalSection(
         "Yapay zekâ",
-        "FitKoç'un bulut modu, öğün/fotoğraf analizleri ve ekipman tanıma, isteğin yanıtlanması için gereken bilgileri yapay zekâ sağlayıcısına (OpenAI) gönderir. Sağlayıcı bu verileri yanıt üretmek için işler ve yapay zekâ modellerini eğitmek için kullanmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır. Yapay zekâ önerileri tıbbi tavsiye değildir; bir sağlık sorunun varsa uzmana danış.",
+        "FitKoç'un bulut modu, öğün/fotoğraf analizleri ve ekipman tanıma, isteğin yanıtlanması için gereken bilgileri yapay zekâ sağlayıcısına (OpenAI) gönderir. Sağlayıcı bu verileri yanıt üretmek için işler ve yapay zekâ modellerini eğitmek için kullanmaz; fotoğraf içeren isteklerde sağlayıcı tarafında kayıt (store) özelliği kapatılır. Hizmet maliyetini ve kötüye kullanımı izlemek için her yapay zekâ isteği için yalnızca özellik, plan, model, token sayısı ve tahmini maliyet kaydedilir; istek ve yanıt metni kaydedilmez ve bu kayıtlar en fazla 180 gün saklanır. Yapay zekâ önerileri tıbbi tavsiye değildir; bir sağlık sorunun varsa uzmana danış.",
     ),
     LegalSection(
         "FitKoç hafızası",
         "FitKoç, seni zamanla tanıyıp daha uygun yanıt verebilmek için sohbetlerinden çıkardığı ya da açıkça söylediğin kısa notları (egzersiz ve yemek tercihi, hedef, kısıt, alışkanlık, ekipman, motivasyon) hesabına bağlı olarak sunucuda saklar; kullanıcı başına en fazla 60 not tutulur. Kısıt notları bir sakatlık veya sağlık durumuna ilişkin bilgi içerebilir. Bu notlar yanıt üretmek için yapay zekâ sağlayıcısına gönderilen bağlama dahil edilir. Hesabını sildiğinde notların da silinir; hesabını silmeden kaldırılmasını istersen $LEGAL_CONTACT adresine yazabilirsin.",
+    ),
+    LegalSection(
+        "Abonelikler ve ödeme",
+        "Plus ve Premium abonelikleri Google Play üzerinden satın alınır ve yenilenir. Kart veya ödeme bilgilerini görmeyiz; yalnızca satın almanın doğrulanması için Google Play'den gelen abonelik durumunu, bitiş tarihini ve satın alma jetonunu hesabına bağlı olarak saklarız. Aboneliği istediğin an Google Play'den iptal edebilirsin; hesabını silmek aboneliği iptal etmez, önce Google Play'den iptal etmelisin. İade veya iptalde plan hakların otomatik güncellenir.",
     ),
     LegalSection(
         "Reklamlar",
@@ -127,11 +132,12 @@ internal val KVKK_NOTICE_EN = listOf(
             "• Fit Coach: in cloud mode, the messages you send and the profile/workout/nutrition summary needed to answer. Chat history is kept only on your device.\n" +
             "• Fit Coach memory: short notes inferred from your chats or that you state explicitly. Each note has a category (exercise, food, coaching or schedule preference; goal; constraint; habit; equipment; motivation), a short label and a value. \"Constraint\" notes may include information about an injury or health condition. Unlike chat history, notes are stored on our servers linked to your account; at most 60 notes are kept per user.\n" +
             "• Social features: your username, display name and profile photo; your friendship records (request status and dates); your weekly XP; events shown in the activity feed (workout completed, route distance, achievement and weekly goal/challenge completion, with the XP earned); in shared challenges, the title, metric, target, your participation status and your progress (XP, workout count or kilometres).\n" +
-            "• Device and usage: app version, error logs, daily AI usage counter, notification preferences; advertising ID in the ad-supported version.",
+            "• Subscription: your Plus/Premium plan, Google Play purchase token, subscription status and end date. We never access your card or payment details; payment is handled by Google Play.\n" +
+            "• Device and usage: app version, error logs, daily AI usage counter, AI usage records (feature, plan, model used, token counts and estimated cost; they do not contain request or reply text), notification preferences; advertising ID in the ad-supported version.",
     ),
     LegalSection(
         "3. Purposes of processing",
-        "Creating and securing your account; building your personal training program and calorie and macro targets; tracking your workout, nutrition, step, sleep and weight progress; providing Fit Coach suggestions and meal/photo analysis; keeping memory notes so Fit Coach can remember your preferences and constraints and answer more fittingly over time; recording routes; running friendships, the weekly leaderboard, the activity feed and shared challenges; sending reminder notifications; running the rewards and level system; checking that usernames are unique and appropriate; fixing errors and improving the service; meeting legal obligations and protecting our rights in potential disputes.",
+        "Creating and securing your account; building your personal training program and calorie and macro targets; tracking your workout, nutrition, step, sleep and weight progress; providing Fit Coach suggestions and meal/photo analysis; keeping memory notes so Fit Coach can remember your preferences and constraints and answer more fittingly over time; recording routes; verifying your subscription and unlocking plan benefits, updating access on refunds and cancellations; monitoring AI cost and abuse; running friendships, the weekly leaderboard, the activity feed and shared challenges; sending reminder notifications; running the rewards and level system; checking that usernames are unique and appropriate; fixing errors and improving the service; meeting legal obligations and protecting our rights in potential disputes.",
     ),
     LegalSection(
         "4. Legal grounds",
@@ -143,7 +149,7 @@ internal val KVKK_NOTICE_EN = listOf(
             "• Supabase: authentication, database and profile photo storage.\n" +
             "• Cloudflare: application server and secure connection infrastructure.\n" +
             "• OpenAI (USA): cloud Fit Coach replies, meal/photo analysis and equipment recognition. Data sent (including your Fit Coach memory notes) is processed to produce the reply and is not used to train AI models; for requests that include a photo, provider-side storage (store) is turned off.\n" +
-            "• Google: Google sign-in, ad serving (AdMob) and consent management, in-app reviews; Health Connect data is read on your device through Google infrastructure.\n" +
+            "• Google: Google sign-in, ad serving (AdMob) and consent management, in-app reviews, subscription purchase and verification through Google Play; Health Connect data is read on your device through Google infrastructure.\n" +
             "These providers' servers may be located outside Türkiye. Transfers abroad are made under KVKK Art. 9 on the basis of appropriate safeguards (standard contracts) or your explicit consent. Data may also be shared in response to lawful requests from competent public authorities.\n" +
             "When you use social features, some data is also shared with other Hedefit users: your username can be searched by any user who types at least 2 characters, and a search result shows your username, display name and profile photo (you can turn this off with the \"Appear in search\" setting on the Friends screen; when off, you don't show up in search, but anyone who knows your exact username can still send you a friend request). Friends you accept can see your username, display name, profile photo, weekly XP and the events in the activity feed (workout completed, route distance, achievement, weekly goal completion and the XP earned). In a shared challenge, participants see each other's progress (XP, workout count or kilometres). Your meal, measurement, weight, health and location records are not shared with your friends.",
     ),
@@ -153,7 +159,7 @@ internal val KVKK_NOTICE_EN = listOf(
     ),
     LegalSection(
         "7. Retention and deletion",
-        "Data is kept while your account is open. \"Delete account permanently\" deletes your account and related data; records subject to legal retention are kept only for that period. \"Reset progress\" deletes your logs, and \"Freeze account\" stops access while keeping your data. Photo analyses are not stored; Fit Coach chats live only on your device and can be cleared in the app. Fit Coach memory notes and your friendship and challenge records are deleted when you delete your account. If you want memory notes removed without deleting your account, write to $LEGAL_CONTACT.",
+        "Data is kept while your account is open. \"Delete account permanently\" deletes your account and related data; records subject to legal retention are kept only for that period. \"Reset progress\" deletes your logs, and \"Freeze account\" stops access while keeping your data. Photo analyses are not stored; Fit Coach chats live only on your device and can be cleared in the app. Fit Coach memory notes, subscription records and your friendship and challenge records are deleted when you delete your account. AI usage records are also deleted after 180 days at the latest. Deleting your account does not cancel your Google Play subscription; you must cancel it separately in Google Play. If you want memory notes removed without deleting your account, write to $LEGAL_CONTACT.",
     ),
     LegalSection(
         "8. Your rights (KVKK Art. 11)",
@@ -184,11 +190,15 @@ internal val PRIVACY_POLICY_EN = listOf(
     ),
     LegalSection(
         "Artificial intelligence",
-        "Fit Coach's cloud mode, meal/photo analysis and equipment recognition send the information needed to answer your request to the AI provider (OpenAI). The provider processes this data to generate the reply and does not use it to train AI models; for requests that include a photo, provider-side storage (store) is turned off. AI suggestions are not medical advice; if you have a health concern, consult a professional.",
+        "Fit Coach's cloud mode, meal/photo analysis and equipment recognition send the information needed to answer your request to the AI provider (OpenAI). The provider processes this data to generate the reply and does not use it to train AI models; for requests that include a photo, provider-side storage (store) is turned off. To monitor service cost and abuse, for each AI request we record only the feature, plan, model, token counts and estimated cost; request and reply text is not recorded and these records are kept for at most 180 days. AI suggestions are not medical advice; if you have a health concern, consult a professional.",
     ),
     LegalSection(
         "Fit Coach memory",
         "So that Fit Coach can get to know you and answer more fittingly over time, it stores short notes inferred from your chats or that you state explicitly (exercise and food preferences, goals, constraints, habits, equipment, motivation) on our servers, linked to your account; at most 60 notes are kept per user. Constraint notes may include information about an injury or health condition. These notes are included in the context sent to the AI provider to generate replies. They are deleted when you delete your account; if you want them removed without deleting your account, write to $LEGAL_CONTACT.",
+    ),
+    LegalSection(
+        "Subscriptions and payment",
+        "Plus and Premium subscriptions are purchased and renewed through Google Play. We never see your card or payment details; we only store, linked to your account, the subscription status, end date and purchase token received from Google Play so we can verify your purchase. You can cancel at any time in Google Play; deleting your account does not cancel the subscription, so cancel it in Google Play first. Your plan benefits update automatically on refunds and cancellations.",
     ),
     LegalSection(
         "Ads",

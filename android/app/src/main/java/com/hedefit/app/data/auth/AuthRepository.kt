@@ -336,6 +336,6 @@ class AuthRepository(
     private fun authHeaders() = mapOf("apikey" to BuildConfig.SUPABASE_ANON_KEY, "Content-Type" to "application/json")
 
     internal companion object {
-        const val LEGAL_DOCUMENT_VERSION = "2026-10-01"
+        const val LEGAL_DOCUMENT_VERSION = "2026-10-03"
     }
 }

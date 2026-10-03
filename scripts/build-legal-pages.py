@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = (ROOT / "android/app/src/main/java/com/hedefit/app/ui/screens/LegalTexts.kt").read_text(encoding="utf-8")
 CONTROLLER = re.search(r'LEGAL_CONTROLLER = "([^"]+)"', SRC).group(1)
 CONTACT = re.search(r'LEGAL_CONTACT = "([^"]+)"', SRC).group(1)
-UPDATED_TR, UPDATED_EN = "1 Ekim 2026", "1 October 2026"
+UPDATED_TR, UPDATED_EN = "3 Ekim 2026", "3 October 2026"
 
 
 def unesc(s):
