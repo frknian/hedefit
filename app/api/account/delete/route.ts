@@ -20,9 +20,9 @@ export async function POST(request: Request) {
   const secretKey = process.env.SUPABASE_SECRET_KEY;
   if (!url || !anonKey || !secretKey) return Response.json({ error: "Hesap silme servisi yapılandırılmamış." }, { status: 503 });
 
-  let payload: { confirmation?: string; email?: string };
+  let payload: { confirmation?: string; email?: string; confirmActiveSubscription?: boolean };
   try {
-    payload = await request.json() as { confirmation?: string; email?: string };
+    payload = await request.json() as { confirmation?: string; email?: string; confirmActiveSubscription?: boolean };
   } catch {
     return Response.json({ error: "Silme onayı okunamadı." }, { status: 400 });
   }
@@ -32,6 +32,26 @@ export async function POST(request: Request) {
   }
 
   const admin = createClient(url, secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
+
+  // Hesabı silmek Google Play aboneliğini İPTAL ETMEZ; ücretlendirme sürer. Aktif abonelik varsa
+  // kullanıcı bunu açıkça onaylamadan silmeyiz. Sorgu başarısızsa silme hakkını engellememek için devam ederiz.
+  if (payload.confirmActiveSubscription !== true) {
+    const { data: active, error: activeError } = await admin
+      .from("subscriptions")
+      .select("purchase_token")
+      .eq("user_id", auth.user.id)
+      .in("state", ["active", "grace", "canceled"])
+      .gt("expires_at", new Date().toISOString())
+      .limit(1);
+    if (activeError) {
+      console.error("[account-delete] subscription lookup failed, proceeding", { userId: auth.user.id, code: activeError.code });
+    } else if (active?.length) {
+      return Response.json({
+        error: "Aktif bir aboneliğin var. Hesabı silmek aboneliği iptal etmez; önce Google Play'den iptal et.",
+        code: "active_subscription",
+      }, { status: 409 });
+    }
+  }
 
   // list() sayfa başına en fazla AVATAR_LIST_PAGE_SIZE döner; 100'den fazla
   // yüklenmiş avatarı olan bir kullanıcıda tek sayfa fazlasını atlayıp

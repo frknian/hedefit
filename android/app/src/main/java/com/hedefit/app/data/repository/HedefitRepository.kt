@@ -336,7 +336,8 @@ class HedefitRepository(
     }
 
     suspend fun deleteAccount(email: String) {
-        api.post("/api/account/delete", JSONObject().put("email", email.trim()).put("confirmation", "HESABIMI SİL"))
+        // Aktif abonelik uyarısı diyalogda onaylanır; sunucu bayrak olmadan 409 döner (başka istemciler için).
+        api.post("/api/account/delete", JSONObject().put("email", email.trim()).put("confirmation", "HESABIMI SİL").put("confirmActiveSubscription", true))
             .requireSuccess("Hesap silinemedi.")
     }
 

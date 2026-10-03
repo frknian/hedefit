@@ -305,7 +305,7 @@ fun ProfileSettingsScreen(
 
     if (showReset) ConfirmDialog(if (en) "Delete progress data" else "İlerleme verilerini sil", if (en) "Your workouts, measurements, calories and streak records will be permanently deleted." else "Antrenman, ölçüm, kalori ve seri kayıtların kalıcı olarak silinecek.", if (en) "Reset" else "Sıfırla", accountBusy, en, { showReset = false }) { showReset = false; onResetProgress() }
     if (showFreeze) ConfirmDialog(if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data will remain. App access will pause until you reactivate." else "Verilerin korunacak. Yeniden etkinleştirene kadar uygulama erişimin duracak.", if (en) "Freeze" else "Dondur", accountBusy, en, { showFreeze = false }) { showFreeze = false; onFreeze() }
-    if (showDelete) DeleteAccountDialog(email, accountBusy, en, { showDelete = false }) { confirmedEmail -> showDelete = false; onDelete(confirmedEmail) }
+    if (showDelete) DeleteAccountDialog(email, accountBusy, en, tier == com.hedefit.app.ui.state.Tier.Plus || tier == com.hedefit.app.ui.state.Tier.Premium, { showDelete = false }) { confirmedEmail -> showDelete = false; onDelete(confirmedEmail) }
     if (showShare) ShareAppDialog(defaultShareMessage, en, { showShare = false }) { message -> showShare = false; onShareApp(message) }
     val widgetContext = androidx.compose.ui.platform.LocalContext.current
     if (showShortcut) HomeWidgetsSheet(
@@ -546,16 +546,25 @@ private fun MinimalToggle(icon: androidx.compose.ui.graphics.vector.ImageVector,
     AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Text(body) }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } }, confirmButton = { TextButton(enabled = !busy, onClick = onConfirm) { Text(if (busy) (if (en) "Processing…" else "İşleniyor…") else action, color = HedefitColors.Lime) } })
 }
 
-@Composable private fun DeleteAccountDialog(accountEmail: String, busy: Boolean, en: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+@Composable private fun DeleteAccountDialog(accountEmail: String, busy: Boolean, en: Boolean, hasSubscription: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var phrase by remember { mutableStateOf("") }
     val expectedPhrase = if (en) "DELETE MY ACCOUNT" else "HESABIMI SİL"
-    val ready = email.trim().equals(accountEmail, true) && phrase == expectedPhrase
+    var subscriptionAck by remember { mutableStateOf(false) }
+    val ready = email.trim().equals(accountEmail, true) && phrase == expectedPhrase && (!hasSubscription || subscriptionAck)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (en) "Permanently delete account" else "Hesabı kalıcı olarak sil") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(if (en) "Your profile, workouts and all records will be deleted irreversibly." else "Profilin, antrenmanların ve tüm kayıtların geri alınamaz biçimde silinir.")
+            if (hasSubscription) {
+                // Hesabı silmek Google Play aboneliğini iptal etmez; ücretlendirme sürer.
+                Text(if (en) "Deleting your account does NOT cancel your Google Play subscription. Cancel it in Google Play first or you will keep being charged." else "Hesabı silmek Google Play aboneliğini İPTAL ETMEZ. Önce Google Play'den iptal et, yoksa ücretlendirme sürer.", color = HedefitColors.Coral)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(subscriptionAck, { subscriptionAck = it })
+                    Text(if (en) "I understand and will cancel it in Google Play" else "Anladım, Google Play'den iptal edeceğim", fontSize = 13.sp)
+                }
+            }
             OutlinedTextField(email, { email = it }, label = { Text(if (en) "Your email address" else "E-posta adresin") }, singleLine = true)
             OutlinedTextField(phrase, { phrase = it }, label = { Text(if (en) "Type DELETE MY ACCOUNT" else "HESABIMI SİL yaz") }, singleLine = true, visualTransformation = PasswordVisualTransformation())
         } },
