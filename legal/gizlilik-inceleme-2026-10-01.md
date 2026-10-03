@@ -23,7 +23,7 @@
    alınması gerekir mi. **Mevcut kullanıcılar (Android):** Yapıldı. Rıza alanları olmayan hesap açılışta tam ekran rıza
    kapısı görür (aynı iki kutu); rıza verilene kadar ana arayüz ve veri yükleme açılmaz, reddeden çıkış
    yapar, silme için e-posta yönlendirmesi vardır. Rıza durumu okunamazsa (ağ hatası) kullanıcı kilitlenmez.
-   **Yapılmadı:** iOS kayıt akışı ve iOS rıza kapısı; uygulama içinden rızayı görme/geri çekme ekranı.
+   **Yapıldı (Android, 2026-10-03):** Ayarlar → Gizlilik ve rızalar ekranı rıza durumunu ve tarihlerini gösterir, yasal metinleri açar, rızayı geri çekmeyi sağlar (rıza kaydı boşaltılır, geri çekme zamanı `consent_withdrawn_at` olarak yazılır, oturum kapanır; veriler silinmez). **Yapılmadı:** iOS kayıt akışı ve iOS rıza kapısı/ekranı. **Avukata sorulacak:** rıza geri çekilince verilerin otomatik silinmesi gerekir mi, yoksa yalnız işlemenin durması yeterli mi (şu an hesap silme ayrı ve kullanıcı kararıdır).
 2. **[METNE EKLENDİ; aranabilirlik kapatma ayarı eklendi (`discoverable`) — migrasyon uygulanmalı] Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
    etkinlik akışı ve ortak meydan okumalar var; arkadaşlar görünen adı, kullanıcı adını, avatarı, XP'yi,
    etkinlik türünü ve (meydan okumada) mesafeyi görüyor. Kullanıcı adı en az 2 karakterle herkese

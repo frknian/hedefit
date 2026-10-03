@@ -86,7 +86,7 @@ import com.hedefit.app.gym.detectPersonalRecord
 private fun coreQuestionsAnswered(answers: List<String>) =
     com.hedefit.app.ui.screens.CORE_QUESTION_INDICES.all { answers.getOrNull(it)?.isNotBlank() == true }
 
-private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges }
+private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges, Consents, AiMemory }
 
 /** Programdaki Türkçe bölge adını atlasın birincil kas filtresine çevirir. */
 private fun replacementMuscle(area: String): String {
@@ -525,6 +525,8 @@ class MainActivity : ComponentActivity() {
                             onSaveAccount = { mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.Manual) },
                             onOpenNotifications = { utilityPage = UtilityPage.Notifications },
                             onOpenWearables = { utilityPage = UtilityPage.Wearables },
+                            onOpenConsents = { utilityPage = UtilityPage.Consents },
+                            onOpenAiMemory = { utilityPage = UtilityPage.AiMemory },
                             onAddShortcut = { type ->
                                 val accepted = if (type.startsWith("widget_")) HedefitShortcuts.requestWidget(this@MainActivity, type) else HedefitShortcuts.request(this@MainActivity, type)
                                 if (!accepted) Toast.makeText(this@MainActivity, com.hedefit.app.ui.i18n.tr("Bu başlatıcı ana ekrana eklemeyi desteklemiyor.", "This launcher doesn't support adding to the home screen."), Toast.LENGTH_LONG).show()
@@ -651,6 +653,28 @@ class MainActivity : ComponentActivity() {
                             },
                             language = preferences.language,
                             unitSystem = preferences.unitSystem,
+                        )
+                        UtilityPage.Consents -> com.hedefit.app.ui.screens.ConsentSettingsScreen(
+                            status = uiState.consentStatus,
+                            busy = uiState.consentSettingsBusy,
+                            error = uiState.consentSettingsError,
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onLoad = mainViewModel::loadConsentStatus,
+                            onWithdraw = { health, crossBorder ->
+                                scope.launch { googleSignIn.clearCredentialState() }
+                                mainViewModel.withdrawConsents(health, crossBorder)
+                            },
+                        )
+                        UtilityPage.AiMemory -> com.hedefit.app.ui.screens.AiMemoryScreen(
+                            memories = uiState.aiMemories,
+                            busy = uiState.aiMemoryBusy,
+                            error = uiState.aiMemoryError,
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onRefresh = mainViewModel::loadAiMemories,
+                            onDelete = mainViewModel::deleteAiMemory,
+                            onDeleteAll = mainViewModel::deleteAllAiMemories,
                         )
                         UtilityPage.Wearables -> com.hedefit.app.ui.screens.WearablesScreen(
                             snapshot = uiState.wearables,

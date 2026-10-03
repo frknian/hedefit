@@ -357,7 +357,7 @@ private fun AuthForm(
     legalDocument?.let { LegalDocumentDialog(it) { legalDocument = null } }
 }
 
-private enum class LegalDocument { Kvkk, Privacy }
+internal enum class LegalDocument { Kvkk, Privacy }
 
 @Composable
 private fun LegalAcceptanceFields(
@@ -472,12 +472,12 @@ private fun crossBorderConsentText() = com.hedefit.app.ui.i18n.tr(
 )
 
 private fun consentWithdrawNote() = com.hedefit.app.ui.i18n.tr(
-    "Bu rızalar olmadan hesap açılamaz. Rızanı istediğin zaman hesabını silerek ya da bize yazarak geri çekebilirsin.",
-    "The account cannot be created without these consents. You can withdraw your consent at any time by deleting your account or writing to us.",
+    "Bu rızalar olmadan hesap açılamaz. Rızanı istediğin zaman Ayarlar → Gizlilik ve rızalar'dan geri çekebilir, hesabını silebilir ya da bize yazabilirsin.",
+    "The account cannot be created without these consents. You can withdraw your consent at any time in Settings → Privacy and consents, delete your account, or write to us.",
 )
 
 @Composable
-private fun LegalDocumentDialog(document: LegalDocument, onDismiss: () -> Unit) {
+internal fun LegalDocumentDialog(document: LegalDocument, onDismiss: () -> Unit) {
     val (title, sections) = when (document) {
         LegalDocument.Kvkk -> com.hedefit.app.ui.i18n.tr("KVKK Aydınlatma Metni", "KVKK Privacy Notice") to kvkkNotice()
         LegalDocument.Privacy -> com.hedefit.app.ui.i18n.tr("Gizlilik Politikası", "Privacy Policy") to privacyPolicy()

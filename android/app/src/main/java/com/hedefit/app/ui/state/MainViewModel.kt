@@ -116,6 +116,12 @@ data class MainUiState(
     val consentRequired: Boolean = false,
     val consentBusy: Boolean = false,
     val consentError: String? = null,
+    val aiMemories: List<com.hedefit.app.data.model.AiMemoryItem>? = null,
+    val aiMemoryBusy: Boolean = false,
+    val aiMemoryError: String? = null,
+    val consentStatus: com.hedefit.app.data.model.ConsentStatus? = null,
+    val consentSettingsBusy: Boolean = false,
+    val consentSettingsError: String? = null,
     val healthConnected: Boolean = false,
     val healthBusy: Boolean = false,
     val wearables: com.hedefit.app.health.WearableSnapshot? = null,
@@ -2095,6 +2101,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
             loadAfterConsent()
+        }
+    }
+
+    // ---- Gizlilik: koç hafızası ve rıza ayarları ------------------------------------
+
+    fun loadAiMemories() {
+        if (_state.value.aiMemoryBusy) return
+        _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }
+        viewModelScope.launch {
+            runCatching { repository.aiMemories() }
+                .onSuccess { items -> _state.update { it.copy(aiMemories = items, aiMemoryBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    fun deleteAiMemory(id: String) {
+        if (_state.value.aiMemoryBusy) return
+        _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }
+        viewModelScope.launch {
+            runCatching { repository.deleteAiMemory(id) }
+                .onSuccess { _state.update { current -> current.copy(aiMemories = current.aiMemories?.filterNot { it.id == id }, aiMemoryBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    fun deleteAllAiMemories() {
+        if (_state.value.aiMemoryBusy) return
+        _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }
+        viewModelScope.launch {
+            runCatching { repository.deleteAllAiMemories() }
+                .onSuccess { _state.update { it.copy(aiMemories = emptyList(), aiMemoryBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    fun loadConsentStatus() {
+        if (_state.value.consentSettingsBusy) return
+        _state.update { it.copy(consentSettingsBusy = true, consentSettingsError = null) }
+        viewModelScope.launch {
+            runCatching { repository.consentStatus() }
+                .onSuccess { status -> _state.update { it.copy(consentStatus = status, consentSettingsBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(consentSettingsBusy = false, consentSettingsError = friendlyError(error)) } }
+        }
+    }
+
+    /** Rızayı geri çeker ve oturumu kapatır; hesap bir sonraki girişte yeniden rıza kapısına düşer. */
+    fun withdrawConsents(health: Boolean, crossBorder: Boolean) {
+        if (_state.value.consentSettingsBusy) return
+        _state.update { it.copy(consentSettingsBusy = true, consentSettingsError = null) }
+        viewModelScope.launch {
+            runCatching { repository.withdrawConsents(health, crossBorder) }
+                .onSuccess { signOut() }
+                .onFailure { error -> _state.update { it.copy(consentSettingsBusy = false, consentSettingsError = friendlyError(error)) } }
         }
     }
 

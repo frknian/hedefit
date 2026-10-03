@@ -341,6 +341,21 @@ class HedefitRepository(
             .requireSuccess("Hesap silinemedi.")
     }
 
+    suspend fun aiMemories(): List<com.hedefit.app.data.model.AiMemoryItem> =
+        com.hedefit.app.data.model.parseAiMemories(api.get("/api/ai/memory").requireSuccess("Koç hafızası yüklenemedi.").jsonObject().optJSONArray("memories"))
+
+    suspend fun deleteAiMemory(id: String) {
+        api.delete("/api/ai/memory?id=${java.net.URLEncoder.encode(id, "UTF-8")}").requireSuccess("Not silinemedi.")
+    }
+
+    suspend fun deleteAllAiMemories() {
+        api.delete("/api/ai/memory?all=true").requireSuccess("Hafıza silinemedi.")
+    }
+
+    suspend fun consentStatus() = auth.consentStatus()
+
+    suspend fun withdrawConsents(health: Boolean, crossBorder: Boolean) = auth.withdrawConsents(health, crossBorder)
+
     /**
      * Play satın alma jetonunu sunucuya doğrulatır (/api/billing/verify). Plan yalnız sunucuda,
      * Google'dan doğrulanarak yazılır; ağ hatası [VerifyOutcome.Retry] olarak döner, fırlatmaz.

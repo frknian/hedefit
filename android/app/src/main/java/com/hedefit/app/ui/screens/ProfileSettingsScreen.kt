@@ -78,6 +78,8 @@ fun ProfileSettingsScreen(
     onOpenQuestionnaire: () -> Unit,
     onOpenNotifications: () -> Unit,
     onOpenWearables: () -> Unit = {},
+    onOpenConsents: () -> Unit = {},
+    onOpenAiMemory: () -> Unit = {},
     onAddShortcut: (String) -> Unit,
     onConnectHealth: () -> Unit,
     onSave: (ProfileUpdateData) -> Unit,
@@ -290,6 +292,10 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
+                        SettingsRowContent(Icons.Default.Shield, if (en) "Privacy and consents" else "Gizlilik ve rızalar", if (en) "Consent status, legal texts, withdraw consent" else "Rıza durumu, yasal metinler, rızayı geri çek", onOpenConsents, HedefitColors.Lime)
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.Psychology, if (en) "Coach memory" else "Koç hafızası", if (en) "See and delete what Fit Coach remembers" else "FitKoç'un hatırladıklarını gör ve sil", onOpenAiMemory, HedefitColors.Lime)
+                        CardDivider()
                         SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", "", onSignOut, HedefitColors.TextSecondary)
                         CardDivider()
                         SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", "", onClick = { showFreeze = true }, tint = HedefitColors.Lime)
