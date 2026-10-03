@@ -12,7 +12,7 @@ class MeasurementUnitsTest {
      */
     @Test
     fun `weight loss duration uses a gradual but not excessively slow range`() {
-        // 60 → 56: 4 kg / (60 * 0,0075 = 0,45 kg/hafta) = 8,9 → 9 hafta.
+        // 60 → 56: 4 kg / (60 * 0,0075 = 0,45 kg/hafta) = 8,9 → 9 hafta (en yakın haftaya yuvarlanır).
         assertEquals(9, estimatedGoalWeeks(60.0, 56.0))
         // 100 → 94: 6 kg / 0,75 kg/hafta = 8 hafta.
         assertEquals(8, estimatedGoalWeeks(100.0, 94.0))
@@ -27,8 +27,8 @@ class MeasurementUnitsTest {
 
     @Test
     fun `weight gain uses the slower gain rate`() {
-        // 70 → 73: 3 kg / (70 * 0,00375 = 0,2625 kg/hafta) = 11,4 → 12 hafta.
-        assertEquals(12, estimatedGoalWeeks(70.0, 73.0))
+        // 70 → 73: 3 kg / (70 * 0,00375 = 0,2625 kg/hafta) = 11,4 → 11 hafta.
+        assertEquals(11, estimatedGoalWeeks(70.0, 73.0))
     }
 
     @Test

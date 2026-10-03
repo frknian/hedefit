@@ -1,7 +1,7 @@
 package com.hedefit.app.ui.settings
 
 import kotlin.math.abs
-import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
@@ -27,11 +27,17 @@ object GoalScience {
         return (currentKg * fraction).coerceAtLeast(0.1)
     }
 
+    /**
+     * Hedefe kalan hafta. Sunucu (lib/goal-plan.ts planGoal) ve tanıtım sitesi (site/tools.js) ile AYNI
+     * kural: 0,5 kg'dan az fark "ulaşıldı" (0), aksi halde en yakın haftaya YUVARLANIR (JS Math.round).
+     * Üçü ayrışırsa aynı kullanıcıya uygulamada ve sitede farklı süre görünür; ortak test değerleri için
+     * bkz. GoalScienceParityTest ve tests/goal-plan.test.mjs.
+     */
     fun weeks(currentKg: Double?, targetKg: Double?, pace: GoalPace = GoalPace.Steady): Int? {
         if (currentKg == null || targetKg == null) return null
         val diff = abs(targetKg - currentKg)
-        if (diff < 0.1) return 0
-        return ceil(diff / weeklyRateKg(currentKg, targetKg, pace)).toInt().coerceIn(1, 208)
+        if (diff < 0.5) return 0
+        return floor(diff / weeklyRateKg(currentKg, targetKg, pace) + 0.5).toInt().coerceIn(1, 208)
     }
 
     /** Hedef hıza karşılık gelen günlük enerji farkı (kcal). */
