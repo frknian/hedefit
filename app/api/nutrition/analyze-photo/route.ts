@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!image || !["image/jpeg", "image/png", "image/webp"].includes(image.mimeType)) return Response.json({ error: "Geçerli bir JPG, PNG veya WebP öğün fotoğrafı seç." }, { status: 400 });
   if (!hasRemoteProvider()) return Response.json({ error: "Fotoğraflı öğün analizi yapılandırılmamış." }, { status: 503 });
   const usage = await checkAndConsumeUsage(request, "photo", auth.user.id); if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("photo", usage.used, usage.limit);
+  if (!usage.allowed) return usageLimitExceeded("photo", usage.used, usage.limit, usage.period);
   try {
     const analysis = await estimateFoodPhoto(image, outputTokenLimit("photo", usage.planTier));
     if (!analysis) { if (Number.isFinite(usage.limit)) await refundUsage(auth.user.id, "photo"); return Response.json({ error: "Fotoğrafta güvenle analiz edilebilen bir öğün bulunamadı." }, { status: 422 }); }

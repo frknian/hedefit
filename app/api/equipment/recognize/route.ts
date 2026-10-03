@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!image || image.mimeType !== "image/jpeg") return Response.json({ error: "Geçerli ve sıkıştırılmış bir JPEG ekipman fotoğrafı gönder." }, { status: 400 });
   if (!hasRemoteProvider()) return Response.json({ error: "Ekipman tanıma servisi yapılandırılmamış.", code: "VISION_NOT_CONFIGURED" }, { status: 503 });
   const usage = await checkAndConsumeUsage(request, "photo", auth.user.id); if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("photo", usage.used, usage.limit);
+  if (!usage.allowed) return usageLimitExceeded("photo", usage.used, usage.limit, usage.period);
   try {
     const recognition = await recognizeGymEquipment(image, Math.min(800, outputTokenLimit("photo", usage.planTier)));
     return Response.json({ ...recognition, usage: { used: usage.used, limit: usage.limit } });

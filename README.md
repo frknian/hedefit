@@ -82,10 +82,18 @@ Backend Cloudflare Workers üzerinde yayınlanır:
   XP, ücretsiz hesapların günlük soru hakkını artırır: 300 XP'de +1, 500 XP'de
   +2 ve sonrasında her 250 XP'de bir ek hak (en çok +5). Kötüye kullanım
   koruması olarak kullanıcı başına kısa süreli istek sınırı korunur.
-- Fit Koç model yönlendirmesi basit sohbet, besin çıkarımı ve görsel okumada
-  `gpt-4o`; kişisel program üretimi ve karmaşık haftalık değerlendirmede
-  `gpt-5.1` kullanır. Model adları Worker ortamındaki `OPENAI_MODEL_*`
-  değişkenleriyle değiştirilebilir.
+- Fit Koç model yönlendirmesi: serbest sohbet, besin açıklaması ve kısa özetler
+  `gpt-4o-mini` (`OPENAI_MODEL_LIGHT`); besin çıkarımı ve görsel okuma `gpt-4o`
+  (`OPENAI_MODEL_CHEAP` / `OPENAI_MODEL_STANDARD`); kişisel program üretimi ve
+  karmaşık haftalık değerlendirme `gpt-5.1` (`OPENAI_MODEL_ADVANCED`).
+- Maliyet telemetrisi: her model çağrısı `ai_usage_events` tablosuna (kullanıcı,
+  özellik, plan, model, token, tahmini maliyet; metin yok) yazılır. Özet görünümler:
+  `ai_usage_daily_by_feature`, `ai_usage_monthly_by_user`. Fiyatlar
+  `lib/ai/pricing.ts`'te; ham kayıtlar `purge_ai_usage_events(180)` ile temizlenir.
+  Migration: `20261003130000_ai_usage_events.sql` (aylık tavan için
+  `usage_month_total` da burada).
+- Pahalı özelliklerde aylık tavan vardır (`lib/usage-limits.ts` `MONTHLY_LIMITS`):
+  program üretimi Free 4 / Plus 20 / Premium 30, Premium fotoğraf 120.
 
 Canlı dağıtım:
 

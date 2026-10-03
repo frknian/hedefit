@@ -276,7 +276,7 @@ export async function POST(request: Request) {
   }
   const usage = await checkAndConsumeUsage(request, "plan", auth.user.id);
   if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("plan", usage.used, usage.limit);
+  if (!usage.allowed) return usageLimitExceeded("plan", usage.used, usage.limit, usage.period);
   const trainingHistory = Array.isArray(payload.trainingHistory) ? payload.trainingHistory.slice(0, 8) : [];
   const adaptation = payload.adaptation && typeof payload.adaptation === "object" ? payload.adaptation : null;
   // Modele giden veriler <facts> içinde toplanır: hepsi uygulamada zaten

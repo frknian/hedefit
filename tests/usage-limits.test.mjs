@@ -36,7 +36,7 @@ test("Pro kullanıcı için Fit Koç sohbeti günlük 40 mesajla sınırlıdır"
   }
 });
 
-test("Pro kullanıcı için fotoğraf analizi günlük 15 istekle sınırlıdır", async () => {
+test("Pro kullanıcı için fotoğraf analizi günlük 8 istekle sınırlıdır", async () => {
   const restoreEnv = withSupabaseAuthEnv();
   const previousFetch = globalThis.fetch;
   globalThis.fetch = withUsageMock({ isPremium: true, allowed: true, currentCount: 8 });
@@ -44,7 +44,7 @@ test("Pro kullanıcı için fotoğraf analizi günlük 15 istekle sınırlıdır
     const request = authorizedRequest("http://localhost/x");
     const result = await checkAndConsumeUsage(request, "photo", TEST_USER_ID);
     assert.ok(!("error" in result));
-    assert.deepEqual(result, { allowed: true, used: 8, limit: 15, isPremium: true, planTier: "pro" });
+    assert.deepEqual(result, { allowed: true, used: 8, limit: 8, isPremium: true, planTier: "pro" });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
@@ -481,5 +481,121 @@ test("sohbet: AI çağrısı başarısızsa günlük kota iade edilir", { concur
     globalThis.fetch = previousFetch;
     restoreAuthEnv();
     if (previousKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previousKey;
+  }
+});
+
+// ---- aylık tavan ------------------------------------------------------------
+
+function withMonthlyMock({ planTier, monthTotal, refunds }) {
+  return withUsageMock({ isPremium: planTier === "pro", planTier, allowed: true, currentCount: 1 }, (url, init) => {
+    const href = String(url);
+    if (href.includes("/rpc/usage_month_total")) return Response.json(monthTotal);
+    if (href.includes("/rpc/refund_usage_counter_for_user")) { refunds.push(JSON.parse(String(init.body))); return Response.json(null); }
+    throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
+  });
+}
+
+test("aylık tavan: Plus program üretimi ayda 20 ile sınırlıdır; aşılınca hak iade edilir", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  const refunds = [];
+  globalThis.fetch = withMonthlyMock({ planTier: "plus", monthTotal: 21, refunds });
+  try {
+    const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "plan", TEST_USER_ID);
+    assert.ok(!("error" in result));
+    assert.equal(result.allowed, false);
+    assert.equal(result.period, "monthly");
+    assert.equal(result.limit, 20);
+    assert.deepEqual(refunds, [{ p_user_id: TEST_USER_ID, p_feature: "plan" }]);
+    const response = usageLimitExceeded("plan", result.used, result.limit, result.period);
+    assert.equal(response.status, 429);
+    assert.match((await response.json()).error, /Bu ayki/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("aylık tavan: tavana tam ulaşıldığında (20/20) son hak kullanılabilir", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  const refunds = [];
+  globalThis.fetch = withMonthlyMock({ planTier: "plus", monthTotal: 20, refunds });
+  try {
+    const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "plan", TEST_USER_ID);
+    assert.equal(result.allowed, true);
+    assert.equal(refunds.length, 0);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("aylık tavan: ücretsiz plan program üretimi ayda 4, Premium fotoğraf ayda 120", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  try {
+    for (const [tier, feature, cap] of [["free", "plan", 4], ["pro", "photo", 120], ["pro", "plan", 30]]) {
+      const refunds = [];
+      globalThis.fetch = withMonthlyMock({ planTier: tier, monthTotal: cap + 1, refunds });
+      const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), feature, TEST_USER_ID);
+      assert.equal(result.allowed, false, `${tier}/${feature}`);
+      assert.equal(result.limit, cap);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("aylık tavan: tavanı olmayan özellik (sohbet) aylık sayaç sorgulamaz", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  let monthlyCalls = 0;
+  globalThis.fetch = withUsageMock({ planTier: "pro", isPremium: true }, (url) => {
+    if (String(url).includes("usage_month_total")) monthlyCalls += 1;
+    throw new TypeError("beklenmeyen ağ isteği");
+  });
+  try {
+    const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "chat", TEST_USER_ID);
+    assert.equal(result.allowed, true);
+    assert.equal(monthlyCalls, 0);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("aylık tavan: sayaç okunamazsa açık tarafta kalınır (kullanıcı kilitlenmez)", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = withUsageMock({ planTier: "plus", isPremium: false }, (url) => {
+    if (String(url).includes("usage_month_total")) return Response.json({ code: "XX000", message: "boom" }, { status: 500 });
+    throw new TypeError("beklenmeyen ağ isteği");
+  });
+  try {
+    const result = await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "plan", TEST_USER_ID);
+    assert.equal(result.allowed, true);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
+  }
+});
+
+test("günlük sınırlar: pahalı özellikler kısıldı (Plus program 1, Premium program 2 / fotoğraf 8)", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const previousFetch = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = withUsageMock({ planTier: "pro", isPremium: true, allowed: false }, (url, init) => { seen.push(url); throw new TypeError("x"); });
+  const bodies = [];
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => { if (String(url).includes("/rpc/check_and_consume_usage")) bodies.push(JSON.parse(String(init.body))); return inner(url, init); };
+  try {
+    await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "plan", TEST_USER_ID);
+    await checkAndConsumeUsage(authorizedRequest("http://localhost/x"), "photo", TEST_USER_ID);
+    assert.deepEqual(bodies.map((b) => [b.p_feature, b.p_free_limit, b.p_plus_limit, b.p_pro_limit]), [["plan", 1, 1, 2], ["photo", 1, 3, 8]]);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreEnv();
   }
 });

@@ -13,9 +13,19 @@ export type PlanTier = "free" | "plus" | "pro";
 // daha düşük tutulur.
 const DAILY_LIMITS = {
   free: { chat: 5, photo: 1, text_nutrition: 3, weekly_review: 1, nutrition_advice: 5, plan: 1, memory: 2 },
-  plus: { chat: 20, photo: 3, text_nutrition: 15, weekly_review: 1, nutrition_advice: 12, plan: 3, memory: 10 },
-  pro: { chat: 40, photo: 15, text_nutrition: 40, weekly_review: 2, nutrition_advice: 30, plan: 6, memory: 25 },
+  plus: { chat: 20, photo: 3, text_nutrition: 15, weekly_review: 1, nutrition_advice: 12, plan: 1, memory: 10 },
+  pro: { chat: 40, photo: 8, text_nutrition: 30, weekly_review: 2, nutrition_advice: 30, plan: 2, memory: 25 },
 } as const satisfies Record<PlanTier, Record<UsageFeature, number>>;
+
+// Pahalı özellikler için aylık toplam tavan (günlük sınırın yanında). Program
+// üretimi (gpt-5.1, ~₺2/çağrı) ve fotoğraf (vision) günlük sınırın 30 katına
+// çıkarsa abonelik gelirini aşar; aylık tavan ele geçirilmiş/aşırı kullanımı
+// keser. Tanımsız özellik/plan için aylık tavan yoktur. Misafirler free sayılır.
+const MONTHLY_LIMITS: Partial<Record<PlanTier, Partial<Record<UsageFeature, number>>>> = {
+  free: { plan: 4 },
+  plus: { plan: 20 },
+  pro: { plan: 30, photo: 120 },
+};
 
 // Misafir (anonim) oturumlar ücretsiz katmandan da dar kotayla çalışır; hesabını
 // kaydedince ücretsiz katmana geçer. Android'deki Entitlements.kt ile uyumlu tutun.
@@ -40,7 +50,7 @@ const OUTPUT_TOKEN_LIMITS: Record<UsageFeature, Record<PlanTier, number>> = {
 
 export function outputTokenLimit(feature: UsageFeature, tier: PlanTier) { return OUTPUT_TOKEN_LIMITS[feature][tier]; }
 
-export type UsageCheckResult = { allowed: boolean; used: number; limit: number; isPremium: boolean; planTier: PlanTier };
+export type UsageCheckResult = { allowed: boolean; used: number; limit: number; isPremium: boolean; planTier: PlanTier; period?: "monthly" };
 
 /** Bir özellik için günlük reklam bonusu tavanı. */
 const MAX_BONUS_PER_DAY = 3;
@@ -117,7 +127,28 @@ export async function checkAndConsumeUsage(request: Request, feature: UsageFeatu
   // Number.isFinite(usage.limit) ile bu durumu kontrol ediyor.
   const planTier = (["free", "plus", "pro"] as const).includes(result.plan_tier) ? result.plan_tier : "free";
   setAiUsageContext({ userId, feature, planTier });
-  return { allowed: result.allowed, used: result.current_count, limit: result.effective_limit, isPremium: planTier !== "free", planTier };
+  const consumed = { allowed: result.allowed, used: result.current_count, limit: result.effective_limit, isPremium: planTier !== "free", planTier };
+  if (!consumed.allowed) return consumed;
+  return (await enforceMonthlyLimit(client, userId, feature, consumed)) ?? consumed;
+}
+
+/**
+ * Aylık tavanı aşıldıysa az önce tüketilen günlük hakkı iade eder ve reddeder.
+ * Tavan yoksa ya da sayaç okunamazsa null döner (açık tarafta kalınır: günlük
+ * sınır zaten uygulanıyor; altyapı arızası kullanıcıyı kilitlememeli).
+ */
+async function enforceMonthlyLimit(client: SupabaseClient, userId: string, feature: UsageFeature, consumed: UsageCheckResult): Promise<UsageCheckResult | null> {
+  const cap = MONTHLY_LIMITS[consumed.planTier]?.[feature];
+  if (cap === undefined) return null;
+  const { data, error } = await client.rpc("usage_month_total", { p_feature: feature });
+  if (error || typeof data !== "number") {
+    if (error && !isMissingInfrastructure(error)) console.error("[usage-limits] usage_month_total failed", error.code);
+    return null;
+  }
+  // `data` bu isteğin sayacı dahil toplamdır.
+  if (data <= cap) return null;
+  await refundUsage(userId, feature);
+  return { ...consumed, allowed: false, used: cap, limit: cap, period: "monthly" };
 }
 
 /**
@@ -313,7 +344,7 @@ function handleMissingInfrastructure(feature: UsageFeature, missing: string, isP
   return { error: Response.json({ error: "Kullanım sınırı servisi geçici olarak kullanılamıyor. Lütfen kısa süre sonra tekrar dene." }, { status: 503 }) };
 }
 
-export function usageLimitExceeded(feature: UsageFeature, used: number, limit: number) {
+export function usageLimitExceeded(feature: UsageFeature, used: number, limit: number, period: "daily" | "monthly" = "daily") {
   const featureLabel = feature === "chat"
     ? "AI koç mesajı"
     : feature === "photo"
@@ -329,11 +360,14 @@ export function usageLimitExceeded(feature: UsageFeature, used: number, limit: n
               : "AI beslenme önerisi";
   return Response.json(
     {
-      error: `Bugünkü ${featureLabel} sınırına ulaştın (${limit}/${limit}). Yarın tekrar deneyebilirsin.`,
+      error: period === "monthly"
+        ? `Bu ayki ${featureLabel} sınırına ulaştın (${limit}/${limit}). Hakkın ay başında yenilenir.`
+        : `Bugünkü ${featureLabel} sınırına ulaştın (${limit}/${limit}). Yarın tekrar deneyebilirsin.`,
       limitReached: true,
       feature,
       used,
       limit,
+      period,
     },
     { status: 429 },
   );

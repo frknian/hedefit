@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 
   const usage = await checkAndConsumeUsage(request, "chat", auth.user.id);
   if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("chat", usage.used, usage.limit);
+  if (!usage.allowed) return usageLimitExceeded("chat", usage.used, usage.limit, usage.period);
 
   // Hafıza bir iyileştirmedir: tablo yoksa veya okunamazsa boş döner ve sohbet
   // normal şekilde devam eder (bkz. lib/ai/memory.ts loadMemories).

@@ -110,7 +110,7 @@ val TIER_LIMITS: Map<Tier, TierLimits> = mapOf(
     ),
     Tier.Premium to TierLimits(
         dailyMealLogs = UNLIMITED,
-        dailyPhotoMeals = 15,
+        dailyPhotoMeals = 8,
         exerciseLevels = setOf("beginner", "intermediate", "advanced"),
         customPrograms = UNLIMITED,
         routeSaving = true,
