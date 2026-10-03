@@ -1,7 +1,11 @@
 import { spawnSync } from "node:child_process";
 
 const config = "dist/server/wrangler.json";
-const healthUrl = "https://hedefit.frknian.workers.dev/api/health/openai";
+// Özel alan adı varsa (HEDEFIT_API_BASE_URL=https://api.alanadi.com) sağlık kontrolü ve Worker bağlaması ona göre yapılır.
+const apiBase = (process.env.HEDEFIT_API_BASE_URL || "https://hedefit.frknian.workers.dev").replace(/\/+$/, "");
+const healthUrl = `${apiBase}/api/health/openai`;
+const apiHost = new URL(apiBase).hostname;
+const domainArgs = apiHost.endsWith(".workers.dev") ? [] : ["--domain", apiHost];
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { stdio: "inherit", ...options });
@@ -54,7 +58,7 @@ if (!healthToken) {
 const deployments = JSON.parse(output("npx", ["wrangler", "deployments", "list", "-c", config, "--json"]));
 const previousVersion = deployments.at(-1)?.versions?.find((item) => item.percentage === 100)?.version_id;
 
-run("npx", ["wrangler", "deploy", "-c", config, "--message", "Verified deploy with automatic OpenAI health check"]);
+run("npx", ["wrangler", "deploy", "-c", config, "--message", "Verified deploy with automatic OpenAI health check", ...domainArgs]);
 
 try {
   const health = await checkHealth(healthUrl, healthToken);

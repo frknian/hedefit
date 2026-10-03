@@ -151,10 +151,10 @@ npm run site:build          # yalnız .site-dist/ üretir (SITE_URL gerekir)
 ```
 
 - `site:build` çıktısı `.site-dist/` içindedir: `__SITE_URL__` yer tutucularını doldurur, `sitemap.xml` ve `robots.txt` üretir.
-- Özel alan adı: Cloudflare panelinde `hedefit-site` Worker'ına alan adı ekle, sonra `SITE_URL` ile yeniden yayınla (canonical, sitemap ve paylaşım görseli güncellenir).
+- Özel alan adı: alan adı Cloudflare'de olmalı; `SITE_URL=https://alanadi.com npm run site:deploy` Worker'ı o alan adına da bağlar ve canonical, sitemap ve paylaşım görselini günceller. API için `HEDEFIT_API_BASE_URL=https://api.alanadi.com npm run deploy`.
 - İngilizce sürüm (`site/en/`) Türkçe sayfalardan **üretilir**: `python3 scripts/i18n/build-en.py` (çeviriler `scripts/i18n/en.json`; yeni/değişen Türkçe metin için `python3 scripts/i18n/extract.py` eksikleri listeler). Çıktı dosyalarını elle düzenleme.
 - "Yayınlanınca haber ver" formu: site Worker'ı (`scripts/site-worker/index.js`, Workers KV `SUBSCRIBERS`). Liste: `node scripts/export-subscribers.mjs > aboneler.csv`.
-- Mağaza bağlantıları: `site/main.js` içindeki `STORES` nesnesine Google Play ve App Store adreslerini yaz; butonlar otomatik aktifleşir.
+- Mağaza bağlantıları: `GOOGLE_PLAY_URL` / `APP_STORE_URL` ortam değişkenleriyle (yalnız `https://`) `npm run site:deploy` çalıştır; butonlar otomatik aktifleşir. Alan adı ve mağaza formları için `android/STORE_LISTING.md`.
 - `gizlilik.html` ve `destek.html` üretilir: `LegalTexts.kt` değişince `python3 scripts/build-legal-pages.py`.
 - Plan limitleri (`planlar.html`) `lib/usage-limits.ts` ve Android `Entitlements.kt` ile birlikte güncellenmelidir.
 - Wrangler komutları depo dışından çalıştırılır (kökteki `.wrangler/deploy` yönlendirmesi API Worker'ına aittir).

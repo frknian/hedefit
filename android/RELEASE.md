@@ -74,4 +74,4 @@ Kod tarafı hazır (Play Billing, sunucu doğrulama, RTDN, uzlaştırma); aşağ
 - [ ] Data safety / App privacy formları: satın alma geçmişi, AI kullanım metadatası, konum, sağlık, AD_ID (bkz. `legal/gizlilik-inceleme-2026-10-01.md` bölüm F).
 - [ ] Health Connect bildirim formu: manifest `READ_*` izinlerinin yanında `WRITE_EXERCISE` de istiyor; kullanımı gerekçelendir ya da kullanılmıyorsa kaldır.
 - [ ] R8/küçültme kapalı (`isMinifyEnabled = false`); açılırsa Billing, Health Connect ve Wear Data Layer ile tam regresyon testi şart.
-- [ ] Alan adı + gizlilik/destek/hesap-silme URL'leri kalıcı alan adında (şu an `workers.dev`).
+- [ ] Alan adı + gizlilik/destek/hesap-silme URL'leri kalıcı alan adında (şu an `workers.dev`) — adım adım kurulum ve form metinleri: `STORE_LISTING.md`.

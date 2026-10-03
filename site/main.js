@@ -3,8 +3,10 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.getElementById('yr').textContent = new Date().getFullYear();
 
-  // Mağaza bağlantıları yayına çıkınca: href'i yaz, aria-disabled'ı kaldır.
-  const STORES = { 'google-play': '', 'app-store': '' };
+  // Mağaza bağlantıları yayına çıkınca: derlemede GOOGLE_PLAY_URL / APP_STORE_URL ortam değişkeniyle verilir
+  // (scripts/build-site.mjs yer tutucuları doldurur); boş ya da yer tutucu kalırsa buton pasif kalır.
+  const live = v => (/^https:\/\//.test(v) ? v : '');
+  const STORES = { 'google-play': live('__STORE_GOOGLE_PLAY__'), 'app-store': live('__STORE_APP_STORE__') };
   document.querySelectorAll('.store[data-store]').forEach(el => {
     const url = STORES[el.dataset.store];
     if (!url) { el.addEventListener('click', e => e.preventDefault()); return; }
