@@ -57,6 +57,7 @@ export async function runScheduledReconcile(): Promise<ReconcileSummary | null> 
   // Saklama süreleri (gizlilik metniyle tutarlı): RTDN kayıtları 90 gün, AI kullanım kayıtları 180 gün. En iyi çaba.
   await admin.rpc("purge_billing_events", { p_days: 90 });
   await admin.rpc("purge_ai_usage_events", { p_days: 180 });
+  await admin.rpc("purge_ad_reward_events", { p_days: 90 });
   console.info("[billing] reconcile done", summary);
   return summary;
 }

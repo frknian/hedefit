@@ -19,10 +19,10 @@ test("sunucu reklam bonus miktarını ve günlük tavanı sabitler", async () =>
   assert.doesNotMatch(sql, /grant execute on function public\.grant_usage_bonus_for_user\(uuid, text\) to authenticated/i);
 });
 
-test("doğrulanmamış reklam ödülü API'si kapalıdır", async () => {
-  const { POST } = await import(`../app/api/ads/reward/route.ts?test=${Date.now()}`);
-  const response = await POST();
-  assert.equal(response.status, 501);
+test("istemcinin beyanıyla reklam ödülü verilemez: reward ucunda yazma (POST) yoktur", async () => {
+  const route = await import(`../app/api/ads/reward/route.ts?test=${Date.now()}`);
+  assert.equal(route.POST, undefined, "hak yalnız imzalı AdMob callback'iyle (api/ads/ssv) verilir");
+  assert.equal(typeof route.GET, "function");
 });
 
 test("hesap durumu sorgusu normal kullanıcıyı kendi kimliğiyle sınırlar", async () => {
