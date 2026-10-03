@@ -233,3 +233,12 @@ export async function deleteMemory(request: Request, memoryId: string): Promise<
   const { error } = await client.from("ai_memories").delete().eq("id", memoryId);
   return !error;
 }
+
+/** Kullanıcının TÜM hafızasını silmesi (uygulamadaki "Tümünü sil"). RLS yalnız kendi satırlarını kapsar. */
+export async function deleteAllMemories(request: Request): Promise<boolean> {
+  const client = userClient(request);
+  if (!client) return false;
+  // PostgREST filtresiz silmeyi reddeder; "id dolu olan her satır" RLS ile kullanıcının kendi satırlarıyla sınırlıdır.
+  const { error } = await client.from("ai_memories").delete().not("id", "is", null);
+  return !error;
+}
