@@ -101,6 +101,27 @@ Canlı dağıtım:
 npm run deploy
 ```
 
+## Google Play abonelikleri (Billing)
+
+Plan yalnızca sunucuda, Google Play Developer API'den doğrulanarak yazılır
+(`app/api/billing/verify`, `lib/billing/`); istemci plan yazamaz. Abonelik
+değişiklikleri (yenileme, iptal, iade, ödeme sorunu) RTDN ile gelir:
+
+1. Play Console → Monetization setup → *Real-time developer notifications*: bir Pub/Sub
+   topic'i bağla ve `google-play-developer-notifications@system.gserviceaccount.com`
+   hesabına topic üzerinde *Pub/Sub Publisher* yetkisi ver.
+2. Topic'e **push** abonelik ekle: endpoint `https://<worker>/api/billing/rtdn`,
+   *Enable authentication* açık, servis hesabı + audience = endpoint URL'si.
+3. Worker secret'ları: `GOOGLE_PLAY_SERVICE_ACCOUNT` (Play API servis hesabı JSON'u),
+   `GOOGLE_PLAY_RTDN_AUDIENCE` (adım 2'deki audience), `GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT_EMAIL`
+   (push aboneliğinin servis hesabı e-postası); isteğe bağlı `GOOGLE_PLAY_PACKAGE_NAME`.
+4. Play Console'dan *Send test notification* ile doğrula (log: `rtdn test notification received`).
+
+Günlük cron (`vite.config.ts` → `triggers.crons`, 03:17 UTC) RTDN kaçsa bile planları
+Google ile uzlaştırır (`lib/billing/reconcile.ts`). Migration'lar: `20261003120000_play_billing.sql`,
+`20261003140000_play_rtdn.sql`. Hesap silme, aktif abonelik varken kullanıcı onaylamadan 409 döner
+(silmek Play aboneliğini iptal etmez).
+
 ## Web sitesi (tanıtım)
 
 `site/` klasörü, statik varlıklı bir Cloudflare Worker (`hedefit-site`, `scripts/wrangler.site.jsonc`) olarak yayınlanan tanıtım sitesidir; API Worker'ından ayrıdır.
