@@ -167,3 +167,20 @@ export function wellnessModalitySummary(session: WellnessSession, catalog: Exerc
   const modalities = [...new Set(session.exercises.flatMap((item) => byId.get(item.id)?.modalities ?? []))] as Modality[];
   return modalities.map((modality) => MODALITY_LABELS[modality][locale]).join(" · ");
 }
+
+/**
+ * "Mobilite ekle" eylemi için kısa bir bitiriş: katman kapısına uyan, başlangıç seviyesi mobilite hareketlerinden
+ * deterministik seçim (aynı tohum aynı sonuç).
+ */
+export function pickMobilityFinisher(input: { count: number; tier: PlanTier; seed: string; locale?: "tr" | "en"; level?: WellnessLevel; catalog?: Exercise[] }): WorkoutExerciseItem[] {
+  const locale = input.locale === "en" ? "en" : "tr";
+  const level = input.level ?? "beginner";
+  const pool = (input.catalog ?? getAllExercises())
+    .filter((exercise) => exercise.isActive !== false && exercise.mediaStatus !== "missing" && exercise.modalities?.includes("mobility") && (LEVEL_RANK[exercise.level] ?? 0) <= 0 && canUseModalityExercise(input.tier ?? "free", exercise.modalities, exercise.subcategories))
+    .sort((a, b) => hash(`${input.seed}:mobility:${a.id}`) - hash(`${input.seed}:mobility:${b.id}`));
+  return pool.slice(0, Math.max(0, input.count)).map((exercise) => {
+    const dose = prescribe(exercise, locale, level);
+    const steps = locale === "en" ? exercise.instructions : exercise.instructionsTr?.length ? exercise.instructionsTr : exercise.instructions;
+    return { id: exercise.id, name: translateExerciseName(exercise.name, locale), english: exercise.name, area: AREA_TR[exercise.bodyPart ?? ""] ?? "Tüm vücut", sets: 1, reps: dose.reps, restSeconds: 10, instructions: steps.slice(0, 2).join(" ") };
+  });
+}

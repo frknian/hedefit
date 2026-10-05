@@ -146,6 +146,8 @@ data class MainUiState(
     val checkinToday: com.hedefit.app.data.model.CheckinData? = null,
     val checkinCycle: com.hedefit.app.data.model.CycleStateData? = null,
     val checkinSaved: Boolean = false,
+    /** Bugünün uyarlanmış planı (null = yok ya da kapatıldı). */
+    val adaptiveResult: com.hedefit.app.data.model.AdaptiveResultData? = null,
     val readinessAdaptation: ReadinessAdaptationData? = null,
     val replacementBusy: Boolean = false,
     val replacementCandidate: ExerciseReplacementCandidate? = null,
@@ -2232,9 +2234,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
             val saved = result.getOrNull()
             if (result.isSuccess && saved == null) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Check-in şimdi kaydedilemedi. Daha sonra tekrar dene.", "Couldn't save the check-in right now. Try again later.")) }
-            if (saved != null) { _state.update { it.copy(checkinToday = saved.checkin, checkinCycle = saved.cycle, checkinSaved = true) }; onSaved(saved) }
+            if (saved != null) { _state.update { it.copy(checkinToday = saved.checkin, checkinCycle = saved.cycle, checkinSaved = true) }; onSaved(saved); loadAdaptivePlan() }
         }
     }
+
+    /** Kayıtlı check-in'e göre bugünün planını uyarlar. Hata sessizdir: plan aynen geçerli kalır. */
+    fun loadAdaptivePlan() {
+        val dashboard = _state.value.dashboard ?: return
+        val exercises = dashboard.workouts
+        if (exercises.isEmpty()) return
+        val today = LocalDate.now()
+        val recent = dashboard.sessions.count { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull()?.let { it.isAfter(today.minusDays(3)) } == true }
+        viewModelScope.launch {
+            runCatching { repository.adaptivePlan(exercises, recent, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess { result -> _state.update { it.copy(adaptiveResult = result.takeIf { value -> value.adapted }) } }
+        }
+    }
+
+    fun dismissAdaptivePlan() { _state.update { it.copy(adaptiveResult = null) } }
 
     fun clearCheckinSaved() { _state.update { it.copy(checkinSaved = false) } }
 

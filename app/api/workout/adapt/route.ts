@@ -9,6 +9,11 @@ import { normalizeTrainingProfile } from "../../../../lib/training/profile-norma
 import type { LimitationArea } from "../../../../lib/training/types.ts";
 import { buildWellnessSession, type WellnessKind } from "../../../../lib/training/wellness-session.ts";
 import { loadPlanTier } from "../../../../lib/plan-tier.ts";
+import { adaptTodaysPlan } from "../../../../lib/training/adaptive-engine.ts";
+import { validateCheckin } from "../../../../lib/checkin.ts";
+import { describeCycle } from "../../../../lib/cycle.ts";
+import { adaptiveCapabilities } from "../../../../lib/entitlements.ts";
+import { loadCheckins, loadCycleState, DEFAULT_PERSONALIZATION } from "../../../../lib/health-store.ts";
 import { resolveRotationDate } from "../../../../lib/training/rotation.ts";
 
 export const runtime = "edge";
@@ -57,6 +62,33 @@ export async function POST(request: Request) {
     const tier = await loadPlanTier(request, auth.user.id);
     const session = buildWellnessSession({ kind, minutes, level: profile.fitnessLevel, tier, seed: `${auth.user.id}:${day}`, locale });
     return Response.json({ session, tier });
+  }
+
+  // 1c. Adaptive Training: bugünün planını check-in + (isteğe bağlı) döngü + geçmiş + katmana göre uyarlar.
+  if (action === "adaptive_plan") {
+    const exercises = Array.isArray(body.exercises) ? (body.exercises as WorkoutExerciseItem[]).slice(0, 20) : [];
+    if (!exercises.length) return Response.json({ error: "no_exercises" }, { status: 400 });
+    const day = resolveRotationDate(body.localDate).toISOString().slice(0, 10);
+    const tier = await loadPlanTier(request, auth.user.id);
+    const caps = adaptiveCapabilities(tier);
+    // Check-in: istekte doğrulanmış olarak gelir ya da bugünkü kayıt veritabanından okunur.
+    let checkin = null;
+    if (body.checkin !== undefined && body.checkin !== null) {
+      const validated = validateCheckin({ ...(body.checkin as object), day }, day);
+      if (!validated.ok) return Response.json({ error: validated.error }, { status: 400 });
+      checkin = validated.value;
+    } else {
+      const stored = await loadCheckins(request, day, 5);
+      if (stored.ok) checkin = stored.value.find((item) => item.day === day) ?? null;
+    }
+    // Ayarlar ve döngü: tablolar yoksa varsayılan (uyarlama açık, döngü kapalı). Döngü yalnızca açık rıza + izinli katmanda kullanılır.
+    const state = await loadCycleState(request);
+    const personalization = state.ok ? state.value.personalization : DEFAULT_PERSONALIZATION;
+    const cycle = state.ok && caps.cycleAdaptation && personalization.cycleEnabled ? describeCycle(state.value.profile, day) : null;
+    const recent = typeof body.recentSessions3d === "number" && Number.isFinite(body.recentSessions3d) ? Math.max(0, Math.min(10, Math.floor(body.recentSessions3d))) : 0;
+    const result = adaptTodaysPlan({ profile, exercises, checkin, cycle, tier, adaptiveEnabled: personalization.adaptiveEnabled, recentSessions3d: recent, locale, seed: `${auth.user.id}:${day}` });
+    // AI açıklaması (Premium) Faz 7'de bu sonucun ÜZERİNE eklenir; burada yalnızca şablon açıklama döner.
+    return Response.json({ result, tier });
   }
 
   // 2. Exercise Replacement

@@ -159,6 +159,10 @@ fun HomeScreen(
     onStartWellness: (com.hedefit.app.data.model.WellnessKind) -> Unit = {},
     checkinToday: com.hedefit.app.data.model.CheckinData? = null,
     onOpenCheckin: () -> Unit = {},
+    adaptiveResult: com.hedefit.app.data.model.AdaptiveResultData? = null,
+    onStartAdaptive: (com.hedefit.app.data.model.AdaptiveResultData) -> Unit = {},
+    onDismissAdaptive: () -> Unit = {},
+    onAdaptiveUpgrade: (String) -> Unit = {},
     onOpenProgress: () -> Unit = {},
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
@@ -216,6 +220,7 @@ fun HomeScreen(
             }
             item { NextStepCard(data, en, waterGoalMl, onOpenProgram, onOpenNutrition, { metricDialog = "water" }, onOpenCoach) }
             item { CheckinCard(en, checkinToday, onOpenCheckin) }
+            if (adaptiveResult != null) item { AdaptiveCard(en, adaptiveResult, onStartAdaptive, onDismissAdaptive, onAdaptiveUpgrade) }
             val wellnessUp = com.hedefit.app.data.model.wellnessProminent(data.profile.gender, data.profile.historyAnswers.getOrNull(8).orEmpty())
             if (wellnessUp) item { WellnessRow(en, onStartWellness) }
             item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
@@ -300,6 +305,34 @@ fun HomeScreen(
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
     )
+}
+
+/** Bugünün planı check-in'e göre uyarlandıysa: açıklama, uyarlanmış planı başlat / orijinal planla devam, kilitli eylem ipucu. */
+@Composable
+private fun AdaptiveCard(
+    en: Boolean,
+    result: com.hedefit.app.data.model.AdaptiveResultData,
+    onStart: (com.hedefit.app.data.model.AdaptiveResultData) -> Unit,
+    onDismiss: () -> Unit,
+    onUpgrade: (String) -> Unit,
+) {
+    HeroCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (en) "TODAY'S PLAN, ADAPTED" else "BUGÜNÜN PLANI, UYARLANDI", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            HfPill("${result.estimatedMinutes} " + (if (en) "min" else "dk"))
+        }
+        Text(result.explanation(en), color = HedefitColors.TextPrimary, style = MaterialTheme.typography.bodyMedium)
+        HfPrimaryButton(text = if (en) "Start adapted plan" else "Uyarlanmış planı başlat", onClick = { onStart(result) }, icon = Icons.Default.PlayArrow, modifier = Modifier.fillMaxWidth())
+        TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text(if (en) "Keep my original plan" else "Orijinal planla devam et", color = HedefitColors.TextSecondary) }
+        com.hedefit.app.data.model.upgradeHint(result.lockedActions)?.let { hint ->
+            Text(
+                if (hint == "switch_pilates") (if (en) "Premium can turn today into a Pilates session. Tap to see." else "Premium bugünü Pilates oturumuna çevirebilir. Görmek için dokun.")
+                else (if (en) "Plus and Premium add smarter swaps, mobility and recovery. Tap to see." else "Plus ve Premium daha akıllı değişim, mobilite ve toparlanma ekler. Görmek için dokun."),
+                color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onUpgrade(hint) },
+            )
+        }
+    }
 }
 
 /** Günlük check-in daveti (5 dokunuş); yapıldıysa özet ve güncelleme. */

@@ -341,6 +341,15 @@ class HedefitRepository(
             .requireSuccess("Hesap silinemedi.")
     }
 
+    /** Bugünün planını check-in'e göre uyarlar (sunucu: katman, ayar ve isteğe bağlı döngü uygulanır). */
+    suspend fun adaptivePlan(exercises: List<WorkoutExerciseData>, recentSessions3d: Int, locale: String): com.hedefit.app.data.model.AdaptiveResultData {
+        val items = JSONArray(exercises.map { e -> JSONObject().put("id", e.id).put("name", e.name).put("area", e.area).put("sets", e.sets).put("reps", e.reps).put("restSeconds", e.restSeconds) })
+        return com.hedefit.app.data.model.parseAdaptiveResult(
+            api.post("/api/workout/adapt", JSONObject().put("action", "adaptive_plan").put("exercises", items).put("recentSessions3d", recentSessions3d).put("locale", locale).put("localDate", java.time.LocalDate.now().toString()))
+                .requireSuccess("Plan uyarlanamadı.").jsonObject(),
+        )
+    }
+
     /** Bugünkü check-in'i yazar. null = sunucu henüz hazır değil (503); diğer hatalar fırlatılır. */
     suspend fun saveCheckin(checkin: com.hedefit.app.data.model.CheckinData): com.hedefit.app.data.model.CheckinSaveResult? {
         val response = api.put("/api/checkin", checkin.toJson())
