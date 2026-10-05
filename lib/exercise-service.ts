@@ -1,7 +1,7 @@
 import { exerciseRecords as exerciseData } from "./exercise-records.ts";
 import legacyExerciseData from "../data/legacy-exercises.json" with { type: "json" };
 import { translateExerciseLabel, translateExerciseName } from "./exercise-translations.ts";
-import { readAsset, readImpact, readModalities, readSubcategories } from "./exercise-modality.ts";
+import { FREE_EXERCISE_DB_ASSET, REPDB_ASSET, readAsset, readImpact, readModalities, readSubcategories } from "./exercise-modality.ts";
 import type { AIExerciseContext, Exercise, ExerciseFilters } from "@/types/exercise";
 
 const safeText = (value: unknown, fallback = "", maxLength = 300) => typeof value === "string" ? value.trim().slice(0, maxLength) : fallback;
@@ -52,9 +52,15 @@ export function normalizeExercise(value: unknown): Exercise | null {
     instructions: safeList(item.instructions, 12, 1200),
     category: safeText(item.category, "strength"),
     images: safeList(item.images, 4).map(safeImage).filter((image): image is string => Boolean(image)),
-    source: item.source === "legacy" ? "legacy" : item.source === "supplement" ? "supplement" : "repdb",
+    source: item.source === "legacy" ? "legacy" : item.source === "supplement" ? "supplement" : item.source === "wellness" ? "wellness" : "repdb",
     sourceExerciseId: safeText(item.sourceExerciseId) || undefined,
     bodyPart: safeText(item.bodyPart) || undefined,
+    nameTr: safeText(item.nameTr) || undefined,
+    descriptionEn: safeText(item.descriptionEn, "", 600) || undefined,
+    instructionsTr: Array.isArray(item.instructionsTr) ? safeList(item.instructionsTr, 12, 1200) : undefined,
+    descriptionTr: safeText(item.descriptionTr, "", 600) || undefined,
+    tipsEn: Array.isArray(item.tipsEn) ? safeList(item.tipsEn, 6, 300) : undefined,
+    tipsTr: Array.isArray(item.tipsTr) ? safeList(item.tipsTr, 6, 300) : undefined,
     goalCompatibility: safeList(item.goalCompatibility, 10, 40),
     environment: safeList(item.environment, 5, 20),
     laterality: item.laterality === "unilateral" ? "unilateral" : "bilateral",
@@ -66,7 +72,8 @@ export function normalizeExercise(value: unknown): Exercise | null {
     ...(() => {
       const modalities = readModalities(item.modalities);
       const impact = readImpact(item.impact);
-      const asset = readAsset(item.asset);
+      // Lisans kaydı: açıkça yazılmamışsa kaynağa göre bilinen kayıt (RepDB atfı ya da kamu malı fotoğraf).
+      const asset = readAsset(item.asset) ?? (item.source === "supplement" ? FREE_EXERCISE_DB_ASSET : item.source === "legacy" ? FREE_EXERCISE_DB_ASSET : item.source === "wellness" ? undefined : REPDB_ASSET);
       return {
         ...(modalities.length ? { modalities, subcategories: readSubcategories(modalities, item.subcategories) } : {}),
         ...(impact ? { impact } : {}),

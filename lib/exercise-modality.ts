@@ -36,6 +36,22 @@ export const HEDEFIT_ORIGINAL_ASSET: ExerciseAsset = {
   commercialUse: true,
 };
 
+/** RepDB ücretsiz katman: ticari kullanım serbest, uygulamada görünür atıf zorunlu (bkz. data/RepDB_ATTRIBUTION.md). */
+export const REPDB_ASSET: ExerciseAsset = {
+  source: "RepDB",
+  license: "RepDB Free Tier (commercial use with visible attribution)",
+  attribution: "Exercise data by RepDB (repdb.co)",
+  commercialUse: true,
+};
+
+/** Free Exercise DB fotoğrafları: kamu malı (data/FREE_EXERCISE_DB_LICENSE.md, Unlicense). */
+export const FREE_EXERCISE_DB_ASSET: ExerciseAsset = {
+  source: "Free Exercise DB",
+  license: "Unlicense (public domain)",
+  attribution: "",
+  commercialUse: true,
+};
+
 export function isModality(value: unknown): value is Modality {
   return typeof value === "string" && (MODALITIES as readonly string[]).includes(value);
 }

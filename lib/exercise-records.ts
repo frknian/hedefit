@@ -5,5 +5,16 @@
 
 import atlasData from "../data/exercises.json" with { type: "json" };
 import supplementData from "../data/exercises-supplement.json" with { type: "json" };
+import wellnessData from "../data/exercises-wellness.json" with { type: "json" };
+import modalityOverlay from "../data/exercise-modality-overlay.json" with { type: "json" };
 
-export const exerciseRecords: unknown[] = [...(atlasData as unknown[]), ...(supplementData as unknown[])];
+// Wellness (Pilates, Mobility, Barre, Low Impact, Recovery): Hedefit'e özel, scripts/build-wellness-exercises.mjs ile üretilir.
+// Modalite etiketleri (Pilates, Mobility, Barre, Low Impact, Recovery) RepDB satırlarına DOKUNMADAN, bir katman olarak
+// uygulanır: atlas dosyası yeniden üretilince (scripts/import-repdb.mjs) etiketler kaybolmaz.
+const overlay = modalityOverlay as Record<string, { modalities: string[]; subcategories: string[]; impact: string }>;
+const tagged = (records: unknown[]) => records.map((record) => {
+  const id = (record as { id?: string }).id;
+  return id && overlay[id] ? { ...(record as object), ...overlay[id] } : record;
+});
+
+export const exerciseRecords: unknown[] = [...tagged(atlasData as unknown[]), ...tagged(supplementData as unknown[]), ...(wellnessData as unknown[])];

@@ -33,7 +33,7 @@ test("lisans kaydı: kaynak, lisans ve ticari izin yoksa kabul edilmez", () => {
 test("katalog satırı: yeni alanlar geçer, eski satırlar aynen kalır (geriye uyumlu)", () => {
   const legacy = normalizeExercise({ id: "plain", name: "Plain Move" });
   assert.equal(legacy.modalities, undefined);
-  assert.equal(legacy.asset, undefined);
+  assert.equal(legacy.asset?.source, "RepDB", "kaynağı belirtilmeyen satır RepDB varsayılır ve atıf kaydı alır");
   const pilates = normalizeExercise({ id: "hundred", name: "The Hundred", modalities: ["pilates", "nonsense"], subcategories: ["core", "hip"], impact: "low", asset: HEDEFIT_ORIGINAL_ASSET, category: "strength" });
   assert.deepEqual(pilates.modalities, ["pilates"]);
   assert.deepEqual(pilates.subcategories, ["core"]);

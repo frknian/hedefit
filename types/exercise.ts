@@ -19,7 +19,7 @@ export interface Exercise {
 
   // --- RepDB canonical enrichment (additive; optional so legacy rows stay valid) ---
   /** Where this row came from. Legacy rows are kept addressable so old plans never break. */
-  source?: "repdb" | "legacy" | "supplement";
+  source?: "repdb" | "legacy" | "supplement" | "wellness";
   sourceExerciseId?: string;
   nameTr?: string;
   descriptionEn?: string;
