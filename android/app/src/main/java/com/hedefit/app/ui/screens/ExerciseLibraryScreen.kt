@@ -52,6 +52,8 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
     var mechanic by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var showFilters by remember { mutableStateOf(false) }
+    var showMap by remember { mutableStateOf(false) }
+    var grid by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<ExerciseCatalogData?>(null) }
     var showCustom by remember { mutableStateOf(false) }
     var selectedForProgram by remember { mutableStateOf<List<ExerciseCatalogData>>(emptyList()) }
@@ -93,6 +95,28 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                     if (activeFilterCount > 0) Text("$activeFilterCount", color = HedefitColors.Lime, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.align(Alignment.TopEnd).offset(4.dp, (-4).dp).background(HedefitColors.Surface, CircleShape).padding(horizontal = 5.dp, vertical = 1.dp))
                 }
             }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HfChip(if (en) "Muscle map" else "Kas haritası", showMap, { showMap = !showMap })
+                HfChip(if (en) "Grid" else "Izgara", grid, { grid = !grid })
+            }
+            if (showMap) {
+                MuscleMap(
+                    selected = setOfNotNull(muscle.ifBlank { null }),
+                    onSelect = { id ->
+                        val next = if (muscle == id) "" else id
+                        muscle = next
+                        muscleRole = if (next.isBlank()) "" else "primary"
+                        onSearch(query, next, equipment, level, environment, muscleRole, force, mechanic, category)
+                    },
+                    description = if (en) "Tap a muscle to list its movements" else "Hareketlerini görmek için bir kasa dokun",
+                )
+                Text(
+                    if (muscle.isBlank()) (if (en) "Tap a muscle to see its movements" else "Bir kasa dokun, hareketleri listelensin")
+                    else muscleOptions(en).firstOrNull { it.first == muscle }?.second ?: muscle,
+                    color = if (muscle.isBlank()) HedefitColors.TextMuted else HedefitColors.Lime,
+                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                )
+            }
             HfChipRow {
                 muscleOptions(en).take(9).forEach { (value, label) ->
                     HfChip(label, muscle == value, {
@@ -108,7 +132,22 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
             }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = HedefitColors.Lime)
-        LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (grid) androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            androidx.compose.foundation.lazy.grid.GridCells.Fixed(3), Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(items.size, key = { items[it].id }) { index ->
+                val item = items[index]
+                val locked = isLocked(item)
+                Box(Modifier.fillMaxWidth().aspectRatio(.8f).clip(RoundedCornerShape(16.dp)).alpha(if (locked) .55f else 1f).clickable { if (locked) onLocked(item) else selected = item }) {
+                    ExerciseMedia(item.imageUrls.firstOrNull(), item.name, Modifier.fillMaxSize())
+                    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color(0xCC000000)))))
+                    if (locked) Icon(Icons.Default.Lock, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(16.dp))
+                    Text(item.name, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, maxLines = 2, modifier = Modifier.align(Alignment.BottomStart).padding(8.dp))
+                }
+            }
+        } else LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(items, key = { it.id }) { item ->
                 val isPicked = selectedForProgram.any { it.id == item.id }
                 val locked = isLocked(item)
@@ -277,7 +316,7 @@ private fun muscleOptions(en: Boolean) = if (en) listOf(
     "shoulders" to "Shoulders", "biceps" to "Front arm · biceps", "triceps" to "Back arm · triceps", "forearms" to "Forearm & wrist", "abdominals" to "Abs",
     "glutes" to "Glutes", "quadriceps" to "Front thigh · quads", "hamstrings" to "Back thigh · hamstrings", "calves" to "Calves", "adductors" to "Inner thigh · adductors", "abductors" to "Outer hip · abductors",
 ) else listOf(
-    "" to "Tümü", "chest" to "Göğüs", "back" to "Sırt", "lats" to "Kanat", "traps" to "Trapez", "neck" to "Boyun", "shoulders" to "Omuz", "biceps" to "Ön kol", "triceps" to "Arka kol", "forearms" to "Bilek", "abdominals" to "Karın", "legs" to "Bacak", "glutes" to "Kalça", "calves" to "Baldır", "abductors" to "Dış kalça",
+    "" to "Tümü", "chest" to "Göğüs", "back" to "Sırt", "lats" to "Kanat", "traps" to "Trapez", "neck" to "Boyun", "shoulders" to "Omuz", "biceps" to "Ön kol", "triceps" to "Arka kol", "forearms" to "Bilek", "abdominals" to "Karın", "legs" to "Bacak", "glutes" to "Kalça", "calves" to "Baldır", "abductors" to "Dış kalça", "middle back" to "Orta sırt", "lower back" to "Bel", "quadriceps" to "Ön bacak", "hamstrings" to "Arka bacak",
 )
 
 @Composable

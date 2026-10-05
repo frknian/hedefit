@@ -22,6 +22,14 @@ export const QUESTION = {
   dailyMovement: 12,
   sleep: 13,
   freeNote: 14,
+  focusAreas: 15,
+  healthConditions: 16,
+  foodAllergies: 17,
+  dietPreference: 18,
+  habits: 19,
+  stress: 20,
+  lifestyleSatisfaction: 21,
+  performance: 22,
 } as const;
 
 export const QUESTION_COUNT = Object.keys(QUESTION).length;
@@ -119,6 +127,14 @@ export const QUESTION_LABELS: Record<keyof typeof QUESTION, string> = {
   dailyMovement: "Gün içi hareket düzeyi",
   sleep: "Uyku ve toparlanma düzeni",
   freeNote: "Serbest not",
+  focusAreas: "Odaklanmak istediği vücut bölgeleri",
+  healthConditions: "Sağlık durumu",
+  foodAllergies: "Besin alerjileri",
+  dietPreference: "Beslenme tercihi",
+  habits: "Alışkanlıkları",
+  stress: "Günlük stres seviyesi",
+  lifestyleSatisfaction: "Yaşam tarzından memnuniyeti (0-10)",
+  performance: "Fiziksel performans (squat / barfiks tekrarı)",
 };
 
 /** Cevapları soru etiketleriyle eşleştirir; boş cevaplar listeye girmez. */

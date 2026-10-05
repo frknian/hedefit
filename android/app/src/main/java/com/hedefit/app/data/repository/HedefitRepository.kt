@@ -888,7 +888,7 @@ class HedefitRepository(
                 .put("weightKg", it.profile.weightKg ?: JSONObject.NULL)
                 .put("environment", it.profile.environment)
                 .put("equipment", it.profile.equipment)
-                .put("assessmentAnswers", JSONArray(it.profile.historyAnswers.take(20))))
+                .put("assessmentAnswers", JSONArray(it.profile.historyAnswers.take(30))))
             val goalType = when {
                 it.profile.goal.contains("yağ", true) -> "fatLoss"
                 it.profile.goal.contains("kilo ver", true) || it.profile.goal.contains("zayıf", true) -> "lose"

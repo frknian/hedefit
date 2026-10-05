@@ -173,7 +173,7 @@ export function sanitizeCoachSignals(value: unknown, legacyContext?: string): In
       environment: text(profile?.environment, 40),
       equipment: text(profile?.equipment, 200),
       assessmentAnswers: Array.isArray(profile?.assessmentAnswers)
-        ? profile.assessmentAnswers.map((answer) => text(answer, 100)).filter((answer): answer is string => Boolean(answer)).slice(0, 20)
+        ? profile.assessmentAnswers.map((answer) => text(answer, 100)).filter((answer): answer is string => Boolean(answer)).slice(0, 30)
         : undefined,
     },
     goal: {

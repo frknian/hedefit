@@ -52,7 +52,10 @@ private data class ProfileQuestion(
     val freeText: Boolean = false,
     val multiSelect: Boolean = false,
     val exclusiveChoice: String? = null,
+    val kind: QuestionKind = QuestionKind.Choices,
 )
+
+private enum class QuestionKind { Choices, FocusMap, Slider, Performance }
 
 private val profileQuestions = listOf(
     ProfileQuestion("Ana hedefin ne?", "Programın ve tahmini süren bu hedefe göre hazırlanır.", listOf("Kilo verme", "Kilo alma", "Kas kazanma", "Formu koruma")),
@@ -70,7 +73,28 @@ private val profileQuestions = listOf(
     ProfileQuestion("Gün içinde ne kadar hareketlisin?", "Günlük enerji hesabı", listOf("Çoğunlukla oturuyorum", "Ara sıra hareket", "Aktif", "Çok aktif")),
     ProfileQuestion("Uyku düzenin nasıl?", "Toparlanma kapasiten", listOf("5 saatten az", "5–6 saat", "7–8 saat", "9+ saat")),
     ProfileQuestion("Koçunun bilmesi gereken başka bir şey?", "Tercih, kısıt veya not ekleyebilirsin.", freeText = true),
+    ProfileQuestion("Hangi bölgelere odaklanmak istersin?", "Birden fazla seçebilirsin. Haritadan da dokunabilirsin.", listOf("Karın", "Göğüs", "Omuz", "Sırt", "Kol", "Kalça", "Bacak", "Genel Gelişim"), multiSelect = true, kind = QuestionKind.FocusMap),
+    ProfileQuestion("Sağlık durumun hakkında bilgi ver.", "Birden fazla seçebilirsin. “Yok” tek başına seçilir.", listOf("Yok", "Diyabet", "Kalp Hastalığı", "İnsülin Direnci", "Hipotiroidi", "Hipertansiyon", "Yüksek Kolesterol", "Diğer"), multiSelect = true, exclusiveChoice = "Yok"),
+    ProfileQuestion("Besin alerjin var mı?", "Birden fazla seçebilirsin. “Yok” tek başına seçilir.", listOf("Yok", "Gluten", "Süt ürünleri", "Yumurta", "Kuruyemiş", "Deniz ürünleri", "Soya", "Diğer"), multiSelect = true, exclusiveChoice = "Yok"),
+    ProfileQuestion("Beslenme tercihin nedir?", "Beslenme önerilerinde bunu dikkate alırız.", listOf("Standart", "Vejetaryen", "Vegan", "Pesketaryen")),
+    ProfileQuestion("Bu alışkanlıklardan hangisine sahipsin?", "Birden fazla seçebilirsin. “Yok” seçeneği diğerlerini temizler.", listOf("Yok", "Sigara", "Alkol", "Gece geç yatıyorum", "Fazla şeker tüketiyorum", "Çok oturuyorum", "Egzersizi erteliyorum", "Düzenli beslenemiyorum"), multiSelect = true, exclusiveChoice = "Yok"),
+    ProfileQuestion("Günlük stres seviyeni nasıl tanımlarsın?", "Toparlanma ihtiyacını planlarken bu bilgiyi de dikkate alırız.", listOf("Nadiren stres yaşıyorum", "Bazen stresli oluyorum", "Sık sık stres yaşıyorum", "Neredeyse her gün stres altındayım")),
+    ProfileQuestion("Mevcut yaşam tarzından ne kadar memnunsun?", "", kind = QuestionKind.Slider),
+    ProfileQuestion("Fiziksel performansın nasıl?", "Bilmiyorsan boş bırakabilirsin.", kind = QuestionKind.Performance),
 )
+
+/** İlk 15 soru eski şemadır; bunlar sonradan eklenen sağlık/yaşam tarzı soruları. */
+private const val QUESTION_COUNT = 23
+private val EXTRA_QUESTION_INDICES = (15 until QUESTION_COUNT).toList()
+
+/** Harita bölgesi → odak alanı. Cevaplar odak alanı adıyla (Türkçe) saklanır. */
+private val focusAreaByMuscle = mapOf(
+    "abdominals" to "Karın", "chest" to "Göğüs", "shoulders" to "Omuz",
+    "lats" to "Sırt", "traps" to "Sırt", "middle back" to "Sırt", "lower back" to "Sırt",
+    "biceps" to "Kol", "triceps" to "Kol", "forearms" to "Kol", "glutes" to "Kalça",
+    "quadriceps" to "Bacak", "hamstrings" to "Bacak", "calves" to "Bacak",
+)
+
 
 /** Sorular ve cevaplar sunucuya Türkçe kaydedilir; yalnız ekranda çevrilir. */
 private val questionEn = mapOf(
@@ -168,6 +192,26 @@ private val questionEn = mapOf(
     "9+ saat" to "9+ hours",
     "Koçunun bilmesi gereken başka bir şey?" to "Anything else your coach should know?",
     "Tercih, kısıt veya not ekleyebilirsin." to "Add preferences, limits or notes.",
+    "Hangi bölgelere odaklanmak istersin?" to "Which areas do you want to focus on?",
+    "Birden fazla seçebilirsin. Haritadan da dokunabilirsin." to "Pick any that apply. You can also tap the map.",
+    "Karın" to "Abs", "Göğüs" to "Chest", "Omuz" to "Shoulders", "Sırt" to "Back", "Kol" to "Arms", "Kalça" to "Hips", "Bacak" to "Legs", "Genel Gelişim" to "Overall",
+    "Sağlık durumun hakkında bilgi ver." to "Tell us about your health.",
+    "Birden fazla seçebilirsin. “Yok” tek başına seçilir." to "Pick any that apply. “None” is chosen on its own.",
+    "Yok" to "None", "Diyabet" to "Diabetes", "Kalp Hastalığı" to "Heart disease", "İnsülin Direnci" to "Insulin resistance", "Hipotiroidi" to "Hypothyroidism", "Hipertansiyon" to "Hypertension", "Yüksek Kolesterol" to "High cholesterol", "Diğer" to "Other",
+    "Besin alerjin var mı?" to "Do you have food allergies?",
+    "Gluten" to "Gluten", "Süt ürünleri" to "Dairy", "Yumurta" to "Eggs", "Kuruyemiş" to "Nuts", "Deniz ürünleri" to "Seafood", "Soya" to "Soy",
+    "Beslenme tercihin nedir?" to "What is your diet preference?",
+    "Beslenme önerilerinde bunu dikkate alırız." to "We take this into account in nutrition suggestions.",
+    "Standart" to "Standard", "Vejetaryen" to "Vegetarian", "Vegan" to "Vegan", "Pesketaryen" to "Pescatarian",
+    "Bu alışkanlıklardan hangisine sahipsin?" to "Which of these habits apply to you?",
+    "Birden fazla seçebilirsin. “Yok” seçeneği diğerlerini temizler." to "Pick any that apply. “None” clears the others.",
+    "Sigara" to "Smoking", "Alkol" to "Alcohol", "Gece geç yatıyorum" to "I go to bed late", "Fazla şeker tüketiyorum" to "I eat a lot of sugar", "Çok oturuyorum" to "I sit a lot", "Egzersizi erteliyorum" to "I put off exercise", "Düzenli beslenemiyorum" to "I can't eat regularly",
+    "Günlük stres seviyeni nasıl tanımlarsın?" to "How would you describe your daily stress?",
+    "Toparlanma ihtiyacını planlarken bu bilgiyi de dikkate alırız." to "We take this into account when planning your recovery.",
+    "Nadiren stres yaşıyorum" to "I rarely feel stressed", "Bazen stresli oluyorum" to "I'm sometimes stressed", "Sık sık stres yaşıyorum" to "I'm often stressed", "Neredeyse her gün stres altındayım" to "I'm stressed almost every day",
+    "Mevcut yaşam tarzından ne kadar memnunsun?" to "How satisfied are you with your current lifestyle?",
+    "Fiziksel performansın nasıl?" to "How is your physical performance?",
+    "Bilmiyorsan boş bırakabilirsin." to "Leave it blank if you don't know.",
 )
 
 private fun qt(text: String): String = com.hedefit.app.ui.i18n.tr(text, questionEn[text] ?: text)
@@ -183,8 +227,8 @@ val CORE_QUESTION_INDICES = listOf(0, 4, 6, 7, 9, 10, 11)
 
 @Composable
 fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart: Boolean, onClose: () -> Unit, onSave: (ProfileUpdateData) -> Unit) {
-    val answers = remember(profile) { mutableStateListOf<String>().apply { addAll((profile.historyAnswers + List(15) { "" }).take(15).map { if (it == "Kas alma") "Kas kazanma" else it }) } }
-    val questionOrder = remember(quickStart) { if (quickStart) quickStartQuestionOrder else CORE_QUESTION_INDICES }
+    val answers = remember(profile) { mutableStateListOf<String>().apply { addAll((profile.historyAnswers + List(QUESTION_COUNT) { "" }).take(QUESTION_COUNT).map { if (it == "Kas alma") "Kas kazanma" else it }) } }
+    val questionOrder = remember(quickStart) { if (quickStart) quickStartQuestionOrder else CORE_QUESTION_INDICES + EXTRA_QUESTION_INDICES }
     var step by rememberSaveable { mutableIntStateOf(0) }
     var forward by remember { mutableStateOf(true) }
     val index = questionOrder[step]
@@ -225,6 +269,19 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
             Text("${step + 1}/${questionOrder.size}", Modifier.padding(horizontal = 14.dp), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelLarge)
         }
 
+        val fraction = (step + 1).toFloat() / questionOrder.size
+        Text(
+            when {
+                step == 0 -> com.hedefit.app.ui.i18n.tr("Isınma turu — rahat ol, birlikte başlıyoruz 👊", "Warm-up round — relax, we start together 👊")
+                fraction < .5f -> com.hedefit.app.ui.i18n.tr("Seni tanıdıkça plan netleşiyor, devam 🔥", "The plan sharpens as we get to know you 🔥")
+                fraction < .75f -> com.hedefit.app.ui.i18n.tr("Yarıyı geçtin, tam formdasın 💪", "Past halfway — you're in great form 💪")
+                step < questionOrder.lastIndex -> com.hedefit.app.ui.i18n.tr("Son cevaplar — bırakma, neredeyse bitti 🏁", "Last answers — almost there 🏁")
+                else -> com.hedefit.app.ui.i18n.tr("Son soru! Planın hazırlanıyor 🏁", "Final question! Your plan is next 🏁")
+            },
+            Modifier.fillMaxWidth().padding(horizontal = 22.dp), color = HedefitColors.TextSecondary,
+            style = MaterialTheme.typography.bodyMedium, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+
         AnimatedContent(
             targetState = step,
             modifier = Modifier.weight(1f),
@@ -250,6 +307,8 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
                 Spacer(Modifier.height(8.dp))
                 if (shown.freeText) {
                     OutlinedTextField(answers[shownIndex], { answers[shownIndex] = it }, modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp).staggeredEntrance(shownStep, 2), placeholder = { Text(com.hedefit.app.ui.i18n.tr("Yanıtını yaz… (boş bırakabilirsin)", "Type your answer… (optional)")) }, colors = questionnaireFieldColors())
+                } else if (shown.kind != QuestionKind.Choices) {
+                    QuestionExtras(shown, answers, shownIndex)
                 } else shown.choices.forEachIndexed { choiceIndex, choice ->
                     val selected = if (shown.multiSelect) choice in selectedProfileChoices(answers[shownIndex]) else answers[shownIndex] == choice
                     val bounce = selectionBounce(selected)
@@ -300,7 +359,7 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
             }
         }
 
-        val canContinue = answers[index].isNotBlank() || question.freeText
+        val canContinue = answers[index].isNotBlank() || question.freeText || question.kind == QuestionKind.Performance
         val isLast = step == questionOrder.lastIndex
         AnimatedVisibility(canContinue || question.multiSelect || isLast, enter = slideInVertically { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut()) {
             Button(
@@ -333,4 +392,62 @@ private fun suggestedTarget(profile: ProfileData): Double {
         profile.goal.contains("ver", true) -> weight - 6
         else -> weight + 4
     }.coerceAtLeast(40.0)
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QuestionExtras(question: ProfileQuestion, answers: MutableList<String>, index: Int) {
+    when (question.kind) {
+        QuestionKind.FocusMap -> {
+            val chosen = selectedProfileChoices(answers[index])
+            val toggle = { area: String -> answers[index] = toggleProfileChoice(answers[index], area, question.choices, null) }
+            com.hedefit.app.ui.components.MuscleMap(
+                selected = focusAreaByMuscle.filterValues { it in chosen }.keys,
+                onSelect = { id -> focusAreaByMuscle[id]?.let(toggle) },
+                modifier = Modifier.padding(vertical = 4.dp),
+                description = com.hedefit.app.ui.i18n.tr("Odaklanmak istediğin bölgelere dokun", "Tap the areas you want to focus on"),
+            )
+            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                question.choices.forEach { area ->
+                    FilterChip(
+                        selected = area in chosen, onClick = { toggle(area) },
+                        label = { Text(qt(area), fontWeight = FontWeight.SemiBold) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = HedefitColors.Lime, selectedLabelColor = HedefitColors.OnLime),
+                    )
+                }
+            }
+        }
+        QuestionKind.Slider -> {
+            // Varsayılan değer cevaba yazılır; kullanıcı kaydırmadan da devam edebilir.
+            LaunchedEffect(Unit) { if (answers[index].isBlank()) answers[index] = "5" }
+            val value = answers[index].toIntOrNull()?.coerceIn(0, 10) ?: 5
+            Column(Modifier.fillMaxWidth().padding(top = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$value", color = HedefitColors.Lime, style = MaterialTheme.typography.displayLarge, fontWeight = FontWeight.Black)
+                Slider(
+                    value = value.toFloat(), onValueChange = { answers[index] = it.toInt().toString() }, valueRange = 0f..10f, steps = 9,
+                    colors = SliderDefaults.colors(thumbColor = HedefitColors.Lime, activeTrackColor = HedefitColors.Lime),
+                )
+                Row(Modifier.fillMaxWidth()) {
+                    Text(com.hedefit.app.ui.i18n.tr("Hiç memnun değilim", "Not satisfied at all"), Modifier.weight(1f), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    Text(com.hedefit.app.ui.i18n.tr("Çok memnunum", "Very satisfied"), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        QuestionKind.Performance -> {
+            val squat = Regex("Squat: (\\d+)").find(answers[index])?.groupValues?.get(1).orEmpty()
+            val pullUp = Regex("Barfiks: (\\d+)").find(answers[index])?.groupValues?.get(1).orEmpty()
+            fun write(newSquat: String, newPullUp: String) {
+                answers[index] = listOfNotNull(
+                    newSquat.takeIf(String::isNotBlank)?.let { "Squat: $it" },
+                    newPullUp.takeIf(String::isNotBlank)?.let { "Barfiks: $it" },
+                ).joinToString(", ")
+            }
+            OutlinedTextField(squat, { write(it.filter(Char::isDigit).take(3), pullUp) }, label = { Text(com.hedefit.app.ui.i18n.tr("Squat (tekrar)", "Squat (reps)")) }, placeholder = { Text(com.hedefit.app.ui.i18n.tr("örn. 15", "e.g. 15")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, modifier = Modifier.fillMaxWidth(), colors = questionnaireFieldColors())
+            OutlinedTextField(pullUp, { write(squat, it.filter(Char::isDigit).take(3)) }, label = { Text(com.hedefit.app.ui.i18n.tr("Barfiks (tekrar)", "Pull-ups (reps)")) }, placeholder = { Text(com.hedefit.app.ui.i18n.tr("örn. 5", "e.g. 5")) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, modifier = Modifier.fillMaxWidth(), colors = questionnaireFieldColors())
+            Surface(color = HedefitColors.SurfaceHigh, shape = RoundedCornerShape(16.dp)) {
+                Text(com.hedefit.app.ui.i18n.tr("Bu bilgi, programının ve koçunun seviyeni daha iyi anlamasına yardım eder.", "This helps your program and coach understand your level."), Modifier.padding(16.dp), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        QuestionKind.Choices -> Unit
+    }
 }
