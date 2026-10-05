@@ -407,7 +407,10 @@
       "Pause for a moment, then extend the arms slowly under control without leaning back."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Seated_Cable_Rows/0.jpg",
+      "/exercise-images/Seated_Cable_Rows/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "back",
     "goalCompatibility": [
@@ -422,9 +425,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 4.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Seated_Cable_Rows/0.jpg",
+    "imageEnd": "/exercise-images/Seated_Cable_Rows/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -455,7 +458,10 @@
       "Lower slowly until the arms are straight again, keeping the torso still."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Bent_Over_Two-Dumbbell_Row/0.jpg",
+      "/exercise-images/Bent_Over_Two-Dumbbell_Row/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "back",
     "goalCompatibility": [
@@ -470,9 +476,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 4.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Bent_Over_Two-Dumbbell_Row/0.jpg",
+    "imageEnd": "/exercise-images/Bent_Over_Two-Dumbbell_Row/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -501,7 +507,10 @@
       "Return slowly to full extension, then repeat and switch sides."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/One-Arm_Dumbbell_Row/0.jpg",
+      "/exercise-images/One-Arm_Dumbbell_Row/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "back",
     "goalCompatibility": [
@@ -516,9 +525,9 @@
     "laterality": "unilateral",
     "isBodyweight": false,
     "metValue": 4,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/One-Arm_Dumbbell_Row/0.jpg",
+    "imageEnd": "/exercise-images/One-Arm_Dumbbell_Row/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -547,7 +556,10 @@
       "Pause at the bottom, then let the hands rise slowly until your arms are straight."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Wide-Grip_Lat_Pulldown/0.jpg",
+      "/exercise-images/Wide-Grip_Lat_Pulldown/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "back",
     "goalCompatibility": [
@@ -562,9 +574,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 4.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Wide-Grip_Lat_Pulldown/0.jpg",
+    "imageEnd": "/exercise-images/Wide-Grip_Lat_Pulldown/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -592,7 +604,10 @@
       "Return slowly to shoulder height without letting the band snap the arms back."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Straight-Arm_Pulldown/0.jpg",
+      "/exercise-images/Straight-Arm_Pulldown/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "back",
     "goalCompatibility": [
@@ -606,9 +621,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Straight-Arm_Pulldown/0.jpg",
+    "imageEnd": "/exercise-images/Straight-Arm_Pulldown/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -636,7 +651,10 @@
       "Lower slowly, resisting the band all the way down."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Dumbbell_Bicep_Curl/0.jpg",
+      "/exercise-images/Dumbbell_Bicep_Curl/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "upper_arms",
     "goalCompatibility": [
@@ -650,9 +668,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Dumbbell_Bicep_Curl/0.jpg",
+    "imageEnd": "/exercise-images/Dumbbell_Bicep_Curl/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -681,7 +699,10 @@
       "Lower slowly to a straight arm."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Hammer_Curls/0.jpg",
+      "/exercise-images/Hammer_Curls/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "upper_arms",
     "goalCompatibility": [
@@ -695,9 +716,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Hammer_Curls/0.jpg",
+    "imageEnd": "/exercise-images/Hammer_Curls/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -723,7 +744,10 @@
       "Return slowly until the forearms are about parallel to the floor."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Triceps_Pushdown/0.jpg",
+      "/exercise-images/Triceps_Pushdown/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "upper_arms",
     "goalCompatibility": [
@@ -737,9 +761,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Triceps_Pushdown/0.jpg",
+    "imageEnd": "/exercise-images/Triceps_Pushdown/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -768,7 +792,10 @@
       "Pause with the shoulder blades squeezed, then return slowly."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Face_Pull/0.jpg",
+      "/exercise-images/Face_Pull/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "shoulders",
     "goalCompatibility": [
@@ -783,9 +810,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Face_Pull/0.jpg",
+    "imageEnd": "/exercise-images/Face_Pull/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -814,7 +841,10 @@
       "Return slowly until the hands are back at chest level."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Bench_Press_-_With_Bands/0.jpg",
+      "/exercise-images/Bench_Press_-_With_Bands/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "chest",
     "goalCompatibility": [
@@ -829,9 +859,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 4.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Bench_Press_-_With_Bands/0.jpg",
+    "imageEnd": "/exercise-images/Bench_Press_-_With_Bands/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -860,7 +890,10 @@
       "Hold for a second, then bring the hands back to the chest."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Pallof_Press/0.jpg",
+      "/exercise-images/Pallof_Press/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "core",
     "goalCompatibility": [
@@ -875,9 +908,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Pallof_Press/0.jpg",
+    "imageEnd": "/exercise-images/Pallof_Press/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
@@ -905,7 +938,10 @@
       "Keep the elbow bend constant; do not turn the movement into a press."
     ],
     "category": "strength",
-    "images": [],
+    "images": [
+      "/exercise-images/Dumbbell_Flyes/0.jpg",
+      "/exercise-images/Dumbbell_Flyes/1.jpg"
+    ],
     "source": "supplement",
     "bodyPart": "chest",
     "goalCompatibility": [
@@ -919,9 +955,9 @@
     "laterality": "bilateral",
     "isBodyweight": false,
     "metValue": 3.5,
-    "imageStart": null,
-    "imageEnd": null,
-    "mediaStatus": "missing",
+    "imageStart": "/exercise-images/Dumbbell_Flyes/0.jpg",
+    "imageEnd": "/exercise-images/Dumbbell_Flyes/1.jpg",
+    "mediaStatus": "complete",
     "isActive": true,
     "requiredEquipment": [
       [
