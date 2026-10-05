@@ -888,7 +888,7 @@ class HedefitRepository(
                 .put("weightKg", it.profile.weightKg ?: JSONObject.NULL)
                 .put("environment", it.profile.environment)
                 .put("equipment", it.profile.equipment)
-                .put("assessmentAnswers", JSONArray(it.profile.historyAnswers.take(30))))
+                .put("assessmentAnswers", JSONArray(aiSafeHistory(it.profile.historyAnswers.take(30)))))
             val goalType = when {
                 it.profile.goal.contains("yağ", true) -> "fatLoss"
                 it.profile.goal.contains("kilo ver", true) || it.profile.goal.contains("zayıf", true) -> "lose"
@@ -1027,7 +1027,7 @@ class HedefitRepository(
             .put("goal", profile?.goal ?: "Kas geliştirmek")
             .put("environment", profile?.environment ?: "Salon")
             .put("equipment", profile?.equipment ?: "Tam salon")
-            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+            .put("limitations", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
 
         val payload = JSONObject()
             .put("action", "readiness_checkin")
@@ -1079,7 +1079,7 @@ class HedefitRepository(
             .put("goal", profile?.goal ?: "Kas geliştirmek")
             .put("environment", profile?.environment ?: "Salon")
             .put("equipment", profile?.equipment ?: "Tam salon")
-            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+            .put("limitations", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
 
         val payload = JSONObject()
             .put("action", "replace_exercise")
@@ -1131,7 +1131,7 @@ class HedefitRepository(
             .put("goal", profile?.goal ?: "Kas geliştirmek")
             .put("environment", profile?.environment ?: "Salon")
             .put("equipment", profile?.equipment ?: "Tam salon")
-            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+            .put("limitations", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
 
         val paramsObj = JSONObject()
             .put("trigger", trigger)
@@ -1610,3 +1610,13 @@ class HedefitRepository(
         } }
     }
 }
+
+/**
+ * AI sağlayıcılarına giden cevap dizisinden hassas slotları boşaltır (indeksler hizalı kalır).
+ * Sunucu aynı süzgeci uygular (lib/onboarding-questions.ts → AI_SENSITIVE_QUESTIONS); burada
+ * veri hiç cihazdan çıkmasın diye ikinci kez yapılır.
+ */
+internal val AI_SENSITIVE_HISTORY_SLOTS = setOf(16, 17, 19, 20, 21)
+
+internal fun aiSafeHistory(answers: List<String>): List<String> =
+    answers.mapIndexed { index, answer -> if (index in AI_SENSITIVE_HISTORY_SLOTS) "" else answer }

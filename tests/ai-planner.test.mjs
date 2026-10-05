@@ -151,8 +151,49 @@ test("AI sağlayıcısı başarıyla plan üretir", { concurrency: false }, asyn
     const fullHistory = scenarios[0].payload.history;
     assert.equal(fullHistory.filter(Boolean).length, 15, "test profili 15 sorunun tamamını doldurmalı");
     for (const [name, index] of Object.entries(QUESTION)) {
+      if (!fullHistory[index]) continue; // 15 ilk soru dolu; sonradan eklenen sorular bu profilde boş
       assert.ok(openAiBody.includes(QUESTION_LABELS[name]), `${QUESTION_LABELS[name]} OpenAI isteğinde bulunmalı`);
       assert.ok(openAiBody.includes(fullHistory[index]), `${QUESTION_LABELS[name]} yanıtı OpenAI isteğinde bulunmalı`);
+    }
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreAuthEnv();
+    if (previousKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previousKey;
+  }
+});
+
+test("sağlık, alerji, alışkanlık, stres ve memnuniyet cevapları OpenAI isteğine GİTMEZ; odak ve sakatlık gider", { concurrency: false }, async () => {
+  const previousKey = process.env.OPENAI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  const restoreAuthEnv = withSupabaseAuthEnv();
+  const requestBodies = [];
+  process.env.OPENAI_API_KEY = "test-key";
+  globalThis.fetch = withUsageMock({ isPremium: false, allowed: true, currentCount: 1 }, async (url, init) => {
+    requestBodies.push(String(init?.body || ""));
+    const generated = {
+      title: "Test planı", profileSummary: "Test", rationale: "Test", safetyNote: "Test",
+      analysis: { experienceLevel: "Yeni", weeklyFrequency: "1–2 gün", sessionMinutes: 30, primaryGoal: "Güç", intensity: "Düşük", equipmentMode: "Ekipmansız", focusAreas: ["Tüm vücut"], adaptationNotes: [] },
+      weeklySchedule: [{ day: "Pazartesi", focus: "Tüm vücut", durationMinutes: 30 }], progression: ["1", "2", "3", "4"],
+      workouts: [1, 2, 3, 4].map((index) => ({ id: `ex-${index}`, name: `Hareket ${index}`, english: `Exercise ${index}`, area: "Core", sets: 3, reps: "10 tekrar", restSeconds: 60, instructions: "Kontrollü yap." })),
+    };
+    return Response.json(openAiResponse(JSON.stringify(generated)));
+  });
+  try {
+    const history = scenarios[0].payload.history.slice();
+    while (history.length < 23) history.push("");
+    history[QUESTION.focusAreas] = "ODAK-GOGUS-SIRT";
+    history[QUESTION.healthConditions] = "GIZLI-DIYABET";
+    history[QUESTION.foodAllergies] = "GIZLI-DENIZ-URUNU";
+    history[QUESTION.habits] = "GIZLI-SIGARA";
+    history[QUESTION.stress] = "GIZLI-STRES";
+    history[QUESTION.lifestyleSatisfaction] = "GIZLI-MEMNUNIYET";
+    const response = await POST(authorizedRequest("http://localhost/api/generate-plan", { method: "POST", body: JSON.stringify({ ...scenarios[0].payload, history }) }));
+    assert.equal(response.status, 200);
+    const body = requestBodies.join("\n");
+    assert.ok(body.includes("ODAK-GOGUS-SIRT"), "odak bölgeleri plan için gider");
+    assert.ok(body.includes(history[QUESTION.injuries]), "sakatlık program güvenliği için gider");
+    for (const secret of ["GIZLI-DIYABET", "GIZLI-DENIZ-URUNU", "GIZLI-SIGARA", "GIZLI-STRES", "GIZLI-MEMNUNIYET"]) {
+      assert.ok(!body.includes(secret), `${secret} üçüncü taraf AI isteğinde bulunmamalı`);
     }
   } finally {
     globalThis.fetch = previousFetch;

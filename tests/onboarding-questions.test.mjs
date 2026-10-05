@@ -92,3 +92,15 @@ test("her soru için metin ve seçenek girdisi vardır", async () => {
     assert.equal([...questions.matchAll(/^\s*"/gm)].length, QUESTION_COUNT, `${file}: soru sayısı ${QUESTION_COUNT} olmalı`);
   }
 });
+
+test("AI'ya giden cevaplardan sağlık/alerji/alışkanlık/stres/memnuniyet çıkar, sakatlık kalır", async () => {
+  const { AI_SENSITIVE_QUESTIONS, redactSensitiveAnswers, labelledAnswers, QUESTION } = await import("../lib/onboarding-questions.ts");
+  const history = Array.from({ length: QUESTION_COUNT }, (_, index) => `cevap-${index}`);
+  const redacted = redactSensitiveAnswers(history, "");
+  for (const index of AI_SENSITIVE_QUESTIONS) assert.equal(redacted[index], "", `slot ${index} boşalmalı`);
+  assert.equal(redacted[QUESTION.injuries], `cevap-${QUESTION.injuries}`, "sakatlık program güvenliği için kalır");
+  assert.equal(redacted.length, history.length, "indeksler hizalı kalmalı");
+  const labels = labelledAnswers(history).map((entry) => entry.answer);
+  for (const index of AI_SENSITIVE_QUESTIONS) assert.ok(!labels.includes(`cevap-${index}`), `etiketli listede slot ${index} olmamalı`);
+  assert.ok(labelledAnswers(history, { allowHealthContext: true }).some((entry) => entry.answer === `cevap-${QUESTION.healthConditions}`), "açık izinle gönderilebilir");
+});

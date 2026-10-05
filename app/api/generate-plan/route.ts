@@ -1,6 +1,6 @@
 import { jsonSchema } from "ai";
 import { extractSessionMinutes, extractWeeklyDays } from "../../../lib/training-profile.ts";
-import { QUESTION, labelledAnswers } from "../../../lib/onboarding-questions.ts";
+import { QUESTION, labelledAnswers, redactSensitiveAnswers } from "../../../lib/onboarding-questions.ts";
 import { normalizeAnswers } from "../../../lib/goal-plan.ts";
 import { authenticateRequest } from "../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../lib/rate-limit.ts";
@@ -109,7 +109,8 @@ function text(value: unknown) {
 }
 
 export function profileSignals(payload: Record<string, unknown>) {
-  const history = Array.isArray(payload.history) ? payload.history.map(text) : [];
+  // Sağlık/alerji/alışkanlık/stres cevapları plan için gerekli değil ve AI sağlayıcısına gitmemeli.
+  const history = Array.isArray(payload.history) ? redactSensitiveAnswers(payload.history.map(text), "") : [];
   // Hedef planı varsa haftalık gün ve seans süresi ORADAN gelir: kullanıcı o
   // ekranda "haftada 3 gün, 45 dakika" diye taahhüt etmiştir; profil testindeki
   // daha eski cevabın onu ezmesi planı taahhüdüyle çelişkiye düşürürdü.
@@ -262,7 +263,7 @@ export async function POST(request: Request) {
     recentExerciseIds: await loadRecentExerciseIds(request),
   };
   const locale = payload.locale === "en" ? "en" : "tr";
-  const profile = { ...payload };
+  const profile = { ...payload, ...(Array.isArray(payload.history) ? { history: redactSensitiveAnswers(payload.history.map(text), "") } : {}) };
   delete profile.photoDataUrl;
   delete profile.exerciseCatalog;
   delete profile.locale;

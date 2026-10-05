@@ -1,6 +1,7 @@
 import { exerciseRecords as exerciseData } from "./exercise-records.ts";
 import legacyExerciseData from "../data/legacy-exercises.json" with { type: "json" };
 import { translateExerciseLabel, translateExerciseName } from "./exercise-translations.ts";
+import { readAsset, readImpact, readModalities, readSubcategories } from "./exercise-modality.ts";
 import type { AIExerciseContext, Exercise, ExerciseFilters } from "@/types/exercise";
 
 const safeText = (value: unknown, fallback = "", maxLength = 300) => typeof value === "string" ? value.trim().slice(0, maxLength) : fallback;
@@ -62,6 +63,16 @@ export function normalizeExercise(value: unknown): Exercise | null {
     imageStart: safeImage(item.imageStart),
     imageEnd: safeImage(item.imageEnd),
     mediaStatus: item.mediaStatus === "partial" || item.mediaStatus === "missing" ? item.mediaStatus : "complete",
+    ...(() => {
+      const modalities = readModalities(item.modalities);
+      const impact = readImpact(item.impact);
+      const asset = readAsset(item.asset);
+      return {
+        ...(modalities.length ? { modalities, subcategories: readSubcategories(modalities, item.subcategories) } : {}),
+        ...(impact ? { impact } : {}),
+        ...(asset ? { asset } : {}),
+      };
+    })(),
     isActive: item.isActive !== false,
   };
 }

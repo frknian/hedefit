@@ -137,10 +137,30 @@ export const QUESTION_LABELS: Record<keyof typeof QUESTION, string> = {
   performance: "Fiziksel performans (squat / barfiks tekrarı)",
 };
 
-/** Cevapları soru etiketleriyle eşleştirir; boş cevaplar listeye girmez. */
-export function labelledAnswers(history: string[]): { question: string; answer: string }[] {
+/**
+ * Sağlık ve yaşam tarzı cevapları. Üçüncü taraf AI sağlayıcılarına VARSAYILAN olarak gönderilmez:
+ * plan veya koç yanıtı için gerekli değildir ve kullanıcının açık izni olmadan sağlık verisi
+ * dışarı çıkmamalıdır. (Sakatlık/ağrı bilinçli olarak burada DEĞİL: program güvenliği için gerekir.)
+ */
+export const AI_SENSITIVE_QUESTIONS: number[] = [
+  QUESTION.healthConditions,
+  QUESTION.foodAllergies,
+  QUESTION.habits,
+  QUESTION.stress,
+  QUESTION.lifestyleSatisfaction,
+];
+
+/** Hassas slotları boşaltır; indeksler hizalı kalır (etiketsiz dizilerde de güvenli). */
+export function redactSensitiveAnswers<T>(answers: T[], blank: T, allowHealthContext = false): T[] {
+  if (allowHealthContext) return answers.slice();
+  return answers.map((answer, index) => (AI_SENSITIVE_QUESTIONS.includes(index) ? blank : answer));
+}
+
+/** Cevapları soru etiketleriyle eşleştirir; boş cevaplar listeye girmez. Hassas cevaplar varsayılan olarak çıkar. */
+export function labelledAnswers(history: string[], options: { allowHealthContext?: boolean } = {}): { question: string; answer: string }[] {
+  const safe = redactSensitiveAnswers(history, "", options.allowHealthContext === true);
   return Object.entries(QUESTION)
-    .map(([name, index]) => ({ question: QUESTION_LABELS[name as keyof typeof QUESTION], answer: (history[index] || "").trim() }))
+    .map(([name, index]) => ({ question: QUESTION_LABELS[name as keyof typeof QUESTION], answer: (safe[index] || "").trim() }))
     .filter((entry) => entry.answer !== "");
 }
 

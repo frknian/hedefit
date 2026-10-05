@@ -15,6 +15,7 @@
 // Ayrıca her alan tür ve aralık olarak doğrulanır: bu veri doğrudan prompta
 // gömülecek, güvenilmeyen girdidir.
 
+import { redactSensitiveAnswers } from "../onboarding-questions.ts";
 import type { IntelligenceInput } from "./intelligence.ts";
 import type { NutritionGoalType } from "../nutrition-goals.ts";
 import { sanitizeNutritionGoal } from "../nutrition-goals.ts";
@@ -172,8 +173,9 @@ export function sanitizeCoachSignals(value: unknown, legacyContext?: string): In
       weightKg: bounded(profile?.weightKg, 20, 400),
       environment: text(profile?.environment, 40),
       equipment: text(profile?.equipment, 200),
+      // Hassas slotlar, boş cevaplar süzülmeden ÖNCE indeksine göre çıkarılır (sonrasında indeks kaybolur).
       assessmentAnswers: Array.isArray(profile?.assessmentAnswers)
-        ? profile.assessmentAnswers.map((answer) => text(answer, 100)).filter((answer): answer is string => Boolean(answer)).slice(0, 30)
+        ? redactSensitiveAnswers(profile.assessmentAnswers.map((answer) => text(answer, 100)), undefined).filter((answer): answer is string => Boolean(answer)).slice(0, 30)
         : undefined,
     },
     goal: {
