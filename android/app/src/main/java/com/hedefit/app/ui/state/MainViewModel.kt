@@ -2216,6 +2216,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Wellness oturumunu sunucudan alır; hata antrenmanı başlatmaz, yalnızca hafif bir mesaj gösterir. */
+    fun loadWellnessSession(kind: com.hedefit.app.data.model.WellnessKind, minutes: Int, locale: String, onReady: (com.hedefit.app.data.model.WellnessSessionData) -> Unit) {
+        viewModelScope.launch {
+            runCatching { repository.wellnessSession(kind.wire, minutes, locale) }
+                .onSuccess { session -> if (session.exercises.isEmpty()) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Şimdilik uygun bir oturum bulunamadı.", "No suitable session found right now.")) } else onReady(session) }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
     fun loadAiMemories() {
         if (_state.value.aiMemoryBusy) return
         _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }

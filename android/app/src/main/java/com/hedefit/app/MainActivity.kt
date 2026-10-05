@@ -190,6 +190,7 @@ class MainActivity : ComponentActivity() {
                 var workoutSummary by remember { mutableStateOf<WorkoutSummary?>(null) }
                 var libraryMapMode by rememberSaveable { mutableStateOf(false) }
                 var libraryInitialMuscle by rememberSaveable { mutableStateOf("") }
+                var libraryInitialModality by rememberSaveable { mutableStateOf("") }
                 var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true && !com.hedefit.app.ui.layout.detectTablet(this@MainActivity) -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
                 // Tablet ev/ofis cihazıdır: Rota girişleri antrenman standını (büyük sayaçlı aktif antrenman) açar.
                 // Katlanan telefonlar GPS ile dışarıda kullanıldığı için Rota'yı korur.
@@ -585,6 +586,7 @@ class MainActivity : ComponentActivity() {
                         UtilityPage.ExerciseLibrary -> ExerciseLibraryScreen(
                             startWithMap = libraryMapMode,
                             initialMuscle = libraryInitialMuscle,
+                            initialModality = libraryInitialModality,
                             items = uiState.exerciseLibrary,
                             loading = uiState.exerciseLibraryBusy,
                             language = preferences.language,
@@ -610,13 +612,14 @@ class MainActivity : ComponentActivity() {
                         UtilityPage.Discover -> com.hedefit.app.ui.screens.DiscoverScreen(
                             language = preferences.language,
                             onBack = { utilityPage = UtilityPage.Main },
-                            onSearch = { libraryMapMode = false; libraryInitialMuscle = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            onSearch = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                             onMuscle = { muscle -> markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = muscle; mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
-                            onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                             onOpenCardio = { utilityPage = UtilityPage.Cardio },
                             onOpenRoute = { utilityPage = UtilityPage.Route },
                             onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner },
                             onOpenGame = { utilityPage = UtilityPage.Main; selected = AppDestination.Game },
+                            onModality = { modality -> libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = modality; mainViewModel.loadExerciseLibrary(modality = modality, locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                         )
                         UtilityPage.EquipmentScanner -> EquipmentScannerScreen(
                             onBack = { utilityPage = UtilityPage.Main },
@@ -801,9 +804,10 @@ class MainActivity : ComponentActivity() {
                                 stepSource = uiState.stepSource,
                                 showAds = adsAllowed && uiState.limits().bannerAds,
                                 onOpenCoach = { selected = AppDestination.Coach },
-                                onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
-                                onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenDiscover = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); utilityPage = UtilityPage.Discover },
+                                onStartWellness = { kind -> mainViewModel.loadWellnessSession(kind, if (kind == com.hedefit.app.data.model.WellnessKind.PilatesToday) 20 else 15, preferences.language) { session -> activeWorkoutExercises = session.exercises; mainViewModel.loadPreviousPerformance(session.exercises); activeWorkout = true } },
                                 onSaveSleep = mainViewModel::saveSleep,
                                 onOpenGame = { selected = AppDestination.Game },
                                 onOpenProgress = { selected = AppDestination.Progress },
@@ -822,8 +826,8 @@ class MainActivity : ComponentActivity() {
                             )
                             AppDestination.Workout -> WorkoutPlanScreen(padding, expanded, uiState.dashboard?.workouts.orEmpty(), uiState.dashboard?.workoutPrograms.orEmpty(), uiState.exerciseLibrary, uiState.exerciseLibraryBusy, uiState.dataLoading, uiState.planGenerating, mainViewModel::generatePlan, onStartWorkout = {
                                 if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
-                            }, hasActiveWorkout = remember(workoutStoreVersion, activeWorkout) { activeWorkoutStore.hasRecoverable() }, onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
-                                onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            }, hasActiveWorkout = remember(workoutStoreVersion, activeWorkout) { activeWorkoutStore.hasRecoverable() }, onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
                                 onOpenCardio = { utilityPage = UtilityPage.Cardio },
                                 onOpenRoute = ::openRouteOrStand,

@@ -41,6 +41,10 @@ class DebugGalleryActivity : ComponentActivity() {
             AppLang.en = lang == "en"
             HedefitTheme(darkTheme = true) {
                 when (screen) {
+                    "discover" -> com.hedefit.app.ui.screens.DiscoverScreen(
+                        language = lang, onBack = { finish() }, onSearch = {}, onMuscle = {}, onOpenLibrary = {}, onOpenCardio = {},
+                        onOpenRoute = {}, onOpenScanner = {}, onOpenGame = {}, onModality = {},
+                    )
                     "library" -> {
                         val tier = Tier.valueOf(intent.getStringExtra("tier") ?: "Free")
                         var items by remember { mutableStateOf<List<ExerciseCatalogData>>(emptyList()) }

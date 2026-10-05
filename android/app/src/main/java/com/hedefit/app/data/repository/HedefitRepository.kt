@@ -341,6 +341,13 @@ class HedefitRepository(
             .requireSuccess("Hesap silinemedi.")
     }
 
+    /** Sunucuda deterministik üretilen Pilates / toparlanma / mobilite oturumu (AI yok). */
+    suspend fun wellnessSession(kind: String, minutes: Int, locale: String): com.hedefit.app.data.model.WellnessSessionData =
+        com.hedefit.app.data.model.parseWellnessSession(
+            api.post("/api/workout/adapt", JSONObject().put("action", "wellness_session").put("kind", kind).put("minutes", minutes).put("locale", locale).put("localDate", java.time.LocalDate.now().toString()))
+                .requireSuccess("Oturum hazırlanamadı.").jsonObject(),
+        )
+
     /** İsteğe bağlı döngü profili. Sunucu tabloyu henüz kurmadıysa (503) null: özellik sessizce kapalı kalır. */
     suspend fun cycleSnapshot(): com.hedefit.app.data.model.CycleSnapshot? {
         val response = api.get("/api/cycle?localDate=${java.time.LocalDate.now()}")

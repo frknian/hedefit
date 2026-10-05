@@ -32,6 +32,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material.icons.filled.AccessibilityNew
@@ -154,6 +156,7 @@ fun HomeScreen(
     onOpenLibrary: () -> Unit = {},
     onOpenMuscleMap: () -> Unit = {},
     onOpenDiscover: () -> Unit = {},
+    onStartWellness: (com.hedefit.app.data.model.WellnessKind) -> Unit = {},
     onOpenProgress: () -> Unit = {},
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
@@ -210,6 +213,8 @@ fun HomeScreen(
                 }
             }
             item { NextStepCard(data, en, waterGoalMl, onOpenProgram, onOpenNutrition, { metricDialog = "water" }, onOpenCoach) }
+            val wellnessUp = com.hedefit.app.data.model.wellnessProminent(data.profile.gender, data.profile.historyAnswers.getOrNull(8).orEmpty())
+            if (wellnessUp) item { WellnessRow(en, onStartWellness) }
             item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
             item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) { metricDialog = "weight" } }
             item {
@@ -234,6 +239,7 @@ fun HomeScreen(
                     onSleep = { metricDialog = "sleep" },
                 )
             }
+            if (!wellnessUp) item { WellnessRow(en, onStartWellness) }
             item {
                 HedefitCard(Modifier.fillMaxWidth(), onClick = onOpenDiscover, contentPadding = PaddingValues(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -291,6 +297,36 @@ fun HomeScreen(
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
     )
+}
+
+/** Bugün için üç hazır oturum: herkes için; cinsiyete kilitli değil. */
+@Composable
+private fun WellnessRow(en: Boolean, onStart: (com.hedefit.app.data.model.WellnessKind) -> Unit) {
+    val cards = listOf(
+        Triple(com.hedefit.app.data.model.WellnessKind.PilatesToday, if (en) "Pilates for Today" else "Bugün için Pilates", if (en) "20 min • Core & posture" else "20 dk • Core ve duruş"),
+        Triple(com.hedefit.app.data.model.WellnessKind.LowImpactRecovery, if (en) "Low Impact Recovery" else "Düşük Etkili Toparlanma", if (en) "15 min • Gentle & joint-friendly" else "15 dk • Yumuşak ve eklem dostu"),
+        Triple(com.hedefit.app.data.model.WellnessKind.PostureMobility, if (en) "Posture & Mobility" else "Duruş ve Mobilite", if (en) "15 min • Back, shoulders, hips" else "15 dk • Sırt, omuz, kalça"),
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        HfSectionHeader(if (en) "Suggested for today" else "Bugün için öneriler")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 18.dp)) {
+            items(cards.size) { index ->
+                val (kind, title, subtitle) = cards[index]
+                HedefitCard(Modifier.width(214.dp), onClick = { onStart(kind) }, contentPadding = PaddingValues(16.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        HfIconBadge(when (kind) {
+                            com.hedefit.app.data.model.WellnessKind.PilatesToday -> Icons.Default.SelfImprovement
+                            com.hedefit.app.data.model.WellnessKind.LowImpactRecovery -> Icons.Default.Spa
+                            else -> Icons.Default.AccessibilityNew
+                        }, HedefitColors.Lime, 36.dp, 18.dp)
+                        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2)
+                        Text(subtitle, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                        Text((if (en) "Start" else "Başla") + " ›", color = HedefitColors.Lime, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+            }
+        }
+    }
 }
 
 private class QuickAction(val icon: androidx.compose.ui.graphics.vector.ImageVector, val tint: Color, val title: String, val subtitle: String, val onClick: () -> Unit)

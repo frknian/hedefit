@@ -11,6 +11,10 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +45,7 @@ fun DiscoverScreen(
     onOpenRoute: () -> Unit,
     onOpenScanner: () -> Unit,
     onOpenGame: () -> Unit,
+    onModality: (String) -> Unit = {},
 ) {
     val en = language == "en"
     ScreenContainer {
@@ -64,6 +69,23 @@ fun DiscoverScreen(
                             description = if (en) "Tap a muscle to list its exercises" else "Hareketlerini görmek için bir kasa dokun",
                         )
                         Text(if (en) "Front and back view • tap to see the exercises" else "Ön ve arka görünüm • dokununca hareketleri listelenir", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            item { HfSectionHeader(if (en) "Training styles" else "Antrenman tarzları") }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        HfActionTile(Icons.Default.SelfImprovement, HedefitColors.Lime, "Pilates", if (en) "Core, posture, control" else "Core, duruş, kontrol", { onModality("pilates") }, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Mobility" else "Mobilite", if (en) "Hips, back, shoulders" else "Kalça, sırt, omuz", { onModality("mobility") }, Modifier.weight(1f).fillMaxHeight())
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        HfActionTile(Icons.Default.FitnessCenter, HedefitColors.Lime, "Barre", if (en) "Lower body and balance" else "Alt vücut ve denge", { onModality("barre") }, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Lime, if (en) "Low impact" else "Düşük etkili", if (en) "No jumping, joint-friendly" else "Zıplamadan, eklem dostu", { onModality("low_impact") }, Modifier.weight(1f).fillMaxHeight())
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        HfActionTile(Icons.Default.Spa, HedefitColors.Lime, if (en) "Recovery" else "Toparlanma", if (en) "Stretching and breathing" else "Esneme ve nefes", { onModality("recovery") }, Modifier.weight(1f).fillMaxHeight())
+                        Spacer(Modifier.weight(1f))
                     }
                 }
             }

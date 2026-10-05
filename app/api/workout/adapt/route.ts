@@ -7,6 +7,9 @@ import { replaceExercise, type ReplacementReason } from "../../../../lib/trainin
 import { adaptWorkoutPlanOnTheFly, type PlanAdaptationParams } from "../../../../lib/training/plan-adapter.ts";
 import { normalizeTrainingProfile } from "../../../../lib/training/profile-normalizer.ts";
 import type { LimitationArea } from "../../../../lib/training/types.ts";
+import { buildWellnessSession, type WellnessKind } from "../../../../lib/training/wellness-session.ts";
+import { loadPlanTier } from "../../../../lib/plan-tier.ts";
+import { resolveRotationDate } from "../../../../lib/training/rotation.ts";
 
 export const runtime = "edge";
 
@@ -42,6 +45,18 @@ export async function POST(request: Request) {
     const exercises = Array.isArray(body.exercises) ? (body.exercises as WorkoutExerciseItem[]) : [];
     const result = evaluateReadinessAndAdapt(checkin, exercises, profile);
     return Response.json(result);
+  }
+
+  // 1b. Wellness oturumu: Pilates / düşük etkili toparlanma / duruş ve mobilite (AI yok, deterministik).
+  if (action === "wellness_session") {
+    const kinds: WellnessKind[] = ["pilates_today", "low_impact_recovery", "posture_mobility"];
+    const kind = kinds.find((value) => value === body.kind);
+    if (!kind) return Response.json({ error: "invalid_kind" }, { status: 400 });
+    const minutes = typeof body.minutes === "number" && Number.isFinite(body.minutes) ? body.minutes : 20;
+    const day = resolveRotationDate(body.localDate).toISOString().slice(0, 10);
+    const tier = await loadPlanTier(request, auth.user.id);
+    const session = buildWellnessSession({ kind, minutes, level: profile.fitnessLevel, tier, seed: `${auth.user.id}:${day}`, locale });
+    return Response.json({ session, tier });
   }
 
   // 2. Exercise Replacement
