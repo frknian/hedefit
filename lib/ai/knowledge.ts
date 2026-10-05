@@ -15,7 +15,8 @@
 
 export type KnowledgeTopic =
   | "nutrition" | "weight_management" | "strength_training"
-  | "walking" | "running" | "recovery" | "sleep" | "hydration" | "habit_building";
+  | "walking" | "running" | "recovery" | "sleep" | "hydration" | "habit_building"
+  | "pilates" | "mobility" | "low_impact" | "cycle_training";
 
 export type KnowledgeChunk = {
   id: string;
@@ -99,6 +100,54 @@ const CHUNKS: KnowledgeChunk[] = [
     source: "Genel dayanıklılık antrenmanı ilkeleri",
     updatedAt: UPDATED_AT,
   },
+  {
+    id: "pilates-basics",
+    title: "Pilates ilkeleri",
+    topic: "pilates",
+    content: "Pilates yavaş, kontrollü hareketi nefesle birleştirir; core, duruş ve kalça stabilitesini hedefler. Haftada 2–3 kısa seans yeni başlayanlar için yeterlidir. Kalite sayıdan önemlidir: bel minderden kalkıyorsa menzili küçült ya da bacakları yükselt.",
+    source: "Genel Pilates antrenman ilkeleri",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    id: "mobility-routine",
+    title: "Mobilite rutini",
+    topic: "mobility",
+    content: "Mobilite için günde 5–10 dakikalık, ağrısız aralıkta yapılan hareketler yeterli olabilir. Esnemeyi zorlamak yerine nefesle yavaşça derinleştir; keskin ağrı, uyuşma ya da karıncalanma varsa hareketi bırak.",
+    source: "Genel mobilite ve esneklik ilkeleri",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    id: "low-impact-cardio",
+    title: "Düşük etkili kardiyo",
+    topic: "low_impact",
+    content: "Düşük etkili kardiyo zıplamayı azaltarak eklem yükünü düşürür: tempolu yürüyüş, bisiklet, yerinde yürüyüş ve eliptik gibi. Konuşabildiğin ama şarkı söyleyemediğin tempo, yeni başlayanlar için uygun bir orta yoğunluk işaretidir.",
+    source: "Genel kardiyovasküler antrenman ilkeleri",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    id: "active-recovery",
+    title: "Aktif toparlanma",
+    topic: "recovery",
+    content: "Aktif toparlanma; hafif yürüyüş, mobilite, nefes çalışması ve kısa esnemeyi kapsar. Yorgun ya da uykusuz günlerde antrenmanı tamamen bırakmak yerine hacmi ve yoğunluğu azaltmak çoğu kişi için sürdürülebilir bir yaklaşımdır.",
+    source: "Genel toparlanma ilkeleri",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    id: "menstrual-training",
+    title: "Adet döneminde antrenman",
+    topic: "cycle_training",
+    content: "Adet döneminde egzersiz genel olarak güvenli kabul edilir; enerji ve rahatsızlık kişiden kişiye ve döngüden döngüye değişir. Kendini nasıl hissettiğine göre ayarla: iyi hissediyorsan normal antrenman, yorgun ya da kramplıysan hafif yoğunluk, Pilates, mobilite veya yürüyüş iyi seçenekler olabilir. Şiddetli ağrı, çok yoğun kanama ya da belirgin düzensizlik için bir sağlık profesyoneline danış.",
+    source: "Genel kadın sağlığı ve egzersiz ilkeleri (kişiye göre ayarlama)",
+    updatedAt: UPDATED_AT,
+  },
+  {
+    id: "iron-foods-general",
+    title: "Demir içeren besinler",
+    topic: "nutrition",
+    content: "Dengeli beslenmede demir kaynakları arasında kırmızı et, tavuk, baklagiller, yeşil yapraklı sebzeler ve tam tahıllar bulunur; C vitamini içeren besinlerle birlikte tüketmek bitkisel demirin emilimini destekler. Takviye kullanımı ve dozu için tahlil sonucuna göre bir sağlık profesyoneline danışılmalıdır.",
+    source: "Genel beslenme ilkeleri (takviye dozu önerilmez)",
+    updatedAt: UPDATED_AT,
+  },
 ];
 
 // Konu başına anahtar kelimeler. Sorguda geçen kelime bir konuyu işaret
@@ -113,6 +162,10 @@ const TOPIC_KEYWORDS: Record<KnowledgeTopic, RegExp> = {
   sleep: /uyku|uyu|sleep/i,
   hydration: /su|sıvı|hidrasyon|water|hydrat/i,
   habit_building: /alışkanlık|süreklilik|motivasyon|habit|consisten|streak/i,
+  pilates: /pilates|barre/i,
+  mobility: /mobilite|esnek|esne|gerinme|mobility|stretch|flexib/i,
+  low_impact: /düşük etkili|zıplama|eklem dostu|low[- ]?impact|joint[- ]friendly/i,
+  cycle_training: /adet|regl|döngü|menstr|period|cycle/i,
 };
 
 function scoreChunk(chunk: KnowledgeChunk, query: string): number {

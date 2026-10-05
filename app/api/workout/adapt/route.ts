@@ -13,6 +13,8 @@ import { adaptTodaysPlan } from "../../../../lib/training/adaptive-engine.ts";
 import { validateCheckin } from "../../../../lib/checkin.ts";
 import { describeCycle } from "../../../../lib/cycle.ts";
 import { adaptiveCapabilities } from "../../../../lib/entitlements.ts";
+import { explainAdaptation } from "../../../../lib/ai/adaptive-explainer.ts";
+import { hasRemoteProvider } from "../../../../lib/ai/providers/openai-compatible.ts";
 import { loadCheckins, loadCycleState, DEFAULT_PERSONALIZATION } from "../../../../lib/health-store.ts";
 import { resolveRotationDate } from "../../../../lib/training/rotation.ts";
 
@@ -87,8 +89,12 @@ export async function POST(request: Request) {
     const cycle = state.ok && caps.cycleAdaptation && personalization.cycleEnabled ? describeCycle(state.value.profile, day) : null;
     const recent = typeof body.recentSessions3d === "number" && Number.isFinite(body.recentSessions3d) ? Math.max(0, Math.min(10, Math.floor(body.recentSessions3d))) : 0;
     const result = adaptTodaysPlan({ profile, exercises, checkin, cycle, tier, adaptiveEnabled: personalization.adaptiveEnabled, recentSessions3d: recent, locale, seed: `${auth.user.id}:${day}` });
-    // AI açıklaması (Premium) Faz 7'de bu sonucun ÜZERİNE eklenir; burada yalnızca şablon açıklama döner.
-    return Response.json({ result, tier });
+    // Premium: kişiye özel AI açıklaması şablonun ÜZERİNE eklenir; başarısızlıkta şablon geçerli kalır.
+    let aiExplanation: string | null = null;
+    if (body.explain === true && caps.aiAdaptiveCoach && result.adapted && hasRemoteProvider() && rateLimit(`adapt-explain:${auth.user.id}`, 6, 3_600_000).ok) {
+      aiExplanation = await explainAdaptation({ result, locale });
+    }
+    return Response.json({ result, tier, aiExplanation });
   }
 
   // 2. Exercise Replacement

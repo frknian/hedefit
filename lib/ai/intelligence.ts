@@ -20,6 +20,7 @@ import { calculateNutritionGoal, calculateWeeklyWeightTrend, type NutritionGoal,
 import { progressionSuggestion, recoveryScore, weeklyVolume } from "../training-intelligence.ts";
 
 export type IntelligenceInput = {
+  wellness?: CoachFacts["wellness"];
   profile?: {
     age?: number | null;
     sex?: string | null;
@@ -123,6 +124,16 @@ export type CoachFacts = {
     weeklyVolumeKg?: number;
     muscleDistribution?: Array<{ muscle: string; setEquivalent: number; status: "low" | "balanced" | "high" }>;
     personalRecords?: Array<{ exerciseName: string; weightKg: number; reps: number; estimatedOneRepMaxKg: number }>;
+  };
+  /**
+   * Adaptive Fitness bağlamı. YALNIZCA kaba, türetilmiş bilgi: ham sağlık sayıları gönderilmez.
+   * `cycle` yalnızca kullanıcı etkinleştirdiyse, Premium ise VE sağlık bağlamının AI ile paylaşımına açıkça izin verdiyse
+   * (sunucu doldurur; istemciden gelen değer yok sayılır).
+   */
+  wellness?: {
+    adaptation?: { level: "good" | "moderate" | "low" | "recovery"; adapted: boolean; actions: string[]; intensity: "normal" | "reduced" | "recovery"; reasons: string[]; sessionKind?: string; estimatedMinutes?: number };
+    cycle?: { cycleDay: number; phase?: string; periodLikely: boolean };
+    preferredStyles?: string[];
   };
   /** Hesaplanamayan alanların NEDENİ. Model "veri yok" diyebilsin diye. */
   missing: string[];
@@ -281,6 +292,7 @@ export function analyze(input: IntelligenceInput): CoachFacts {
       ...(input.training?.muscleDistribution?.length && { muscleDistribution: input.training.muscleDistribution }),
       ...(input.training?.personalRecords?.length && { personalRecords: input.training.personalRecords }),
     },
+    ...(input.wellness && Object.keys(input.wellness).length ? { wellness: input.wellness } : {}),
     missing,
   };
 }

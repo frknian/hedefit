@@ -9,6 +9,10 @@ import { AiAllProvidersFailedError } from "../../../lib/ai/errors.ts";
 import { checkAndConsumeUsage, outputTokenLimit, refundUsage, usageLimitExceeded } from "../../../lib/usage-limits.ts";
 import { parseCoachActions } from "../../../lib/ai/coach-actions.ts";
 import { LOCAL_PROVIDER_ID } from "../../../lib/ai/providers/deterministic-local.ts";
+import { adaptiveCapabilities } from "../../../lib/entitlements.ts";
+import { describeCycle } from "../../../lib/cycle.ts";
+import { loadCycleState } from "../../../lib/health-store.ts";
+import { resolveRotationDate } from "../../../lib/training/rotation.ts";
 
 type CoachMessage = { role: "user" | "assistant"; text: string };
 
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
   const rateLimitResult = rateLimit(`chat:${auth.user.id}`, 5, 60_000);
   if (!rateLimitResult.ok) return tooManyRequests(rateLimitResult.retryAfterSeconds);
 
-  let payload: { messages?: unknown; context?: unknown; signals?: unknown; locale?: unknown; workoutContext?: unknown };
+  let payload: { messages?: unknown; context?: unknown; signals?: unknown; locale?: unknown; workoutContext?: unknown; localDate?: unknown };
   let providerFailure: unknown = undefined;
   try {
     payload = await request.json() as typeof payload;
@@ -98,6 +102,17 @@ export async function POST(request: Request) {
   // Hafıza bir iyileştirmedir: tablo yoksa veya okunamazsa boş döner ve sohbet
   // normal şekilde devam eder (bkz. lib/ai/memory.ts loadMemories).
   const memories = await loadMemories(request);
+
+  // DÖNGÜ BAĞLAMI (sağlık verisi): koça YALNIZCA şu üç koşul birlikte sağlanırsa gider — Premium katman, kullanıcının döngü
+  // kişiselleştirmesini açması VE sağlık bağlamının AI ile paylaşımına açıkça izin vermesi. İstemciden gelen döngü
+  // alanı sanitizeCoachSignals'ta zaten atılır; burada yalnızca sunucunun doğruladığı veri eklenir.
+  if (adaptiveCapabilities(usage.planTier).coachCycleAware) {
+    const state = await loadCycleState(request);
+    if (state.ok && state.value.personalization.cycleEnabled && state.value.personalization.aiHealthContextEnabled) {
+      const cycle = describeCycle(state.value.profile, resolveRotationDate(payload.localDate).toISOString().slice(0, 10));
+      if (cycle) signals.wellness = { ...(signals.wellness ?? {}), cycle: { cycleDay: cycle.cycleDay, ...(cycle.phase ? { phase: cycle.phase } : {}), periodLikely: cycle.periodLikely } };
+    }
+  }
 
   try {
     console.info("[api/chat] provider chain started", { requestId, memoryCount: memories.length });

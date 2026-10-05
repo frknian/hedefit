@@ -75,6 +75,7 @@ export function factsJson(facts: CoachFacts): string {
     trends: facts.trends,
     activity: facts.activity,
     training: facts.training,
+    wellness: facts.wellness,
   };
   const payload: Record<string, unknown> = {};
   for (const [name, group] of Object.entries(groups)) {
