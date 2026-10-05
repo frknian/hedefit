@@ -1,5 +1,6 @@
 package com.hedefit.app.data
 
+import com.hedefit.app.data.model.coachSummary
 import com.hedefit.app.data.model.parseAdaptiveResult
 import com.hedefit.app.data.model.upgradeHint
 import org.json.JSONObject
@@ -38,5 +39,15 @@ class AdaptiveDataTest {
         assertEquals("switch_pilates", upgradeHint(listOf("add_mobility", "switch_pilates")))
         assertEquals("adaptive", upgradeHint(listOf("replace_exercises")))
         assertNull(upgradeHint(emptyList())); assertNull(upgradeHint(listOf("shorten")))
+    }
+
+    @Test fun aiExplanationWinsAndCoachSummaryStaysCoarse() {
+        val withAi = JSONObject(json.toString()).put("aiExplanation", "Kişisel açıklama.")
+        val r = parseAdaptiveResult(withAi)
+        assertEquals("Kişisel açıklama.", r.explanation(en = false))
+        assertEquals("Bugün enerjin düşük.", parseAdaptiveResult(json).explanation(en = false))
+        val summary = r.coachSummary().toString()
+        assertTrue(summary.contains("low_energy") && summary.contains("switch_recovery"))
+        assertFalse(summary.contains("nudged") || summary.contains("cycle") || summary.contains("score"))
     }
 }

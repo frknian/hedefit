@@ -1,5 +1,6 @@
 package com.hedefit.app.data.repository
 
+import com.hedefit.app.data.model.coachSummary
 import com.hedefit.app.data.auth.AuthRepository
 import com.hedefit.app.data.model.BodyMeasurementData
 import com.hedefit.app.data.model.ChatReplyData
@@ -345,10 +346,13 @@ class HedefitRepository(
     suspend fun adaptivePlan(exercises: List<WorkoutExerciseData>, recentSessions3d: Int, locale: String): com.hedefit.app.data.model.AdaptiveResultData {
         val items = JSONArray(exercises.map { e -> JSONObject().put("id", e.id).put("name", e.name).put("area", e.area).put("sets", e.sets).put("reps", e.reps).put("restSeconds", e.restSeconds) })
         return com.hedefit.app.data.model.parseAdaptiveResult(
-            api.post("/api/workout/adapt", JSONObject().put("action", "adaptive_plan").put("exercises", items).put("recentSessions3d", recentSessions3d).put("locale", locale).put("localDate", java.time.LocalDate.now().toString()))
+            api.post("/api/workout/adapt", JSONObject().put("action", "adaptive_plan").put("exercises", items).put("recentSessions3d", recentSessions3d).put("locale", locale).put("explain", true).put("localDate", java.time.LocalDate.now().toString()))
                 .requireSuccess("Plan uyarlanamadı.").jsonObject(),
-        )
+        ).also { lastAdaptation = it }
     }
+
+    /** Son uyarlama; koça yalnızca kaba özeti gider (bkz. coachSummary). */
+    @Volatile private var lastAdaptation: com.hedefit.app.data.model.AdaptiveResultData? = null
 
     /** Bugünkü check-in'i yazar. null = sunucu henüz hazır değil (503); diğer hatalar fırlatılır. */
     suspend fun saveCheckin(checkin: com.hedefit.app.data.model.CheckinData): com.hedefit.app.data.model.CheckinSaveResult? {
@@ -972,8 +976,10 @@ class HedefitRepository(
                 .put("personalRecords", JSONArray(personalBests)))
         }
 
+        lastAdaptation?.takeIf { it.adapted }?.let { signals.put("wellness", JSONObject().put("adaptation", it.coachSummary())) }
         val requestPayload = JSONObject()
             .put("messages", bodyMessages)
+            .put("localDate", LocalDate.now().toString())
             .put("signals", signals)
             .put("locale", if (locale == "en") "en" else "tr")
 

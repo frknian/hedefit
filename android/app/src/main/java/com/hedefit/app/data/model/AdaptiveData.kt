@@ -19,8 +19,12 @@ data class AdaptiveResultData(
     val explanationTr: String,
     val explanationEn: String,
     val cycleSignal: String,
+    /** Coarse nedenler (low_energy, poor_sleep, sore, pain, training_load) — koça yalnızca bunlar gider. */
+    val reasons: List<String> = emptyList(),
+    /** Premium: kişiye özel AI açıklaması; yoksa şablon açıklama gösterilir. */
+    val aiExplanation: String? = null,
 ) {
-    fun explanation(en: Boolean) = if (en) explanationEn.ifBlank { explanationTr } else explanationTr.ifBlank { explanationEn }
+    fun explanation(en: Boolean) = aiExplanation?.takeIf { it.isNotBlank() } ?: if (en) explanationEn.ifBlank { explanationTr } else explanationTr.ifBlank { explanationEn }
 }
 
 fun parseAdaptiveResult(json: JSONObject): AdaptiveResultData {
@@ -45,6 +49,8 @@ fun parseAdaptiveResult(json: JSONObject): AdaptiveResultData {
         explanationTr = r.optString("explanationTr"),
         explanationEn = r.optString("explanationEn"),
         cycleSignal = r.optJSONObject("signals")?.optString("cycle", "none") ?: "none",
+        reasons = r.optJSONObject("signals")?.optJSONArray("reasons")?.let { a -> List(a.length()) { a.optString(it) } }.orEmpty(),
+        aiExplanation = json.optString("aiExplanation").takeIf { it.isNotBlank() && it != "null" },
     )
 }
 
@@ -54,3 +60,10 @@ fun upgradeHint(locked: List<String>): String? = when {
     "switch_recovery" in locked || "add_mobility" in locked || "replace_exercises" in locked -> "adaptive"
     else -> null
 }
+
+/** Koça giden kaba uyarlama özeti. Ham check-in değerleri, döngü günü/fazı ASLA eklenmez. */
+fun AdaptiveResultData.coachSummary(): JSONObject = JSONObject()
+    .put("level", level).put("adapted", adapted).put("intensity", intensity)
+    .put("actions", org.json.JSONArray(appliedActions)).put("reasons", org.json.JSONArray(reasons))
+    .put("estimatedMinutes", estimatedMinutes)
+    .also { o -> wellnessKind?.let { o.put("sessionKind", it) } }
