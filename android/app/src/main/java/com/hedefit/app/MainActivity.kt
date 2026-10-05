@@ -191,6 +191,7 @@ class MainActivity : ComponentActivity() {
                 var libraryMapMode by rememberSaveable { mutableStateOf(false) }
                 var libraryInitialMuscle by rememberSaveable { mutableStateOf("") }
                 var libraryInitialModality by rememberSaveable { mutableStateOf("") }
+                var showDailyCheckin by rememberSaveable { mutableStateOf(false) }
                 var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true && !com.hedefit.app.ui.layout.detectTablet(this@MainActivity) -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
                 // Tablet ev/ofis cihazıdır: Rota girişleri antrenman standını (büyük sayaçlı aktif antrenman) açar.
                 // Katlanan telefonlar GPS ile dışarıda kullanıldığı için Rota'yı korur.
@@ -807,6 +808,8 @@ class MainActivity : ComponentActivity() {
                                 onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; libraryInitialModality = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                                 onOpenDiscover = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); utilityPage = UtilityPage.Discover },
+                                checkinToday = uiState.checkinToday,
+                                onOpenCheckin = { mainViewModel.clearCheckinSaved(); showDailyCheckin = true },
                                 onStartWellness = { kind -> mainViewModel.loadWellnessSession(kind, if (kind == com.hedefit.app.data.model.WellnessKind.PilatesToday) 20 else 15, preferences.language) { session -> activeWorkoutExercises = session.exercises; mainViewModel.loadPreviousPerformance(session.exercises); activeWorkout = true } },
                                 onSaveSleep = mainViewModel::saveSleep,
                                 onOpenGame = { selected = AppDestination.Game },
@@ -1000,6 +1003,13 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(activeMission, selected, utilityPage, activeWorkout) {
                     if (activeMission != null && selected == AppDestination.Home && utilityPage == UtilityPage.Main && !activeWorkout) activeMission = null
                 }
+                if (showDailyCheckin && uiState.dashboard != null) com.hedefit.app.ui.components.DailyCheckinSheet(
+                    onDismiss = { showDailyCheckin = false; mainViewModel.clearCheckinSaved() },
+                    onSave = { checkin -> mainViewModel.saveCheckin(checkin) },
+                    saved = uiState.checkinSaved,
+                    cycle = uiState.checkinCycle,
+                    initial = uiState.checkinToday,
+                )
                 if ((showWelcomeGuide || !preferences.welcomeGuideSeen) && activeMission == null && uiState.auth is AuthState.SignedIn && uiState.dashboard != null && utilityPage == UtilityPage.Main && coreQuestionsAnswered(uiState.dashboard?.profile?.historyAnswers.orEmpty()) && uiState.dashboard?.profile?.heightCm != null && uiState.dashboard?.profile?.weightKg != null) WelcomeGuideDialog(
                     language = preferences.language,
                     coachName = preferences.coachName.ifBlank { if (preferences.language == "en") "Fit Coach" else "FitKoç" },

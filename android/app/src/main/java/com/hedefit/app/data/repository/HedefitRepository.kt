@@ -341,6 +341,20 @@ class HedefitRepository(
             .requireSuccess("Hesap silinemedi.")
     }
 
+    /** Bugünkü check-in'i yazar. null = sunucu henüz hazır değil (503); diğer hatalar fırlatılır. */
+    suspend fun saveCheckin(checkin: com.hedefit.app.data.model.CheckinData): com.hedefit.app.data.model.CheckinSaveResult? {
+        val response = api.put("/api/checkin", checkin.toJson())
+        if (response.status == 503) return null
+        return com.hedefit.app.data.model.parseCheckinSave(response.requireSuccess("Check-in kaydedilemedi.").jsonObject())
+    }
+
+    /** Bugünkü check-in (yoksa null). 503 → null: özellik sessizce kapalı. */
+    suspend fun todayCheckin(): com.hedefit.app.data.model.CheckinData? {
+        val response = api.get("/api/checkin?days=1&localDate=${java.time.LocalDate.now()}")
+        if (response.status == 503) return null
+        return com.hedefit.app.data.model.parseCheckin(response.requireSuccess("Check-in yüklenemedi.").jsonObject().optJSONObject("today"))
+    }
+
     /** Sunucuda deterministik üretilen Pilates / toparlanma / mobilite oturumu (AI yok). */
     suspend fun wellnessSession(kind: String, minutes: Int, locale: String): com.hedefit.app.data.model.WellnessSessionData =
         com.hedefit.app.data.model.parseWellnessSession(

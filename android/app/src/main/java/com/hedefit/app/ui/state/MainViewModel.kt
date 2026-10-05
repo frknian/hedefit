@@ -142,6 +142,10 @@ data class MainUiState(
     val offlinePendingCount: Int = 0,
     val previousPerformance: Map<String, List<PreviousSetData>> = emptyMap(),
     val readinessCheckinBusy: Boolean = false,
+    /** Bugünkü check-in (null = henüz yapılmadı ya da sunucu hazır değil). */
+    val checkinToday: com.hedefit.app.data.model.CheckinData? = null,
+    val checkinCycle: com.hedefit.app.data.model.CycleStateData? = null,
+    val checkinSaved: Boolean = false,
     val readinessAdaptation: ReadinessAdaptationData? = null,
     val replacementBusy: Boolean = false,
     val replacementCandidate: ExerciseReplacementCandidate? = null,
@@ -367,6 +371,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     // The server snapshot is historical data only. Immediately
                     // replace today's visible total with the central live source.
+                    loadTodayCheckin()
                     val reading = stepRepository.refresh()
                     _state.update { current -> current.copy(
                         stepSource = reading.source,
@@ -2215,6 +2220,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             onDone(ok)
         }
     }
+
+    private fun loadTodayCheckin() {
+        viewModelScope.launch { runCatching { repository.todayCheckin() }.onSuccess { today -> _state.update { it.copy(checkinToday = today) } } }
+    }
+
+    /** Check-in'i kaydeder. Başarısızlık hiçbir akışı engellemez; yalnızca hafif bir mesaj gösterilir. */
+    fun saveCheckin(checkin: com.hedefit.app.data.model.CheckinData, onSaved: (com.hedefit.app.data.model.CheckinSaveResult) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = runCatching { repository.saveCheckin(checkin) }
+            result.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+            val saved = result.getOrNull()
+            if (result.isSuccess && saved == null) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Check-in şimdi kaydedilemedi. Daha sonra tekrar dene.", "Couldn't save the check-in right now. Try again later.")) }
+            if (saved != null) { _state.update { it.copy(checkinToday = saved.checkin, checkinCycle = saved.cycle, checkinSaved = true) }; onSaved(saved) }
+        }
+    }
+
+    fun clearCheckinSaved() { _state.update { it.copy(checkinSaved = false) } }
 
     /** Wellness oturumunu sunucudan alır; hata antrenmanı başlatmaz, yalnızca hafif bir mesaj gösterir. */
     fun loadWellnessSession(kind: com.hedefit.app.data.model.WellnessKind, minutes: Int, locale: String, onReady: (com.hedefit.app.data.model.WellnessSessionData) -> Unit) {

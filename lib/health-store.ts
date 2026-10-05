@@ -9,6 +9,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { bearerToken } from "./api-auth.ts";
 import { normalizeSupabaseUrl } from "./supabase/url.ts";
 import { emptyCycleProfile, type CycleProfile, type CycleRegularity } from "./cycle.ts";
+import { checkinFromRow, checkinToRow, type Checkin } from "./checkin.ts";
 
 export type StoreResult<T> = { ok: true; value: T } | { ok: false; reason: "unavailable" | "error" };
 
@@ -112,6 +113,52 @@ export async function deleteCycleData(request: Request, userId: string): Promise
     if (removed.error) return { ok: false, reason: "error" };
     const settings = await client.from("personalization_settings").upsert({ user_id: userId, cycle_personalization_enabled: false }, { onConflict: "user_id" });
     if (settings.error && !isMissingTable(settings.error)) return { ok: false, reason: "error" };
+    return { ok: true, value: null };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
+
+// --- Günlük check-in --------------------------------------------------------------------------------------
+
+const CHECKIN_COLUMNS = "day, energy, sleep_quality, sleep_hours, soreness, pain, available_minutes";
+
+export async function saveCheckin(request: Request, userId: string, checkin: Checkin): Promise<StoreResult<null>> {
+  const client = userClientFor(request);
+  if (!client) return { ok: false, reason: "error" };
+  try {
+    const { error } = await client.from("daily_checkins").upsert(checkinToRow(userId, checkin), { onConflict: "user_id,day" });
+    if (isMissingTable(error)) return { ok: false, reason: "unavailable" };
+    if (error) return { ok: false, reason: "error" };
+    return { ok: true, value: null };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
+
+/** `sinceDay` (dahil) sonrası check-in'ler, yeniden eskiye. Katman geçmiş sınırı çağıran tarafta hesaplanır. */
+export async function loadCheckins(request: Request, sinceDay: string, limit = 400): Promise<StoreResult<Checkin[]>> {
+  const client = userClientFor(request);
+  if (!client) return { ok: false, reason: "error" };
+  try {
+    const { data, error } = await client.from("daily_checkins").select(CHECKIN_COLUMNS).gte("day", sinceDay).order("day", { ascending: false }).limit(limit);
+    if (isMissingTable(error)) return { ok: false, reason: "unavailable" };
+    if (error || !Array.isArray(data)) return { ok: false, reason: "error" };
+    return { ok: true, value: (data as Parameters<typeof checkinFromRow>[0][]).map(checkinFromRow).filter((item): item is Checkin => item !== null) };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
+
+/** Check-in verisini GERÇEKTEN siler: tek gün (`day`) ya da hepsi. */
+export async function deleteCheckins(request: Request, userId: string, day?: string): Promise<StoreResult<null>> {
+  const client = userClientFor(request);
+  if (!client) return { ok: false, reason: "error" };
+  try {
+    const query = client.from("daily_checkins").delete().eq("user_id", userId);
+    const { error } = await (day ? query.eq("day", day) : query);
+    if (isMissingTable(error)) return { ok: false, reason: "unavailable" };
+    if (error) return { ok: false, reason: "error" };
     return { ok: true, value: null };
   } catch {
     return { ok: false, reason: "error" };

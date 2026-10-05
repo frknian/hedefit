@@ -157,6 +157,8 @@ fun HomeScreen(
     onOpenMuscleMap: () -> Unit = {},
     onOpenDiscover: () -> Unit = {},
     onStartWellness: (com.hedefit.app.data.model.WellnessKind) -> Unit = {},
+    checkinToday: com.hedefit.app.data.model.CheckinData? = null,
+    onOpenCheckin: () -> Unit = {},
     onOpenProgress: () -> Unit = {},
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
@@ -213,6 +215,7 @@ fun HomeScreen(
                 }
             }
             item { NextStepCard(data, en, waterGoalMl, onOpenProgram, onOpenNutrition, { metricDialog = "water" }, onOpenCoach) }
+            item { CheckinCard(en, checkinToday, onOpenCheckin) }
             val wellnessUp = com.hedefit.app.data.model.wellnessProminent(data.profile.gender, data.profile.historyAnswers.getOrNull(8).orEmpty())
             if (wellnessUp) item { WellnessRow(en, onStartWellness) }
             item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
@@ -297,6 +300,25 @@ fun HomeScreen(
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
     )
+}
+
+/** Günlük check-in daveti (5 dokunuş); yapıldıysa özet ve güncelleme. */
+@Composable
+private fun CheckinCard(en: Boolean, today: com.hedefit.app.data.model.CheckinData?, onOpen: () -> Unit) {
+    HedefitCard(Modifier.fillMaxWidth(), onClick = onOpen, contentPadding = PaddingValues(14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            HfIconBadge(Icons.Default.Insights, HedefitColors.Lime, 36.dp, 18.dp)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(if (today == null) (if (en) "How are you today?" else "Bugün nasılsın?") else (if (en) "Check-in done ✓" else "Check-in tamam ✓"), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    if (today == null) (if (en) "5 taps to adapt your workout to your day." else "Antrenmanı gününe uyarlamak için 5 dokunuş.")
+                    else (if (en) "Energy ${today.energy}/10 • Sleep ${today.sleepQuality}/10 • tap to update" else "Enerji ${today.energy}/10 • Uyku ${today.sleepQuality}/10 • güncellemek için dokun"),
+                    color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2,
+                )
+            }
+            Text("›", color = HedefitColors.Lime, fontSize = 24.sp, fontWeight = FontWeight.Black)
+        }
+    }
 }
 
 /** Bugün için üç hazır oturum: herkes için; cinsiyete kilitli değil. */

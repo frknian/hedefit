@@ -41,6 +41,15 @@ class DebugGalleryActivity : ComponentActivity() {
             AppLang.en = lang == "en"
             HedefitTheme(darkTheme = true) {
                 when (screen) {
+                    "checkin" -> {
+                        var saved by remember { mutableStateOf(false) }
+                        com.hedefit.app.ui.components.DailyCheckinSheet(
+                            onDismiss = { finish() },
+                            onSave = { saved = true; android.util.Log.i("HedefitDebug", "checkin energy=${it.energy} sleep=${it.sleepQuality}/${it.sleepHours} soreness=${it.soreness} pain=${it.pain} min=${it.availableMinutes}") },
+                            saved = saved,
+                            cycle = if (gender == "Kadın") com.hedefit.app.data.model.CycleStateData(3, "menstrual", true, "2026-10-29", 24, false) else null,
+                        )
+                    }
                     "discover" -> com.hedefit.app.ui.screens.DiscoverScreen(
                         language = lang, onBack = { finish() }, onSearch = {}, onMuscle = {}, onOpenLibrary = {}, onOpenCardio = {},
                         onOpenRoute = {}, onOpenScanner = {}, onOpenGame = {}, onModality = {},
