@@ -660,5 +660,14 @@
  "₺99 / ay": "₺99 / month",
  "₺169 / ay": "₺169 / month",
  "Yıllık ₺849 (%28 indirim) · ilk 7 gün ücretsiz": "₺849 / year (28% off) · first 7 days free",
- "Yıllık ₺1.449 (%28 indirim)": "₺1,449 / year (28% off)"
+ "Yıllık ₺1.449 (%28 indirim)": "₺1,449 / year (28% off)",
+ "Üye olmadan misafir olarak başlayabilir ya da hesap açabilirsin. Birkaç kısa soruyu yanıtla: hedefin, haftada kaç gün, ne kadar süre, nerede ve hangi ekipmanla çalışacağın. İstersen odaklanmak istediğin bölgeleri vücut haritasından seç; sağlık durumunu, alerjilerini ve beslenme tercihini de ekle.": "Start as a guest without signing up, or create an account. Answer a few short questions: your goal, days per week, time available, where you train and with which equipment. If you like, pick the areas you want to focus on from the body map and add your health conditions, allergies and diet preference.",
+ "Hareket atlası kas haritası: göğse dokununca göğüs hareketleri listelenir": "Exercise atlas muscle map: tap the chest to list chest exercises",
+ "Kas haritasından hareket bul": "Find exercises on the muscle map",
+ "Hareket atlası ızgara görünümü: kas filtresine göre hareket kartları": "Exercise atlas grid view: exercise cards filtered by muscle",
+ "Hareket ızgarası": "Exercise grid",
+ "Başlangıç soruları: odaklanmak istediğin bölgeleri haritadan seç": "Setup questions: pick the areas you want to focus on from the map",
+ "Odak bölgelerini haritadan seç": "Pick focus areas on the map",
+ "Başlangıç soruları: sağlık durumu": "Setup questions: health conditions",
+ "Sana göre hazırlanan sorular": "Questions built around you"
 }
