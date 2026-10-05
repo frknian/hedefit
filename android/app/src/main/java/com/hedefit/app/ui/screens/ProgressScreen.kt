@@ -72,6 +72,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.CircleShape
 import com.hedefit.app.ui.settings.MeasurementUnits
+import com.hedefit.app.ui.settings.WeightTrend
 import com.hedefit.app.data.model.DashboardData
 import com.hedefit.app.data.model.BodyMeasurementData
 import com.hedefit.app.data.model.WorkoutSessionData
@@ -99,6 +100,7 @@ fun ProgressScreen(
     onWeeklyWorkoutGoalChange: (Int) -> Unit = {},
     measurementSaving: Boolean = false,
     onSaveMeasurement: (BodyMeasurementData) -> Unit = {},
+    onDeleteMeasurement: (BodyMeasurementData) -> Unit = {},
     onDeleteRoute: (RouteActivityData) -> Unit = {},
     nutritionHistory: List<com.hedefit.app.data.model.NutritionLogData> = emptyList(),
     onLoadNutritionHistory: () -> Unit = {},
@@ -108,6 +110,8 @@ fun ProgressScreen(
     var range by remember { mutableStateOf("30G") }
     var showGoalEditor by remember { mutableStateOf(false) }
     var showMeasurementEditor by remember { mutableStateOf(false) }
+    var showWeightHistory by remember { mutableStateOf(false) }
+    var editingMeasurement by remember { mutableStateOf<BodyMeasurementData?>(null) }
     var showWeeklyReview by remember { mutableStateOf(false) }
     val filteredData = filterProgressData(data, range)
     ScreenContainer(padding) {
@@ -126,7 +130,7 @@ fun ProgressScreen(
             item { ActivityHeatmap(data, range, en) }
             item { WeeklyMinutesChart(data, en) }
             item { WeeklyCalorieBalance(data, nutritionHistory, en) }
-            item { WeightChart(range, filteredData, en, unitSystem) }
+            item { WeightChart(range, filteredData, data, en, unitSystem) { showWeightHistory = true } }
             item { ExercisePerformanceHistory(filteredData?.exercisePerformance.orEmpty(), en) }
             item { WorkoutHistory(filteredData, en) }
             item { RouteHistory(filteredData?.routeActivities.orEmpty(), en, unitSystem, onDeleteRoute) }
@@ -143,6 +147,27 @@ fun ProgressScreen(
         saving = measurementSaving,
         onDismiss = { if (!measurementSaving) showMeasurementEditor = false },
         onSave = { onSaveMeasurement(it); showMeasurementEditor = false },
+    )
+    editingMeasurement?.let { entry ->
+        BodyMeasurementDialog(
+            latest = entry,
+            profileWeightKg = null,
+            en = en,
+            unitSystem = unitSystem,
+            saving = measurementSaving,
+            date = runCatching { LocalDate.parse(entry.date.take(10)) }.getOrDefault(LocalDate.now()),
+            onDismiss = { if (!measurementSaving) editingMeasurement = null },
+            onSave = { onSaveMeasurement(it); editingMeasurement = null },
+        )
+    }
+    if (showWeightHistory) WeightHistoryDialog(
+        measurements = data?.measurements.orEmpty(),
+        en = en,
+        unitSystem = unitSystem,
+        busy = measurementSaving,
+        onEdit = { editingMeasurement = it },
+        onDelete = onDeleteMeasurement,
+        onDismiss = { showWeightHistory = false },
     )
     if (showWeeklyReview) WeeklyReviewDialog(filteredData, en) { showWeeklyReview = false }
 }
@@ -176,7 +201,7 @@ private fun TimeRangeSelector(selected: String, en: Boolean, onSelect: (String) 
 }
 
 @Composable
-private fun WeightChart(range: String, data: DashboardData?, en: Boolean, unitSystem: String) {
+private fun WeightChart(range: String, data: DashboardData?, allData: DashboardData?, en: Boolean, unitSystem: String, onShowHistory: () -> Unit) {
     val weights = data?.measurements?.mapNotNull { it.weightKg?.toFloat() }.orEmpty()
     val current = weights.lastOrNull() ?: data?.profile?.weightKg?.toFloat()
     val change = if (weights.size >= 2) current!! - weights.first() else null
@@ -192,8 +217,10 @@ private fun WeightChart(range: String, data: DashboardData?, en: Boolean, unitSy
                 }
                 if (change != null) HfPill("%+.1f %s".format(MeasurementUnits.weightValue(change.toDouble(), unitSystem), MeasurementUnits.weightUnit(unitSystem)), if (change <= 0) HedefitColors.Lime else HedefitColors.Warning)
             }
+            val trendPoints = WeightTrend.points(data?.measurements.orEmpty())
+            val trend = WeightTrend.smooth(trendPoints)
             Sparkline(
-                if (weights.size >= 2) weights.map { MeasurementUnits.weightValue(it.toDouble(), unitSystem).toFloat() } else listOf(0f, 0f),
+                if (trend.size >= 2) trend.map { MeasurementUnits.weightValue(it, unitSystem).toFloat() } else listOf(0f, 0f),
                 Modifier.fillMaxWidth().height(if (range == "7G") 80.dp else 110.dp),
                 showGrid = true,
             )
@@ -201,6 +228,11 @@ private fun WeightChart(range: String, data: DashboardData?, en: Boolean, unitSy
             if (dates.isNotEmpty()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 listOf(dates.first(), dates[dates.lastIndex / 2], dates.last()).forEach { Text(formatDate(it, en), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
             }
+            if (trend.size >= 2) Text(
+                if (en) "Line shows your 7-day average, so daily ups and downs don't mislead." else "Çizgi 7 günlük ortalamanı gösterir; günlük dalgalanmalar yanıltmasın.",
+                color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall,
+            )
+            WeightInsights(allData, en, unitSystem, onShowHistory)
         }
     }
 }
@@ -649,7 +681,9 @@ private fun BodyMeasurementDialog(
     saving: Boolean,
     onDismiss: () -> Unit,
     onSave: (BodyMeasurementData) -> Unit,
+    date: LocalDate = LocalDate.now(),
 ) {
+    val isToday = date == LocalDate.now()
     fun initial(value: Double?) = value?.let { "%.1f".format(MeasurementUnits.heightValue(it, unitSystem)) }.orEmpty()
     var weight by remember(latest, unitSystem) { mutableStateOf(latest?.weightKg?.let { "%.1f".format(MeasurementUnits.weightValue(it, unitSystem)) } ?: profileWeightKg?.let { "%.1f".format(MeasurementUnits.weightValue(it, unitSystem)) }.orEmpty()) }
     var waist by remember(latest, unitSystem) { mutableStateOf(initial(latest?.waistCm)) }
@@ -664,11 +698,12 @@ private fun BodyMeasurementDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (en) "Update body measurements" else "Vücut ölçülerini güncelle") },
+        title = { Text(if (isToday) (if (en) "Update body measurements" else "Vücut ölçülerini güncelle") else formatDate(date.toString(), en) + (if (en) " measurements" else " ölçümleri")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    if (en) "Today's record is updated. Leave a field blank if you do not want to track it."
+                    if (!isToday) (if (en) "This day's record is updated. Leave a field blank if you do not want to track it." else "Bu günün kaydı güncellenir. Takip etmek istemediğin alanı boş bırakabilirsin.")
+                    else if (en) "Today's record is updated. Leave a field blank if you do not want to track it."
                     else "Bugünün kaydı güncellenir. Takip etmek istemediğin alanı boş bırakabilirsin.",
                     color = HedefitColors.TextSecondary,
                 )
@@ -707,7 +742,7 @@ private fun BodyMeasurementDialog(
                 enabled = !saving,
                 onClick = {
                     val measurement = BodyMeasurementData(
-                        date = LocalDate.now().toString(),
+                        date = date.toString(),
                         weightKg = parsed(weight)?.let { MeasurementUnits.weightToKg(it, unitSystem) },
                         waistCm = lengthCm(waist),
                         hipsCm = lengthCm(hips),

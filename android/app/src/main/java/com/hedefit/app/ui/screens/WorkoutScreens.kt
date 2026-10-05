@@ -184,6 +184,7 @@ fun WorkoutPlanScreen(
     onResumeWorkout: () -> Unit,
     onOpenScanner: () -> Unit,
     onOpenLibrary: () -> Unit,
+    onOpenMuscleMap: () -> Unit = {},
     onOpenActivityLog: () -> Unit,
     onOpenCardio: () -> Unit = {},
     onOpenRoute: () -> Unit,
@@ -385,11 +386,14 @@ fun WorkoutPlanScreen(
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Muscle Atlas" else "Kas Atlası", if (en) "Muscles you trained" else "Çalışan kasların", { page = "muscles" }, Modifier.weight(1f).fillMaxHeight())
-                        if (com.hedefit.app.ui.layout.rememberIsTablet()) HfActionTile(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Workout Stand" else "Antrenman Standı", if (en) "Big timer, set counter, video" else "Büyük zamanlayıcı, set sayacı, video", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
-                        else HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        HfActionTile(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Muscle Map" else "Kas Haritası", if (en) "Tap a muscle, see exercises" else "Kasa dokun, hareketleri gör", onOpenMuscleMap, Modifier.weight(1f).fillMaxHeight())
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
+                        if (com.hedefit.app.ui.layout.rememberIsTablet()) HfActionTile(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Workout Stand" else "Antrenman Standı", if (en) "Big timer, set counter, video" else "Büyük zamanlayıcı, set sayacı, video", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
+                        else HfActionTile(Icons.Default.Route, HedefitColors.Lime, if (en) "Hedefit Route" else "Hedefit Rota", if (en) "GPS activity" else "GPS aktivitesi", onOpenRoute, Modifier.weight(1f).fillMaxHeight())
                         HfActionTile(Icons.Default.Add, HedefitColors.Lime, if (en) "Log activity" else "Antrenman ekle", if (en) "Sport, distance, pace" else "Spor, mesafe, tempo", onOpenActivityLog, Modifier.weight(1f).fillMaxHeight())
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                         HfActionTile(Icons.Default.CameraAlt, HedefitColors.Lime, if (en) "Scan equipment" else "Ekipman tara", if (en) "Recognise with camera" else "Kamerayla tanı", onOpenScanner, Modifier.weight(1f).fillMaxHeight())
                     }
                 }

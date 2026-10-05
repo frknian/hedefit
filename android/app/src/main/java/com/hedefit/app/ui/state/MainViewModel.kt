@@ -964,10 +964,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loadExerciseLibrary(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr") {
+    fun loadExerciseLibrary(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", modality: String = "", subcategory: String = "") {
         viewModelScope.launch {
             _state.update { it.copy(exerciseLibraryBusy = true) }
-            runCatching { repository.loadExerciseCatalog(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, locale) }
+            runCatching { repository.loadExerciseCatalog(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, locale, emptyList(), modality, subcategory) }
                 .onSuccess { items -> _state.update { it.copy(exerciseLibraryBusy = false, exerciseLibrary = items) } }
                 .onFailure { error -> _state.update { it.copy(exerciseLibraryBusy = false, transientMessage = friendlyError(error)) } }
         }
@@ -1886,6 +1886,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Hızlı kilo girişi: bugünün kaydı varsa çevre ölçülerini koruyarak yalnız kiloyu günceller. */
+    fun saveQuickWeight(weightKg: Double) {
+        val today = java.time.LocalDate.now().toString()
+        val existing = _state.value.dashboard?.measurements.orEmpty().firstOrNull { it.date.take(10) == today }
+        saveBodyMeasurement((existing ?: BodyMeasurementData(today, null, null, null, null, null, null)).copy(date = today, weightKg = weightKg))
+    }
+
     fun deleteBodyMeasurement(measurement: BodyMeasurementData) {
         if (_state.value.measurementSaving) return
         viewModelScope.launch {
@@ -2194,6 +2201,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ---- Gizlilik: koç hafızası ve rıza ayarları ------------------------------------
+
+    /**
+     * Döngü bilgisini sunucuya yazar (isteğe bağlı özellik). Başarısızlık onboarding'i ya da başka bir akışı
+     * ENGELLEMEZ: kullanıcıya yalnızca hafif bir mesaj gösterilir, ayar sonra Ayarlar'dan yapılabilir.
+     */
+    fun saveCycleProfile(profile: com.hedefit.app.data.model.CycleProfileData, onDone: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val saved = runCatching { repository.saveCycleProfile(profile) }
+            saved.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+            val ok = saved.getOrDefault(false)
+            if (saved.isSuccess && !ok) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü ayarı şimdi kaydedilemedi. Daha sonra Ayarlar'dan tekrar deneyebilirsin.", "Couldn't save the cycle setting right now. You can try again later in Settings.")) }
+            onDone(ok)
+        }
+    }
 
     fun loadAiMemories() {
         if (_state.value.aiMemoryBusy) return

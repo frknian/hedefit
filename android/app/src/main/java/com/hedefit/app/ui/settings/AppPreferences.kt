@@ -20,9 +20,13 @@ data class AppPreferences(
     val homeQuickActions: List<String> = DEFAULT_QUICK_ACTIONS,
     /** How often a fresh AI training block is offered: "weekly" or "monthly" (default). */
     val planRotation: String = "monthly",
+    /** Haftalık tartı hatırlatması; ana bildirim anahtarını da izler. */
+    val weighInReminderEnabled: Boolean = false,
+    /** java.util.Calendar gün sabiti (varsayılan Pazartesi). */
+    val weighInReminderDay: Int = 2,
 ) {
     companion object {
-        val DEFAULT_QUICK_ACTIONS = listOf("nutrition", "cardio", "route", "sleep", "coach", "atlas", "curlgame")
+        val DEFAULT_QUICK_ACTIONS = listOf("workout", "nutrition", "coach", "musclemap", "atlas", "cardio", "route", "sleep", "curlgame")
     }
 }
 
@@ -45,11 +49,22 @@ class AppPreferencesStore(context: Context) {
         unitSystem = preferences.getString("unit_system", "metric").let { if (it == "imperial") "imperial" else "metric" },
         accentHue = preferences.getFloat("accent_hue", 106f).coerceIn(0f, 360f),
         welcomeGuideSeen = preferences.getBoolean("welcome_guide_seen", false),
+        weighInReminderEnabled = preferences.getBoolean("weigh_in_reminder_enabled", false),
+        weighInReminderDay = preferences.getInt("weigh_in_reminder_day", 2).coerceIn(1, 7),
         planRotation = preferences.getString("plan_rotation", "monthly").let { if (it == "weekly") "weekly" else "monthly" },
         // Kardiyo ve dambıl oyunu sonradan eklendi: kayıtlı listesi olanlara bir kez eklenir.
         homeQuickActions = preferences.getString("home_quick_actions", null)
             ?.split(',')?.filter(String::isNotBlank)?.takeIf { it.isNotEmpty() }
             ?.let { saved -> if (preferences.getBoolean("quick_actions_cardio_added_v2", false)) saved else (saved + listOf("cardio", "curlgame")).distinct().also { preferences.edit().putString("home_quick_actions", it.joinToString(",")).putBoolean("quick_actions_cardio_added_v2", true).apply() } }
+            // Kas haritası sonradan eklendi: kayıtlı listesi olanlara bir kez, Hareket Atlası'nın yanına eklenir.
+            ?.let { saved ->
+                if (preferences.getBoolean("quick_actions_musclemap_added", false)) saved
+                else {
+                    val at = saved.indexOf("atlas").let { if (it >= 0) it + 1 else saved.size }
+                    saved.toMutableList().apply { if ("musclemap" !in this) add(at, "musclemap") }
+                        .also { preferences.edit().putString("home_quick_actions", it.joinToString(",")).putBoolean("quick_actions_musclemap_added", true).apply() }
+                }
+            }
             ?: AppPreferences.DEFAULT_QUICK_ACTIONS,
     )
 
@@ -70,6 +85,8 @@ class AppPreferencesStore(context: Context) {
             .putFloat("accent_hue", value.accentHue.coerceIn(0f, 360f))
             .putBoolean("welcome_guide_seen", value.welcomeGuideSeen)
             .putString("home_quick_actions", value.homeQuickActions.joinToString(","))
+            .putBoolean("weigh_in_reminder_enabled", value.weighInReminderEnabled)
+            .putInt("weigh_in_reminder_day", value.weighInReminderDay.coerceIn(1, 7))
             .putString("plan_rotation", if (value.planRotation == "weekly") "weekly" else "monthly")
             .apply()
     }

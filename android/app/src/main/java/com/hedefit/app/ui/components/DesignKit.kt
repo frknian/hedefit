@@ -147,7 +147,10 @@ fun HfActionTile(icon: ImageVector, tint: Color, title: String, subtitle: String
     HedefitCard(modifier, onClick = if (enabled) onClick else null, contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             HfIconBadge(icon, tint, 36.dp, 18.dp)
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (subtitle.isNotBlank()) Text(subtitle, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

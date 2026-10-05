@@ -716,29 +716,11 @@ class HedefitRepository(
         return parseScheduleItem(rest.upsert("workout_schedule", row, "user_id,scheduled_date"))
     }
 
-    suspend fun loadExerciseCatalog(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", owned: List<String> = emptyList()): List<ExerciseCatalogData> {
+    suspend fun loadExerciseCatalog(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", owned: List<String> = emptyList(), modality: String = "", subcategory: String = ""): List<ExerciseCatalogData> {
         val encode = { value: String -> java.net.URLEncoder.encode(value, Charsets.UTF_8.name()) }
-        val path = "/api/exercises?limit=1000&search=${encode(search)}&muscle=${encode(muscle)}&equipment=${encode(equipment)}&level=${encode(level)}&environment=${encode(environment)}&muscleRole=${encode(muscleRole)}&force=${encode(force)}&mechanic=${encode(mechanic)}&category=${encode(category)}&owned=${encode(owned.joinToString(","))}&locale=${if (locale == "en") "en" else "tr"}"
+        val path = "/api/exercises?limit=1000&search=${encode(search)}&muscle=${encode(muscle)}&equipment=${encode(equipment)}&level=${encode(level)}&environment=${encode(environment)}&muscleRole=${encode(muscleRole)}&force=${encode(force)}&mechanic=${encode(mechanic)}&category=${encode(category)}&owned=${encode(owned.joinToString(","))}&modality=${encode(modality)}&subcategory=${encode(subcategory)}&locale=${if (locale == "en") "en" else "tr"}"
         val array = api.get(path).requireSuccess("Egzersiz kütüphanesi yüklenemedi.").jsonObject().optJSONArray("items") ?: JSONArray()
-        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
-            add(ExerciseCatalogData(
-                id = item.optString("id"),
-                name = item.optString("name"),
-                level = item.optString("level"),
-                equipment = item.optString("equipment"),
-                primaryMuscles = item.optJSONArray("primaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
-                instructions = item.optJSONArray("instructions")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
-                category = item.optString("category"),
-                imageUrls = item.optJSONArray("images")?.let { values -> List(values.length()) { values.optString(it) }.filter(String::isNotBlank) }.orEmpty(),
-                secondaryMuscles = item.optJSONArray("secondaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
-                force = item.optString("force"),
-                mechanic = item.optString("mechanic"),
-                levelKey = item.optString("levelKey"),
-                requiredEquipment = item.optJSONArray("requiredEquipment")?.let { options ->
-                    List(options.length()) { i -> options.optJSONArray(i)?.let { groups -> List(groups.length()) { groups.optString(it) } }.orEmpty() }
-                }.orEmpty(),
-            ))
-        } }
+        return parseExerciseCatalog(array)
     }
 
     suspend fun loadPreviousPerformance(exercises: List<WorkoutExerciseData>): Map<String, List<PreviousSetData>> = buildMap {
@@ -1640,3 +1622,32 @@ internal val AI_SENSITIVE_HISTORY_SLOTS = setOf(16, 17, 19, 20, 21)
 
 internal fun aiSafeHistory(answers: List<String>): List<String> =
     answers.mapIndexed { index, answer -> if (index in AI_SENSITIVE_HISTORY_SLOTS) "" else answer }
+
+/** Katalog JSON'unu modele çevirir (repository ve debug galeri ortak kullanır). */
+internal fun parseExerciseCatalog(array: JSONArray): List<ExerciseCatalogData> {
+    return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
+        add(ExerciseCatalogData(
+            id = item.optString("id"),
+            name = item.optString("name"),
+            level = item.optString("level"),
+            equipment = item.optString("equipment"),
+            primaryMuscles = item.optJSONArray("primaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            instructions = item.optJSONArray("instructions")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            category = item.optString("category"),
+            imageUrls = item.optJSONArray("images")?.let { values -> List(values.length()) { values.optString(it) }.filter(String::isNotBlank) }.orEmpty(),
+            secondaryMuscles = item.optJSONArray("secondaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            force = item.optString("force"),
+            mechanic = item.optString("mechanic"),
+            levelKey = item.optString("levelKey"),
+            requiredEquipment = item.optJSONArray("requiredEquipment")?.let { options ->
+                List(options.length()) { i -> options.optJSONArray(i)?.let { groups -> List(groups.length()) { groups.optString(it) } }.orEmpty() }
+            }.orEmpty(),
+            modalities = item.optJSONArray("modalities")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            subcategories = item.optJSONArray("subcategories")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            subcategoryLabels = item.optJSONArray("subcategoryLabels")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            impact = item.optString("impact").takeIf { it != "null" }.orEmpty(),
+            description = item.optString("description").takeIf { it != "null" }.orEmpty(),
+            tips = item.optJSONArray("tips")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+        ))
+    } }
+}

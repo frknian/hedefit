@@ -41,6 +41,31 @@ fun NotificationCalendarScreen(preferences: AppPreferences, onBack: () -> Unit, 
                     }
                 }
             }
+            item {
+                HedefitCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(Modifier.weight(1f)) {
+                                Text(if (en) "Weekly weigh-in" else "Haftalık tartı hatırlatması", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    if (en) "A 09:00 nudge to log your weight. Needs workout reminders turned on." else "Kilonu kaydetmen için 09:00'da bildirim. Antrenman hatırlatmaları açık olmalı.",
+                                    color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(preferences.weighInReminderEnabled, { onChange(preferences.copy(weighInReminderEnabled = it)) })
+                        }
+                        if (preferences.weighInReminderEnabled) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            days.forEach { (day, label) ->
+                                val selected = day == preferences.weighInReminderDay
+                                Box(
+                                    Modifier.size(38.dp).background(if (selected) HedefitColors.Lime else HedefitColors.SurfaceHigh, CircleShape)
+                                        .clickable { onChange(preferences.copy(weighInReminderDay = day)) }, contentAlignment = Alignment.Center,
+                                ) { Text(label, color = if (selected) HedefitColors.OnLime else HedefitColors.TextSecondary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall) }
+                            }
+                        }
+                    }
+                }
+            }
             item { Text(if (en) "DAYS" else "GÜNLER", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium) }
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

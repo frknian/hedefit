@@ -32,6 +32,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -149,6 +152,8 @@ fun HomeScreen(
     showAds: Boolean = false,
     onOpenCoach: () -> Unit = {},
     onOpenLibrary: () -> Unit = {},
+    onOpenMuscleMap: () -> Unit = {},
+    onOpenDiscover: () -> Unit = {},
     onOpenProgress: () -> Unit = {},
     onOpenActivityLog: () -> Unit = {},
     onOpenWearables: () -> Unit = {},
@@ -162,10 +167,12 @@ fun HomeScreen(
     quickActions: List<String> = com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS,
     onQuickActionsChange: (List<String>) -> Unit = {},
     onOpenFriends: () -> Unit = {},
+    onSaveWeight: (Double) -> Unit = {},
 ) {
     val en = language == "en"
     var metricDialog by remember { mutableStateOf<String?>(null) }
     var editingQuickActions by remember { mutableStateOf(false) }
+    var showAllQuick by rememberSaveable { mutableStateOf(false) }
     ScreenContainer(padding) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -202,9 +209,9 @@ fun HomeScreen(
                     }
                 }
             }
-            item { TodayCard(data, en, onOpenProgram) }
+            item { NextStepCard(data, en, waterGoalMl, onOpenProgram, onOpenNutrition, { metricDialog = "water" }, onOpenCoach) }
             item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }
-            item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) }
+            item { GoalProjectionCard(data, onOpenGoal, en, unitSystem) { metricDialog = "weight" } }
             item {
                 val done = listOf(
                     data.nutritionLogs.sumOf { it.calories } >= data.nutritionGoal.calories * .9,
@@ -216,6 +223,7 @@ fun HomeScreen(
             }
             item {
                 DailyBalanceCard(
+                    onOpenNutrition = onOpenNutrition,
                     data = data,
                     stepGoal = stepGoal,
                     waterGoalMl = waterGoalMl,
@@ -226,16 +234,34 @@ fun HomeScreen(
                     onSleep = { metricDialog = "sleep" },
                 )
             }
+            item {
+                HedefitCard(Modifier.fillMaxWidth(), onClick = onOpenDiscover, contentPadding = PaddingValues(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Box(Modifier.width(86.dp)) { com.hedefit.app.ui.components.MuscleMap(selected = setOf("chest", "shoulders"), onSelect = {}) }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(if (en) "Discover" else "Keşfet", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                            Text(if (en) "Tap a muscle, browse 600+ exercises and tools." else "Bir kasa dokun, 600+ hareketi ve araçları keşfet.", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Text("›", color = HedefitColors.Lime, fontSize = 26.sp, fontWeight = FontWeight.Black)
+                    }
+                }
+            }
             item { HfSectionHeader(if (en) "Quick actions" else "Hızlı işlemler", if (en) "Customize" else "Özelleştir") { editingQuickActions = true } }
             item {
-                val catalog = quickActionCatalog(en, com.hedefit.app.ui.layout.rememberIsTablet(), data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" }, onOpenFriends)
+                val catalog = quickActionCatalog(en, com.hedefit.app.ui.layout.rememberIsTablet(), data, onOpenNutrition, onOpenRoute, { metricDialog = "sleep" }, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, onOpenCalendar, onOpenGame, onOpenProgress, onOpenActivityLog, { metricDialog = it }, onOpenWearables, onOpenCardio, { metricDialog = "curlgame" }, onOpenFriends, onOpenMuscleMap)
                 val active = quickActions.mapNotNull(catalog::get).ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS.mapNotNull(catalog::get) }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    active.chunked(2).forEach { row ->
+                    (if (showAllQuick) active else active.take(4)).chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.height(IntrinsicSize.Min)) {
                             row.forEach { action -> HfActionTile(action.icon, action.tint, action.title, action.subtitle, action.onClick, Modifier.weight(1f).fillMaxHeight()) }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
+                    }
+                    if (active.size > 4) TextButton(onClick = { showAllQuick = !showAllQuick }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                        Text(
+                            if (showAllQuick) (if (en) "Show less" else "Daha az göster") else (if (en) "Show all (${active.size})" else "Tümünü göster (${active.size})"),
+                            color = HedefitColors.Lime, fontWeight = FontWeight.ExtraBold,
+                        )
                     }
                 }
             }
@@ -246,6 +272,7 @@ fun HomeScreen(
     when (metricDialog) {
         "steps" -> StepDetailDialog(data?.steps ?: 0, stepGoal, data?.stepHistory.orEmpty(), en, { metricDialog = null }, { onStepGoalChange(it); metricDialog = null })
         "calories" -> CalorieDetailDialog(data, en, stepSource) { metricDialog = null }
+        "weight" -> QuickWeightDialog(data?.measurements?.lastOrNull { it.weightKg != null }?.weightKg ?: data?.profile?.weightKg, en, unitSystem, { metricDialog = null }) { onSaveWeight(it); metricDialog = null }
         "water" -> WaterAddDialog(data?.waterMl ?: 0, waterGoalMl, en, unitSystem, { metricDialog = null }, onWaterGoalChange) { onAddWater(it); metricDialog = null }
         "curlgame" -> androidx.compose.ui.window.Dialog(onDismissRequest = { metricDialog = null }, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
             Box(Modifier.fillMaxSize().background(HedefitColors.Background).padding(16.dp), contentAlignment = Alignment.Center) {
@@ -259,7 +286,7 @@ fun HomeScreen(
     }
     if (editingQuickActions && data != null) QuickActionPickerDialog(
         en = en,
-        catalog = quickActionCatalog(en, com.hedefit.app.ui.layout.rememberIsTablet(), data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+        catalog = quickActionCatalog(en, com.hedefit.app.ui.layout.rememberIsTablet(), data, onOpenNutrition, onOpenRoute, {}, onOpenCoach, onOpenProgram, onOpenGoal, onOpenLibrary, {}, {}, {}, {}, {}, {}, {}, {}, {}, onOpenMuscleMap),
         selected = quickActions.ifEmpty { com.hedefit.app.ui.settings.AppPreferences.DEFAULT_QUICK_ACTIONS },
         onDismiss = { editingQuickActions = false },
         onSave = { editingQuickActions = false; onQuickActionsChange(it) },
@@ -288,6 +315,7 @@ private fun quickActionCatalog(
     onOpenCardio: () -> Unit,
     onOpenCurlGame: () -> Unit,
     onOpenFriends: () -> Unit,
+    onOpenMuscleMap: () -> Unit = {},
 ): Map<String, QuickAction> = linkedMapOf(
     "nutrition" to QuickAction(Icons.Default.Restaurant, HedefitColors.Lime, if (en) "Log meal" else "Öğün ekle", if (en) "Text, photo or search" else "Yazı, foto veya arama", onOpenNutrition),
     // Tablet ev/ofis cihazıdır: GPS rotası yerine antrenman standı açılır (onOpenRoute tablette standı başlatır).
@@ -298,6 +326,7 @@ private fun quickActionCatalog(
     "workout" to QuickAction(Icons.Default.FitnessCenter, HedefitColors.Lime, if (en) "Start workout" else "Antrenmanı başlat", if (en) "Jump into today's plan" else "Bugünün planına atla", { onOpenProgram(data.workoutPrograms.firstOrNull { it.isActive }?.id) }),
     "goal" to QuickAction(Icons.Default.Flag, HedefitColors.Lime, if (en) "Goal journey" else "Hedef yolculuğu", if (en) "Weight pace" else "Kilo & tempo", onOpenGoal),
     "atlas" to QuickAction(Icons.Default.MenuBook, HedefitColors.Lime, if (en) "Movement Atlas" else "Hareket Atlası", if (en) "Technique and exercises" else "Teknik ve hareketler", onOpenLibrary),
+    "musclemap" to QuickAction(Icons.Default.AccessibilityNew, HedefitColors.Lime, if (en) "Muscle Map" else "Kas Haritası", if (en) "Tap a muscle, see exercises" else "Kasa dokun, hareketleri gör", onOpenMuscleMap),
     "water" to QuickAction(Icons.Default.LocalDrink, HedefitColors.Lime, if (en) "Add water" else "Su ekle", "", { onMetric("water") }),
     "steps" to QuickAction(Icons.Default.DirectionsWalk, HedefitColors.Lime, if (en) "Steps" else "Adımlarım", "", { onMetric("steps") }),
     "calories" to QuickAction(Icons.Default.LocalFireDepartment, HedefitColors.Lime, if (en) "Calories" else "Kalori özeti", "", { onMetric("calories") }),
@@ -366,6 +395,69 @@ private fun HomeHeader(
     }
 }
 
+/** Ana ekranın tek odak noktası: gradyanlı, çerçeveli, diğer kartlardan belirgin. */
+@Composable
+private fun HeroCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp)
+    Column(
+        modifier.fillMaxWidth().clip(shape)
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(HedefitColors.Lime.copy(alpha = .26f), HedefitColors.Surface)))
+            .border(1.dp, HedefitColors.Lime.copy(alpha = .40f), shape)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        content = content,
+    )
+}
+
+/**
+ * Yeni kullanıcıya "şimdi ne yapmalıyım?" sorusunun tek cevabı: antrenman bekliyorsa antrenman,
+ * bittiyse sırayla öğün, su ve koç.
+ */
+@Composable
+private fun NextStepCard(
+    data: DashboardData,
+    en: Boolean,
+    waterGoalMl: Int,
+    onOpenProgram: (String?) -> Unit,
+    onOpenNutrition: () -> Unit,
+    onAddWater: () -> Unit,
+    onOpenCoach: () -> Unit,
+) {
+    val today = LocalDate.now()
+    val workoutDone = data.sessions.any { session ->
+        runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == today }.getOrDefault(false)
+    }
+    if (data.workouts.isEmpty() || !workoutDone) { TodayCard(data, en, onOpenProgram); return }
+    val (title, body, cta, icon, action) = when {
+        data.nutritionLogs.isEmpty() -> NextStep(
+            if (en) "Log your first meal" else "Öğününü ekle",
+            if (en) "Type it or snap a photo — calories are worked out for you." else "Yaz ya da fotoğrafını çek, kalorisini senin için hesaplayalım.",
+            if (en) "Add meal" else "Öğün ekle", Icons.Default.Restaurant, onOpenNutrition,
+        )
+        data.waterMl < waterGoalMl / 2 -> NextStep(
+            if (en) "Drink some water" else "Su içmeyi unutma",
+            if (en) "You're under half of today's water goal." else "Bugünkü su hedefinin yarısının altındasın.",
+            if (en) "Add water" else "Su ekle", Icons.Default.LocalDrink, onAddWater,
+        )
+        else -> NextStep(
+            if (en) "Great day so far" else "Bugün harika gidiyor",
+            if (en) "Ask your coach what to focus on tomorrow." else "Yarın neye odaklanacağını koçuna sor.",
+            if (en) "Ask Fit Coach" else "Koça sor", Icons.Default.AutoAwesome, onOpenCoach,
+        )
+    }
+    HeroCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (en) "NEXT STEP" else "SIRADAKİ ADIM", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+            HfPill(if (en) "Workout done ✓" else "Antrenman tamam ✓")
+        }
+        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+        Text(body, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+        HfPrimaryButton(text = cta, onClick = action, icon = icon, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+private data class NextStep(val title: String, val body: String, val cta: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val action: () -> Unit)
+
 @Composable
 private fun TodayCard(
     data: DashboardData,
@@ -379,8 +471,8 @@ private fun TodayCard(
         runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == today }.getOrDefault(false)
     }
     val areas = data.workouts.map { it.area }.filter { it.isNotBlank() }.distinct().take(3)
-    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    HeroCard {
+        run {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(if (en) "TODAY'S WORKOUT" else "BUGÜNÜN ANTRENMANI", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
                 if (workoutDoneToday) HfPill(if (en) "Completed" else "Tamamlandı")
@@ -407,6 +499,7 @@ private fun TodayCard(
 
 @Composable
 private fun DailyBalanceCard(
+    onOpenNutrition: () -> Unit,
     data: DashboardData,
     stepGoal: Int,
     waterGoalMl: Int,
@@ -420,6 +513,7 @@ private fun DailyBalanceCard(
     val target = data.nutritionGoal.calories.coerceAtLeast(1)
     fun fmt(n: Int) = "%,d".format(n).replace(',', '.')
     HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 16.dp)) {
+      Column {
         Row(Modifier.fillMaxWidth()) {
             BalanceRing(if (en) "Calories" else "Kalori", fmt(consumed), "/ ${fmt(target)}", consumed / target.toFloat(), HedefitColors.Lime, onCalories, Modifier.weight(1f))
             BalanceRing(if (en) "Steps" else "Adım", fmt(data.steps), "/ ${fmt(stepGoal)}", data.steps / stepGoal.coerceAtLeast(1).toFloat(), HedefitColors.Water, onSteps, Modifier.weight(1f))
@@ -427,6 +521,20 @@ private fun DailyBalanceCard(
             val sleep = if (data.sleepMinutes > 0) "${data.sleepMinutes / 60}s ${data.sleepMinutes % 60}dk" else "—"
             BalanceRing(if (en) "Sleep" else "Uyku", sleep, if (en) "/ 8h" else "/ 8s", data.sleepMinutes / 480f, HedefitColors.Sleep, onSleep, Modifier.weight(1f))
         }
+        // Boş bir halka "burada hiçbir şey yok" der; ilk eksik adımı tek dokunuşluk bir davete çevir.
+        val hint = when {
+            data.nutritionLogs.isEmpty() -> Triple(if (en) "No meals logged today" else "Bugün henüz öğün eklemedin", if (en) "Add meal" else "Öğün ekle", onOpenNutrition)
+            data.waterMl == 0 -> Triple(if (en) "Haven't had water yet" else "Henüz su eklemedin", if (en) "Add water" else "Su ekle", onWater)
+            else -> null
+        }
+        if (hint != null) {
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).background(HedefitColors.Lime.copy(alpha = .10f)).clickable(onClick = hint.third).padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(hint.first, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Text(hint.second + " ›", color = HedefitColors.Lime, fontWeight = FontWeight.ExtraBold)
+            }
+        }
+      }
     }
 }
 
@@ -469,7 +577,7 @@ private fun HomeAvatar(url: String?, previewBytes: ByteArray?, name: String, mod
 }
 
 @Composable
-private fun GoalProjectionCard(data: DashboardData, onOpen: () -> Unit, en: Boolean, unitSystem: String) {
+private fun GoalProjectionCard(data: DashboardData, onOpen: () -> Unit, en: Boolean, unitSystem: String, onAddWeight: () -> Unit) {
     val current = data.measurements.lastOrNull()?.weightKg ?: data.profile.weightKg
     val target = data.profile.targetWeightKg
     val weeks = estimatedGoalWeeks(current, target)
@@ -492,6 +600,11 @@ private fun GoalProjectionCard(data: DashboardData, onOpen: () -> Unit, en: Bool
                 }
             }
             HfProgressBar(progress, height = 8.dp)
+            TextButton(onClick = onAddWeight, contentPadding = PaddingValues(0.dp)) {
+                Icon(Icons.Default.Add, null, tint = HedefitColors.Lime)
+                Spacer(Modifier.width(6.dp))
+                Text(if (en) "Log weight" else "Kilo ekle", color = HedefitColors.Lime, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

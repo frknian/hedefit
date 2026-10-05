@@ -40,7 +40,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
+fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String = "", items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
     val en = language == "en"
     var query by remember { mutableStateOf("") }
     var muscle by remember { mutableStateOf("") }
@@ -51,23 +51,29 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
     var force by remember { mutableStateOf("") }
     var mechanic by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var modality by remember { mutableStateOf("") }
+    var subcategory by remember { mutableStateOf("") }
     var showFilters by remember { mutableStateOf(false) }
-    var showMap by remember { mutableStateOf(false) }
-    var grid by remember { mutableStateOf(false) }
+    var showMap by remember { mutableStateOf(startWithMap) }
+    var grid by remember { mutableStateOf(startWithMap) }
     var selected by remember { mutableStateOf<ExerciseCatalogData?>(null) }
     var showCustom by remember { mutableStateOf(false) }
     var selectedForProgram by remember { mutableStateOf<List<ExerciseCatalogData>>(emptyList()) }
     var showNameDialog by remember { mutableStateOf(false) }
-    val activeFilterCount = listOf(muscle, equipment, level, environment, force, mechanic, category).count(String::isNotBlank)
-    val clearFilters = {
-        muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""
-        onSearch(query, "", "", "", "", "", "", "", "")
+    LaunchedEffect(initialMuscle) {
+        // Liste çağıran tarafta bu kasla zaten yüklendi; burada yalnız filtre durumu eşitlenir.
+        if (initialMuscle.isNotBlank()) { muscle = initialMuscle; muscleRole = "primary" }
     }
-    val search = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category) }
+    val activeFilterCount = listOf(muscle, equipment, level, environment, force, mechanic, category, modality, subcategory).count(String::isNotBlank)
+    val clearFilters = {
+        muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""; modality = ""; subcategory = ""
+        onSearch(query, "", "", "", "", "", "", "", "", "", "")
+    }
+    val search = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory) }
     ScreenContainer { Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             HfScreenHeader(
-                if (en) "Movement Atlas" else "Hareket Atlası",
+                if (startWithMap) (if (en) "Muscle Map" else "Kas Haritası") else if (en) "Movement Atlas" else "Hareket Atlası",
                 if (loading) (if (en) "Loading…" else "Yükleniyor…") else if (en) "${items.size} movements" else "${items.size} hareket",
                 onBack = onBack,
                 backLabel = if (en) "Back" else "Geri",
@@ -106,7 +112,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                         val next = if (muscle == id) "" else id
                         muscle = next
                         muscleRole = if (next.isBlank()) "" else "primary"
-                        onSearch(query, next, equipment, level, environment, muscleRole, force, mechanic, category)
+                        onSearch(query, next, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory)
                     },
                     description = if (en) "Tap a muscle to list its movements" else "Hareketlerini görmek için bir kasa dokun",
                 )
@@ -122,7 +128,24 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                     HfChip(label, muscle == value, {
                         muscle = value
                         muscleRole = if (value.isBlank()) "" else "primary"
-                        onSearch(query, value, equipment, level, environment, if (value.isBlank()) "" else "primary", force, mechanic, category)
+                        onSearch(query, value, equipment, level, environment, if (value.isBlank()) "" else "primary", force, mechanic, category, modality, subcategory)
+                    })
+                }
+            }
+            // Antrenman tarzı: Pilates, Mobilite, Barre, Düşük etkili, Toparlanma (kas filtresinden bağımsız).
+            HfChipRow {
+                modalityOptions(en).forEach { (value, label) ->
+                    HfChip(label, modality == value, {
+                        modality = value; subcategory = ""
+                        onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, value, "")
+                    })
+                }
+            }
+            if (modality.isNotBlank()) HfChipRow {
+                subcategoryOptions(modality, en).forEach { (value, label) ->
+                    HfChip(label, subcategory == value, {
+                        subcategory = value
+                        onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, value)
                     })
                 }
             }
@@ -217,7 +240,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                 item { FilterSection(if (en) "Structure" else "Yapı", mechanicOptions(en), mechanic) { mechanic = it } }
             }
             Button(
-                onClick = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category); showFilters = false },
+                onClick = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory); showFilters = false },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
             ) { Text(if (en) "Show matching movements" else "Uygun hareketleri göster") }
@@ -367,4 +390,47 @@ private fun CustomExerciseDialog(onDismiss: () -> Unit, onCreate: (ExerciseCatal
         dismissButton = { TextButton(onClick = onDismiss) { Text(com.hedefit.app.ui.i18n.tr("Vazgeç", "Cancel")) } },
         confirmButton = { Button(enabled = name.trim().length >= 2, onClick = { onCreate(ExerciseCatalogData("custom-${UUID.randomUUID()}", name.trim(), "custom", equipment.trim(), listOf(muscle.trim().ifBlank { "Tüm Vücut" }), listOf(instruction.trim()).filter(String::isNotBlank), "custom", emptyList())) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text("Programa ekle") } },
     )
+}
+
+private fun modalityOptions(en: Boolean) = listOf(
+    "" to if (en) "All styles" else "Tüm tarzlar",
+    "pilates" to "Pilates",
+    "mobility" to if (en) "Mobility" else "Mobilite",
+    "barre" to "Barre",
+    "low_impact" to if (en) "Low impact" else "Düşük etkili",
+    "recovery" to if (en) "Recovery" else "Toparlanma",
+)
+
+/** Sunucudaki lib/exercise-modality.ts ile aynı alt kategoriler. */
+private fun subcategoryOptions(modality: String, en: Boolean): List<Pair<String, String>> {
+    val keys = when (modality) {
+        "pilates" -> listOf("", "beginner", "full_body", "core", "lower_body", "upper_body", "posture", "short", "recovery")
+        "mobility" -> listOf("", "full_body", "hip", "back", "shoulder", "morning", "evening")
+        "barre" -> listOf("", "beginner", "lower_body", "core", "full_body", "balance_posture")
+        "low_impact" -> listOf("", "full_body", "cardio", "beginner", "recovery")
+        "recovery" -> listOf("", "full_body", "lower_body", "upper_body", "breathing")
+        else -> listOf("")
+    }
+    return keys.map { it to subcategoryLabel(it, en) }
+}
+
+internal fun subcategoryLabel(key: String, en: Boolean): String = when (key) {
+    "" -> if (en) "All" else "Tümü"
+    "beginner" -> if (en) "Beginner" else "Başlangıç"
+    "full_body" -> if (en) "Full body" else "Tüm vücut"
+    "core" -> "Core"
+    "lower_body" -> if (en) "Lower body" else "Alt vücut"
+    "upper_body" -> if (en) "Upper body" else "Üst vücut"
+    "posture" -> if (en) "Posture" else "Duruş"
+    "short" -> if (en) "Short" else "Kısa"
+    "recovery" -> if (en) "Recovery" else "Toparlanma"
+    "hip" -> if (en) "Hip" else "Kalça"
+    "back" -> if (en) "Back" else "Sırt"
+    "shoulder" -> if (en) "Shoulder" else "Omuz"
+    "morning" -> if (en) "Morning" else "Sabah"
+    "evening" -> if (en) "Evening" else "Akşam"
+    "cardio" -> if (en) "Cardio" else "Kardiyo"
+    "balance_posture" -> if (en) "Balance & posture" else "Denge ve duruş"
+    "breathing" -> if (en) "Breathing" else "Nefes"
+    else -> key
 }
