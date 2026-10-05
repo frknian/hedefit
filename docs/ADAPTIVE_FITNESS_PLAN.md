@@ -80,7 +80,7 @@ P4: Faz 15–17 (QA, UI cilası, üretim kontrolü)
 2. **Check-in kalıcı değil.** Mevcut adaptör çalışıyor ama geçmiş, trend ve "kullanıcı her gün kısa form" akışı yok.
 3. **Kategori çakışması.** Mevcut doğrulayıcılar ve seçici `category` değerine bağlı. Pilates/Barre'yi `category` yapmak onları bozar; ayrı `modality` alanı güvenli yol.
 4. **Barre, Pilates ve gerçek Mobility görseli katalogda yok.** RepDB ve Free Exercise DB'de Pilates/Barre içeriği neredeyse yok. "Rastgele internetten içerik alma" kuralı nedeniyle bu içerik üretilmeli (bkz. karar 2).
-5. **Cinsiyet serbest metin.** `profiles.gender` `"Erkek"` gibi serbest dize. Döngü sorusunu "cinsiyet == kadın" ile kilitlemek hem kırılgan hem ikili varsayım. Öneri: onboarding'de cinsiyet "Kadın" seçilirse soru doğrudan gösterilir; "Erkek", "Diğer" ve "Belirtmek istemiyorum" için soru gösterilmez ama Ayarlar → Döngü takibi (isteğe bağlı) herkese açık kalır.
+5. **Cinsiyet serbest metin.** `profiles.gender` `"Erkek"` gibi serbest dize. Döngü sorusunu "cinsiyet == kadın" ile kilitlemek hem kırılgan hem ikili varsayım. Uygulanan karar: onboarding'de cinsiyet "Kadın" ise soru gösterilir; "Erkek", "Diğer" ve belirtmeyenlere sorulmaz. Ayarlar → "Döngü takibi (isteğe bağlı)" girişi yalnızca "Erkek" olarak belirtenlere gösterilmez (kadın, diğer ve belirtmeyen herkes erişebilir).
 6. **iOS ayrı kod tabanı.** 23 slotluk şema ve yeni özellikler iOS'ta yok.
 
 ## 5. Karar bekleyenler
@@ -90,3 +90,28 @@ P4: Faz 15–17 (QA, UI cilası, üretim kontrolü)
 3. **Analitik:** Şu an hiç yok. Seçenekler: (a) yalnızca sunucuda izin listeli, yüklemesiz olay sayacı (yeni tablo, yeni SDK yok), (b) hiç eklememek. (Öneri: a.)
 4. **Production migration:** Migration dosyalarını yazıp inceleme yaparım; production Supabase'e uygulamak için onayın gerekir.
 5. **Faz 1'in ilk işi:** Bulgu 1'deki AI payload düzeltmesini ilk iş olarak yapmamı onaylıyor musun?
+
+
+## 6. Plan ayrımı (Free / Plus / Premium)
+
+Kaynak: sunucuda `lib/entitlements.ts`, Android'de `TIER_LIMITS` (`ui/state/Entitlements.kt`). İkisi aynı matrisi taşır, ikisi de testlidir
+(`tests/entitlements-adaptive.test.mjs`, `AdaptiveTierTest.kt`).
+
+| Özellik | Free | Plus | Premium |
+|---|---|---|---|
+| Günlük check-in | ✓ | ✓ | ✓ |
+| Check-in geçmişi | 14 gün (Misafir 7) | 90 gün | Sınırsız + trend |
+| Adaptasyon eylemleri | Kısalt, yoğunluğu azalt | + hareket değiştir, mobilite ekle, toparlanmaya geç | + Pilates oturumuna geç |
+| Pilates / Mobility / Low Impact / Recovery | Başlangıç seti (beginner, short, recovery, morning, evening) | Tümü | Tümü |
+| Barre | – | ✓ | ✓ |
+| Döngü takibi (kayıt, düzenleme, silme) | ✓ | ✓ | ✓ |
+| Döngü bilgisinin adaptasyona katılması | – | ✓ | ✓ |
+| Koç: adaptasyon açıklaması | Şablon | Şablon | Kişiye özel (AI) |
+| Koç: döngü farkındalığı | – | – | ✓ |
+| Beslenme kişiselleştirme | Temel | Antrenman yüküne göre | + toparlanma + (isteğe bağlı) döngü wellness |
+
+İlke: sağlık verisini yönetme hakkı (takip, düzenleme, silme) hiçbir katmanda paywall'ın arkasında değildir. Ücretli katman yalnızca bu
+bilginin adaptasyona katılmasını ve açıklamanın derinliğini ayırır. Modalitesiz klasik hareketler bu kurala tabi değildir.
+
+Uygulama durumu: matris ve testler Faz 2'de kuruldu. Uygulama noktaları: egzersiz kilidi (Faz 3), check-in geçmişi (Faz 5), eylemler (Faz 6),
+koç (Faz 7), beslenme (Faz 8), plan sayfaları ve mağaza metni (Faz 10, 12), uygulama içi plan karşılaştırması (Faz 16).

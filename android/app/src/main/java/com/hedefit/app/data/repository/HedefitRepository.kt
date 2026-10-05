@@ -341,6 +341,26 @@ class HedefitRepository(
             .requireSuccess("Hesap silinemedi.")
     }
 
+    /** İsteğe bağlı döngü profili. Sunucu tabloyu henüz kurmadıysa (503) null: özellik sessizce kapalı kalır. */
+    suspend fun cycleSnapshot(): com.hedefit.app.data.model.CycleSnapshot? {
+        val response = api.get("/api/cycle?localDate=${java.time.LocalDate.now()}")
+        if (response.status == 503) return null
+        return com.hedefit.app.data.model.parseCycleSnapshot(response.requireSuccess("Döngü bilgisi yüklenemedi.").jsonObject())
+    }
+
+    /** true = kaydedildi, false = sunucu henüz hazır değil (503); diğer hatalar fırlatılır. */
+    suspend fun saveCycleProfile(profile: com.hedefit.app.data.model.CycleProfileData): Boolean {
+        val response = api.put("/api/cycle", profile.toJson())
+        if (response.status == 503) return false
+        response.requireSuccess("Döngü bilgisi kaydedilemedi.")
+        return true
+    }
+
+    /** Döngü verisini sunucuda kalıcı siler. */
+    suspend fun deleteCycleData() {
+        api.delete("/api/cycle").requireSuccess("Döngü verisi silinemedi.")
+    }
+
     suspend fun aiMemories(): List<com.hedefit.app.data.model.AiMemoryItem> =
         com.hedefit.app.data.model.parseAiMemories(api.get("/api/ai/memory").requireSuccess("Koç hafızası yüklenemedi.").jsonObject().optJSONArray("memories"))
 

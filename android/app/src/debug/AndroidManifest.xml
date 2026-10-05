@@ -4,5 +4,8 @@
     <!-- Yalnız debug derlemesi yerel HTTP geliştirme sunucusuna bağlanabilir. -->
     <application
         android:usesCleartextTraffic="true"
-        tools:replace="android:usesCleartextTraffic" />
+        tools:replace="android:usesCleartextTraffic">
+        <!-- Yalnız debug: yeni ekranları hesap/ağ olmadan sahte verilerle çizer (QA ve ekran görüntüsü). -->
+        <activity android:name="com.hedefit.app.debug.DebugGalleryActivity" android:exported="true" android:theme="@style/Theme.Hedefit" />
+    </application>
 </manifest>

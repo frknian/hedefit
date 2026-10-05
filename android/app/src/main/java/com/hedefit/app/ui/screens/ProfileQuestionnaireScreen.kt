@@ -55,7 +55,7 @@ private data class ProfileQuestion(
     val kind: QuestionKind = QuestionKind.Choices,
 )
 
-private enum class QuestionKind { Choices, FocusMap, Slider, Performance }
+private enum class QuestionKind { Choices, FocusMap, Slider, Performance, CycleOptIn }
 
 private val profileQuestions = listOf(
     ProfileQuestion("Ana hedefin ne?", "Programın ve tahmini süren bu hedefe göre hazırlanır.", listOf("Kilo verme", "Kilo alma", "Kas kazanma", "Formu koruma")),
@@ -66,7 +66,7 @@ private val profileQuestions = listOf(
     ProfileQuestion("Son 3 ayda haftada kaç gün spor yaptın?", "Mevcut alışkanlığın", listOf("0 gün", "1–2 gün", "3–4 gün", "5+ gün")),
     ProfileQuestion("Haftada kaç gün ayırabilirsin?", "Gerçekçi bir tempo seç.", listOf("2 gün", "3 gün", "4 gün", "5 gün", "6 gün", "7 gün")),
     ProfileQuestion("Bir antrenman için ne kadar süren var?", "Isınma ve soğuma dahil ayırabileceğin toplam süre.", listOf("15 dk", "30 dk", "45 dk", "60 dk", "75+ dk")),
-    ProfileQuestion("Hangi antrenmanları seversin?", "Birden fazla seçebilirsin.", listOf("Ağırlık", "HIIT", "Koşu", "Bisiklet", "Vücut ağırlığı"), multiSelect = true),
+    ProfileQuestion("Hangi antrenmanları seversin?", "Birden fazla seçebilirsin.", listOf("Ağırlık", "HIIT", "Koşu", "Bisiklet", "Vücut ağırlığı", "Pilates", "Mobilite", "Barre", "Düşük etkili", "Toparlanma"), multiSelect = true),
     ProfileQuestion("Nerede çalışacaksın?", "Egzersizler ortama göre seçilir.", listOf("Evde", "Spor salonunda", "Açık havada", "Karışık")),
     ProfileQuestion("Hangi ekipmanların var?", "Birden fazla seçebilirsin. “Ekipman yok” tek başına seçilir.", listOf("Ekipman yok", "Dambıl", "Kettlebell", "Direnç bandı", "Barfiks barı", "Sehpa", "Halter", "TRX / halka", "Pilates topu", "Atlama ipi", "Tam salon", "Kardiyo aleti"), multiSelect = true, exclusiveChoice = "Ekipman yok"),
     ProfileQuestion("Ağrı veya sakatlık var mı?", "Birden fazla bölge seçebilirsin. “Yok” tek başına seçilir.", listOf("Yok", "Bel", "Diz", "Omuz", "Boyun", "Diğer"), multiSelect = true, exclusiveChoice = "Yok"),
@@ -86,6 +86,32 @@ private val profileQuestions = listOf(
 /** İlk 15 soru eski şemadır; bunlar sonradan eklenen sağlık/yaşam tarzı soruları. */
 private const val QUESTION_COUNT = 23
 private val EXTRA_QUESTION_INDICES = (15 until QUESTION_COUNT).toList()
+
+/**
+ * Tam akış sırası: hedef, seviye, aktivite düzeyi, gün, süre, tercih edilen antrenman türleri, ortam, ekipman,
+ * sakatlık; ardından sağlık/yaşam tarzı soruları. `CORE_QUESTION_INDICES` (tamamlanma ölçütü) bilerek DEĞİŞMEZ:
+ * mevcut kullanıcılar testi yeniden doldurmaya zorlanmaz; yeni sorular yalnız akışa eklenir.
+ */
+private val FULL_FLOW_ORDER = listOf(0, 4, 12, 6, 7, 8, 9, 10, 11) + EXTRA_QUESTION_INDICES
+
+/** Döngü adımı bir `history` slotu değildir; yalnızca kadın olarak belirten kullanıcıya, isteğe bağlı gösterilir. */
+private const val CYCLE_STEP = 100
+private val CYCLE_QUESTION = ProfileQuestion(
+    "Hedefit'in antrenmanlarını adet döngüsü bilgilerine göre uyarlamasını ister misin?",
+    "İsteğe bağlı. Tek başına antrenman kararı vermez; günlük check-in cevapların her zaman önceliklidir. İstediğin zaman Ayarlar'dan kapatabilir ve verini silebilirsin.",
+    kind = QuestionKind.CycleOptIn,
+)
+
+private fun questionAt(index: Int): ProfileQuestion = if (index == CYCLE_STEP) CYCLE_QUESTION else profileQuestions[index]
+
+/** Döngü adımının taslağı: yalnızca kullanıcı "Aktifleştir" derse sunucuya yazılır. */
+private class CycleDraft {
+    var enabled by mutableStateOf<Boolean?>(null)
+    var lastPeriod by mutableStateOf<java.time.LocalDate?>(null)
+    var cycleLength by mutableIntStateOf(28)
+    var periodLength by mutableIntStateOf(5)
+    var regularity by mutableStateOf("unknown")
+}
 
 /** Harita bölgesi → odak alanı. Cevaplar odak alanı adıyla (Türkçe) saklanır. */
 private val focusAreaByMuscle = mapOf(
@@ -151,6 +177,7 @@ private val questionEn = mapOf(
     "Koşu" to "Running",
     "Bisiklet" to "Cycling",
     "Vücut ağırlığı" to "Bodyweight",
+    "Pilates" to "Pilates", "Mobilite" to "Mobility", "Barre" to "Barre", "Düşük etkili" to "Low impact", "Toparlanma" to "Recovery",
     "Nerede çalışacaksın?" to "Where will you train?",
     "Egzersizler ortama göre seçilir." to "Exercises are chosen for your setting.",
     "Evde" to "At home",
@@ -192,6 +219,8 @@ private val questionEn = mapOf(
     "9+ saat" to "9+ hours",
     "Koçunun bilmesi gereken başka bir şey?" to "Anything else your coach should know?",
     "Tercih, kısıt veya not ekleyebilirsin." to "Add preferences, limits or notes.",
+    "Hedefit'in antrenmanlarını adet döngüsü bilgilerine göre uyarlamasını ister misin?" to "Would you like Hedefit to adapt your workouts using menstrual cycle information?",
+    "İsteğe bağlı. Tek başına antrenman kararı vermez; günlük check-in cevapların her zaman önceliklidir. İstediğin zaman Ayarlar'dan kapatabilir ve verini silebilirsin." to "Optional. It never decides your workout on its own — your daily check-in always comes first. You can turn it off and delete your data in Settings at any time.",
     "Hangi bölgelere odaklanmak istersin?" to "Which areas do you want to focus on?",
     "Birden fazla seçebilirsin. Haritadan da dokunabilirsin." to "Pick any that apply. You can also tap the map.",
     "Karın" to "Abs", "Göğüs" to "Chest", "Omuz" to "Shoulders", "Sırt" to "Back", "Kol" to "Arms", "Kalça" to "Hips", "Bacak" to "Legs", "Genel Gelişim" to "Overall",
@@ -226,14 +255,16 @@ private val quickStartQuestionOrder = listOf(0, 4, 6, 7, 11)
 val CORE_QUESTION_INDICES = listOf(0, 4, 6, 7, 9, 10, 11)
 
 @Composable
-fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart: Boolean, onClose: () -> Unit, onSave: (ProfileUpdateData) -> Unit) {
+fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart: Boolean, onClose: () -> Unit, onSave: (ProfileUpdateData) -> Unit, onSaveCycle: (com.hedefit.app.data.model.CycleProfileData) -> Unit = {}) {
     val answers = remember(profile) { mutableStateListOf<String>().apply { addAll((profile.historyAnswers + List(QUESTION_COUNT) { "" }).take(QUESTION_COUNT).map { if (it == "Kas alma") "Kas kazanma" else it }) } }
-    val questionOrder = remember(quickStart) { if (quickStart) quickStartQuestionOrder else CORE_QUESTION_INDICES + EXTRA_QUESTION_INDICES }
+    val cycleStep = !quickStart && com.hedefit.app.data.model.cycleOptInInOnboarding(profile.gender)
+    val questionOrder = remember(quickStart, cycleStep) { if (quickStart) quickStartQuestionOrder else FULL_FLOW_ORDER + (if (cycleStep) listOf(CYCLE_STEP) else emptyList()) }
+    val cycleDraft = remember { CycleDraft() }
     var step by rememberSaveable { mutableIntStateOf(0) }
     var forward by remember { mutableStateOf(true) }
     val index = questionOrder[step]
     var targetText by remember(profile) { mutableStateOf(profile.targetWeightKg?.toString() ?: suggestedTarget(profile).toString()) }
-    val question = profileQuestions[index]
+    val question = questionAt(index)
     val target = targetText.toDoubleOrNull()
     val weeks = estimatedGoalWeeks(profile.weightKg, target)
     val haptic = LocalHapticFeedback.current
@@ -244,11 +275,15 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
     val progress by animateFloatAsState((step + 1).toFloat() / questionOrder.size, tween(if (reduced) 0 else 450), label = "questionProgress")
 
     fun goBack() { if (step > 0) { forward = false; step-- } else onClose() }
-    fun submit() = onSave(ProfileUpdateData(
+    // Yalnızca açıkça "Aktifleştir" denirse; "Şimdi değil" hiçbir şey yazmaz.
+    val saveCycleIfEnabled = {
+        if (cycleStep && cycleDraft.enabled == true) onSaveCycle(com.hedefit.app.data.model.CycleProfileData(true, cycleDraft.lastPeriod?.toString(), cycleDraft.cycleLength, cycleDraft.periodLength, cycleDraft.regularity))
+    }
+    fun submit() { saveCycleIfEnabled(); onSave(ProfileUpdateData(
         profile.displayName, profile.age, profile.gender, profile.heightCm, profile.weightKg,
         answers[0].ifBlank { profile.goal }, target, weeks, answers[9].ifBlank { profile.environment }, answers[10].ifBlank { profile.equipment },
         answers.mapIndexed { answerIndex, answer -> if (answer.isBlank() && profileQuestions[answerIndex].freeText) "Yok" else answer },
-    ))
+    )) }
     fun next() { if (step < questionOrder.lastIndex) { forward = true; step++ } else submit() }
 
     BackHandler { goBack() }
@@ -296,7 +331,7 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
             label = "questionStep",
         ) { shownStep ->
             val shownIndex = questionOrder[shownStep]
-            val shown = profileQuestions[shownIndex]
+            val shown = questionAt(shownIndex)
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -308,7 +343,13 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
                 if (shown.freeText) {
                     OutlinedTextField(answers[shownIndex], { answers[shownIndex] = it }, modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp).staggeredEntrance(shownStep, 2), placeholder = { Text(com.hedefit.app.ui.i18n.tr("Yanıtını yaz… (boş bırakabilirsin)", "Type your answer… (optional)")) }, colors = questionnaireFieldColors())
                 } else if (shown.kind != QuestionKind.Choices) {
-                    QuestionExtras(shown, answers, shownIndex)
+                    QuestionExtras(shown, answers, shownIndex, cycleDraft) { enabled ->
+                        cycleDraft.enabled = enabled
+                        if (!enabled && shownStep < questionOrder.lastIndex) scope.launch {
+                            delay(if (reduced) 120 else 320)
+                            if (step == shownStep) next()
+                        }
+                    }
                 } else shown.choices.forEachIndexed { choiceIndex, choice ->
                     val selected = if (shown.multiSelect) choice in selectedProfileChoices(answers[shownIndex]) else answers[shownIndex] == choice
                     val bounce = selectionBounce(selected)
@@ -359,7 +400,7 @@ fun ProfileQuestionnaireScreen(profile: ProfileData, saving: Boolean, quickStart
             }
         }
 
-        val canContinue = answers[index].isNotBlank() || question.freeText || question.kind == QuestionKind.Performance
+        val canContinue = answers.getOrElse(index) { "" }.isNotBlank() || question.freeText || question.kind == QuestionKind.Performance || (question.kind == QuestionKind.CycleOptIn && cycleDraft.enabled != null)
         val isLast = step == questionOrder.lastIndex
         AnimatedVisibility(canContinue || question.multiSelect || isLast, enter = slideInVertically { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut()) {
             Button(
@@ -396,7 +437,7 @@ private fun suggestedTarget(profile: ProfileData): Double {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun QuestionExtras(question: ProfileQuestion, answers: MutableList<String>, index: Int) {
+private fun QuestionExtras(question: ProfileQuestion, answers: MutableList<String>, index: Int, cycleDraft: CycleDraft, onCycleChoice: (Boolean) -> Unit) {
     when (question.kind) {
         QuestionKind.FocusMap -> {
             val chosen = selectedProfileChoices(answers[index])
@@ -448,6 +489,88 @@ private fun QuestionExtras(question: ProfileQuestion, answers: MutableList<Strin
                 Text(com.hedefit.app.ui.i18n.tr("Bu bilgi, programının ve koçunun seviyeni daha iyi anlamasına yardım eder.", "This helps your program and coach understand your level."), Modifier.padding(16.dp), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
             }
         }
+        QuestionKind.CycleOptIn -> CycleOptInStep(cycleDraft, onCycleChoice)
         QuestionKind.Choices -> Unit
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun CycleOptInStep(draft: CycleDraft, onChoice: (Boolean) -> Unit) {
+    var picking by remember { mutableStateOf(false) }
+    @Composable
+    fun ChoiceCard(selected: Boolean, label: String, onClick: () -> Unit) {
+        val border by animateColorAsState(if (selected) HedefitColors.Lime else HedefitColors.Divider, label = "cycleBorder")
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                .background(if (selected) HedefitColors.Lime.copy(alpha = .16f) else HedefitColors.Surface)
+                .border(BorderStroke(if (selected) 2.dp else 1.dp, border), RoundedCornerShape(18.dp))
+                .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                .padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(label, Modifier.weight(1f), color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleMedium, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
+            if (selected) Icon(Icons.Filled.Check, null, tint = HedefitColors.Lime)
+        }
+    }
+    @Composable
+    fun Stepper(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, Modifier.weight(1f), color = HedefitColors.TextPrimary)
+            OutlinedButton(onClick = { if (value > range.first) onChange(value - 1) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(40.dp)) { Text("−") }
+            Text("$value", Modifier.width(48.dp), color = HedefitColors.Lime, fontWeight = FontWeight.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            OutlinedButton(onClick = { if (value < range.last) onChange(value + 1) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(40.dp)) { Text("+") }
+        }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ChoiceCard(draft.enabled == true, com.hedefit.app.ui.i18n.tr("Aktifleştir", "Enable")) { onChoice(true) }
+        ChoiceCard(draft.enabled == false, com.hedefit.app.ui.i18n.tr("Şimdi değil", "Not now")) { onChoice(false) }
+        AnimatedVisibility(draft.enabled == true, enter = expandVertically() + fadeIn()) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.padding(top = 4.dp)) {
+                Text(com.hedefit.app.ui.i18n.tr("Son adetin ne zaman başladı?", "When did your last period start?"), color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(onClick = { picking = true }, shape = RoundedCornerShape(14.dp)) {
+                        Text(draft.lastPeriod?.toString() ?: com.hedefit.app.ui.i18n.tr("Tarih seç", "Pick a date"))
+                    }
+                    if (draft.lastPeriod != null) TextButton(onClick = { draft.lastPeriod = null }) { Text(com.hedefit.app.ui.i18n.tr("Bilmiyorum", "I don't know"), color = HedefitColors.TextSecondary) }
+                }
+                Stepper(com.hedefit.app.ui.i18n.tr("Döngü uzunluğu (gün)", "Cycle length (days)"), draft.cycleLength, 21..45) { draft.cycleLength = it; if (draft.periodLength >= it) draft.periodLength = it - 1 }
+                Stepper(com.hedefit.app.ui.i18n.tr("Adet süresi (gün)", "Period length (days)"), draft.periodLength, 1..minOf(10, draft.cycleLength - 1)) { draft.periodLength = it }
+                Text(com.hedefit.app.ui.i18n.tr("Döngün ne kadar düzenli?", "How regular is your cycle?"), color = HedefitColors.TextPrimary, fontWeight = FontWeight.Bold)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        "regular" to com.hedefit.app.ui.i18n.tr("Düzenli", "Regular"),
+                        "somewhat_irregular" to com.hedefit.app.ui.i18n.tr("Biraz düzensiz", "Somewhat irregular"),
+                        "irregular" to com.hedefit.app.ui.i18n.tr("Düzensiz", "Irregular"),
+                        "unknown" to com.hedefit.app.ui.i18n.tr("Bilmiyorum", "Not sure"),
+                    ).forEach { (value, label) ->
+                        FilterChip(
+                            selected = draft.regularity == value, onClick = { draft.regularity = value }, label = { Text(label) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = HedefitColors.Lime, selectedLabelColor = HedefitColors.OnLime),
+                        )
+                    }
+                }
+            }
+        }
+    }
+    if (picking) {
+        val today = java.time.LocalDate.now()
+        val toMillis = { date: java.time.LocalDate -> date.atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli() }
+        val state = rememberDatePickerState(
+            initialSelectedDateMillis = toMillis(draft.lastPeriod ?: today),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= toMillis(today) && utcTimeMillis >= toMillis(today.minusYears(1))
+            },
+        )
+        DatePickerDialog(
+            onDismissRequest = { picking = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { draft.lastPeriod = java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneOffset.UTC).toLocalDate() }
+                    picking = false
+                }) { Text(com.hedefit.app.ui.i18n.tr("Tamam", "OK")) }
+            },
+            dismissButton = { TextButton(onClick = { picking = false }) { Text(com.hedefit.app.ui.i18n.tr("İptal", "Cancel")) } },
+        ) { DatePicker(state = state) }
     }
 }
