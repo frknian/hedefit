@@ -4,7 +4,7 @@
   const EN = document.documentElement.lang === 'en';
   const t = (tr, en) => (EN ? en : tr);
   // İngilizce arayüzlü ekran görüntüsü olanlar (site/assets/shots-en); diğerleri Türkçe arayüzlü kalır.
-  const EN_SHOTS = new Set(['atlas', 'beslenme', 'hareketler', 'istatistik', 'ogunler', 'rota', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
+  const EN_SHOTS = new Set(['atlas', 'harita', 'beslenme', 'hareketler', 'istatistik', 'ogunler', 'rota', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
   const app = document.getElementById('heroApp');
   if (!app) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -23,7 +23,7 @@
     koc:       { img: 'koc', t: t('Fit Koç', 'Fit Coach'), d: t('Antrenman, beslenme ve ilerleme sorularını senin verine göre yanıtlar.', 'Answers your training, nutrition and progress questions using your own data.'), a: '#f-koc', tab: 'koc' },
     seans:     { img: 'seans-hizli', t: t('Antrenman seansı', 'Workout session'), d: t('Setlere dokun, dinlenme sayacı kendiliğinden başlar. İstersen detaylı moda geç.', 'Tap sets and the rest timer starts on its own. Switch to detailed mode if you like.'), a: '#f-antrenman' },
     hedef:     { img: 'hedef', t: t('Hedef yolculuğu', 'Goal journey'), d: t('Hedef kilon için tempo seç; tarihin ve ara hedeflerin hesaplansın.', 'Pick a pace for your target weight; your date and milestones are calculated.'), a: '#hedef-yolculugu' },
-    atlas:     { img: 'atlas', t: t('Hareket Atlası', 'Exercise Atlas'), d: t('600’den fazla hareket; kas, ekipman ve seviyeye göre filtrele.', '600+ exercises; filter by muscle, equipment and level.'), a: '#f-antrenman' },
+    atlas:     { img: 'harita', t: t('Hareket Atlası', 'Exercise Atlas'), d: t('600’den fazla hareket. Kas haritasında bir bölgeye dokun, o kasın hareketleri listelensin.', '600+ exercises. Tap a spot on the muscle map and its exercises are listed.'), a: '#f-antrenman' },
     kardiyo:   { img: 'kardiyo-prog', t: t('Kardiyo', 'Cardio'), d: t('6 makine ve hazır programlar: HIIT, tepe tırmanışı, bisiklet sprintleri.', '6 machines and ready programs: HIIT, hill climb, bike sprints.'), a: '#f-kardiyo' },
     oyun:      { img: 'oyun', t: t('Oyun modu', 'Game mode'), d: t('Sanal rota, rekorunla yarış ve hedef görevleri.', 'A virtual route, racing your record and goal quests.'), a: '#galeri' },
     rota:      { img: 'rota', t: t('Hedefit Rota', 'Hedefit Routes'), d: t('GPS ile kaydet, rotanı planla ve tekrar kullan.', 'Record with GPS, plan your route and reuse it.'), a: '#rota' },
