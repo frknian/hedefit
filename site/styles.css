@@ -1009,3 +1009,15 @@ html.embed [hidden]{display:none!important}
 .share-msg{color:var(--muted)}
 .cta .share-msg{color:#06130a;font-weight:600}
 @media (max-width:700px){.hero .sharebar{margin-top:10px}.hero .share{width:100%}}
+
+/* uyarlanan antrenman */
+.adapt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+.adapt-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px}
+.adapt-card h3{font-size:1.5rem;margin-bottom:8px}
+.adapt-card p{color:#c4ccd6;font-size:.95rem}
+.demo-card{position:relative;margin-top:24px;background:var(--card2);border:1px dashed var(--line);border-radius:22px;padding:24px}
+.demo-card h3{font-size:1.5rem}
+.demo-card ul{list-style:none;display:grid;gap:8px;color:#c4ccd6}
+.demo-card li b{color:var(--text)}
+.demo-badge{display:inline-block;margin-bottom:10px;padding:3px 10px;border-radius:999px;border:1px solid var(--yellow);color:var(--yellow);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+@media(max-width:900px){.adapt-grid{grid-template-columns:1fr}}
