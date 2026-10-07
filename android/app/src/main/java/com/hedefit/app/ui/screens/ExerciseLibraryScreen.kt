@@ -23,6 +23,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hedefit.app.data.model.ExerciseCatalogData
@@ -71,7 +75,28 @@ fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String =
         onSearch(query, "", "", "", "", "", "", "", "", "", "")
     }
     val search = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory) }
-    ScreenContainer { Column(Modifier.fillMaxSize()) {
+    // Aşağı kaydırdıkça harita küçülür, hareket listesi iskeletin üstüne doğru büyür; yukarı kaydırınca geri açılır.
+    val mapCollapse = remember { MapCollapse() }
+    LaunchedEffect(showMap) { mapCollapse.px = 0 }
+    val mapScroll = remember(mapCollapse) {
+        object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                if (available.y >= 0f || mapCollapse.px >= mapCollapse.max) return androidx.compose.ui.geometry.Offset.Zero
+                val next = (mapCollapse.px - available.y.toInt()).coerceAtMost(mapCollapse.max)
+                val used = next - mapCollapse.px
+                mapCollapse.px = next
+                return androidx.compose.ui.geometry.Offset(0f, -used.toFloat())
+            }
+            override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                if (available.y <= 0f || mapCollapse.px <= 0) return androidx.compose.ui.geometry.Offset.Zero
+                val next = (mapCollapse.px - available.y.toInt()).coerceAtLeast(0)
+                val used = mapCollapse.px - next
+                mapCollapse.px = next
+                return androidx.compose.ui.geometry.Offset(0f, used.toFloat())
+            }
+        }
+    }
+    ScreenContainer { Column(Modifier.fillMaxSize().nestedScroll(mapScroll)) {
         Column(Modifier.padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             HfScreenHeader(
                 if (startWithMap) (if (en) "Muscle Map" else "Kas Haritası") else if (en) "Movement Atlas" else "Hareket Atlası",
@@ -106,7 +131,15 @@ fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String =
                 HfChip(if (en) "Muscle map" else "Kas haritası", showMap, { showMap = !showMap })
                 HfChip(if (en) "Grid" else "Izgara", grid, { grid = !grid })
             }
-            if (showMap) {
+            if (showMap) Column(
+                Modifier.fillMaxWidth().clipToBounds().layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+                    mapCollapse.max = placeable.height
+                    val visible = (placeable.height - mapCollapse.px).coerceAtLeast(0)
+                    layout(placeable.width, visible) { placeable.place(0, -mapCollapse.px / 2) }
+                }.graphicsLayer { alpha = 1f - (mapCollapse.px.toFloat() / mapCollapse.max.coerceAtLeast(1)).coerceIn(0f, 1f) * .6f },
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 MuscleMap(
                     selected = setOfNotNull(muscle.ifBlank { null }),
                     onSelect = { id ->
@@ -434,4 +467,10 @@ internal fun subcategoryLabel(key: String, en: Boolean): String = when (key) {
     "balance_posture" -> if (en) "Balance & posture" else "Denge ve duruş"
     "breathing" -> if (en) "Breathing" else "Nefes"
     else -> key
+}
+
+/** Harita bloğunun kaydırmayla daralma durumu (px). `max` yerleşimde ölçülen tam yükseklik. */
+private class MapCollapse {
+    var px by androidx.compose.runtime.mutableIntStateOf(0)
+    var max: Int = 0
 }
