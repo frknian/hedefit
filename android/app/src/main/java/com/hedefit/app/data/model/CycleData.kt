@@ -71,3 +71,12 @@ fun cycleOptInInOnboarding(gender: String) = normalizedGender(gender) in FEMALE_
  * "diğer" ya da belirtmeyen herkes erişebilir (ikili cinsiyet varsayımına kilitlenmemek için).
  */
 fun cycleSettingsVisible(gender: String) = normalizedGender(gender) !in MALE_VALUES
+
+/** Sunucudaki kişiselleştirme ayarları (personalization_settings). Varsayılan: uyarlama açık, döngü ve AI sağlık bağlamı kapalı. */
+data class PersonalizationData(val adaptiveEnabled: Boolean = true, val cycleEnabled: Boolean = false, val aiHealthContextEnabled: Boolean = false)
+
+fun parsePersonalization(json: JSONObject?): PersonalizationData = PersonalizationData(
+    adaptiveEnabled = json?.optBoolean("adaptiveEnabled", true) ?: true,
+    cycleEnabled = json?.optBoolean("cycleEnabled", false) ?: false,
+    aiHealthContextEnabled = json?.optBoolean("aiHealthContextEnabled", false) ?: false,
+)

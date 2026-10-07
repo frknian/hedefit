@@ -105,7 +105,7 @@ private val CYCLE_QUESTION = ProfileQuestion(
 private fun questionAt(index: Int): ProfileQuestion = if (index == CYCLE_STEP) CYCLE_QUESTION else profileQuestions[index]
 
 /** Döngü adımının taslağı: yalnızca kullanıcı "Aktifleştir" derse sunucuya yazılır. */
-private class CycleDraft {
+internal class CycleDraft {
     var enabled by mutableStateOf<Boolean?>(null)
     var lastPeriod by mutableStateOf<java.time.LocalDate?>(null)
     var cycleLength by mutableIntStateOf(28)
@@ -496,7 +496,7 @@ private fun QuestionExtras(question: ProfileQuestion, answers: MutableList<Strin
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun CycleOptInStep(draft: CycleDraft, onChoice: (Boolean) -> Unit) {
+internal fun CycleOptInStep(draft: CycleDraft, onChoice: (Boolean) -> Unit) {
     var picking by remember { mutableStateOf(false) }
     @Composable
     fun ChoiceCard(selected: Boolean, label: String, onClick: () -> Unit) {

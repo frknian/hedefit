@@ -87,7 +87,7 @@ import com.hedefit.app.gym.detectPersonalRecord
 private fun coreQuestionsAnswered(answers: List<String>) =
     com.hedefit.app.ui.screens.CORE_QUESTION_INDICES.all { answers.getOrNull(it)?.isNotBlank() == true }
 
-private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, Discover, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges, Consents, AiMemory }
+private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, Discover, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges, Consents, AiMemory, HealthPrivacy }
 
 /** Programdaki Türkçe bölge adını atlasın birincil kas filtresine çevirir. */
 private fun replacementMuscle(area: String): String {
@@ -532,6 +532,7 @@ class MainActivity : ComponentActivity() {
                             onOpenWearables = { utilityPage = UtilityPage.Wearables },
                             onOpenConsents = { utilityPage = UtilityPage.Consents },
                             onOpenAiMemory = { utilityPage = UtilityPage.AiMemory },
+                            onOpenHealthPrivacy = { utilityPage = UtilityPage.HealthPrivacy },
                             onAddShortcut = { type ->
                                 val accepted = if (type.startsWith("widget_")) HedefitShortcuts.requestWidget(this@MainActivity, type) else HedefitShortcuts.request(this@MainActivity, type)
                                 if (!accepted) Toast.makeText(this@MainActivity, com.hedefit.app.ui.i18n.tr("Bu başlatıcı ana ekrana eklemeyi desteklemiyor.", "This launcher doesn't support adding to the home screen."), Toast.LENGTH_LONG).show()
@@ -692,6 +693,19 @@ class MainActivity : ComponentActivity() {
                                 scope.launch { googleSignIn.clearCredentialState() }
                                 mainViewModel.withdrawConsents(health, crossBorder)
                             },
+                        )
+                        UtilityPage.HealthPrivacy -> com.hedefit.app.ui.screens.HealthPrivacyScreen(
+                            state = uiState.healthPrivacy,
+                            gender = uiState.dashboard?.profile?.gender.orEmpty(),
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onLoad = mainViewModel::loadHealthPrivacy,
+                            onAdaptive = { mainViewModel.updatePersonalization(adaptive = it) },
+                            onAiContext = { mainViewModel.updatePersonalization(aiHealthContext = it) },
+                            onSaveCycle = { profile -> mainViewModel.saveCycleProfile(profile) { mainViewModel.loadHealthPrivacy() } },
+                            onTurnOffCycle = { mainViewModel.updatePersonalization(cycleOff = true) },
+                            onDeleteCycle = mainViewModel::deleteCycleData,
+                            onDeleteAll = mainViewModel::deleteAllHealthData,
                         )
                         UtilityPage.AiMemory -> com.hedefit.app.ui.screens.AiMemoryScreen(
                             memories = uiState.aiMemories,

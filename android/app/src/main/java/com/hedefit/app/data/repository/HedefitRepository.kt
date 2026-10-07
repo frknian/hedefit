@@ -400,6 +400,25 @@ class HedefitRepository(
         return true
     }
 
+    /** Kişiselleştirme ayarları; sunucu tabloyu kurmadıysa `available=false` ve varsayılanlar. */
+    suspend fun personalization(): Pair<Boolean, com.hedefit.app.data.model.PersonalizationData> {
+        val json = api.get("/api/personalization").requireSuccess("Ayarlar yüklenemedi.").jsonObject()
+        return json.optBoolean("available", true) to com.hedefit.app.data.model.parsePersonalization(json.optJSONObject("personalization"))
+    }
+
+    suspend fun updatePersonalization(adaptive: Boolean? = null, aiHealthContext: Boolean? = null, cycleOff: Boolean = false): com.hedefit.app.data.model.PersonalizationData {
+        val body = JSONObject()
+        adaptive?.let { body.put("adaptiveEnabled", it) }
+        aiHealthContext?.let { body.put("aiHealthContextEnabled", it) }
+        if (cycleOff) body.put("cycleEnabled", false)
+        return com.hedefit.app.data.model.parsePersonalization(api.put("/api/personalization", body).requireSuccess("Ayar kaydedilemedi.").jsonObject().optJSONObject("personalization"))
+    }
+
+    /** Döngü, check-in'ler ve ayarlar: sunucuda kalıcı silinir. */
+    suspend fun deleteAllHealthData() {
+        api.delete("/api/personalization").requireSuccess("Sağlık verisi silinemedi.")
+    }
+
     /** Döngü verisini sunucuda kalıcı siler. */
     suspend fun deleteCycleData() {
         api.delete("/api/cycle").requireSuccess("Döngü verisi silinemedi.")

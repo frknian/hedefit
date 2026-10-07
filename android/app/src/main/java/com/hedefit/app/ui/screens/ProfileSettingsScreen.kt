@@ -80,6 +80,7 @@ fun ProfileSettingsScreen(
     onOpenWearables: () -> Unit = {},
     onOpenConsents: () -> Unit = {},
     onOpenAiMemory: () -> Unit = {},
+    onOpenHealthPrivacy: () -> Unit = {},
     onAddShortcut: (String) -> Unit,
     onConnectHealth: () -> Unit,
     onSave: (ProfileUpdateData) -> Unit,
@@ -293,6 +294,8 @@ fun ProfileSettingsScreen(
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
                         SettingsRowContent(Icons.Default.Shield, if (en) "Privacy and consents" else "Gizlilik ve rızalar", if (en) "Consent status, legal texts, withdraw consent" else "Rıza durumu, yasal metinler, rızayı geri çek", onOpenConsents, HedefitColors.Lime)
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.Shield, if (en) "Health data and personalization" else "Sağlık verisi ve kişiselleştirme", if (en) "Adaptation, optional cycle tracking, delete health data" else "Uyarlama, isteğe bağlı döngü takibi, sağlık verisini sil", onOpenHealthPrivacy, HedefitColors.Lime)
                         CardDivider()
                         SettingsRowContent(Icons.Default.Psychology, if (en) "Coach memory" else "Koç hafızası", if (en) "See and delete what Fit Coach remembers" else "FitKoç'un hatırladıklarını gör ve sil", onOpenAiMemory, HedefitColors.Lime)
                         CardDivider()

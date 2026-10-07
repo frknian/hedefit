@@ -164,3 +164,40 @@ export async function deleteCheckins(request: Request, userId: string, day?: str
     return { ok: false, reason: "error" };
   }
 }
+
+// --- Kişiselleştirme ayarları ve toplu silme -----------------------------------------------------------
+
+/** Yalnızca verilen bayrakları yazar (kısmi güncelleme); boş gövde hiçbir şey yazmaz. */
+export async function savePersonalization(request: Request, userId: string, patch: Partial<PersonalizationSettings>): Promise<StoreResult<null>> {
+  const client = userClientFor(request);
+  if (!client) return { ok: false, reason: "error" };
+  const row: Record<string, unknown> = { user_id: userId };
+  if (typeof patch.adaptiveEnabled === "boolean") row.adaptive_enabled = patch.adaptiveEnabled;
+  if (typeof patch.cycleEnabled === "boolean") row.cycle_personalization_enabled = patch.cycleEnabled;
+  if (typeof patch.aiHealthContextEnabled === "boolean") row.ai_health_context_enabled = patch.aiHealthContextEnabled;
+  if (Object.keys(row).length === 1) return { ok: true, value: null };
+  try {
+    const { error } = await client.from("personalization_settings").upsert(row, { onConflict: "user_id" });
+    if (isMissingTable(error)) return { ok: false, reason: "unavailable" };
+    if (error) return { ok: false, reason: "error" };
+    return { ok: true, value: null };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}
+
+/** Tüm sağlık verisini GERÇEKTEN siler: döngü profili, tüm check-in'ler ve ayar satırı (varsayılanlara döner). */
+export async function deleteAllHealthData(request: Request, userId: string): Promise<StoreResult<null>> {
+  const client = userClientFor(request);
+  if (!client) return { ok: false, reason: "error" };
+  try {
+    for (const [table, column] of [["cycle_profiles", "user_id"], ["daily_checkins", "user_id"], ["personalization_settings", "user_id"]] as const) {
+      const { error } = await client.from(table).delete().eq(column, userId);
+      if (isMissingTable(error)) return { ok: false, reason: "unavailable" };
+      if (error) return { ok: false, reason: "error" };
+    }
+    return { ok: true, value: null };
+  } catch {
+    return { ok: false, reason: "error" };
+  }
+}

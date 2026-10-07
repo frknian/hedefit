@@ -123,6 +123,7 @@ data class MainUiState(
     val consentStatus: com.hedefit.app.data.model.ConsentStatus? = null,
     val consentSettingsBusy: Boolean = false,
     val consentSettingsError: String? = null,
+    val healthPrivacy: HealthPrivacyState = HealthPrivacyState(),
     val healthConnected: Boolean = false,
     val healthBusy: Boolean = false,
     val wearables: com.hedefit.app.health.WearableSnapshot? = null,
@@ -186,6 +187,15 @@ data class MainUiState(
 
 /** Misafire kayıt teklifinin çıktığı an; metin buna göre kişiselleşir. */
 enum class SaveAccountTrigger { WorkoutCompleted, CoachLimit, Sync, Manual, Limit }
+
+/** Ayarlar → Sağlık verisi ve kişiselleştirme. `available=false`: sunucu tabloları henüz kurulu değil (bölüm sade bir not gösterir). */
+data class HealthPrivacyState(
+    val loaded: Boolean = false,
+    val available: Boolean = true,
+    val busy: Boolean = false,
+    val personalization: com.hedefit.app.data.model.PersonalizationData = com.hedefit.app.data.model.PersonalizationData(),
+    val cycle: com.hedefit.app.data.model.CycleSnapshot? = null,
+)
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val http = JsonHttpClient()
@@ -2304,6 +2314,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             runCatching { repository.deleteAllAiMemories() }
                 .onSuccess { _state.update { it.copy(aiMemories = emptyList(), aiMemoryBusy = false) } }
                 .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    fun loadHealthPrivacy() {
+        viewModelScope.launch {
+            _state.update { it.copy(healthPrivacy = it.healthPrivacy.copy(busy = true)) }
+            val settings = runCatching { repository.personalization() }
+            val cycle = if (settings.getOrNull()?.first == true) runCatching { repository.cycleSnapshot() }.getOrNull() else null
+            _state.update { it.copy(healthPrivacy = HealthPrivacyState(loaded = true, available = settings.getOrNull()?.first ?: false, busy = false, personalization = settings.getOrNull()?.second ?: it.healthPrivacy.personalization, cycle = cycle)) }
+            settings.exceptionOrNull()?.let { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun updatePersonalization(adaptive: Boolean? = null, aiHealthContext: Boolean? = null, cycleOff: Boolean = false) {
+        viewModelScope.launch {
+            runCatching { repository.updatePersonalization(adaptive, aiHealthContext, cycleOff) }
+                .onSuccess { updated -> _state.update { it.copy(healthPrivacy = it.healthPrivacy.copy(personalization = updated)) }; if (cycleOff) loadHealthPrivacy() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    /** Döngü verisini sunucuda siler. */
+    fun deleteCycleData() {
+        viewModelScope.launch {
+            runCatching { repository.deleteCycleData() }
+                .onSuccess { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü verin silindi.", "Your cycle data was deleted.")) }; loadHealthPrivacy() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    /** Döngü, tüm check-in'ler ve kişiselleştirme ayarları kalıcı silinir; yerel check-in/uyarlama durumu da temizlenir. */
+    fun deleteAllHealthData() {
+        viewModelScope.launch {
+            runCatching { repository.deleteAllHealthData() }
+                .onSuccess {
+                    _state.update { it.copy(checkinToday = null, checkinCycle = null, adaptiveResult = null, transientMessage = com.hedefit.app.ui.i18n.tr("Sağlık verilerin silindi.", "Your health data was deleted.")) }
+                    loadHealthPrivacy()
+                }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
 
