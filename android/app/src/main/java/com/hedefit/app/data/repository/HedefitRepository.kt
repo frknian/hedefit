@@ -419,6 +419,11 @@ class HedefitRepository(
         api.delete("/api/personalization").requireSuccess("Sağlık verisi silinemedi.")
     }
 
+    /** Gizlilik dostu olay sayacı: yalnızca izin listesindeki olay adı gider (lib/analytics-events.ts); veri taşımaz. */
+    suspend fun trackEvent(event: String) {
+        api.post("/api/analytics", JSONObject().put("event", event))
+    }
+
     /** Döngü verisini sunucuda kalıcı siler. */
     suspend fun deleteCycleData() {
         api.delete("/api/cycle").requireSuccess("Döngü verisi silinemedi.")

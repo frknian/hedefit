@@ -2230,6 +2230,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             saved.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
             val ok = saved.getOrDefault(false)
             if (saved.isSuccess && !ok) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü ayarı şimdi kaydedilemedi. Daha sonra Ayarlar'dan tekrar deneyebilirsin.", "Couldn't save the cycle setting right now. You can try again later in Settings.")) }
+            if (ok) track(if (profile.trackingEnabled) "menstrual_tracking_enabled" else "menstrual_tracking_disabled")
             onDone(ok)
         }
     }
@@ -2245,7 +2246,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
             val saved = result.getOrNull()
             if (result.isSuccess && saved == null) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Check-in şimdi kaydedilemedi. Daha sonra tekrar dene.", "Couldn't save the check-in right now. Try again later.")) }
-            if (saved != null) { _state.update { it.copy(checkinToday = saved.checkin, checkinCycle = saved.cycle, checkinSaved = true) }; onSaved(saved); loadAdaptivePlan() }
+            if (saved != null) { _state.update { it.copy(checkinToday = saved.checkin, checkinCycle = saved.cycle, checkinSaved = true) }; onSaved(saved); track("daily_checkin_completed"); loadAdaptivePlan() }
         }
     }
 
@@ -2258,7 +2259,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val recent = dashboard.sessions.count { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull()?.let { it.isAfter(today.minusDays(3)) } == true }
         viewModelScope.launch {
             runCatching { repository.adaptivePlan(exercises, recent, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
-                .onSuccess { result -> _state.update { it.copy(adaptiveResult = result.takeIf { value -> value.adapted }) } }
+                .onSuccess { result -> if (result.adapted) track("adaptive_workout_generated"); _state.update { it.copy(adaptiveResult = result.takeIf { value -> value.adapted }) } }
         }
     }
 
@@ -2270,7 +2271,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val diet = com.hedefit.app.data.model.dietFromAnswers(dashboard.profile.historyAnswers)
         viewModelScope.launch {
             runCatching { repository.nutritionWellness(diet, worked, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
-                .onSuccess { result -> _state.update { it.copy(nutritionWellness = result.takeIf { value -> value.tips.isNotEmpty() }) } }
+                .onSuccess { result -> if (result.tips.isNotEmpty()) track("nutrition_notes_viewed"); _state.update { it.copy(nutritionWellness = result.takeIf { value -> value.tips.isNotEmpty() }) } }
         }
     }
 
@@ -2282,7 +2283,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun loadWellnessSession(kind: com.hedefit.app.data.model.WellnessKind, minutes: Int, locale: String, onReady: (com.hedefit.app.data.model.WellnessSessionData) -> Unit) {
         viewModelScope.launch {
             runCatching { repository.wellnessSession(kind.wire, minutes, locale) }
-                .onSuccess { session -> if (session.exercises.isEmpty()) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Şimdilik uygun bir oturum bulunamadı.", "No suitable session found right now.")) } else onReady(session) }
+                .onSuccess { session -> if (session.exercises.isNotEmpty()) track(when (kind) { com.hedefit.app.data.model.WellnessKind.PilatesToday -> "pilates_workout_started"; com.hedefit.app.data.model.WellnessKind.LowImpactRecovery -> "low_impact_workout_started"; com.hedefit.app.data.model.WellnessKind.PostureMobility -> "mobility_workout_started" }); if (session.exercises.isEmpty()) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Şimdilik uygun bir oturum bulunamadı.", "No suitable session found right now.")) } else onReady(session) }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
@@ -2317,6 +2318,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Sessiz, gizlilik dostu olay sayacı (yalnızca olay adı). Başarısızlık hiçbir akışı etkilemez. */
+    fun track(event: String) {
+        viewModelScope.launch { runCatching { repository.trackEvent(event) } }
+    }
+
     fun loadHealthPrivacy() {
         viewModelScope.launch {
             _state.update { it.copy(healthPrivacy = it.healthPrivacy.copy(busy = true)) }
@@ -2339,7 +2345,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteCycleData() {
         viewModelScope.launch {
             runCatching { repository.deleteCycleData() }
-                .onSuccess { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü verin silindi.", "Your cycle data was deleted.")) }; loadHealthPrivacy() }
+                .onSuccess { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü verin silindi.", "Your cycle data was deleted.")) }; track("cycle_data_deleted"); loadHealthPrivacy() }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
@@ -2350,6 +2356,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             runCatching { repository.deleteAllHealthData() }
                 .onSuccess {
                     _state.update { it.copy(checkinToday = null, checkinCycle = null, adaptiveResult = null, transientMessage = com.hedefit.app.ui.i18n.tr("Sağlık verilerin silindi.", "Your health data was deleted.")) }
+                    track("health_data_deleted")
                     loadHealthPrivacy()
                 }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }

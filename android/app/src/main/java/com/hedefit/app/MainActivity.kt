@@ -825,7 +825,7 @@ class MainActivity : ComponentActivity() {
                                 checkinToday = uiState.checkinToday,
                                 onOpenCheckin = { mainViewModel.clearCheckinSaved(); showDailyCheckin = true },
                                 adaptiveResult = uiState.adaptiveResult,
-                                onStartAdaptive = { result -> activeWorkoutExercises = result.exercises; mainViewModel.loadPreviousPerformance(result.exercises); mainViewModel.dismissAdaptivePlan(); activeWorkout = true },
+                                onStartAdaptive = { result -> mainViewModel.track("adaptive_workout_started"); activeWorkoutExercises = result.exercises; mainViewModel.loadPreviousPerformance(result.exercises); mainViewModel.dismissAdaptivePlan(); activeWorkout = true },
                                 onDismissAdaptive = mainViewModel::dismissAdaptivePlan,
                                 onAdaptiveUpgrade = { hint -> mainViewModel.requireEntitlement(if (hint == "switch_pilates") com.hedefit.app.ui.state.LockedFeature.PilatesSwitch else com.hedefit.app.ui.state.LockedFeature.AdaptiveAction) { false } },
                                 onStartWellness = { kind -> mainViewModel.loadWellnessSession(kind, if (kind == com.hedefit.app.data.model.WellnessKind.PilatesToday) 20 else 15, preferences.language) { session -> activeWorkoutExercises = session.exercises; mainViewModel.loadPreviousPerformance(session.exercises); activeWorkout = true } },
