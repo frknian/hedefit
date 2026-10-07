@@ -907,6 +907,9 @@ class MainActivity : ComponentActivity() {
                                 onSavePhotoResults = mainViewModel::savePhotoNutrition,
                                 reviewFromText = uiState.mealReviewSource == "text",
                                 reviewMeal = uiState.mealReviewMeal,
+                                wellness = uiState.nutritionWellness,
+                                onLoadWellness = mainViewModel::loadNutritionWellness,
+                                onUpgradeNutrition = { mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.AdaptiveAction) { false } },
                                 openMealComposer = openMealComposer,
                                 onMealComposerOpened = { openMealComposer = false },
                             )

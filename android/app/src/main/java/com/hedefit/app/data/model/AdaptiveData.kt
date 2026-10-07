@@ -67,3 +67,25 @@ fun AdaptiveResultData.coachSummary(): JSONObject = JSONObject()
     .put("actions", org.json.JSONArray(appliedActions)).put("reasons", org.json.JSONArray(reasons))
     .put("estimatedMinutes", estimatedMinutes)
     .also { o -> wellnessKind?.let { o.put("sessionKind", it) } }
+
+/** Sunucudaki beslenme kişiselleştirmesi (lib/nutrition-wellness.ts). Tamamen genel ipuçları; tıbbi değil. */
+data class NutritionTipData(val id: String, val title: String, val body: String)
+
+data class NutritionWellnessData(val tips: List<NutritionTipData>, val proteinBonusGrams: Int, val lockedTipCount: Int)
+
+fun parseNutritionWellness(json: JSONObject): NutritionWellnessData {
+    val items = json.optJSONArray("tips")
+    return NutritionWellnessData(
+        tips = buildList { if (items != null) for (i in 0 until items.length()) items.optJSONObject(i)?.let { add(NutritionTipData(it.optString("id"), it.optString("title"), it.optString("body"))) } },
+        proteinBonusGrams = json.optInt("proteinBonusGrams", 0),
+        lockedTipCount = json.optInt("lockedTipCount", 0),
+    )
+}
+
+/** Beslenme tercihi: profil cevaplarından (Standart / Vejetaryen / Vegan / Pesketaryen). */
+fun dietFromAnswers(answers: List<String>): String = when {
+    "Vegan" in answers -> "vegan"
+    "Vejetaryen" in answers -> "vegetarian"
+    "Pesketaryen" in answers -> "pescatarian"
+    else -> "standard"
+}

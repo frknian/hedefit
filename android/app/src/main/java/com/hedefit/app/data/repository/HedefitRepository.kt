@@ -351,6 +351,16 @@ class HedefitRepository(
         ).also { lastAdaptation = it }
     }
 
+    /** Antrenmana/toparlanmaya göre beslenme ipuçları. Yalnızca kaba antrenman bağlamı gider; döngüyü sunucu kendi izniyle ekler. */
+    suspend fun nutritionWellness(diet: String, workedOutToday: Boolean, locale: String): com.hedefit.app.data.model.NutritionWellnessData {
+        val training = JSONObject().put("workedOutToday", workedOutToday)
+        lastAdaptation?.takeIf { it.adapted }?.let { training.put("level", it.level).put("minutes", it.estimatedMinutes); it.wellnessKind?.let { kind -> training.put("sessionKind", kind) } }
+        return com.hedefit.app.data.model.parseNutritionWellness(
+            api.post("/api/nutrition/wellness", JSONObject().put("locale", locale).put("diet", diet).put("training", training).put("localDate", java.time.LocalDate.now().toString()))
+                .requireSuccess("İpuçları alınamadı.").jsonObject(),
+        )
+    }
+
     /** Son uyarlama; koça yalnızca kaba özeti gider (bkz. coachSummary). */
     @Volatile private var lastAdaptation: com.hedefit.app.data.model.AdaptiveResultData? = null
 

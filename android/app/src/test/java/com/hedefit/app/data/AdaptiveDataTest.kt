@@ -1,6 +1,8 @@
 package com.hedefit.app.data
 
 import com.hedefit.app.data.model.coachSummary
+import com.hedefit.app.data.model.dietFromAnswers
+import com.hedefit.app.data.model.parseNutritionWellness
 import com.hedefit.app.data.model.parseAdaptiveResult
 import com.hedefit.app.data.model.upgradeHint
 import org.json.JSONObject
@@ -49,5 +51,11 @@ class AdaptiveDataTest {
         val summary = r.coachSummary().toString()
         assertTrue(summary.contains("low_energy") && summary.contains("switch_recovery"))
         assertFalse(summary.contains("nudged") || summary.contains("cycle") || summary.contains("score"))
+    }
+
+    @Test fun parsesNutritionWellnessAndDiet() {
+        val r = parseNutritionWellness(JSONObject("""{"tips":[{"id":"a","title":"T","body":"B"}],"proteinBonusGrams":10,"lockedTipCount":2}"""))
+        assertEquals(1, r.tips.size); assertEquals("B", r.tips[0].body); assertEquals(10, r.proteinBonusGrams); assertEquals(2, r.lockedTipCount)
+        assertEquals("vegan", dietFromAnswers(listOf("Evde", "Vegan"))); assertEquals("standard", dietFromAnswers(listOf("Standart")))
     }
 }

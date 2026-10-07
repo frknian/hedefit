@@ -148,6 +148,7 @@ data class MainUiState(
     val checkinSaved: Boolean = false,
     /** Bugünün uyarlanmış planı (null = yok ya da kapatıldı). */
     val adaptiveResult: com.hedefit.app.data.model.AdaptiveResultData? = null,
+    val nutritionWellness: com.hedefit.app.data.model.NutritionWellnessData? = null,
     val readinessAdaptation: ReadinessAdaptationData? = null,
     val replacementBusy: Boolean = false,
     val replacementCandidate: ExerciseReplacementCandidate? = null,
@@ -2248,6 +2249,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             runCatching { repository.adaptivePlan(exercises, recent, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
                 .onSuccess { result -> _state.update { it.copy(adaptiveResult = result.takeIf { value -> value.adapted }) } }
+        }
+    }
+
+    /** Beslenme ekranı açılınca bir kez; hata olursa kart sessizce gizlenir. */
+    fun loadNutritionWellness() {
+        val dashboard = _state.value.dashboard ?: return
+        val today = LocalDate.now()
+        val worked = dashboard.sessions.any { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull() == today }
+        val diet = com.hedefit.app.data.model.dietFromAnswers(dashboard.profile.historyAnswers)
+        viewModelScope.launch {
+            runCatching { repository.nutritionWellness(diet, worked, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess { result -> _state.update { it.copy(nutritionWellness = result.takeIf { value -> value.tips.isNotEmpty() }) } }
         }
     }
 

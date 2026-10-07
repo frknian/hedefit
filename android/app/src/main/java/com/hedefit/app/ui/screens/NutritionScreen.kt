@@ -180,7 +180,11 @@ fun NutritionScreen(
     onAskCoach: (String) -> Unit = {},
     reviewFromText: Boolean = false,
     reviewMeal: String? = null,
+    wellness: com.hedefit.app.data.model.NutritionWellnessData? = null,
+    onLoadWellness: () -> Unit = {},
+    onUpgradeNutrition: () -> Unit = {},
 ) {
+    androidx.compose.runtime.LaunchedEffect(Unit) { onLoadWellness() }
     val en = language == "en"
     var showFoodSearch by remember { mutableStateOf(false) }
     var showCalendar by remember { mutableStateOf(false) }
@@ -291,6 +295,7 @@ fun NutritionScreen(
                 MealSection(type, entries, canLog, busy, en, onAdd = { quickAddMeal = type }, onFavorite = onAddFavorite, onRemove = onRemoveNutritionLog, onUpdate = onUpdateNutritionLog)
             }
             if (canLog && favorites.isNotEmpty()) item { FavoriteChips(favorites, busy, en, onRepeatFavorite, onRemoveFavorite) }
+            if (canLog && wellness != null) item { WellnessTipsCard(en, wellness, onUpgradeNutrition) }
             if (canLog && !tipDismissed) item { NutritionTip(en) { tipDismissed = true } }
         }
         if (canLog) {
@@ -1473,5 +1478,26 @@ private fun TrainingSection(title: String, timing: String, why: String, foods: L
                 }
             }
         }
+    }
+}
+
+/** Antrenman yüküne ve toparlanmaya göre genel beslenme ipuçları (katmana göre); tıbbi değil. */
+@Composable
+private fun WellnessTipsCard(en: Boolean, wellness: com.hedefit.app.data.model.NutritionWellnessData, onUpgrade: () -> Unit) {
+    Column(Modifier.fillMaxWidth().background(HedefitColors.Surface, RoundedCornerShape(20.dp)).padding(16.dp), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+        Text(if (en) "TODAY'S NUTRITION NOTES" else "BUGÜNÜN BESLENME NOTLARI", color = HedefitColors.Lime, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold)
+        wellness.tips.forEach { tip ->
+            Text(tip.title, color = HedefitColors.TextPrimary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(tip.body, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+        }
+        if (wellness.proteinBonusGrams > 0) Text(
+            if (en) "Optional: about +${wellness.proteinBonusGrams} g protein today can support recovery." else "İsteğe bağlı: bugün yaklaşık +${wellness.proteinBonusGrams} g protein toparlanmaya destek olabilir.",
+            color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall,
+        )
+        if (wellness.lockedTipCount > 0) Text(
+            if (en) "Plus and Premium add training-day and personalised notes. Tap to see." else "Plus ve Premium antrenman günü ve kişiselleştirilmiş notlar ekler. Görmek için dokun.",
+            color = HedefitColors.Lime, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onUpgrade() },
+        )
+        Text(if (en) "General information, not medical advice." else "Genel bilgidir, tıbbi tavsiye değildir.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.labelSmall)
     }
 }
