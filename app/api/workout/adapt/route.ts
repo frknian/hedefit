@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: "Geçersiz istek gövdesi" }, { status: 400 });
+    return Response.json({ error: "Invalid request body / Geçersiz istek gövdesi" }, { status: 400 });
   }
 
   const action = typeof body.action === "string" ? body.action : "";
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
 
     const result = replaceExercise(exerciseId, reason, profile, sessionIds, discomfortArea);
     if (!result) {
-      return Response.json({ error: "Uygun alternatif hareket bulunamadı" }, { status: 404 });
+      return Response.json({ error: body.locale === "en" ? "No suitable alternative exercise found" : "Uygun alternatif hareket bulunamadı" }, { status: 404 });
     }
     return Response.json(result);
   }

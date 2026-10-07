@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const limit = rateLimit(`nutrition-wellness:${auth.user.id}`, 30, 60_000);
   if (!limit.ok) return tooManyRequests(limit.retryAfterSeconds);
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body || typeof body !== "object") return Response.json({ error: "Geçersiz istek" }, { status: 400 });
+  if (!body || typeof body !== "object") return Response.json({ error: "Invalid request / Geçersiz istek" }, { status: 400 });
   const locale = body.locale === "en" ? "en" : "tr";
   const training = body.training && typeof body.training === "object" ? body.training as Record<string, unknown> : {};
   const tier = await loadPlanTier(request, auth.user.id);
