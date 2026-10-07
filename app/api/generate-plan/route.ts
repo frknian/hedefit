@@ -263,7 +263,7 @@ export async function POST(request: Request) {
     recentExerciseIds: await loadRecentExerciseIds(request),
   };
   const locale = payload.locale === "en" ? "en" : "tr";
-  const profile = { ...payload, ...(Array.isArray(payload.history) ? { history: redactSensitiveAnswers(payload.history.map(text), "") } : {}) };
+  const profile: Record<string, unknown> = { ...payload, ...(Array.isArray(payload.history) ? { history: redactSensitiveAnswers(payload.history.map(text), "") } : {}) };
   delete profile.photoDataUrl;
   delete profile.exerciseCatalog;
   delete profile.locale;
