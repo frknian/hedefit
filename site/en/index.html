@@ -239,6 +239,112 @@
               <div class="a-pad"></div>
             
             </section>
+            
+            <section class="view view-ex" data-v="kesfet" tabindex="-1">
+              
+              <h3 class="ex-h">Explore</h3>
+              
+              <div class="ex-seg" role="tablist" aria-label="Explore sections">
+                
+                <button type="button" role="tab" data-seg="prog" aria-selected="true">Programs</button>
+                
+                <button type="button" role="tab" data-seg="chal" aria-selected="false">Challenge</button>
+                
+                <button type="button" role="tab" data-seg="top" aria-selected="false">Community</button>
+              
+              </div>
+              
+              <div class="ex-pane on" data-pane="prog">
+                
+                <div class="ex-cats">
+                  
+                  <button type="button" data-go="kocchal"><i>✨</i>For You</button>
+                  
+                  <button type="button" data-go="atlas"><i>🏋</i>Gym</button>
+                  
+                  <button type="button" data-go="atlas"><i>🏠</i>At Home</button>
+                  
+                  <button type="button" data-go="atlas"><i>〰</i>Band</button>
+                  
+                  <button type="button" data-go="atlas"><i>🧘</i>Pilates</button>
+                  
+                  <button type="button" data-go="atlas"><i>🤸</i>Flexibility</button>
+                  
+                  <button type="button" data-go="atlas"><i>💪</i>Muscle Groups</button>
+                  
+                  <button type="button" data-go="atlas"><i>📖</i>Exercise Library</button>
+                
+                </div>
+                
+                <h4>My Workout</h4>
+                
+                <div class="a-card">
+                  
+                  <small class="lime">ACTIVE PROGRAM</small><b>Upper / Lower Strength</b>
+                  
+                  <ul class="ex-list">
+                    
+                    <li><span>Bench Press</span><em>4 × 8–10</em></li>
+                    
+                    <li><span>Lat Pulldown</span><em>4 × 10–12</em></li>
+                    
+                    <li><span>Shoulder Press</span><em>3 × 10–12</em></li>
+                  
+                  </ul>
+                  
+                  <button type="button" class="a-btn" data-go="seans">▶ Start workout</button>
+                
+                </div>
+              
+              </div>
+              
+              <div class="ex-pane" data-pane="chal">
+                
+                <button type="button" class="a-card ex-coach" data-go="kocchal"><img src="/assets/brand/koc.png" alt="" width="26" height="26"><span><b>Create a Challenge with Fit Coach</b><em>A personal plan for your goal, time and equipment.</em></span><i>›</i></button>
+                
+                <h4>In progress</h4>
+                
+                <div class="ex-active" id="exActive"></div>
+                
+                <div class="ex-chips" id="exChips" role="tablist" aria-label="Challenge categories"></div>
+                
+                <div class="ex-cards" id="exCards" aria-live="polite"></div>
+              
+              </div>
+              
+              <div class="ex-pane" data-pane="top">
+                
+                <div class="ex-friends">
+                  
+                  <div><i>M</i><b>Mert</b><em>Level 12</em></div>
+                  
+                  <div><i>E</i><b>Sophie</b><em>Level 9</em></div>
+                  
+                  <div><i>C</i><b>Can</b><em>Level 7</em></div>
+                
+                </div>
+                
+                <h4>7-Day Step Challenge</h4>
+                
+                <div class="a-card ex-race" id="exRace">
+                  
+                  <small>COMPETE · 3 DAYS LEFT</small>
+                  
+                  <div class="rr"><span>Mert</span><div class="gbar"><span style="width:100%"></span></div><em>42.840</em></div>
+                  
+                  <div class="rr me"><span>Alex</span><div class="gbar"><span id="exMe" style="width:91.5%"></span></div><em id="exMeTxt">39.210</em></div>
+                  
+                  <button type="button" class="a-btn" id="exWalk">Walk +2,000 steps</button>
+                
+                </div>
+                
+                <button type="button" class="a-card ex-dare" id="exDare">🏆 <b>Challenge</b><em>Complete Together or Compete</em></button>
+              
+              </div>
+              
+              <div class="a-pad"></div>
+            
+            </section>
           
           </div>
           
@@ -599,6 +705,26 @@
     <div class="more reveal">
       
       <h3>Explore more</h3>
+      
+      <div class="more-shots" tabindex="0" aria-label="New app screens, scroll sideways">
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/bugun.jpg" alt="Today: active challenge on the home screen" width="560" height="1244"></div><figcaption>Today</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/kesfet.jpg" alt="Explore: Programs" width="560" height="1244"></div><figcaption>Explore · Programs</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/challenge.jpg" alt="Explore: Challenge" width="560" height="1244"></div><figcaption>Challenge</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/challenge-detay.jpg" alt="Challenge details and today’s task" width="560" height="1244"></div><figcaption>Today’s task</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/koc-challenge.jpg" alt="A personal challenge with Fit Coach" width="560" height="1244"></div><figcaption>Challenge with Fit Coach</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/istatistik.jpg" alt="Progress: level, XP and badges" width="560" height="1244"></div><figcaption>Level and XP</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/beslenme.jpg" alt="Nutrition" width="560" height="1244"></div><figcaption>Nutrition</figcaption></figure>
+        
+        <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/adim-yarisi.jpg" alt="Step race with a friend" width="560" height="1244"></div><figcaption>Challenge a friend</figcaption></figure>
+      
+      </div>
       
       <div class="mgrid">
         
