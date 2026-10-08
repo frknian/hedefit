@@ -106,7 +106,7 @@
   
   <div class="hero-copy">
     
-    <p class="eyebrow reveal">Workouts · Nutrition · Cardio · AI coach</p>
+    <p class="eyebrow reveal">Programs · Challenges · Nutrition · AI coach</p>
     
     <h1 class="reveal">Your path to your goal,<br><span class="hl">in one app.</span></h1>
     
@@ -176,6 +176,16 @@
               
               </div>
               
+              <button type="button" class="a-card chal-card" data-go="challenge">
+                
+                <small>ACTIVE CHALLENGE</small><b>14-Day Core Challenge</b>
+                
+                <span class="cdots" aria-hidden="true"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="t"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                
+                <span class="crow"><em>Day 6 / 14 · 10 min Core</em><strong>+25 XP</strong></span>
+              
+              </button>
+              
               <h4>Goal journey</h4>
               
               <button type="button" class="a-card goalc" data-go="hedef">
@@ -238,13 +248,13 @@
             
             <button type="button" data-tab="home" class="on" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
             
-            <button type="button" data-tab="antrenman" aria-label="Workout"><svg viewBox="0 0 24 24" class="fill"><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><rect x="8" y="11" width="8" height="2"/></svg></button>
+            <button type="button" data-tab="kesfet" aria-label="Explore"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></button>
+            
+            <button type="button" data-tab="koc" aria-label="Fit Coach"><img src="/assets/brand/koc.png" alt="" width="24" height="24"></button>
             
             <button type="button" data-tab="beslenme" aria-label="Nutrition"><svg viewBox="0 0 24 24"><path d="M7 3v7M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/></svg></button>
             
             <button type="button" data-tab="ilerleme" aria-label="Progress"><svg viewBox="0 0 24 24" class="fill"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="5" width="4" height="15" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg></button>
-            
-            <button type="button" data-tab="koc" aria-label="Fit Coach"><img src="/assets/brand/koc.png" alt="" width="24" height="24"></button>
           
           </nav>
           
@@ -320,11 +330,11 @@
   
   <div class="marquee-track">
     
-    <span>Workout</span><span>Nutrition</span><span>Cardio</span><span>Hedef<span lang="en">it</span> Routes</span><span>Progress</span><span>Fit Coach</span>
+    <span>Programs</span><span>Challenge</span><span>XP and levels</span><span>Nutrition</span><span>Cardio</span><span>Hedef<span lang="en">it</span> Routes</span><span>Progress</span><span>Fit Coach</span>
     
-    <span>Workout</span><span>Nutrition</span><span>Cardio</span><span>Hedef<span lang="en">it</span> Routes</span><span>Progress</span><span>Fit Coach</span>
+    <span>Programs</span><span>Challenge</span><span>XP and levels</span><span>Nutrition</span><span>Cardio</span><span>Hedef<span lang="en">it</span> Routes</span><span>Progress</span><span>Fit Coach</span>
     
-    <span>Workout</span><span>Nutrition</span><span>Cardio</span><span>Hedef<span lang="en">it</span> Routes</span><span>Progress</span><span>Fit Coach</span>
+    <span>Programs</span><span>Challenge</span><span>XP and levels</span><span>Nutrition</span><span>Cardio</span><span>Hedef<span lang="en">it</span> Routes</span><span>Progress</span><span>Fit Coach</span>
   
   </div>
 
@@ -564,17 +574,17 @@
 
       <article class="bcard reveal">
         
-        <div class="bhead"><span class="bico">👥</span><div><h3>Together with friends</h3><p>Follow the feed, climb the XP board, start a challenge.</p></div></div>
+        <div class="bhead"><span class="bico">👥</span><div><h3>Together with friends</h3><p>Challenge a friend: complete it together or compete.</p></div></div>
         
         <div class="bdemo">
           
           <div class="seg three bmode" id="socTabs" role="tablist" aria-label="Social">
             
-            <button type="button" data-s="feed" aria-selected="true"><b>Feed</b></button>
+            <button type="button" data-s="together" aria-selected="true"><b>Together</b></button>
+            
+            <button type="button" data-s="chal" aria-selected="false"><b>Compete</b></button>
             
             <button type="button" data-s="board" aria-selected="false"><b>Leaderboard</b></button>
-            
-            <button type="button" data-s="chal" aria-selected="false"><b>Challenge</b></button>
           
           </div>
           
@@ -602,9 +612,9 @@
         
         <a class="mtile" href="/en/detail#tablet"><span class="mi">📱</span><b>Tablet and foldable</b><small>Stand mode on big screens</small><i aria-hidden="true">→</i></a>
         
-        <a class="mtile" href="/en/detail#gorevler"><span class="mi">🏆</span><b>Quests and XP</b><small>Level up, earn badges</small><i aria-hidden="true">→</i></a>
+        <a class="mtile" href="/en/detail#gorevler"><span class="mi">🏆</span><b>Challenges, XP and levels</b><small>Join a challenge, level up, earn badges</small><i aria-hidden="true">→</i></a>
         
-        <a class="mtile" href="/en/detail#sosyal"><span class="mi">👥</span><b>Social</b><small>Friends, ranking, challenges</small><i aria-hidden="true">→</i></a>
+        <a class="mtile" href="/en/detail#sosyal"><span class="mi">👥</span><b>Community</b><small>Friends, challenge, complete together</small><i aria-hidden="true">→</i></a>
         
         <a class="mtile" href="/en/detail#galeri"><span class="mi">🖼</span><b>Screenshots</b><small>From inside the app</small><i aria-hidden="true">→</i></a>
         
@@ -613,6 +623,48 @@
       </div>
     
     </div>
+  
+  </div>
+
+</section>
+
+
+
+<!-- CHALLENGE -->
+
+<section class="section challenge" id="challenge">
+  
+  <div class="wrap">
+    
+    <p class="eyebrow reveal">Explore · Challenge</p>
+    
+    <h2 class="reveal">Join a challenge, <span class="hl">level up.</span></h2>
+    
+    <p class="lead reveal">Find a challenge in Explore or have Fit Coach build one just for you. Today’s task waits on your Today screen; complete it to earn XP and grow your streak and level. Results live in Progress.</p>
+    
+    <div class="social-row reveal">
+      
+      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/challenge.jpg" alt="Challenge discovery screen" width="560" height="1244"></div><figcaption>Find a challenge</figcaption></figure>
+      
+      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/challenge-detay.jpg" alt="Challenge details and today’s task" width="560" height="1244"></div><figcaption>Today’s task</figcaption></figure>
+      
+      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/koc-challenge.jpg" alt="A personal challenge with Fit Coach" width="560" height="1244"></div><figcaption>Create with Fit Coach</figcaption></figure>
+      
+      <figure><div class="phone"><img loading="lazy" src="/assets/shots-en/istatistik.jpg" alt="Level, XP and badges" width="560" height="1244"></div><figcaption>Levels and badges</figcaption></figure>
+    
+    </div>
+    
+    <div class="adapt-grid reveal">
+      
+      <article class="adapt-card"><h3>A streak that doesn’t punish</h3><p>Miss a day and the challenge doesn’t break; you pick up where you left off. A recovery day keeps your streak.</p></article>
+      
+      <article class="adapt-card"><h3>Fits how you feel today</h3><p>If your check-in shows low energy or poor sleep, the task gets shorter and the day still counts in full.</p></article>
+      
+      <article class="adapt-card"><h3>XP is never taken away</h3><p>XP is awarded once per action and never taken back. Workouts, check-ins, water, nutrition and challenge days all feed your level.</p></article>
+    
+    </div>
+    
+    <p class="fine reveal">Names and values in the screenshots are sample data and don’t belong to a real user.</p>
   
   </div>
 

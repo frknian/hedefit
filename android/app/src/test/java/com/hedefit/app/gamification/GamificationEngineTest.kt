@@ -81,9 +81,11 @@ class GamificationEngineTest {
         assertEquals(3, GamificationEngine.aiRewardFor(750).extraQuestions)
     }
 
-    @Test fun `achievement catalogue contains twenty four rewards of one hundred xp`() {
+    @Test fun `achievement catalogue contains thirty rewards of one hundred xp`() {
         val result = snapshot()
-        assertEquals(24, result.achievements.size)
+        // 24 aktivite rozeti + 30 günlük seri + 5 challenge rozeti (sunucuda açılır).
+        assertEquals(30, result.achievements.size)
+        assertTrue(result.achievements.filter { it.id.contains("challenge") }.all { it.unlockedAt == null })
         assertTrue(result.achievements.all { it.rewardXp == 100 })
     }
 

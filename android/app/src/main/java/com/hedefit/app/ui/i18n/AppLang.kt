@@ -12,6 +12,9 @@ object AppLang {
     var en by mutableStateOf(false)
 }
 
+/** Dile göre büyük harf (Türkçede i → İ). Locale'siz uppercase() "SERI" gibi hatalı sonuç verir. */
+fun String.upperLocalized(): String = uppercase(if (AppLang.en) java.util.Locale.ENGLISH else java.util.Locale.forLanguageTag("tr"))
+
 /** Türkçe / İngilizce metin seçer. */
 fun tr(tr: String, en: String): String = if (AppLang.en) en else tr
 

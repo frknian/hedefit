@@ -29,6 +29,9 @@ private const val NEW_BLOCK_HOUR = 9
 private const val WEIGH_IN_REQUEST_CODE = 791
 private const val WEIGH_IN_NOTIFICATION_ID = 1203
 private const val WEIGH_IN_HOUR = 9
+private const val CHALLENGE_REQUEST_CODE = 792
+private const val CHALLENGE_NOTIFICATION_ID = 1204
+private const val CHALLENGE_HOUR = 18
 
 class NotificationScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -54,6 +57,37 @@ class NotificationScheduler(private val context: Context) {
         }
         scheduleNewBlock(preferences)
         scheduleWeighIn(preferences)
+        scheduleChallengeReminder(preferences)
+    }
+
+    /**
+     * Günlük challenge hatırlatması (18:00). Tek seferlik alarm; tetiklendiğinde ve uygulama her açıldığında yeniden
+     * kurulur. Alıcı ağ çağırmaz: uygulamanın yazdığı günlük özete bakar ve görev yapılmışsa sessiz kalır.
+     */
+    fun scheduleChallengeReminder(preferences: AppPreferences) {
+        cancelChallengeReminder()
+        if (!preferences.notificationsEnabled || !preferences.challengeRemindersEnabled) return
+        createChannel(context)
+        val triggerAt = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, CHALLENGE_HOUR)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (timeInMillis <= System.currentTimeMillis()) add(Calendar.DAY_OF_YEAR, 1)
+        }.timeInMillis
+        val pending = PendingIntent.getBroadcast(
+            context, CHALLENGE_REQUEST_CODE, Intent(context, ChallengeNotificationReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pending)
+    }
+
+    private fun cancelChallengeReminder() {
+        val pending = PendingIntent.getBroadcast(
+            context, CHALLENGE_REQUEST_CODE, Intent(context, ChallengeNotificationReceiver::class.java),
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+        )
+        if (pending != null) alarmManager.cancel(pending)
     }
 
     /**
@@ -124,11 +158,46 @@ class NotificationScheduler(private val context: Context) {
         }
         cancelNewBlock()
         cancelWeighIn()
+        cancelChallengeReminder()
+    }
+}
+
+/** Bugünkü challenge görevi yapılmadıysa tek bir nazik hatırlatma; serinin 7'ye 1 gün kaldığı gün metni değişir. */
+class ChallengeNotificationReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        val preferences = AppPreferencesStore(context).read()
+        NotificationScheduler(context).scheduleChallengeReminder(preferences)
+        if (!preferences.notificationsEnabled || !preferences.challengeRemindersEnabled) return
+        val summary = context.getSharedPreferences("hedefit-challenges", Context.MODE_PRIVATE)
+        if (summary.getString("reminder_date", null) != LocalDate.now().toString() || summary.getBoolean("reminder_done", true)) return
+        val en = preferences.language == "en"
+        val title = (if (en) summary.getString("reminder_title_en", null) else summary.getString("reminder_title_tr", null)) ?: return
+        createChannel(context)
+        if (android.os.Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        val streak = summary.getInt("reminder_streak", 0)
+        val text = when {
+            streak % 7 == 6 -> if (en) "Just 1 day left to your ${streak + 1}-day streak." else "${streak + 1} günlük serine yalnızca 1 gün kaldı."
+            else -> if (en) "Today's task is ready." else "Bugünkü görevin hazır."
+        }
+        val openApp = PendingIntent.getActivity(
+            context, 903, Intent(context, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setContentIntent(openApp)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+        NotificationManagerCompat.from(context).notify(CHALLENGE_NOTIFICATION_ID, notification)
     }
 }
 
 class RoutineNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
+        val en = AppPreferencesStore(context).read().language == "en"
         createChannel(context)
         if (android.os.Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
         val openApp = PendingIntent.getActivity(
@@ -137,8 +206,8 @@ class RoutineNotificationReceiver : BroadcastReceiver() {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher)
-            .setContentTitle("Bugünün hedefi hazır")
-            .setContentText("Kısa bir antrenman bile serini korur. Planına göz at.")
+            .setContentTitle(if (en) "Today's goal is ready" else "Bugünün hedefi hazır")
+            .setContentText(if (en) "Even a short workout keeps your streak. Take a look at your plan." else "Kısa bir antrenman bile serini korur. Planına göz at.")
             .setContentIntent(openApp)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -203,5 +272,7 @@ class WeighInNotificationReceiver : BroadcastReceiver() {
 
 private fun createChannel(context: Context) {
     val manager = context.getSystemService(NotificationManager::class.java)
-    manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Antrenman hatırlatmaları", NotificationManager.IMPORTANCE_DEFAULT))
+    // Kanal adı dile göre güncellenir (aynı kimlikle yeniden oluşturmak yalnız adı değiştirir).
+    val en = AppPreferencesStore(context).read().language == "en"
+    manager.createNotificationChannel(NotificationChannel(CHANNEL_ID, if (en) "Training reminders" else "Antrenman hatırlatmaları", NotificationManager.IMPORTANCE_DEFAULT))
 }

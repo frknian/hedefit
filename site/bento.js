@@ -183,18 +183,19 @@
     const me = { n: t('Sen', 'You'), xp: 320, me: true };
     const board = [{ n: 'Elif', xp: 540 }, { n: 'Mert', xp: 470 }, me, { n: 'Zeynep', xp: 290 }, { n: 'Can', xp: 210 }];
     const chal = { me: 14, fr: 17, goal: 30 };
-    let tab = 'feed';
-    const FEED = [
-      ['E', 'Elif', t('5,2 km koştu', 'ran 5.2 km'), t('2 sa önce', '2 h ago')],
-      ['M', 'Mert', t('Bacak antrenmanını tamamladı', 'finished a leg workout'), t('4 sa önce', '4 h ago')],
-      ['Z', 'Zeynep', t('12 günlük seriye ulaştı', 'reached a 12-day streak'), t('dün', 'yesterday')],
-    ];
+    let tab = 'together';
+    const tog = { me: 9, fr: 8, goal: 14 };
     const draw = () => {
       body.innerHTML = '';
-      if (tab === 'feed') {
-        const ul = document.createElement('ul'); ul.className = 'feed';
-        FEED.forEach(([a, n, w, ago]) => { const li = document.createElement('li'); li.innerHTML = '<i></i><div><b></b> <span></span><small></small></div>'; li.firstChild.textContent = a; li.querySelector('b').textContent = n; li.querySelector('span').textContent = w; li.querySelector('small').textContent = ago; ul.appendChild(li); });
-        body.appendChild(ul);
+      if (tab === 'together') {
+        // Birlikte Tamamla: amaç ikinizin de bitirmesi.
+        const wrap = document.createElement('div'); wrap.className = 'chal';
+        const h = document.createElement('p'); h.className = 'bnote'; h.textContent = t('14 Gün Core · Elif ile birlikte', '14-Day Core · together with Elif'); wrap.appendChild(h);
+        [[t('Sen', 'You'), tog.me, true], ['Elif', tog.fr, false]].forEach(([n, v, mine]) => { const r = document.createElement('div'); r.className = 'cr' + (mine ? ' me' : ''); r.innerHTML = '<span></span><div class="mbar"><i></i></div><b></b>'; r.querySelector('span').textContent = n; r.querySelector('i').style.setProperty('--w', Math.round(v / tog.goal * 100) + '%'); r.querySelector('b').textContent = v + '/' + tog.goal; wrap.appendChild(r); });
+        const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'sbtn'; btn.textContent = t('Bugünkü görevi yap (+25 XP)', 'Do today’s task (+25 XP)');
+        btn.addEventListener('click', () => { tog.me = Math.min(tog.goal, tog.me + 1); tog.fr = Math.min(tog.goal, tog.fr + 1); draw(); });
+        const res = document.createElement('p'); res.className = 'bnote'; res.textContent = tog.me >= tog.goal ? t('İkiniz de bitirdiniz: +100 bonus XP!', 'You both finished: +100 bonus XP!') : t('İkiniz de bitirince bonus XP kazanırsınız.', 'Finish together to earn bonus XP.');
+        body.append(wrap, btn, res);
       } else if (tab === 'board') {
         const rows = [...board].sort((x, y) => y.xp - x.xp), top = rows[0].xp;
         const ul = document.createElement('ul'); ul.className = 'lb';
@@ -204,7 +205,7 @@
         body.append(ul, btn);
       } else {
         const wrap = document.createElement('div'); wrap.className = 'chal';
-        const h = document.createElement('p'); h.className = 'bnote'; h.textContent = t('Haftalık 30 km · Elif ile', 'Weekly 30 km · vs Elif'); wrap.appendChild(h);
+        const h = document.createElement('p'); h.className = 'bnote'; h.textContent = t('Rekabet · 30 km · Elif ile', 'Compete · 30 km · vs Elif'); wrap.appendChild(h);
         [[t('Sen', 'You'), chal.me, true], ['Elif', chal.fr, false]].forEach(([n, v, mine]) => { const r = document.createElement('div'); r.className = 'cr' + (mine ? ' me' : ''); r.innerHTML = '<span></span><div class="mbar"><i></i></div><b></b>'; r.querySelector('span').textContent = n; r.querySelector('i').style.setProperty('--w', Math.min(100, Math.round(v / chal.goal * 100)) + '%'); r.querySelector('b').textContent = num(v, v % 1 ? 1 : 0) + ' km'; wrap.appendChild(r); });
         const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'sbtn'; btn.textContent = t('+5 km koştum', 'I ran +5 km');
         btn.addEventListener('click', () => { chal.me = Math.min(chal.goal, chal.me + 5); draw(); });

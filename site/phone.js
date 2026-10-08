@@ -4,7 +4,7 @@
   const EN = document.documentElement.lang === 'en';
   const t = (tr, en) => (EN ? en : tr);
   // İngilizce arayüzlü ekran görüntüsü olanlar (site/assets/shots-en); diğerleri Türkçe arayüzlü kalır.
-  const EN_SHOTS = new Set(['atlas', 'harita', 'beslenme', 'hareketler', 'istatistik', 'ogunler', 'rota', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
+  const EN_SHOTS = new Set(['kesfet', 'challenge', 'challenge-detay', 'koc-challenge', 'topluluk', 'adim-yarisi', 'atlas', 'harita', 'beslenme', 'hareketler', 'istatistik', 'ogunler', 'rota', 'hedef', 'kardiyo-prog', 'koc', 'kosubandi', 'oyun', 'program', 'rotaplan', 'seans-detay', 'seans-hizli', 'sosyal-board', 'sosyal-challenges', 'sosyal-feed', 'sosyal-friends']);
   const app = document.getElementById('heroApp');
   if (!app) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -17,9 +17,10 @@
   // id → { img, başlık, açıklama, bölüm bağlantısı, sekme }
   const S = {
     home:      { t: t('Ana ekran', 'Home screen'), d: t('Bugünün antrenmanı, hedef yolculuğu ve günlük dengen tek bakışta.', 'Today\'s workout, goal journey and daily balance at a glance.'), tab: 'home' },
-    antrenman: { img: 'hareketler', t: t('Antrenman', 'Workout'), d: t('Her hareket animasyonlu önizlemeyle gelir; set ve tekrarı dokunarak ayarla.', 'Every exercise comes with an animated preview; adjust sets and reps with a tap.'), a: '#f-antrenman', tab: 'antrenman' },
+    kesfet:    { img: 'kesfet', t: t('Keşfet', 'Explore'), d: t('Programlar, challenge’lar ve topluluk tek sekmede. Antrenmanın ve hareket kütüphanen Programlar’da.', 'Programs, challenges and community in one tab. Your workout and the exercise library live in Programs.'), a: '#challenge', tab: 'kesfet' },
+    challenge: { img: 'challenge-detay', t: t('Challenge', 'Challenge'), d: t('Gün gün plan, seri ve bugünkü görev. Görevi yap, XP kazan.', 'A day-by-day plan, your streak and today’s task. Do the task, earn XP.'), a: '#challenge' },
     beslenme:  { img: 'beslenme', t: t('Beslenme', 'Nutrition'), d: t('Kalori halkası, makrolar ve su. Öğünü yaz, kalorisi veritabanından hesaplansın; ya da fotoğrafla.', 'Calorie ring, macros and water. Type your meal and its calories are calculated from the database, or photograph it.'), a: '#f-beslenme', tab: 'beslenme' },
-    ilerleme:  { img: 'istatistik', t: t('İlerleme', 'Progress'), d: t('Aktivite takvimi, seri ve haftalık süre. 7G’den Tümü’ne.', 'Activity calendar, streak and weekly time. From 7D to All.'), a: '#f-ilerleme', tab: 'ilerleme' },
+    ilerleme:  { img: 'istatistik', t: t('İlerleme', 'Progress'), d: t('Seviye, XP, seri ve rozetlerin; kilo ve performans grafiklerinle birlikte.', 'Your level, XP, streak and badges, alongside your weight and performance charts.'), a: '#f-ilerleme', tab: 'ilerleme' },
     koc:       { img: 'koc', t: t('Fit Koç', 'Fit Coach'), d: t('Antrenman, beslenme ve ilerleme sorularını senin verine göre yanıtlar.', 'Answers your training, nutrition and progress questions using your own data.'), a: '#f-koc', tab: 'koc' },
     seans:     { img: 'seans-hizli', t: t('Antrenman seansı', 'Workout session'), d: t('Setlere dokun, dinlenme sayacı kendiliğinden başlar. İstersen detaylı moda geç.', 'Tap sets and the rest timer starts on its own. Switch to detailed mode if you like.'), a: '#f-antrenman' },
     hedef:     { img: 'hedef', t: t('Hedef yolculuğu', 'Goal journey'), d: t('Hedef kilon için tempo seç; tarihin ve ara hedeflerin hesaplansın.', 'Pick a pace for your target weight; your date and milestones are calculated.'), a: '#hedef-yolculugu' },
@@ -28,9 +29,9 @@
     oyun:      { img: 'oyun', t: t('Oyun modu', 'Game mode'), d: t('Sanal rota, rekorunla yarış ve hedef görevleri.', 'A virtual route, racing your record and goal quests.'), a: '#galeri' },
     rota:      { img: 'rota', t: t('Hedefit Rota', 'Hedefit Routes'), d: t('GPS ile kaydet, rotanı planla ve tekrar kullan.', 'Record with GPS, plan your route and reuse it.'), a: '#rota' },
     ogunler:   { img: 'ogunler', t: t('Öğün ekle', 'Add meal'), d: t('Metinle ya da fotoğrafla akıllı öğün ekleme.', 'Smart meal add by text or photo.'), a: '#yapay-zeka' },
-    arkadaslar:{ img: 'sosyal-friends', t: t('Arkadaşlar', 'Friends'), d: t('Sıralama, akış ve ortak meydan okumalar.', 'Leaderboard, feed and shared challenges.'), a: '#sosyal' },
+    arkadaslar:{ img: 'topluluk', t: t('Topluluk', 'Community'), d: t('Arkadaşların, meydan okumalar ve challenge sıralamaları.', 'Your friends, challenges and challenge rankings.'), a: '#challenge' },
   };
-  const TABS = ['home', 'antrenman', 'beslenme', 'ilerleme', 'koc'];
+  const TABS = ['home', 'kesfet', 'koc', 'beslenme', 'ilerleme'];
   const home = views.querySelector('[data-v="home"]');
   let cur = 'home', userActive = false, idleT = 0, tourT = 0, tourI = 0;
 
@@ -119,7 +120,7 @@
     const step = n => { const p = Math.min(1, (n - t) / dur); el.scrollTop = from + (to - from) * ease(p); if (p < 1 && !userActive) requestAnimationFrame(step); };
     requestAnimationFrame(step);
   }
-  const STEPS = ['home-scroll', 'antrenman', 'beslenme', 'ilerleme', 'koc', 'home', 'rota', 'home'];
+  const STEPS = ['home-scroll', 'kesfet', 'koc', 'beslenme', 'ilerleme', 'home', 'rota', 'home'];
   function tour() {
     if (userActive || reduce || !visible) return;
     const s = STEPS[tourI++ % STEPS.length];

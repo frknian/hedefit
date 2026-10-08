@@ -177,6 +177,13 @@ fun HomeScreen(
     onQuickActionsChange: (List<String>) -> Unit = {},
     onOpenFriends: () -> Unit = {},
     onSaveWeight: (Double) -> Unit = {},
+    /** Ana ekranda tek kompakt kart: en öncelikli aktif challenge (yoksa alan hiç gösterilmez). */
+    activeChallenge: com.hedefit.app.data.model.UserChallengeData? = null,
+    otherActiveChallenges: Int = 0,
+    challengeDayXp: Int = 25,
+    challengeBusy: Boolean = false,
+    onOpenChallenge: (com.hedefit.app.data.model.UserChallengeData) -> Unit = {},
+    onDoChallengeTask: (com.hedefit.app.data.model.UserChallengeData) -> Unit = {},
 ) {
     val en = language == "en"
     var metricDialog by remember { mutableStateOf<String?>(null) }
@@ -221,6 +228,12 @@ fun HomeScreen(
             item { NextStepCard(data, en, waterGoalMl, onOpenProgram, onOpenNutrition, { metricDialog = "water" }, onOpenCoach) }
             item { CheckinCard(en, checkinToday, onOpenCheckin) }
             if (adaptiveResult != null) item { AdaptiveCard(en, adaptiveResult, onStartAdaptive, onDismissAdaptive, onAdaptiveUpgrade) }
+            // Sıra: Bugünün Antrenmanı → Check-in → Aktif Challenge → Hedef Yolculuğu → Günlük Denge.
+            activeChallenge?.let { challenge ->
+                item(key = "active-challenge") {
+                    HomeActiveChallengeCard(challenge, challengeDayXp, challengeBusy, onOpen = { onOpenChallenge(challenge) }, onDoTask = { onDoChallengeTask(challenge) }, extraCount = otherActiveChallenges)
+                }
+            }
             val wellnessUp = com.hedefit.app.data.model.wellnessProminent(data.profile.gender, data.profile.historyAnswers.getOrNull(8).orEmpty())
             if (wellnessUp) item { WellnessRow(en, onStartWellness) }
             item { HfSectionHeader(if (en) "Goal journey" else "Hedef yolculuğu") }

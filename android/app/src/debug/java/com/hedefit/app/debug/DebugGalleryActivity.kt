@@ -76,6 +76,8 @@ class DebugGalleryActivity : ComponentActivity() {
                             isLocked = { item -> !TIER_LIMITS.getValue(tier).canUseModalityExercise(item.modalities, item.subcategories) },
                         )
                     }
+                    "home", "explore", "challenges", "challenge_detail", "community", "step_race", "progress", "coach", "coach_challenge", "nutrition" ->
+                        Showcase(screen, lang) { finish() }
                     "onboarding" -> ProfileQuestionnaireScreen(
                         profile = demoProfile(gender),
                         saving = false,

@@ -24,6 +24,8 @@ data class AppPreferences(
     val weighInReminderEnabled: Boolean = false,
     /** java.util.Calendar gün sabiti (varsayılan Pazartesi). */
     val weighInReminderDay: Int = 2,
+    /** Günde en fazla bir challenge hatırlatması (yalnızca bugünkü görev yapılmadıysa); ana bildirim anahtarını da izler. */
+    val challengeRemindersEnabled: Boolean = true,
 ) {
     companion object {
         val DEFAULT_QUICK_ACTIONS = listOf("workout", "nutrition", "coach", "musclemap", "atlas", "cardio", "route", "sleep", "curlgame")
@@ -51,6 +53,7 @@ class AppPreferencesStore(context: Context) {
         welcomeGuideSeen = preferences.getBoolean("welcome_guide_seen", false),
         weighInReminderEnabled = preferences.getBoolean("weigh_in_reminder_enabled", false),
         weighInReminderDay = preferences.getInt("weigh_in_reminder_day", 2).coerceIn(1, 7),
+        challengeRemindersEnabled = preferences.getBoolean("challenge_reminders_enabled", true),
         planRotation = preferences.getString("plan_rotation", "monthly").let { if (it == "weekly") "weekly" else "monthly" },
         // Kardiyo ve dambıl oyunu sonradan eklendi: kayıtlı listesi olanlara bir kez eklenir.
         homeQuickActions = preferences.getString("home_quick_actions", null)
@@ -87,6 +90,7 @@ class AppPreferencesStore(context: Context) {
             .putString("home_quick_actions", value.homeQuickActions.joinToString(","))
             .putBoolean("weigh_in_reminder_enabled", value.weighInReminderEnabled)
             .putInt("weigh_in_reminder_day", value.weighInReminderDay.coerceIn(1, 7))
+            .putBoolean("challenge_reminders_enabled", value.challengeRemindersEnabled)
             .putString("plan_rotation", if (value.planRotation == "weekly") "weekly" else "monthly")
             .apply()
     }

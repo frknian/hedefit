@@ -391,7 +391,8 @@ test("social/challenges/[id] PATCH: normal durum — davet kabul edilir", async 
       body: JSON.stringify({ status: "joined" }),
     }), { params: Promise.resolve({ id: "00000000-0000-4000-8000-000000000c02" }) });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { challengeId: "00000000-0000-4000-8000-000000000c02", status: "joined" });
+    // Katalog bağlantısı olmayan (eski tip) davette challenge planı başlatılmaz.
+    assert.deepEqual(await response.json(), { challengeId: "00000000-0000-4000-8000-000000000c02", status: "joined", userChallengeId: null });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();
@@ -496,13 +497,14 @@ test("social/settings GET: normal durum — aranabilirlik tercihi döner", async
   globalThis.fetch = withAuthenticatedFetch((url) => {
     const href = String(url);
     if (href.includes("/rpc/hedefit_get_discoverable")) return Response.json(false);
+    if (href.includes("/rest/v1/profiles")) return Response.json({ share_progress_with_friends: false });
     throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
   }, freshUserId());
   try {
     const { GET } = await import(`../app/api/social/settings/route.ts?test=${Date.now()}`);
     const response = await GET(authorizedRequest("http://localhost/api/social/settings"));
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { discoverable: false });
+    assert.deepEqual(await response.json(), { discoverable: false, shareProgress: false });
   } finally {
     globalThis.fetch = previousFetch;
     restoreEnv();

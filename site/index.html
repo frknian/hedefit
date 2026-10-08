@@ -52,7 +52,7 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-copy">
-    <p class="eyebrow reveal">Antrenman · Beslenme · Kardiyo · Yapay zekâ koçu</p>
+    <p class="eyebrow reveal">Programlar · Challenge · Beslenme · Yapay zekâ koçu</p>
     <h1 class="reveal">Hedefine giden yol,<br><span class="hl">tek uygulamada.</span></h1>
     <p class="lead reveal">Antrenmanın, öğünlerin, koşuların ve koçun tek yerde. Hareketlerin ve kalorin <b>doğrulanmış verilerle hesaplanır</b>; yapay zekâ <b>tabağını fotoğraftan okur, haftanı yorumlar</b> ve sorularını senin verine bakarak yanıtlar. Hedeflerin ise ona bırakılmaz: boyundan, kilondan ve amacından <b>hesaplanır</b>.</p>
     <div class="stores reveal" id="yakinda">
@@ -87,6 +87,11 @@
                 <div class="tags"><i>Kalça</i><i>Göğüs</i><i>Sırt</i></div>
                 <button type="button" class="a-btn" data-go="seans">▶ Antrenmanı başlat</button>
               </div>
+              <button type="button" class="a-card chal-card" data-go="challenge">
+                <small>AKTİF CHALLENGE</small><b>14 Gün Core Challenge</b>
+                <span class="cdots" aria-hidden="true"><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="d"></i><i class="t"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="crow"><em>Gün 6 / 14 · 10 dk Core</em><strong>+25 XP</strong></span>
+              </button>
               <h4>Hedef yolculuğu</h4>
               <button type="button" class="a-card goalc" data-go="hedef">
                 <div class="gc-row"><div><small>ŞİMDİ</small><b id="apKg">95.0 kg</b></div><span class="pill" id="apWk">20 hafta kaldı</span><div class="gr"><small>HEDEF</small><b id="apTo">80.0 kg</b></div></div>
@@ -118,10 +123,10 @@
           <button type="button" class="app-back" id="appBack" hidden>‹ Geri</button>
           <nav class="app-nav" aria-label="Uygulama sekmeleri">
             <button type="button" data-tab="home" class="on" aria-label="Ana sayfa"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
-            <button type="button" data-tab="antrenman" aria-label="Antrenman"><svg viewBox="0 0 24 24" class="fill"><rect x="2" y="9" width="3" height="6" rx="1"/><rect x="5" y="7" width="3" height="10" rx="1"/><rect x="16" y="7" width="3" height="10" rx="1"/><rect x="19" y="9" width="3" height="6" rx="1"/><rect x="8" y="11" width="8" height="2"/></svg></button>
+            <button type="button" data-tab="kesfet" aria-label="Keşfet"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></button>
+            <button type="button" data-tab="koc" aria-label="Fit Koç"><img src="assets/brand/koc.png" alt="" width="24" height="24"></button>
             <button type="button" data-tab="beslenme" aria-label="Beslenme"><svg viewBox="0 0 24 24"><path d="M7 3v7M4 3v5a3 3 0 0 0 6 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10"/></svg></button>
             <button type="button" data-tab="ilerleme" aria-label="İlerleme"><svg viewBox="0 0 24 24" class="fill"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="5" width="4" height="15" rx="1"/><rect x="16" y="9" width="4" height="11" rx="1"/></svg></button>
-            <button type="button" data-tab="koc" aria-label="Fit Koç"><img src="assets/brand/koc.png" alt="" width="24" height="24"></button>
           </nav>
           <span class="tap" id="appTap" aria-hidden="true"></span>
         </div>
@@ -159,9 +164,9 @@
 <!-- MARQUEE -->
 <div class="marquee" aria-label="Özellikler">
   <div class="marquee-track">
-    <span>Antrenman</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
-    <span>Antrenman</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
-    <span>Antrenman</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
+    <span>Programlar</span><span>Challenge</span><span>XP ve seviye</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
+    <span>Programlar</span><span>Challenge</span><span>XP ve seviye</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
+    <span>Programlar</span><span>Challenge</span><span>XP ve seviye</span><span>Beslenme</span><span>Kardiyo</span><span>Hedef<span lang="en">it</span> Rota</span><span>İlerleme</span><span>Fit Koç</span>
   </div>
 </div>
 
@@ -281,12 +286,12 @@
       </article>
 
       <article class="bcard reveal">
-        <div class="bhead"><span class="bico">👥</span><div><h3>Arkadaşlarınla birlikte</h3><p>Akışı izle, XP sıralamasında yarış, meydan oku.</p></div></div>
+        <div class="bhead"><span class="bico">👥</span><div><h3>Arkadaşlarınla birlikte</h3><p>Meydan oku: birlikte tamamlayın ya da rekabet edin.</p></div></div>
         <div class="bdemo">
           <div class="seg three bmode" id="socTabs" role="tablist" aria-label="Sosyal">
-            <button type="button" data-s="feed" aria-selected="true"><b>Akış</b></button>
+            <button type="button" data-s="together" aria-selected="true"><b>Birlikte</b></button>
+            <button type="button" data-s="chal" aria-selected="false"><b>Rekabet</b></button>
             <button type="button" data-s="board" aria-selected="false"><b>Sıralama</b></button>
-            <button type="button" data-s="chal" aria-selected="false"><b>Meydan okuma</b></button>
           </div>
           <div class="soc" id="socBody" aria-live="polite"></div>
         </div>
@@ -300,12 +305,33 @@
         <a class="mtile" href="detay.html#rota"><span class="mi">📍</span><b>Hedefit Rota</b><small>GPS ile koşu, yürüyüş, bisiklet</small><i aria-hidden="true">→</i></a>
         <a class="mtile" href="detay.html#akilli-saat"><span class="mi">⌚</span><b>Akıllı saat</b><small>Bileğinden su, set ve kardiyo</small><i aria-hidden="true">→</i></a>
         <a class="mtile" href="detay.html#tablet"><span class="mi">📱</span><b>Tablet ve katlanabilir</b><small>Geniş ekranda stand modu</small><i aria-hidden="true">→</i></a>
-        <a class="mtile" href="detay.html#gorevler"><span class="mi">🏆</span><b>Görevler ve XP</b><small>Seviye atla, rozet kazan</small><i aria-hidden="true">→</i></a>
-        <a class="mtile" href="detay.html#sosyal"><span class="mi">👥</span><b>Sosyal</b><small>Arkadaşlar, sıralama, meydan okuma</small><i aria-hidden="true">→</i></a>
+        <a class="mtile" href="detay.html#gorevler"><span class="mi">🏆</span><b>Challenge, XP ve seviye</b><small>Challenge’a katıl, seviye atla, rozet kazan</small><i aria-hidden="true">→</i></a>
+        <a class="mtile" href="detay.html#sosyal"><span class="mi">👥</span><b>Topluluk</b><small>Arkadaşlar, meydan oku, birlikte tamamla</small><i aria-hidden="true">→</i></a>
         <a class="mtile" href="detay.html#galeri"><span class="mi">🖼</span><b>Ekran görüntüleri</b><small>Uygulamanın içinden</small><i aria-hidden="true">→</i></a>
         <a class="mtile" href="detay.html#dene"><span class="mi">🧪</span><b>Araçlar ve kas atlası</b><small>Hedef hesaplayıcı, kas atlası</small><i aria-hidden="true">→</i></a>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- CHALLENGE -->
+<section class="section challenge" id="challenge">
+  <div class="wrap">
+    <p class="eyebrow reveal">Keşfet · Challenge</p>
+    <h2 class="reveal">Challenge’a katıl, <span class="hl">seviyeni yükselt.</span></h2>
+    <p class="lead reveal">Keşfet’te bir challenge bul ya da Fit Koç’a sana özel bir tane hazırlat. Bugünkü görevin ana ekranda seni bekler; tamamladıkça XP kazanır, serini ve seviyeni büyütürsün. Sonuçlar İlerleme’de.</p>
+    <div class="social-row reveal">
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/challenge.jpg" alt="Challenge keşfet ekranı" width="560" height="1244"></div><figcaption>Challenge bul</figcaption></figure>
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/challenge-detay.jpg" alt="Challenge detay ve bugünkü görev" width="560" height="1244"></div><figcaption>Bugünkü görev</figcaption></figure>
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/koc-challenge.jpg" alt="Fit Koç ile kişisel challenge" width="560" height="1244"></div><figcaption>Fit Koç ile oluştur</figcaption></figure>
+      <figure><div class="phone"><img loading="lazy" src="assets/shots/istatistik.jpg" alt="Seviye, XP ve rozetler" width="560" height="1244"></div><figcaption>Seviye ve rozetler</figcaption></figure>
+    </div>
+    <div class="adapt-grid reveal">
+      <article class="adapt-card"><h3>Cezalandırmayan seri</h3><p>Gün kaçırırsan challenge bozulmaz; kaldığın yerden devam edersin. Toparlanma günü serini korur.</p></article>
+      <article class="adapt-card"><h3>Bugünkü haline uyar</h3><p>Check-in’de enerjin ya da uykun düşükse görev kısalır; gün yine tam sayılır.</p></article>
+      <article class="adapt-card"><h3>XP asla silinmez</h3><p>XP her işlem için bir kez verilir ve geri alınmaz. Antrenman, check-in, su, beslenme ve challenge günleri seviyeni besler.</p></article>
+    </div>
+    <p class="fine reveal">Ekran görüntülerindeki adlar ve değerler örnek veridir; gerçek bir kullanıcıya ait değildir.</p>
   </div>
 </section>
 

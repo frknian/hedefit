@@ -44,7 +44,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String = "", initialModality: String = "", items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
+fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String = "", initialModality: String = "", initialEnvironment: String = "", initialEquipment: String = "", items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
     val en = language == "en"
     var query by remember { mutableStateOf("") }
     var muscle by remember { mutableStateOf("") }
@@ -65,6 +65,9 @@ fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String =
     var selectedForProgram by remember { mutableStateOf<List<ExerciseCatalogData>>(emptyList()) }
     var showNameDialog by remember { mutableStateOf(false) }
     LaunchedEffect(initialModality) { if (initialModality.isNotBlank()) modality = initialModality }
+    // Keşfet > Programlar kategorileri (Gym / Evde / Direnç Bandı) filtreyi önceden seçili açar.
+    LaunchedEffect(initialEnvironment) { if (initialEnvironment.isNotBlank()) environment = initialEnvironment }
+    LaunchedEffect(initialEquipment) { if (initialEquipment.isNotBlank()) equipment = initialEquipment }
     LaunchedEffect(initialMuscle) {
         // Liste çağıran tarafta bu kasla zaten yüklendi; burada yalnız filtre durumu eşitlenir.
         if (initialMuscle.isNotBlank()) { muscle = initialMuscle; muscleRole = "primary" }

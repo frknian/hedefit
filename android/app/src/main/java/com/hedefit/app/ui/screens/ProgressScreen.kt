@@ -104,6 +104,10 @@ fun ProgressScreen(
     onDeleteRoute: (RouteActivityData) -> Unit = {},
     nutritionHistory: List<com.hedefit.app.data.model.NutritionLogData> = emptyList(),
     onLoadNutritionHistory: () -> Unit = {},
+    gamification: com.hedefit.app.gamification.GamificationSnapshot? = null,
+    challengeHub: com.hedefit.app.data.model.ChallengeHubData? = null,
+    onOpenRewards: () -> Unit = {},
+    onOpenChallenge: (com.hedefit.app.data.model.UserChallengeData) -> Unit = {},
 ) {
     val en = language == "en"
     LaunchedEffect(Unit) { onLoadNutritionHistory() }
@@ -127,6 +131,8 @@ fun ProgressScreen(
             }
             item { TimeRangeSelector(range, en) { range = it } }
             item { ProgressHero(filteredData, data?.sessions.orEmpty(), weeklyWorkoutGoal, en) { showGoalEditor = true } }
+            // Oyunlaştırma: geçmiş performansın bir parçası; kilo/ölçü/performans grafikleri aşağıda olduğu gibi kalır.
+            if (gamification != null) item { ProgressGamificationSection(gamification, challengeHub, data?.sessions?.count { it.manualActivityKey == null } ?: 0, onOpenRewards, onOpenChallenge) }
             item { ActivityHeatmap(data, range, en) }
             item { WeeklyMinutesChart(data, en) }
             item { WeeklyCalorieBalance(data, nutritionHistory, en) }

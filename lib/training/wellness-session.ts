@@ -12,10 +12,14 @@ import { translateExerciseName } from "../exercise-translations.ts";
 import type { WorkoutExerciseItem } from "./readiness-adapter.ts";
 
 export type WellnessKind = "pilates_today" | "low_impact_recovery" | "posture_mobility";
+/** Challenge görevleri için ek odaklı oturumlar: aynı üretici, farklı hareket havuzu (ikinci bir workout motoru yok). */
+export type FocusKind = "core_focus" | "band_strength" | "flexibility" | "home_strength";
+export type SessionKind = WellnessKind | FocusKind;
+export const SESSION_KINDS: SessionKind[] = ["pilates_today", "low_impact_recovery", "posture_mobility", "core_focus", "band_strength", "flexibility", "home_strength"];
 export type WellnessLevel = "beginner" | "intermediate" | "advanced";
 
 export interface WellnessSession {
-  kind: WellnessKind;
+  kind: SessionKind;
   title: string;
   subtitle: string;
   requestedMinutes: number;
@@ -23,10 +27,17 @@ export interface WellnessSession {
   exercises: WorkoutExerciseItem[];
 }
 
-interface Segment { modalities: Modality[]; subs: string[] | null; weight: number }
+interface Segment { modalities: Modality[]; subs: string[] | null; weight: number; match?: (exercise: Exercise) => boolean }
+
+const BAND_EQUIPMENT = new Set(["resistance_band", "loop_band"]);
+const isCore = (exercise: Exercise) => exercise.bodyPart === "core" && exercise.category === "strength";
+const isBodyweight = (exercise: Exercise) => !exercise.equipment;
+const isBand = (exercise: Exercise) => BAND_EQUIPMENT.has(exercise.equipment ?? "");
+const isStretch = (exercise: Exercise) => exercise.category === "stretching" && (!exercise.equipment || isBand(exercise));
+const STRENGTH_PARTS = new Set(["upper_legs", "back", "chest", "shoulders", "upper_arms", "full_body"]);
 
 /** Her oturum türü için sıralı bölümler: ısınma → ana bölüm → soğuma. `weight` fazladan hareketlerin dağıtımı içindir. */
-const TEMPLATES: Record<WellnessKind, Segment[]> = {
+const TEMPLATES: Record<SessionKind, Segment[]> = {
   pilates_today: [
     { modalities: ["pilates"], subs: ["beginner", "short", "posture"], weight: 0 },
     { modalities: ["pilates"], subs: ["core"], weight: 3 },
@@ -47,12 +58,40 @@ const TEMPLATES: Record<WellnessKind, Segment[]> = {
     { modalities: ["pilates"], subs: ["posture"], weight: 1 },
     { modalities: ["recovery"], subs: ["breathing", "upper_body", "full_body"], weight: 0 },
   ],
+  core_focus: [
+    { modalities: ["mobility"], subs: ["back", "morning", "hip"], weight: 0 },
+    { modalities: [], subs: null, weight: 4, match: (exercise) => isCore(exercise) && isBodyweight(exercise) },
+    { modalities: ["pilates"], subs: ["core"], weight: 2 },
+    { modalities: ["recovery"], subs: ["full_body", "lower_body", "back"], weight: 0 },
+  ],
+  band_strength: [
+    { modalities: ["mobility"], subs: ["shoulder", "hip"], weight: 0 },
+    { modalities: [], subs: null, weight: 3, match: (exercise) => isBand(exercise) && exercise.category === "strength" && exercise.bodyPart !== "core" },
+    { modalities: [], subs: null, weight: 1, match: (exercise) => isCore(exercise) && (isBodyweight(exercise) || isBand(exercise)) },
+    { modalities: [], subs: null, weight: 0, match: (exercise) => isStretch(exercise) && isBand(exercise) },
+  ],
+  flexibility: [
+    { modalities: ["mobility"], subs: ["morning", "back"], weight: 1 },
+    { modalities: [], subs: null, weight: 4, match: (exercise) => isStretch(exercise) },
+    { modalities: ["mobility"], subs: ["hip", "shoulder"], weight: 2 },
+    { modalities: ["recovery"], subs: ["breathing", "full_body"], weight: 0 },
+  ],
+  home_strength: [
+    { modalities: ["mobility"], subs: ["hip", "shoulder", "morning"], weight: 0 },
+    { modalities: [], subs: null, weight: 4, match: (exercise) => isBodyweight(exercise) && exercise.category === "strength" && STRENGTH_PARTS.has(exercise.bodyPart ?? "") },
+    { modalities: [], subs: null, weight: 1, match: (exercise) => isCore(exercise) && isBodyweight(exercise) },
+    { modalities: ["recovery"], subs: ["full_body", "lower_body"], weight: 0 },
+  ],
 };
 
-const TITLES: Record<WellnessKind, { tr: [string, string]; en: [string, string] }> = {
+const TITLES: Record<SessionKind, { tr: [string, string]; en: [string, string] }> = {
   pilates_today: { tr: ["Bugün için Pilates", "Kontrollü hareket, güçlü core"], en: ["Pilates for Today", "Controlled movement, a stronger core"] },
   low_impact_recovery: { tr: ["Düşük Etkili Toparlanma", "Eklem dostu hareket ve yumuşak esneme"], en: ["Low Impact Recovery", "Joint-friendly movement and gentle stretching"] },
   posture_mobility: { tr: ["Duruş ve Mobilite", "Sırt, omuz ve kalçayı aç"], en: ["Posture & Mobility", "Open up your back, shoulders and hips"] },
+  core_focus: { tr: ["Core Odaklı", "Gövde gücü ve kontrol"], en: ["Core Focus", "Trunk strength and control"] },
+  band_strength: { tr: ["Direnç Bandı", "Bantla tüm vücut güç"], en: ["Resistance Band", "Full-body strength with a band"] },
+  flexibility: { tr: ["Esneklik", "Kontrollü esneme ve nefes"], en: ["Flexibility", "Controlled stretching and breathing"] },
+  home_strength: { tr: ["Evde Güç", "Ekipmansız tüm vücut"], en: ["Home Strength", "Full body, no equipment"] },
 };
 
 const AREA_TR: Record<string, string> = { core: "Core", upper_legs: "Bacak", lower_legs: "Bacak", back: "Sırt", shoulders: "Omuz", chest: "Göğüs", upper_arms: "Kol", lower_arms: "Kol", full_body: "Tüm vücut" };
@@ -87,7 +126,7 @@ function prescribe(exercise: Exercise, locale: "tr" | "en", level: WellnessLevel
 }
 
 export function buildWellnessSession(input: {
-  kind: WellnessKind;
+  kind: SessionKind;
   minutes: number;
   level?: WellnessLevel;
   tier?: PlanTier;
@@ -101,7 +140,7 @@ export function buildWellnessSession(input: {
   const minutes = Math.max(8, Math.min(45, Math.round(input.minutes || 20)));
   const target = wellnessMinutesToCount(minutes);
   const template = TEMPLATES[input.kind];
-  const catalog = (input.catalog ?? getAllExercises()).filter((exercise) => exercise.isActive !== false && exercise.mediaStatus !== "missing" && (exercise.modalities?.length ?? 0) > 0);
+  const catalog = (input.catalog ?? getAllExercises()).filter((exercise) => exercise.isActive !== false && exercise.mediaStatus !== "missing");
   const maxRank = LEVEL_RANK[level] ?? 0;
   const allowed = (exercise: Exercise, strictLevel: boolean) =>
     canUseModalityExercise(tier, exercise.modalities, exercise.subcategories) && (!strictLevel || (LEVEL_RANK[exercise.level] ?? 0) <= maxRank);
@@ -125,7 +164,9 @@ export function buildWellnessSession(input: {
   const used = new Set<string>();
   const order = (list: Exercise[]) => list.slice().sort((a, b) => hash(`${input.seed}:${input.kind}:${a.id}`) - hash(`${input.seed}:${input.kind}:${b.id}`));
   const pick = (segment: Segment, count: number) => {
-    const matches = (exercise: Exercise) => !used.has(exercise.id) && exercise.modalities!.some((modality) => segment.modalities.includes(modality)) && (!segment.subs || (exercise.subcategories ?? []).some((sub) => segment.subs!.includes(sub)));
+    const matches = (exercise: Exercise) => !used.has(exercise.id) && (segment.match
+      ? segment.match(exercise)
+      : (exercise.modalities ?? []).some((modality) => segment.modalities.includes(modality)) && (!segment.subs || (exercise.subcategories ?? []).some((sub) => segment.subs!.includes(sub))));
     // Önce seviyeye uygun, yetmezse seviyeyi gevşet (yalnızca erişilebilir içerik).
     for (const strict of [true, false]) {
       const pool = order(catalog.filter((exercise) => matches(exercise) && allowed(exercise, strict)));
@@ -138,7 +179,9 @@ export function buildWellnessSession(input: {
   template.forEach((segment, index) => { missing += pick(segment, counts[index]); });
   if (missing > 0) {
     // Eksik kalan yerler aynı türün genel havuzundan tamamlanır.
-    const union: Segment = { modalities: [...new Set(template.flatMap((segment) => segment.modalities))], subs: null, weight: 0 };
+    const matchers = template.filter((segment) => segment.match).map((segment) => segment.match!);
+    const modalities = [...new Set(template.flatMap((segment) => segment.modalities))];
+    const union: Segment = { modalities, subs: null, weight: 0, match: (exercise) => matchers.some((match) => match(exercise)) || (exercise.modalities ?? []).some((modality) => modalities.includes(modality)) };
     pick(union, missing);
   }
 

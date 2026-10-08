@@ -77,6 +77,7 @@ import com.hedefit.app.data.model.FriendsSummaryData
 import com.hedefit.app.data.model.LeaderboardEntryData
 import com.hedefit.app.data.model.FeedItemData
 import com.hedefit.app.data.model.ChallengeData
+import com.hedefit.app.data.model.toJson
 import com.hedefit.app.data.model.ChallengeProgressEntryData
 
 data class ChatMessageState(
@@ -180,10 +181,32 @@ data class MainUiState(
     val challengeProgressBusy: Boolean = false,
     val challengeProgress: List<ChallengeProgressEntryData> = emptyList(),
     val activeChallengeId: String? = null,
+    /** Keşfet > Challenge: katalog + kullanıcının challenge'ları (çevrimdışıyken son önbellek). */
+    val challengeHub: com.hedefit.app.data.model.ChallengeHubData? = null,
+    val challengeHubBusy: Boolean = false,
+    val challengeHubError: String? = null,
+    val challengeHubOffline: Boolean = false,
+    /** Detay ekranında açık challenge'ın bugünkü görevi (uyarlama dahil). */
+    val challengeToday: com.hedefit.app.data.model.ChallengeTodayData? = null,
+    val challengeTodayBusy: Boolean = false,
+    val challengeActionBusy: Boolean = false,
+    /** Gün tamamlanınca gösterilecek kutlama (MainActivity tüketir). */
+    val challengeCelebration: ChallengeCelebration? = null,
+    val coachChallengePreview: com.hedefit.app.data.model.CoachChallengePreview? = null,
+    val coachChallengeBusy: Boolean = false,
+    val friendProfile: com.hedefit.app.data.model.FriendProfileData? = null,
+    val friendProfileBusy: Boolean = false,
+    val shareProgress: Boolean? = null,
     val billing: BillingUiState = BillingUiState(),
 ) {
     val isGuest: Boolean get() = (auth as? AuthState.SignedIn)?.session?.user?.isAnonymous == true
 }
+
+/** Challenge günü tamamlandığında kutlama bilgisi. */
+data class ChallengeCelebration(val title: String, val xp: Int, val streak: Int, val finished: Boolean, val dayText: String, val id: Long = System.nanoTime())
+
+/** Aktif antrenman bittiğinde tamamlanacak challenge günü (uygulama kapanırsa da korunur). */
+data class PendingChallengeDay(val userChallengeId: String, val status: String, val minutes: Int?)
 
 /** Misafire kayıt teklifinin çıktığı an; metin buna göre kişiselleşir. */
 enum class SaveAccountTrigger { WorkoutCompleted, CoachLimit, Sync, Manual, Limit }
@@ -385,6 +408,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     // The server snapshot is historical data only. Immediately
                     // replace today's visible total with the central live source.
                     loadTodayCheckin()
+                    loadChallengeHub(reconcile = true)
                     val reading = stepRepository.refresh()
                     _state.update { current -> current.copy(
                         stepSource = reading.source,
@@ -496,6 +520,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         ),
                         transientMessage = "Antrenman ve tüm setlerin ilerlemene kaydedildi.",
                     ) }
+                    onActivitySavedForChallenges(session.id, durationSeconds / 60)
                     if (feedback.difficulty == "Zor" || feedback.painAreas.any { it != "Yok" } || feedback.fatigue >= 4) adaptPlan(feedback)
                 }
                 .onFailure { error ->
@@ -524,6 +549,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         dashboard = current.dashboard?.copy(sessions = listOf(session) + current.dashboard.sessions),
                         transientMessage = if (language == "en") "${activity.titleEn} saved: $calories kcal burned." else "${activity.titleTr} kaydedildi: $calories kcal yakıldı.",
                     ) }
+                    onActivitySavedForChallenges(session.id, input.durationMinutes)
                     onSaved()
                 }
                 .onFailure { error -> _state.update { it.copy(workoutSaving = false, transientMessage = friendlyError(error)) } }
@@ -542,6 +568,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         dashboard = current.dashboard?.copy(sessions = listOf(session) + current.dashboard.sessions),
                         transientMessage = com.hedefit.app.ui.i18n.tr("Kardiyo kaydedildi: ${session.calories} kcal günlük hesabına eklendi.", "Cardio saved: ${session.calories} kcal added to your day."),
                     ) }
+                    onActivitySavedForChallenges(session.id, durationSeconds / 60)
                     onSaved()
                 }
                 .onFailure { error -> _state.update { it.copy(workoutSaving = false, transientMessage = friendlyError(error)) } }
@@ -1077,7 +1104,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _state.update { it.copy(challengesBusy = true) }
             runCatching { repository.loadChallenges() }
-                .onSuccess { items -> _state.update { it.copy(challengesBusy = false, challenges = items) } }
+                .onSuccess { items ->
+                    // Gönderdiğim bir meydan okumaya katılan olursa bir kez haber ver (push altyapısı yok; uygulama içi bildirim).
+                    val accepted = items.filter { it.isCreator && it.myStatus == "joined" }.any { challenge ->
+                        val key = "joined_${challenge.id}"
+                        val previous = challengePrefs.getInt(key, -1)
+                        challengePrefs.edit().putInt(key, challenge.participantCount).apply()
+                        previous in 1 until challenge.participantCount
+                    }
+                    _state.update { it.copy(challengesBusy = false, challenges = items, transientMessage = if (accepted) com.hedefit.app.ui.i18n.tr("Arkadaşın meydan okumanı kabul etti. Hadi başlayın!", "Your friend accepted your challenge. Let's go!") else it.transientMessage) }
+                }
                 .onFailure { error -> _state.update { it.copy(challengesBusy = false, transientMessage = friendlyError(error)) } }
         }
     }
@@ -1094,7 +1130,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun respondToChallengeInvite(id: String, accept: Boolean) {
         viewModelScope.launch {
             runCatching { repository.respondToChallengeInvite(id, accept) }
-                .onSuccess { loadChallenges() }
+                .onSuccess { loadChallenges(); if (accept) loadChallengeHub() }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
@@ -2405,6 +2441,293 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     else refreshAll()
                 }
                 .onFailure { refreshAll() }
+        }
+    }
+
+
+    // ---- Keşfet > Challenge ---------------------------------------------------------------------------
+
+    private val challengePrefs by lazy { getApplication<Application>().getSharedPreferences("hedefit-challenges", android.content.Context.MODE_PRIVATE) }
+
+    private fun cachedHub(): com.hedefit.app.data.model.ChallengeHubData? =
+        challengePrefs.getString("hub", null)?.let { raw -> runCatching { com.hedefit.app.data.model.parseChallengeHub(org.json.JSONObject(raw)) }.getOrNull() }
+
+    private fun cacheHub(hub: com.hedefit.app.data.model.ChallengeHubData) {
+        challengePrefs.edit().putString("hub", hub.toJson().toString()).apply()
+        writeChallengeReminderSummary(hub)
+    }
+
+    /** Bildirim alıcısı ağ çağırmadan doğru metni seçsin diye bugünkü challenge özeti cihazda tutulur. */
+    private fun writeChallengeReminderSummary(hub: com.hedefit.app.data.model.ChallengeHubData) {
+        val today = LocalDate.now()
+        val primary = hub.primaryActive(today)
+        val state = primary?.state(today)
+        challengePrefs.edit()
+            .putString("reminder_date", today.toString())
+            .putString("reminder_title_tr", primary?.plan?.title?.tr)
+            .putString("reminder_title_en", primary?.plan?.title?.en)
+            .putBoolean("reminder_done", state?.todayDone ?: true)
+            .putInt("reminder_streak", state?.streak ?: 0)
+            .apply()
+    }
+
+    var pendingChallengeDay: PendingChallengeDay?
+        get() = challengePrefs.getString("pending_id", null)?.let { id ->
+            if (challengePrefs.getString("pending_date", null) != LocalDate.now().toString()) null
+            else PendingChallengeDay(id, challengePrefs.getString("pending_status", "completed") ?: "completed", challengePrefs.getInt("pending_minutes", -1).takeIf { it >= 0 })
+        }
+        private set(value) {
+            challengePrefs.edit().apply {
+                if (value == null) remove("pending_id").remove("pending_status").remove("pending_minutes").remove("pending_date")
+                else putString("pending_id", value.userChallengeId).putString("pending_status", value.status).putInt("pending_minutes", value.minutes ?: -1).putString("pending_date", LocalDate.now().toString())
+            }.apply()
+        }
+
+    private fun wellnessProminentNow(): Boolean = _state.value.dashboard?.profile?.let { com.hedefit.app.data.model.wellnessProminent(it.gender, it.historyAnswers.getOrNull(8).orEmpty()) } == true
+
+    /** Katalog + kendi challenge'ları. Bağlantı yoksa son önbellek gösterilir; reconcile=true ise doğrulanabilir görevler eşitlenir. */
+    fun loadChallengeHub(reconcile: Boolean = false) {
+        if (_state.value.challengeHubBusy) return
+        if (_state.value.challengeHub == null) cachedHub()?.let { cached -> _state.update { it.copy(challengeHub = cached, challengeHubOffline = true) } }
+        _state.update { it.copy(challengeHubBusy = true, challengeHubError = null) }
+        viewModelScope.launch {
+            runCatching { repository.loadChallengeHub(_state.value.dashboard?.profile, wellnessProminentNow()) }
+                .onSuccess { hub ->
+                    cacheHub(hub)
+                    _state.update { it.copy(challengeHub = hub, challengeHubBusy = false, challengeHubOffline = false) }
+                    if (reconcile) reconcileChallenges()
+                }
+                .onFailure { error -> _state.update { it.copy(challengeHubBusy = false, challengeHubError = error.message ?: friendlyError(error), challengeHubOffline = it.challengeHub != null) } }
+        }
+    }
+
+    private fun replaceChallenge(updated: com.hedefit.app.data.model.UserChallengeData) {
+        _state.update { current ->
+            val hub = current.challengeHub ?: return@update current
+            val next = hub.copy(challenges = hub.challenges.map { if (it.id == updated.id) updated else it })
+            cacheHub(next)
+            current.copy(challengeHub = next, challengeToday = current.challengeToday?.takeIf { it.challenge.id == updated.id }?.copy(challenge = updated) ?: current.challengeToday)
+        }
+    }
+
+    fun joinChallenge(key: String, onJoined: (String) -> Unit = {}) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.joinChallenge(key) }
+                .onSuccess { id ->
+                    track("challenge_joined")
+                    _state.update { it.copy(challengeActionBusy = false, transientMessage = com.hedefit.app.ui.i18n.tr("Challenge başladı. Bugünkü görevin ana ekranda.", "Challenge started. Today's task is on your Today screen.")) }
+                    loadChallengeHub()
+                    onJoined(id)
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun loadChallengeToday(id: String) {
+        _state.update { it.copy(challengeTodayBusy = true, challengeToday = it.challengeToday?.takeIf { today -> today.challenge.id == id }) }
+        viewModelScope.launch {
+            runCatching { repository.challengeToday(id, _state.value.dashboard?.profile, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess { today -> _state.update { it.copy(challengeToday = today, challengeTodayBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(challengeTodayBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun clearChallengeToday() { _state.update { it.copy(challengeToday = null) } }
+
+    /**
+     * "Bugünkü görevi yap": hareket görevleri MEVCUT aktif antrenman ekranında yapılır (oturum hareketleri ya da
+     * kullanıcının kendi programı). Adım/su/öğün/check-in görevleri sunucuda mevcut kayıtlardan doğrulanır.
+     */
+    fun startChallengeTask(id: String, onStartSession: (List<com.hedefit.app.data.model.WorkoutExerciseData>) -> Unit, onStartProgram: () -> Unit, onOpenCheckin: () -> Unit) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            val today = runCatching { repository.challengeToday(id, _state.value.dashboard?.profile, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .getOrElse { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) }; return@launch }
+            _state.update { it.copy(challengeToday = today, challengeActionBusy = false) }
+            val adaptation = today.adaptation ?: return@launch
+            val task = adaptation.task
+            when {
+                task.kind == "session" && today.session != null && today.session.exercises.isNotEmpty() -> {
+                    pendingChallengeDay = PendingChallengeDay(id, adaptation.completionStatus, task.minutes)
+                    track("challenge_task_started")
+                    onStartSession(today.session.exercises)
+                }
+                task.kind == "workout" -> {
+                    if (_state.value.dashboard?.workouts.isNullOrEmpty()) { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Önce Keşfet > Programlar'dan bir program seç.", "Pick a program in Explore > Programs first.")) }; return@launch }
+                    pendingChallengeDay = PendingChallengeDay(id, adaptation.completionStatus, task.minutes)
+                    track("challenge_task_started")
+                    onStartProgram()
+                }
+                task.kind == "checkin" && !today.checkinDone -> onOpenCheckin()
+                else -> completeChallengeDay(id, "complete", adaptation.completionStatus, task.minutes, null)
+            }
+        }
+    }
+
+    fun useRecoveryDay(id: String) = completeChallengeDay(id, "recovery", "recovery", null, null)
+
+    fun completeChallengeDay(id: String, action: String, status: String, minutes: Int?, sessionId: String?, silent: Boolean = false) {
+        viewModelScope.launch {
+            // Cihaz sayacındaki adımlar sunucuya yalnızca Health Connect yoksa yazılır (HC verisinin üzerine yazılmaz).
+            if (_state.value.stepSource == StepSource.DEVICE_STEP_COUNTER || _state.value.stepSource == StepSource.DEVICE_STEP_DETECTOR) {
+                runCatching { repository.syncTodayDeviceSteps(_state.value.dashboard?.steps ?: 0) }
+            }
+            if (!silent) _state.update { it.copy(challengeActionBusy = true) }
+            runCatching { repository.completeChallengeDay(id, action, status, minutes, sessionId) }
+                .onSuccess { (result, challenge) ->
+                    if (pendingChallengeDay?.userChallengeId == id) pendingChallengeDay = null
+                    challenge?.let(::replaceChallenge)
+                    _state.update { it.copy(challengeActionBusy = false) }
+                    if (!result.alreadyDone) {
+                        track(if (action == "recovery") "challenge_recovery_day" else "challenge_day_completed")
+                        if (result.finished) track("challenge_completed")
+                        val plan = challenge?.plan ?: _state.value.challengeHub?.challenges?.firstOrNull { it.id == id }?.plan
+                        val state = challenge?.state()
+                        _state.update { it.copy(challengeCelebration = ChallengeCelebration(
+                            title = plan?.title?.text().orEmpty(),
+                            xp = result.xp,
+                            streak = result.streak,
+                            finished = result.finished,
+                            dayText = state?.let { s -> com.hedefit.app.ui.i18n.tr("Gün ${s.doneDays} / ${s.totalDays}", "Day ${s.doneDays} / ${s.totalDays}") }.orEmpty(),
+                        )) }
+                        // XP/level/rozetler dashboard'dan okunur: sessizce tazele.
+                        refreshGamificationQuietly()
+                    }
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = if (silent) it.transientMessage else error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun consumeChallengeCelebration() { _state.update { it.copy(challengeCelebration = null) } }
+
+    private fun refreshGamificationQuietly() {
+        viewModelScope.launch {
+            runCatching { repository.loadDashboard() }.onSuccess { fresh ->
+                _state.update { current -> current.copy(dashboard = current.dashboard?.copy(gamificationTotalXp = fresh.gamificationTotalXp, unlockedAchievements = fresh.unlockedAchievements) ?: fresh) }
+            }
+        }
+    }
+
+    /** Antrenman/aktivite kaydedildiğinde: bekleyen challenge günü bu oturumla tamamlanır, yoksa doğrulanabilir görevler eşitlenir. */
+    private fun onActivitySavedForChallenges(sessionId: String, minutes: Int?) {
+        val pending = pendingChallengeDay
+        if (pending != null) completeChallengeDay(pending.userChallengeId, "complete", pending.status, pending.minutes ?: minutes, sessionId)
+        else reconcileChallenges()
+    }
+
+    /**
+     * Bağlantı geri geldiğinde / uygulama açıldığında: bugünkü görevi verisiyle zaten karşılanmış aktif challenge'ları
+     * sessizce tamamlar (sunucu yine doğrular; tekrar çağrı XP vermez). Böylece çevrimdışı yapılan iş kaybolmaz.
+     */
+    fun reconcileChallenges() {
+        val hub = _state.value.challengeHub ?: return
+        val data = _state.value.dashboard ?: return
+        val today = LocalDate.now()
+        val todaySessions = data.sessions.filter { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull() == today }
+        val sessionMinutes = todaySessions.sumOf { it.durationSeconds } / 60
+        val meals = data.nutritionLogs.size
+        hub.active.forEach { challenge ->
+            val state = challenge.state(today)
+            if (state.todayDone || state.finished) return@forEach
+            val task = challenge.plan.days.getOrNull(state.doneDays) ?: return@forEach
+            val satisfied = when (task.kind) {
+                "session", "workout" -> todaySessions.isNotEmpty() && sessionMinutes >= ((task.minutes ?: 10).coerceAtMost(30) * 0.6)
+                "steps" -> data.steps >= (task.target ?: Int.MAX_VALUE)
+                "water" -> data.waterMl >= (task.target ?: Int.MAX_VALUE)
+                "meals" -> meals >= (task.target ?: Int.MAX_VALUE)
+                "checkin" -> _state.value.checkinToday != null
+                else -> false
+            }
+            // Aynı veriyle aynı denemeyi tekrarlama (ör. adım senkronu gecikirse her dakika istek atılmaz).
+            val attempt = "${challenge.id}:$today:${task.kind}:${todaySessions.size}:${data.steps / 500}:${data.waterMl / 250}:$meals:${_state.value.checkinToday != null}"
+            if (satisfied && reconcileAttempts.add(attempt)) completeChallengeDay(challenge.id, "complete", "completed", task.minutes, todaySessions.firstOrNull()?.id, silent = true)
+        }
+    }
+
+    private val reconcileAttempts = mutableSetOf<String>()
+
+    fun abandonChallenge(id: String, onDone: () -> Unit = {}) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.abandonChallenge(id) }
+                .onSuccess {
+                    if (pendingChallengeDay?.userChallengeId == id) pendingChallengeDay = null
+                    track("challenge_abandoned")
+                    _state.update { it.copy(challengeActionBusy = false, transientMessage = com.hedefit.app.ui.i18n.tr("Challenge bırakıldı. Kazandığın XP seninle kalır.", "Challenge left. The XP you earned stays with you.")) }
+                    loadChallengeHub(); onDone()
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    private fun recentWorkouts14d(): Int {
+        val since = LocalDate.now().minusDays(13)
+        return _state.value.dashboard?.sessions.orEmpty().count { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull()?.let { !it.isBefore(since) } == true }
+    }
+
+    fun previewCoachChallenge(preferences: com.hedefit.app.data.model.CoachChallengePreferences) {
+        _state.update { it.copy(coachChallengeBusy = true) }
+        viewModelScope.launch {
+            runCatching { com.hedefit.app.data.model.parseCoachPreview(repository.coachChallenge(preferences, _state.value.dashboard?.profile, recentWorkouts14d(), start = false)) }
+                .onSuccess { preview -> track("coach_challenge_previewed"); _state.update { it.copy(coachChallengePreview = preview, coachChallengeBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(coachChallengeBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun startCoachChallenge(preferences: com.hedefit.app.data.model.CoachChallengePreferences, onStarted: (String) -> Unit) {
+        if (_state.value.coachChallengeBusy) return
+        _state.update { it.copy(coachChallengeBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.coachChallenge(preferences, _state.value.dashboard?.profile, recentWorkouts14d(), start = true).optString("id") }
+                .onSuccess { id ->
+                    track("coach_challenge_started")
+                    _state.update { it.copy(coachChallengeBusy = false, coachChallengePreview = null, transientMessage = com.hedefit.app.ui.i18n.tr("Fit Koç challenge'ın başladı.", "Your Fit Coach challenge has started.")) }
+                    loadChallengeHub(); onStarted(id)
+                }
+                .onFailure { error -> _state.update { it.copy(coachChallengeBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun clearCoachChallengePreview() { _state.update { it.copy(coachChallengePreview = null) } }
+
+    fun createFriendChallenge(templateKey: String, mode: String, friendIds: List<String>, onDone: () -> Unit = {}) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.createFriendChallenge(templateKey, mode, friendIds, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess {
+                    track("friend_challenge_created")
+                    _state.update { it.copy(challengeActionBusy = false, transientMessage = com.hedefit.app.ui.i18n.tr("Meydan okuma gönderildi. Arkadaşın kabul edince ilerlemeniz burada görünür.", "Challenge sent. Your progress shows here once your friend accepts.")) }
+                    loadChallenges(); loadChallengeHub(); onDone()
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun loadFriendProfile(userId: String) {
+        _state.update { it.copy(friendProfileBusy = true, friendProfile = null) }
+        viewModelScope.launch {
+            runCatching { repository.friendProfile(userId) }
+                .onSuccess { profile -> _state.update { it.copy(friendProfile = profile, friendProfileBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(friendProfileBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun clearFriendProfile() { _state.update { it.copy(friendProfile = null, friendProfileBusy = false) } }
+
+    fun loadShareProgress() {
+        viewModelScope.launch { runCatching { repository.loadShareProgress() }.onSuccess { value -> _state.update { it.copy(shareProgress = value) } } }
+    }
+
+    fun setShareProgress(value: Boolean) {
+        _state.update { it.copy(shareProgress = value) }
+        viewModelScope.launch {
+            runCatching { repository.setShareProgress(value) }
+                .onFailure { error -> _state.update { it.copy(shareProgress = !value, transientMessage = friendlyError(error)) } }
         }
     }
 

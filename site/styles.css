@@ -1021,3 +1021,14 @@ html.embed [hidden]{display:none!important}
 .demo-card li b{color:var(--text)}
 .demo-badge{display:inline-block;margin-bottom:10px;padding:3px 10px;border-radius:999px;border:1px solid var(--yellow);color:var(--yellow);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 @media(max-width:900px){.adapt-grid{grid-template-columns:1fr}}
+
+/* Hero telefon: aktif challenge kartı (uygulamadaki ana ekran kartının küçük hali) */
+.a-card.chal-card{margin-bottom:10px;cursor:pointer}
+.a-card.chal-card small{color:var(--g2)}
+.cdots{display:flex;gap:4px;margin:2px 0 8px}
+.cdots i{width:7px;height:7px;border-radius:50%;background:#2a313b}
+.cdots i.d{background:var(--g2)}
+.cdots i.t{background:rgba(125,200,98,.4)}
+.crow{display:flex;justify-content:space-between;align-items:center;font-size:10px}
+.crow em{font-style:normal;color:var(--muted)}
+.crow strong{color:var(--g2);font-weight:800}

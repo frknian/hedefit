@@ -1,6 +1,7 @@
 package com.hedefit.app.data.repository
 
 import com.hedefit.app.data.model.coachSummary
+import com.hedefit.app.data.model.toJson
 import com.hedefit.app.data.auth.AuthRepository
 import com.hedefit.app.data.model.BodyMeasurementData
 import com.hedefit.app.data.model.ChatReplyData
@@ -566,6 +567,13 @@ class HedefitRepository(
         optionalHealthUpsert("daily_steps", JSONObject().put("user_id", userId).put("local_date", snapshot.date.toString()).put("steps", snapshot.steps).put("source", "health_connect").put("synced_at", Instant.now().toString()), "user_id,local_date")
         if (snapshot.sleepMinutes > 0) optionalHealthUpsert("sleep_logs", JSONObject().put("user_id", userId).put("local_date", snapshot.date.toString()).put("minutes", snapshot.sleepMinutes).put("quality", if (snapshot.sleepMinutes >= 420) "iyi" else "orta"), "user_id,local_date")
         snapshot.weightKg?.let { weight -> rest.upsert("body_measurements", JSONObject().put("id", UUID.randomUUID().toString()).put("user_id", userId).put("measured_at", snapshot.date.toString()).put("weight_kg", weight), "user_id,measured_at") }
+    }
+
+    /** Cihaz sayacıyla ölçülen bugünkü adımı sunucuya yazar (adım challenge'ı sunucuda bu kayıtla doğrulanır). */
+    suspend fun syncTodayDeviceSteps(steps: Int) {
+        if (steps <= 0) return
+        val userId = requireNotNull(auth.userId())
+        optionalHealthUpsert("daily_steps", JSONObject().put("user_id", userId).put("local_date", LocalDate.now().toString()).put("steps", steps).put("source", "device").put("synced_at", Instant.now().toString()), "user_id,local_date")
     }
 
     suspend fun saveSleepLog(minutes: Int, quality: String = "iyi", date: LocalDate = LocalDate.now(), bedTime: String? = null, wakeTime: String? = null) {
@@ -1652,6 +1660,8 @@ class HedefitRepository(
                 isCreator = item.optBoolean("isCreator"),
                 myStatus = item.optString("myStatus"),
                 participantCount = item.optInt("participantCount"),
+                mode = item.optString("mode", "compete"),
+                templateKey = item.optString("templateKey").takeIf { it.isNotBlank() && it != "null" },
             ))
         } }
     }
@@ -1663,12 +1673,87 @@ class HedefitRepository(
     }
 
     suspend fun respondToChallengeInvite(id: String, accept: Boolean) {
-        api.patch("/api/social/challenges/$id", JSONObject().put("status", if (accept) "joined" else "declined")).requireSuccess("Davet güncellenemedi.")
+        api.patch("/api/social/challenges/$id", JSONObject().put("status", if (accept) "joined" else "declined").put("localDate", java.time.LocalDate.now().toString())).requireSuccess(com.hedefit.app.ui.i18n.tr("Davet güncellenemedi ya da süresi doldu.", "Couldn't update the invite, or it has expired."))
     }
 
     suspend fun leaveOrCancelChallenge(id: String) {
         api.delete("/api/social/challenges/$id").requireSuccess("Meydan okuma güncellenemedi.")
     }
+
+    // ---- Keşfet > Challenge (/api/challenges) ---------------------------------------------------------
+
+    /** Challenge katalog uygunluğu / Fit Koç için bilinen profil. Hassas onboarding cevapları gönderilmez. */
+    private fun challengeProfileJson(profile: com.hedefit.app.data.model.ProfileData?): JSONObject = JSONObject()
+        .put("goal", profile?.goal?.substringBefore(" | ") ?: "")
+        .put("environment", profile?.environment ?: "")
+        .put("equipment", profile?.equipment ?: "")
+        .put("history", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
+
+    private fun challengeFailure(response: com.hedefit.app.data.network.HttpResponse): Nothing {
+        val code = runCatching { JSONObject(response.body).optString("error") }.getOrNull()
+        throw com.hedefit.app.data.network.ApiException(response.status, response.body, com.hedefit.app.data.model.challengeErrorText(code))
+    }
+
+    suspend fun loadChallengeHub(profile: com.hedefit.app.data.model.ProfileData?, wellnessProminent: Boolean): com.hedefit.app.data.model.ChallengeHubData {
+        val body = JSONObject().put("action", "hub").put("localDate", java.time.LocalDate.now().toString()).put("profile", challengeProfileJson(profile)).put("wellnessProminent", wellnessProminent)
+        val response = api.post("/api/challenges", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        return com.hedefit.app.data.model.parseChallengeHub(response.jsonObject())
+    }
+
+    suspend fun joinChallenge(key: String): String {
+        val response = api.post("/api/challenges", JSONObject().put("action", "join").put("key", key).put("localDate", java.time.LocalDate.now().toString()))
+        if (!response.isSuccessful) challengeFailure(response)
+        return response.jsonObject().optString("id")
+    }
+
+    suspend fun coachChallenge(preferences: com.hedefit.app.data.model.CoachChallengePreferences, profile: com.hedefit.app.data.model.ProfileData?, recentWorkouts14d: Int, start: Boolean): JSONObject {
+        val body = JSONObject().put("action", if (start) "coach_start" else "coach_preview").put("preferences", preferences.toJson())
+            .put("profile", challengeProfileJson(profile)).put("recentWorkouts14d", recentWorkouts14d).put("localDate", java.time.LocalDate.now().toString())
+        val response = api.post("/api/challenges", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        return response.jsonObject()
+    }
+
+    suspend fun challengeToday(id: String, profile: com.hedefit.app.data.model.ProfileData?, locale: String): com.hedefit.app.data.model.ChallengeTodayData {
+        val response = api.post("/api/challenges/$id", JSONObject().put("action", "today").put("localDate", java.time.LocalDate.now().toString()).put("locale", locale).put("profile", challengeProfileJson(profile)))
+        if (!response.isSuccessful) challengeFailure(response)
+        return com.hedefit.app.data.model.parseChallengeToday(response.jsonObject())
+    }
+
+    /** action: complete | recovery. Sunucu görevi mevcut kayıtlardan doğrular; aynı gün ikinci çağrı XP vermez. */
+    suspend fun completeChallengeDay(id: String, action: String, status: String, minutes: Int?, sessionId: String?): Pair<com.hedefit.app.data.model.ChallengeCompletionData, com.hedefit.app.data.model.UserChallengeData?> {
+        val body = JSONObject().put("action", action).put("status", status).put("localDate", java.time.LocalDate.now().toString())
+        minutes?.let { body.put("minutes", it) }; sessionId?.let { body.put("sessionId", it) }
+        val response = api.post("/api/challenges/$id", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        val json = response.jsonObject()
+        return com.hedefit.app.data.model.parseChallengeCompletion(json.optJSONObject("result")) to json.optJSONObject("challenge")?.let { com.hedefit.app.data.model.parseUserChallenge(it) }
+    }
+
+    suspend fun abandonChallenge(id: String) {
+        val response = api.post("/api/challenges/$id", JSONObject().put("action", "abandon"))
+        if (!response.isSuccessful) challengeFailure(response)
+    }
+
+    suspend fun createFriendChallenge(templateKey: String, mode: String, friendIds: List<String>, locale: String): String {
+        val body = JSONObject().put("templateKey", templateKey).put("mode", mode).put("friendIds", JSONArray(friendIds)).put("locale", locale).put("localDate", java.time.LocalDate.now().toString())
+        val response = api.post("/api/social/challenges", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        return response.jsonObject().optString("id")
+    }
+
+    suspend fun friendProfile(userId: String): com.hedefit.app.data.model.FriendProfileData {
+        val response = api.get("/api/social/profile/$userId")
+        if (!response.isSuccessful) challengeFailure(response)
+        return com.hedefit.app.data.model.parseFriendProfile(response.jsonObject().optJSONObject("profile") ?: JSONObject())
+    }
+
+    suspend fun loadShareProgress(): Boolean =
+        api.get("/api/social/settings").requireSuccess("Ayar yüklenemedi.").jsonObject().optBoolean("shareProgress", true)
+
+    suspend fun setShareProgress(value: Boolean): Boolean =
+        api.patch("/api/social/settings", JSONObject().put("shareProgress", value)).requireSuccess("Ayar kaydedilemedi.").jsonObject().optBoolean("shareProgress", value)
 
     suspend fun loadChallengeProgress(id: String): List<ChallengeProgressEntryData> {
         val array = api.get("/api/social/challenges/$id/progress").requireSuccess("İlerleme yüklenemedi.").jsonObject().optJSONArray("entries") ?: JSONArray()

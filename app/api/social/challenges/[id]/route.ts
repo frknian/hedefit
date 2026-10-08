@@ -1,6 +1,9 @@
 import { authenticateRequest } from "../../../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../../../lib/rate-limit.ts";
 import { isUuid, socialUserClient } from "../../../../../lib/social.ts";
+import { planFromTemplate } from "../../../../../lib/challenges/catalog.ts";
+import { joinChallenge } from "../../../../../lib/challenges/store.ts";
+import { resolveRotationDate } from "../../../../../lib/training/rotation.ts";
 
 export const runtime = "edge";
 
@@ -28,8 +31,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .select("challenge_id, status")
     .maybeSingle();
   if (error) return Response.json({ error: "Davet güncellenemedi." }, { status: 500 });
-  if (!data) return Response.json({ error: "Bekleyen davet bulunamadı." }, { status: 404 });
-  return Response.json({ challengeId: data.challenge_id, status: data.status });
+  if (!data) return Response.json({ error: "Bekleyen davet bulunamadı ya da süresi doldu." }, { status: 404 });
+  // Katalog challenge'ı ise kabul eden de aynı planla başlar (ilerleme bu bağlantı üzerinden izlenir).
+  let userChallengeId: string | null = null;
+  if (status === "joined") {
+    const challenge = await client.from("challenges").select("template_key").eq("id", id).maybeSingle();
+    const plan = typeof challenge.data?.template_key === "string" ? planFromTemplate(challenge.data.template_key) : null;
+    if (plan) {
+      const joined = await joinChallenge(client, plan, resolveRotationDate(payload?.localDate).toISOString().slice(0, 10), id);
+      if (joined.ok) userChallengeId = joined.id;
+    }
+  }
+  return Response.json({ challengeId: data.challenge_id, status: data.status, userChallengeId });
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {

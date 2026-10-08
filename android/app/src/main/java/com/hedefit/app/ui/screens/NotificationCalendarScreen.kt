@@ -66,6 +66,20 @@ fun NotificationCalendarScreen(preferences: AppPreferences, onBack: () -> Unit, 
                     }
                 }
             }
+            item {
+                HedefitCard {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(if (en) "Challenge reminders" else "Challenge hatırlatmaları", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                if (en) "At most one nudge a day at 18:00, only if today's challenge task isn't done yet." else "Günde en fazla bir kez, 18:00'de ve yalnızca bugünkü challenge görevin henüz yapılmadıysa.",
+                                color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        Switch(preferences.challengeRemindersEnabled, { onChange(preferences.copy(challengeRemindersEnabled = it)) })
+                    }
+                }
+            }
             item { Text(if (en) "DAYS" else "GÜNLER", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelMedium) }
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

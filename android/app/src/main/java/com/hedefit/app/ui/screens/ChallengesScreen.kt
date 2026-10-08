@@ -53,29 +53,44 @@ private val Bronze = Color(0xFFD98A55)
 private fun metricLabel(metric: String, en: Boolean): String = when (metric) {
     "xp" -> "XP"
     "workouts" -> if (en) "Workouts" else "Antrenman"
+    "steps" -> if (en) "Steps" else "Adım"
+    "challenge_days" -> if (en) "Challenge days" else "Challenge günü"
     else -> if (en) "Distance (km)" else "Mesafe (km)"
 }
 
 private fun metricIcon(metric: String): ImageVector = when (metric) {
     "xp" -> Icons.Default.Bolt
     "workouts" -> Icons.Default.FitnessCenter
+    "steps" -> Icons.Default.DirectionsWalk
+    "challenge_days" -> Icons.Default.EmojiEvents
     else -> Icons.Default.DirectionsRun
 }
 
 private fun metricColor(metric: String): Color = when (metric) {
     "xp" -> HedefitColors.Lime
     "workouts" -> HedefitColors.Coral
+    "steps" -> HedefitColors.Coral
+    "challenge_days" -> HedefitColors.Lime
     else -> HedefitColors.Water
 }
 
 private fun progressText(metric: String, value: Double): String = when (metric) {
     "workouts" -> "${value.toInt()}"
+    "steps" -> com.hedefit.app.ui.i18n.tr("%,d adım".format(java.util.Locale.US, value.toInt()).replace(',', '.'), "%,d steps".format(java.util.Locale.US, value.toInt()))
+    "challenge_days" -> com.hedefit.app.ui.i18n.tr("${value.toInt()} gün", "${value.toInt()} days")
     "distance_km" -> "%.1f km".format(value)
     else -> "${value.toInt()} XP"
 }
 
-private fun targetText(challenge: ChallengeData): String =
-    if (challenge.metric == "distance_km") "%.0f".format(challenge.targetValue) else "${challenge.targetValue.toInt()}"
+private fun targetText(challenge: ChallengeData): String = when (challenge.metric) {
+    "distance_km" -> "%.0f".format(challenge.targetValue)
+    "steps" -> "%,d".format(java.util.Locale.US, challenge.targetValue.toInt()).let { if (com.hedefit.app.ui.i18n.AppLang.en) it else it.replace(',', '.') }
+    else -> "${challenge.targetValue.toInt()}"
+}
+
+/** Birlikte Tamamla / Rekabet Et etiketi (katalog challenge'ları için). */
+internal fun challengeModeLabel(challenge: ChallengeData): String? = if (challenge.templateKey == null) null
+    else if (challenge.mode == "together") com.hedefit.app.ui.i18n.tr("Birlikte Tamamla", "Complete Together") else com.hedefit.app.ui.i18n.tr("Rekabet Et", "Compete")
 
 /** 0f–1f: meydan okuma penceresinde geçen süre oranı (canlı ilerleme çekmeden görsel ipucu). */
 private fun timeElapsedFraction(challenge: ChallengeData): Float = runCatching {
@@ -126,7 +141,7 @@ fun ChallengesScreen(
                     HfCircleButton(Icons.Default.Add, if (en) "New challenge" else "Yeni meydan okuma", { showCreate = true }, tint = HedefitColors.Lime)
                 }
             }
-            val invites = challenges.filter { it.myStatus == "invited" }
+            val invites = challenges.filter { it.myStatus == "invited" || it.myStatus == "expired" }
             val active = challenges.filter { it.myStatus == "joined" }
             if (invites.isNotEmpty()) {
                 item { HfSectionHeader(if (en) "Invites" else "Davetler") }
@@ -215,7 +230,7 @@ private fun Modifier.graphicsLayerScale(scale: Float) = this.then(
 )
 
 @Composable
-private fun InviteChallengeCard(challenge: ChallengeData, en: Boolean, onAccept: () -> Unit, onDecline: () -> Unit) {
+internal fun InviteChallengeCard(challenge: ChallengeData, en: Boolean, onAccept: () -> Unit, onDecline: () -> Unit) {
     val color = metricColor(challenge.metric)
     HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -226,9 +241,10 @@ private fun InviteChallengeCard(challenge: ChallengeData, en: Boolean, onAccept:
                     Text(challenge.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
                     Text("${metricLabel(challenge.metric, en)} • ${targetText(challenge)} ${if (en) "target" else "hedef"}", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
-                HfPill(if (en) "Invited" else "Davet", color = color)
+                HfPill(if (challenge.myStatus == "expired") (if (en) "Expired" else "Süresi doldu") else challengeModeLabel(challenge) ?: (if (en) "Invited" else "Davet"), color = if (challenge.myStatus == "expired") HedefitColors.TextMuted else color)
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (challenge.myStatus == "expired") Text(if (en) "This invite expired after 72 hours." else "Bu davetin süresi 72 saat sonunda doldu.", color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+            else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 HfPrimaryButton(if (en) "Accept" else "Kabul et", onAccept, modifier = Modifier.weight(1f), icon = Icons.Default.Check)
                 HfPrimaryButton(if (en) "Decline" else "Reddet", onDecline, modifier = Modifier.weight(1f), secondary = true, icon = Icons.Default.Close)
             }
@@ -237,7 +253,7 @@ private fun InviteChallengeCard(challenge: ChallengeData, en: Boolean, onAccept:
 }
 
 @Composable
-private fun ActiveChallengeCard(challenge: ChallengeData, en: Boolean, onClick: () -> Unit, onLeaveOrCancel: () -> Unit) {
+internal fun ActiveChallengeCard(challenge: ChallengeData, en: Boolean, onClick: () -> Unit, onLeaveOrCancel: () -> Unit) {
     val color = metricColor(challenge.metric)
     val elapsed by animateFloatAsState(timeElapsedFraction(challenge), animationSpec = tween(600), label = "elapsed")
     HedefitCard(Modifier.fillMaxWidth(), onClick = onClick, contentPadding = PaddingValues(16.dp)) {
@@ -248,7 +264,7 @@ private fun ActiveChallengeCard(challenge: ChallengeData, en: Boolean, onClick: 
                 Column(Modifier.weight(1f)) {
                     Text(challenge.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
                     Text(
-                        "${metricLabel(challenge.metric, en)} • ${targetText(challenge)} ${if (en) "target" else "hedef"} • ${challenge.participantCount} ${if (en) "joined" else "katılımcı"}",
+                        listOfNotNull(challengeModeLabel(challenge), "${metricLabel(challenge.metric, en)} • ${targetText(challenge)} ${if (en) "target" else "hedef"}", "${challenge.participantCount} ${if (en) "joined" else "katılımcı"}").joinToString(" • "),
                         color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -276,7 +292,7 @@ private fun ActiveChallengeCard(challenge: ChallengeData, en: Boolean, onClick: 
 }
 
 @Composable
-private fun CreateChallengeDialog(
+internal fun CreateChallengeDialog(
     friends: List<FriendRequestData>,
     en: Boolean,
     creating: Boolean,
@@ -403,7 +419,7 @@ private fun FriendInviteRow(friend: FriendRequestData, checked: Boolean, accent:
 }
 
 @Composable
-private fun ChallengeProgressDialog(challenge: ChallengeData, progress: List<ChallengeProgressEntryData>, busy: Boolean, en: Boolean, onDismiss: () -> Unit) {
+internal fun ChallengeProgressDialog(challenge: ChallengeData, progress: List<ChallengeProgressEntryData>, busy: Boolean, en: Boolean, onDismiss: () -> Unit) {
     val accent = metricColor(challenge.metric)
     val maxValue = max(1.0, progress.maxOfOrNull { it.progressValue } ?: 1.0)
     AlertDialog(

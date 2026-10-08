@@ -67,6 +67,12 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LinearScale
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.Accessibility
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -229,6 +235,10 @@ fun WorkoutPlanScreen(
     newBlockDue: Boolean = false,
     rotationPeriod: String = "monthly",
     onStartNewBlock: () -> Unit = {},
+    /** Keşfet sekmesinde: ekranın üstünde Keşfet başlığı + segment kontrolü; altında Programlar kategorileri. */
+    exploreHeader: (@Composable () -> Unit)? = null,
+    /** environment, equipment, modality — Programlar kategorilerinden filtreli hareket kütüphanesi. */
+    onOpenLibraryFiltered: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
     val en = language == "en"
     var showRegional by remember { mutableStateOf(false) }
@@ -298,7 +308,27 @@ fun WorkoutPlanScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                HfScreenHeader(
+                if (exploreHeader != null) Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    exploreHeader()
+                    ProgramCategoryRow(
+                        en = en,
+                        onForYou = { page = "ai" },
+                        onGym = { onOpenLibraryFiltered("gym", "", "") },
+                        onHome = { onOpenLibraryFiltered("home", "", "") },
+                        onBand = { onOpenLibraryFiltered("", "band", "") },
+                        onPilates = { onOpenLibraryFiltered("", "", "pilates") },
+                        onFlexibility = { onOpenLibraryFiltered("", "", "mobility") },
+                        onMuscles = { showRegional = true },
+                        onLibrary = onOpenLibrary,
+                    )
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(if (en) "My Workout" else "Antrenmanım", style = MaterialTheme.typography.titleLarge)
+                            Text(activeProgram?.let { programDisplayName(it, en) } ?: if (en) "No active program" else "Aktif program yok", color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        }
+                        HfCircleButton(Icons.Default.CalendarMonth, if (en) "Workout calendar" else "Antrenman takvimi", onOpenCalendar)
+                    }
+                } else HfScreenHeader(
                     if (en) "My Workout" else "Antrenmanım",
                     activeProgram?.let { programDisplayName(it, en) } ?: if (en) "No active program" else "Aktif program yok",
                 ) { HfCircleButton(Icons.Default.CalendarMonth, if (en) "Workout calendar" else "Antrenman takvimi", onOpenCalendar) }
@@ -527,6 +557,42 @@ fun WorkoutPlanScreen(
             onApplyAdaptation = onApplyPlanAdaptation,
             locale = language,
         )
+    }
+}
+
+/** Keşfet > Programlar kategorileri: yeni içerik değil, mevcut program/hareket akışlarına kısa yollar. */
+@Composable
+private fun ProgramCategoryRow(
+    en: Boolean,
+    onForYou: () -> Unit,
+    onGym: () -> Unit,
+    onHome: () -> Unit,
+    onBand: () -> Unit,
+    onPilates: () -> Unit,
+    onFlexibility: () -> Unit,
+    onMuscles: () -> Unit,
+    onLibrary: () -> Unit,
+) {
+    val items = listOf(
+        Triple(Icons.Default.AutoAwesome, if (en) "For You" else "Sana Özel", onForYou),
+        Triple(Icons.Default.FitnessCenter, "Gym", onGym),
+        Triple(Icons.Default.Home, if (en) "At Home" else "Evde", onHome),
+        Triple(Icons.Default.LinearScale, if (en) "Band" else "Direnç Bandı", onBand),
+        Triple(Icons.Default.SelfImprovement, "Pilates", onPilates),
+        Triple(Icons.Default.AccessibilityNew, if (en) "Flexibility" else "Esneklik", onFlexibility),
+        Triple(Icons.Default.Accessibility, if (en) "Muscle Groups" else "Kas Grupları", onMuscles),
+        Triple(Icons.Default.MenuBook, if (en) "Exercise Library" else "Hareket Kütüphanesi", onLibrary),
+    )
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        items.forEach { (icon, label, onClick) ->
+            Column(
+                Modifier.width(80.dp).clip(RoundedCornerShape(18.dp)).background(HedefitColors.Surface).clickable(onClick = onClick).padding(vertical = 10.dp, horizontal = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                HfIconBadge(icon, HedefitColors.Lime, 34.dp, 18.dp)
+                Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center, minLines = 2)
+            }
+        }
     }
 }
 
