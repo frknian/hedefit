@@ -1,5 +1,7 @@
 package com.hedefit.app.data.repository
 
+import com.hedefit.app.data.model.coachSummary
+import com.hedefit.app.data.model.toJson
 import com.hedefit.app.data.auth.AuthRepository
 import com.hedefit.app.data.model.BodyMeasurementData
 import com.hedefit.app.data.model.ChatReplyData
@@ -77,6 +79,27 @@ class HedefitRepository(
     private val api: HedefitApiClient,
 ) {
     private val rawHttp = com.hedefit.app.data.network.JsonHttpClient()
+
+    /** Devam eden antrenmanı hesaba yazar; başka bir cihaz kaldığı yerden sürdürebilsin diye. */
+    suspend fun pushActiveWorkout(snapshot: JSONObject, deviceId: String) {
+        rest.upsert(
+            "active_workout_sessions",
+            JSONObject().put("user_id", requireNotNull(auth.userId())).put("snapshot", snapshot).put("device_id", deviceId)
+                .put("saved_at", snapshot.optLong("savedAt")).put("updated_at", Instant.now().toString()),
+            "user_id",
+        )
+    }
+
+    /** Başka bir cihazın yazdığı aktif antrenman; yoksa ya da bu cihazın kendi kaydıysa null. */
+    suspend fun fetchActiveWorkout(ownDeviceId: String): String? {
+        val row = rest.select("active_workout_sessions", "select=snapshot,device_id&user_id=eq.${requireNotNull(auth.userId())}").optJSONObject(0) ?: return null
+        if (row.optString("device_id") == ownDeviceId) return null
+        return row.optJSONObject("snapshot")?.toString()
+    }
+
+    suspend fun clearActiveWorkout() {
+        rest.delete("active_workout_sessions", "user_id=eq.${requireNotNull(auth.userId())}")
+    }
     suspend fun saveRoute(snapshot: RouteSnapshot, activityType: String, title: String) {
         saveRoutePayload(routePayload(snapshot, activityType, title))
     }
@@ -315,9 +338,139 @@ class HedefitRepository(
     }
 
     suspend fun deleteAccount(email: String) {
-        api.post("/api/account/delete", JSONObject().put("email", email.trim()).put("confirmation", "HESABIMI SİL"))
+        // Aktif abonelik uyarısı diyalogda onaylanır; sunucu bayrak olmadan 409 döner (başka istemciler için).
+        api.post("/api/account/delete", JSONObject().put("email", email.trim()).put("confirmation", "HESABIMI SİL").put("confirmActiveSubscription", true))
             .requireSuccess("Hesap silinemedi.")
     }
+
+    /** Bugünün planını check-in'e göre uyarlar (sunucu: katman, ayar ve isteğe bağlı döngü uygulanır). */
+    suspend fun adaptivePlan(exercises: List<WorkoutExerciseData>, recentSessions3d: Int, locale: String): com.hedefit.app.data.model.AdaptiveResultData {
+        val items = JSONArray(exercises.map { e -> JSONObject().put("id", e.id).put("name", e.name).put("area", e.area).put("sets", e.sets).put("reps", e.reps).put("restSeconds", e.restSeconds) })
+        return com.hedefit.app.data.model.parseAdaptiveResult(
+            api.post("/api/workout/adapt", JSONObject().put("action", "adaptive_plan").put("exercises", items).put("recentSessions3d", recentSessions3d).put("locale", locale).put("explain", true).put("localDate", java.time.LocalDate.now().toString()))
+                .requireSuccess("Plan uyarlanamadı.").jsonObject(),
+        ).also { lastAdaptation = it }
+    }
+
+    /** Antrenmana/toparlanmaya göre beslenme ipuçları. Yalnızca kaba antrenman bağlamı gider; döngüyü sunucu kendi izniyle ekler. */
+    suspend fun nutritionWellness(diet: String, workedOutToday: Boolean, locale: String): com.hedefit.app.data.model.NutritionWellnessData {
+        val training = JSONObject().put("workedOutToday", workedOutToday)
+        lastAdaptation?.takeIf { it.adapted }?.let { training.put("level", it.level).put("minutes", it.estimatedMinutes); it.wellnessKind?.let { kind -> training.put("sessionKind", kind) } }
+        return com.hedefit.app.data.model.parseNutritionWellness(
+            api.post("/api/nutrition/wellness", JSONObject().put("locale", locale).put("diet", diet).put("training", training).put("localDate", java.time.LocalDate.now().toString()))
+                .requireSuccess("İpuçları alınamadı.").jsonObject(),
+        )
+    }
+
+    /** Son uyarlama; koça yalnızca kaba özeti gider (bkz. coachSummary). */
+    @Volatile private var lastAdaptation: com.hedefit.app.data.model.AdaptiveResultData? = null
+
+    /** Bugünkü check-in'i yazar. null = sunucu henüz hazır değil (503); diğer hatalar fırlatılır. */
+    suspend fun saveCheckin(checkin: com.hedefit.app.data.model.CheckinData): com.hedefit.app.data.model.CheckinSaveResult? {
+        val response = api.put("/api/checkin", checkin.toJson())
+        if (response.status == 503) return null
+        return com.hedefit.app.data.model.parseCheckinSave(response.requireSuccess("Check-in kaydedilemedi.").jsonObject())
+    }
+
+    /** Bugünkü check-in (yoksa null). 503 → null: özellik sessizce kapalı. */
+    suspend fun todayCheckin(): com.hedefit.app.data.model.CheckinData? {
+        val response = api.get("/api/checkin?days=1&localDate=${java.time.LocalDate.now()}")
+        if (response.status == 503) return null
+        return com.hedefit.app.data.model.parseCheckin(response.requireSuccess("Check-in yüklenemedi.").jsonObject().optJSONObject("today"))
+    }
+
+    /** Sunucuda deterministik üretilen Pilates / toparlanma / mobilite oturumu (AI yok). */
+    suspend fun wellnessSession(kind: String, minutes: Int, locale: String): com.hedefit.app.data.model.WellnessSessionData =
+        com.hedefit.app.data.model.parseWellnessSession(
+            api.post("/api/workout/adapt", JSONObject().put("action", "wellness_session").put("kind", kind).put("minutes", minutes).put("locale", locale).put("localDate", java.time.LocalDate.now().toString()))
+                .requireSuccess("Oturum hazırlanamadı.").jsonObject(),
+        )
+
+    /** İsteğe bağlı döngü profili. Sunucu tabloyu henüz kurmadıysa (503) null: özellik sessizce kapalı kalır. */
+    suspend fun cycleSnapshot(): com.hedefit.app.data.model.CycleSnapshot? {
+        val response = api.get("/api/cycle?localDate=${java.time.LocalDate.now()}")
+        if (response.status == 503) return null
+        return com.hedefit.app.data.model.parseCycleSnapshot(response.requireSuccess("Döngü bilgisi yüklenemedi.").jsonObject())
+    }
+
+    /** true = kaydedildi, false = sunucu henüz hazır değil (503); diğer hatalar fırlatılır. */
+    suspend fun saveCycleProfile(profile: com.hedefit.app.data.model.CycleProfileData): Boolean {
+        val response = api.put("/api/cycle", profile.toJson())
+        if (response.status == 503) return false
+        response.requireSuccess("Döngü bilgisi kaydedilemedi.")
+        return true
+    }
+
+    /** Kişiselleştirme ayarları; sunucu tabloyu kurmadıysa `available=false` ve varsayılanlar. */
+    suspend fun personalization(): Pair<Boolean, com.hedefit.app.data.model.PersonalizationData> {
+        val json = api.get("/api/personalization").requireSuccess("Ayarlar yüklenemedi.").jsonObject()
+        return json.optBoolean("available", true) to com.hedefit.app.data.model.parsePersonalization(json.optJSONObject("personalization"))
+    }
+
+    suspend fun updatePersonalization(adaptive: Boolean? = null, aiHealthContext: Boolean? = null, cycleOff: Boolean = false): com.hedefit.app.data.model.PersonalizationData {
+        val body = JSONObject()
+        adaptive?.let { body.put("adaptiveEnabled", it) }
+        aiHealthContext?.let { body.put("aiHealthContextEnabled", it) }
+        if (cycleOff) body.put("cycleEnabled", false)
+        return com.hedefit.app.data.model.parsePersonalization(api.put("/api/personalization", body).requireSuccess("Ayar kaydedilemedi.").jsonObject().optJSONObject("personalization"))
+    }
+
+    /** Döngü, check-in'ler ve ayarlar: sunucuda kalıcı silinir. */
+    suspend fun deleteAllHealthData() {
+        api.delete("/api/personalization").requireSuccess("Sağlık verisi silinemedi.")
+    }
+
+    /** Gizlilik dostu olay sayacı: yalnızca izin listesindeki olay adı gider (lib/analytics-events.ts); veri taşımaz. */
+    suspend fun trackEvent(event: String) {
+        api.post("/api/analytics", JSONObject().put("event", event))
+    }
+
+    /** Döngü verisini sunucuda kalıcı siler. */
+    suspend fun deleteCycleData() {
+        api.delete("/api/cycle").requireSuccess("Döngü verisi silinemedi.")
+    }
+
+    suspend fun aiMemories(): List<com.hedefit.app.data.model.AiMemoryItem> =
+        com.hedefit.app.data.model.parseAiMemories(api.get("/api/ai/memory").requireSuccess("Koç hafızası yüklenemedi.").jsonObject().optJSONArray("memories"))
+
+    suspend fun deleteAiMemory(id: String) {
+        api.delete("/api/ai/memory?id=${java.net.URLEncoder.encode(id, "UTF-8")}").requireSuccess("Not silinemedi.")
+    }
+
+    suspend fun deleteAllAiMemories() {
+        api.delete("/api/ai/memory?all=true").requireSuccess("Hafıza silinemedi.")
+    }
+
+    /**
+     * Sohbet mesajından kalıcı tercih çıkarımını sunucuda tetikler (ikinci, ücretli bir model çağrısı;
+     * yanıt gösterildikten SONRA, arka planda çağrılır). Kaydedilen not sayısını döner; başarısızlık sessizdir.
+     */
+    suspend fun extractCoachMemory(message: String, locale: String): Int = runCatching {
+        api.post("/api/ai/memory", JSONObject().put("message", message.trim().take(600)).put("locale", locale))
+            .takeIf { it.isSuccessful }?.jsonObject()?.optInt("saved", 0) ?: 0
+    }.getOrDefault(0)
+
+    /** Bugünkü reklam bonusu ve günlük tavan (sunucudan; yalnız okur). Hata/ağ yoksa null. */
+    suspend fun adBonusToday(feature: String): Pair<Int, Int>? = runCatching {
+        val response = api.get("/api/ads/reward?feature=$feature")
+        if (!response.isSuccessful) return@runCatching null
+        val json = response.jsonObject()
+        json.optInt("bonusCount", 0) to json.optInt("maxBonus", 3)
+    }.getOrNull()
+
+    suspend fun consentStatus() = auth.consentStatus()
+
+    suspend fun withdrawConsents(health: Boolean, crossBorder: Boolean) = auth.withdrawConsents(health, crossBorder)
+
+    /**
+     * Play satın alma jetonunu sunucuya doğrulatır (/api/billing/verify). Plan yalnız sunucuda,
+     * Google'dan doğrulanarak yazılır; ağ hatası [VerifyOutcome.Retry] olarak döner, fırlatmaz.
+     */
+    suspend fun verifyPlaySubscription(productId: String, purchaseToken: String): com.hedefit.app.billing.VerifyOutcome =
+        runCatching {
+            val response = api.post("/api/billing/verify", JSONObject().put("productId", productId).put("purchaseToken", purchaseToken))
+            com.hedefit.app.billing.parseVerifyResponse(response.status, response.body)
+        }.getOrDefault(com.hedefit.app.billing.VerifyOutcome.Retry)
 
     suspend fun recordWorkout(
         exercises: List<WorkoutExerciseData>,
@@ -416,6 +569,13 @@ class HedefitRepository(
         snapshot.weightKg?.let { weight -> rest.upsert("body_measurements", JSONObject().put("id", UUID.randomUUID().toString()).put("user_id", userId).put("measured_at", snapshot.date.toString()).put("weight_kg", weight), "user_id,measured_at") }
     }
 
+    /** Cihaz sayacıyla ölçülen bugünkü adımı sunucuya yazar (adım challenge'ı sunucuda bu kayıtla doğrulanır). */
+    suspend fun syncTodayDeviceSteps(steps: Int) {
+        if (steps <= 0) return
+        val userId = requireNotNull(auth.userId())
+        optionalHealthUpsert("daily_steps", JSONObject().put("user_id", userId).put("local_date", LocalDate.now().toString()).put("steps", steps).put("source", "device").put("synced_at", Instant.now().toString()), "user_id,local_date")
+    }
+
     suspend fun saveSleepLog(minutes: Int, quality: String = "iyi", date: LocalDate = LocalDate.now(), bedTime: String? = null, wakeTime: String? = null) {
         val userId = requireNotNull(auth.userId())
         optionalHealthUpsert(
@@ -451,6 +611,12 @@ class HedefitRepository(
             .put("thigh_cm", measurement.thighCm ?: JSONObject.NULL)
             .put("updated_at", Instant.now().toString())
         return parseMeasurement(rest.upsert("body_measurements", row, "user_id,measured_at"))
+    }
+
+    suspend fun deleteBodyMeasurement(date: String) {
+        val day = date.take(10)
+        require(day.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) { "Geçersiz ölçüm tarihi." }
+        rest.delete("body_measurements", "measured_at=eq.$day&user_id=eq.${requireNotNull(auth.userId())}")
     }
 
     suspend fun setWater(totalMl: Int, date: LocalDate = LocalDate.now()): Int {
@@ -626,29 +792,11 @@ class HedefitRepository(
         return parseScheduleItem(rest.upsert("workout_schedule", row, "user_id,scheduled_date"))
     }
 
-    suspend fun loadExerciseCatalog(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", owned: List<String> = emptyList()): List<ExerciseCatalogData> {
+    suspend fun loadExerciseCatalog(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", owned: List<String> = emptyList(), modality: String = "", subcategory: String = ""): List<ExerciseCatalogData> {
         val encode = { value: String -> java.net.URLEncoder.encode(value, Charsets.UTF_8.name()) }
-        val path = "/api/exercises?limit=1000&search=${encode(search)}&muscle=${encode(muscle)}&equipment=${encode(equipment)}&level=${encode(level)}&environment=${encode(environment)}&muscleRole=${encode(muscleRole)}&force=${encode(force)}&mechanic=${encode(mechanic)}&category=${encode(category)}&owned=${encode(owned.joinToString(","))}&locale=${if (locale == "en") "en" else "tr"}"
+        val path = "/api/exercises?limit=1000&search=${encode(search)}&muscle=${encode(muscle)}&equipment=${encode(equipment)}&level=${encode(level)}&environment=${encode(environment)}&muscleRole=${encode(muscleRole)}&force=${encode(force)}&mechanic=${encode(mechanic)}&category=${encode(category)}&owned=${encode(owned.joinToString(","))}&modality=${encode(modality)}&subcategory=${encode(subcategory)}&locale=${if (locale == "en") "en" else "tr"}"
         val array = api.get(path).requireSuccess("Egzersiz kütüphanesi yüklenemedi.").jsonObject().optJSONArray("items") ?: JSONArray()
-        return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
-            add(ExerciseCatalogData(
-                id = item.optString("id"),
-                name = item.optString("name"),
-                level = item.optString("level"),
-                equipment = item.optString("equipment"),
-                primaryMuscles = item.optJSONArray("primaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
-                instructions = item.optJSONArray("instructions")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
-                category = item.optString("category"),
-                imageUrls = item.optJSONArray("images")?.let { values -> List(values.length()) { values.optString(it) }.filter(String::isNotBlank) }.orEmpty(),
-                secondaryMuscles = item.optJSONArray("secondaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
-                force = item.optString("force"),
-                mechanic = item.optString("mechanic"),
-                levelKey = item.optString("levelKey"),
-                requiredEquipment = item.optJSONArray("requiredEquipment")?.let { options ->
-                    List(options.length()) { i -> options.optJSONArray(i)?.let { groups -> List(groups.length()) { groups.optString(it) } }.orEmpty() }
-                }.orEmpty(),
-            ))
-        } }
+        return parseExerciseCatalog(array)
     }
 
     suspend fun loadPreviousPerformance(exercises: List<WorkoutExerciseData>): Map<String, List<PreviousSetData>> = buildMap {
@@ -691,6 +839,16 @@ class HedefitRepository(
             JSONObject().put("show_on_home", showOnHome).put("updated_at", Instant.now().toString()),
         )
         return program.copy(showOnHome = showOnHome)
+    }
+
+    suspend fun renameProgram(program: WorkoutProgramData, name: String): WorkoutProgramData {
+        val userId = requireNotNull(auth.userId())
+        rest.update(
+            "workout_program_collections",
+            "id=eq.${SupabaseRestClient.encode(program.id)}&user_id=eq.$userId",
+            JSONObject().put("name", name).put("updated_at", Instant.now().toString()),
+        )
+        return program.copy(name = name)
     }
 
     suspend fun deleteProgram(program: WorkoutProgramData): WorkoutProgramData? {
@@ -808,7 +966,7 @@ class HedefitRepository(
                 .put("weightKg", it.profile.weightKg ?: JSONObject.NULL)
                 .put("environment", it.profile.environment)
                 .put("equipment", it.profile.equipment)
-                .put("assessmentAnswers", JSONArray(it.profile.historyAnswers.take(20))))
+                .put("assessmentAnswers", JSONArray(aiSafeHistory(it.profile.historyAnswers.take(30)))))
             val goalType = when {
                 it.profile.goal.contains("yağ", true) -> "fatLoss"
                 it.profile.goal.contains("kilo ver", true) || it.profile.goal.contains("zayıf", true) -> "lose"
@@ -860,8 +1018,10 @@ class HedefitRepository(
                 .put("personalRecords", JSONArray(personalBests)))
         }
 
+        lastAdaptation?.takeIf { it.adapted }?.let { signals.put("wellness", JSONObject().put("adaptation", it.coachSummary())) }
         val requestPayload = JSONObject()
             .put("messages", bodyMessages)
+            .put("localDate", LocalDate.now().toString())
             .put("signals", signals)
             .put("locale", if (locale == "en") "en" else "tr")
 
@@ -947,7 +1107,7 @@ class HedefitRepository(
             .put("goal", profile?.goal ?: "Kas geliştirmek")
             .put("environment", profile?.environment ?: "Salon")
             .put("equipment", profile?.equipment ?: "Tam salon")
-            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+            .put("limitations", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
 
         val payload = JSONObject()
             .put("action", "readiness_checkin")
@@ -999,7 +1159,7 @@ class HedefitRepository(
             .put("goal", profile?.goal ?: "Kas geliştirmek")
             .put("environment", profile?.environment ?: "Salon")
             .put("equipment", profile?.equipment ?: "Tam salon")
-            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+            .put("limitations", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
 
         val payload = JSONObject()
             .put("action", "replace_exercise")
@@ -1051,7 +1211,7 @@ class HedefitRepository(
             .put("goal", profile?.goal ?: "Kas geliştirmek")
             .put("environment", profile?.environment ?: "Salon")
             .put("equipment", profile?.equipment ?: "Tam salon")
-            .put("limitations", JSONArray(profile?.historyAnswers ?: emptyList<String>()))
+            .put("limitations", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
 
         val paramsObj = JSONObject()
             .put("trigger", trigger)
@@ -1500,6 +1660,8 @@ class HedefitRepository(
                 isCreator = item.optBoolean("isCreator"),
                 myStatus = item.optString("myStatus"),
                 participantCount = item.optInt("participantCount"),
+                mode = item.optString("mode", "compete"),
+                templateKey = item.optString("templateKey").takeIf { it.isNotBlank() && it != "null" },
             ))
         } }
     }
@@ -1511,12 +1673,87 @@ class HedefitRepository(
     }
 
     suspend fun respondToChallengeInvite(id: String, accept: Boolean) {
-        api.patch("/api/social/challenges/$id", JSONObject().put("status", if (accept) "joined" else "declined")).requireSuccess("Davet güncellenemedi.")
+        api.patch("/api/social/challenges/$id", JSONObject().put("status", if (accept) "joined" else "declined").put("localDate", java.time.LocalDate.now().toString())).requireSuccess(com.hedefit.app.ui.i18n.tr("Davet güncellenemedi ya da süresi doldu.", "Couldn't update the invite, or it has expired."))
     }
 
     suspend fun leaveOrCancelChallenge(id: String) {
         api.delete("/api/social/challenges/$id").requireSuccess("Meydan okuma güncellenemedi.")
     }
+
+    // ---- Keşfet > Challenge (/api/challenges) ---------------------------------------------------------
+
+    /** Challenge katalog uygunluğu / Fit Koç için bilinen profil. Hassas onboarding cevapları gönderilmez. */
+    private fun challengeProfileJson(profile: com.hedefit.app.data.model.ProfileData?): JSONObject = JSONObject()
+        .put("goal", profile?.goal?.substringBefore(" | ") ?: "")
+        .put("environment", profile?.environment ?: "")
+        .put("equipment", profile?.equipment ?: "")
+        .put("history", JSONArray(aiSafeHistory(profile?.historyAnswers.orEmpty())))
+
+    private fun challengeFailure(response: com.hedefit.app.data.network.HttpResponse): Nothing {
+        val code = runCatching { JSONObject(response.body).optString("error") }.getOrNull()
+        throw com.hedefit.app.data.network.ApiException(response.status, response.body, com.hedefit.app.data.model.challengeErrorText(code))
+    }
+
+    suspend fun loadChallengeHub(profile: com.hedefit.app.data.model.ProfileData?, wellnessProminent: Boolean): com.hedefit.app.data.model.ChallengeHubData {
+        val body = JSONObject().put("action", "hub").put("localDate", java.time.LocalDate.now().toString()).put("profile", challengeProfileJson(profile)).put("wellnessProminent", wellnessProminent)
+        val response = api.post("/api/challenges", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        return com.hedefit.app.data.model.parseChallengeHub(response.jsonObject())
+    }
+
+    suspend fun joinChallenge(key: String): String {
+        val response = api.post("/api/challenges", JSONObject().put("action", "join").put("key", key).put("localDate", java.time.LocalDate.now().toString()))
+        if (!response.isSuccessful) challengeFailure(response)
+        return response.jsonObject().optString("id")
+    }
+
+    suspend fun coachChallenge(preferences: com.hedefit.app.data.model.CoachChallengePreferences, profile: com.hedefit.app.data.model.ProfileData?, recentWorkouts14d: Int, start: Boolean): JSONObject {
+        val body = JSONObject().put("action", if (start) "coach_start" else "coach_preview").put("preferences", preferences.toJson())
+            .put("profile", challengeProfileJson(profile)).put("recentWorkouts14d", recentWorkouts14d).put("localDate", java.time.LocalDate.now().toString())
+        val response = api.post("/api/challenges", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        return response.jsonObject()
+    }
+
+    suspend fun challengeToday(id: String, profile: com.hedefit.app.data.model.ProfileData?, locale: String): com.hedefit.app.data.model.ChallengeTodayData {
+        val response = api.post("/api/challenges/$id", JSONObject().put("action", "today").put("localDate", java.time.LocalDate.now().toString()).put("locale", locale).put("profile", challengeProfileJson(profile)))
+        if (!response.isSuccessful) challengeFailure(response)
+        return com.hedefit.app.data.model.parseChallengeToday(response.jsonObject())
+    }
+
+    /** action: complete | recovery. Sunucu görevi mevcut kayıtlardan doğrular; aynı gün ikinci çağrı XP vermez. */
+    suspend fun completeChallengeDay(id: String, action: String, status: String, minutes: Int?, sessionId: String?): Pair<com.hedefit.app.data.model.ChallengeCompletionData, com.hedefit.app.data.model.UserChallengeData?> {
+        val body = JSONObject().put("action", action).put("status", status).put("localDate", java.time.LocalDate.now().toString())
+        minutes?.let { body.put("minutes", it) }; sessionId?.let { body.put("sessionId", it) }
+        val response = api.post("/api/challenges/$id", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        val json = response.jsonObject()
+        return com.hedefit.app.data.model.parseChallengeCompletion(json.optJSONObject("result")) to json.optJSONObject("challenge")?.let { com.hedefit.app.data.model.parseUserChallenge(it) }
+    }
+
+    suspend fun abandonChallenge(id: String) {
+        val response = api.post("/api/challenges/$id", JSONObject().put("action", "abandon"))
+        if (!response.isSuccessful) challengeFailure(response)
+    }
+
+    suspend fun createFriendChallenge(templateKey: String, mode: String, friendIds: List<String>, locale: String): String {
+        val body = JSONObject().put("templateKey", templateKey).put("mode", mode).put("friendIds", JSONArray(friendIds)).put("locale", locale).put("localDate", java.time.LocalDate.now().toString())
+        val response = api.post("/api/social/challenges", body)
+        if (!response.isSuccessful) challengeFailure(response)
+        return response.jsonObject().optString("id")
+    }
+
+    suspend fun friendProfile(userId: String): com.hedefit.app.data.model.FriendProfileData {
+        val response = api.get("/api/social/profile/$userId")
+        if (!response.isSuccessful) challengeFailure(response)
+        return com.hedefit.app.data.model.parseFriendProfile(response.jsonObject().optJSONObject("profile") ?: JSONObject())
+    }
+
+    suspend fun loadShareProgress(): Boolean =
+        api.get("/api/social/settings").requireSuccess("Ayar yüklenemedi.").jsonObject().optBoolean("shareProgress", true)
+
+    suspend fun setShareProgress(value: Boolean): Boolean =
+        api.patch("/api/social/settings", JSONObject().put("shareProgress", value)).requireSuccess("Ayar kaydedilemedi.").jsonObject().optBoolean("shareProgress", value)
 
     suspend fun loadChallengeProgress(id: String): List<ChallengeProgressEntryData> {
         val array = api.get("/api/social/challenges/$id/progress").requireSuccess("İlerleme yüklenemedi.").jsonObject().optJSONArray("entries") ?: JSONArray()
@@ -1529,4 +1766,43 @@ class HedefitRepository(
             ))
         } }
     }
+}
+
+/**
+ * AI sağlayıcılarına giden cevap dizisinden hassas slotları boşaltır (indeksler hizalı kalır).
+ * Sunucu aynı süzgeci uygular (lib/onboarding-questions.ts → AI_SENSITIVE_QUESTIONS); burada
+ * veri hiç cihazdan çıkmasın diye ikinci kez yapılır.
+ */
+internal val AI_SENSITIVE_HISTORY_SLOTS = setOf(16, 17, 19, 20, 21)
+
+internal fun aiSafeHistory(answers: List<String>): List<String> =
+    answers.mapIndexed { index, answer -> if (index in AI_SENSITIVE_HISTORY_SLOTS) "" else answer }
+
+/** Katalog JSON'unu modele çevirir (repository ve debug galeri ortak kullanır). */
+internal fun parseExerciseCatalog(array: JSONArray): List<ExerciseCatalogData> {
+    return buildList { for (index in 0 until array.length()) array.optJSONObject(index)?.let { item ->
+        add(ExerciseCatalogData(
+            id = item.optString("id"),
+            name = item.optString("name"),
+            level = item.optString("level"),
+            equipment = item.optString("equipment"),
+            primaryMuscles = item.optJSONArray("primaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            instructions = item.optJSONArray("instructions")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            category = item.optString("category"),
+            imageUrls = item.optJSONArray("images")?.let { values -> List(values.length()) { values.optString(it) }.filter(String::isNotBlank) }.orEmpty(),
+            secondaryMuscles = item.optJSONArray("secondaryMuscles")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            force = item.optString("force"),
+            mechanic = item.optString("mechanic"),
+            levelKey = item.optString("levelKey"),
+            requiredEquipment = item.optJSONArray("requiredEquipment")?.let { options ->
+                List(options.length()) { i -> options.optJSONArray(i)?.let { groups -> List(groups.length()) { groups.optString(it) } }.orEmpty() }
+            }.orEmpty(),
+            modalities = item.optJSONArray("modalities")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            subcategories = item.optJSONArray("subcategories")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            subcategoryLabels = item.optJSONArray("subcategoryLabels")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+            impact = item.optString("impact").takeIf { it != "null" }.orEmpty(),
+            description = item.optString("description").takeIf { it != "null" }.orEmpty(),
+            tips = item.optJSONArray("tips")?.let { values -> List(values.length()) { values.optString(it) } }.orEmpty(),
+        ))
+    } }
 }

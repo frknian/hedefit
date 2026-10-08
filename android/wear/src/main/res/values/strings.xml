@@ -6,6 +6,7 @@
     <string name="comp_streak">Seri</string>
     <string name="phone_not_connected">Telefona bağlı değil.</string>
     <string name="no_reply">Yanıt gelmedi. Telefonda Hedefit açık olmalı.</string>
+    <string name="workout_permission_needed">Antrenman için etkinlik tanıma veya nabız izni gerekli.</string>
     <string name="no_speech">Bu saatte ses tanıma yok.</string>
     <string name="tile_steps">%1$s adım</string>
     <string name="tile_streak">%1$d gün seri</string>

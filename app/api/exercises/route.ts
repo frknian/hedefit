@@ -1,27 +1,9 @@
 import { expandMuscleFilter, filterExercises } from "@/lib/exercise-service";
 import { clientKey, rateLimit, tooManyRequests } from "@/lib/rate-limit";
-import { translateExerciseLabel, translateExerciseName, turkishExerciseInstructions } from "@/lib/exercise-translations";
+import { filterByModality, presentExercise } from "@/lib/exercise-presenter";
+import { isModality } from "@/lib/exercise-modality";
 
 const safeParam = (value: string | null) => (value || "").trim().slice(0, 100);
-
-const GROUP_LABELS: Record<string, [string, string]> = {
-  dumbbell: ["Dambıl", "Dumbbell"], barbell: ["Halter", "Barbell"], kettlebell: ["Kettlebell", "Kettlebell"],
-  band: ["Direnç bandı", "Resistance band"], pull_up_bar: ["Barfiks barı", "Pull-up bar"], bench: ["Sehpa", "Bench"],
-  cable: ["Kablo", "Cable"], machine: ["Makine", "Machine"], suspension: ["TRX / halka", "TRX / rings"],
-  stability_ball: ["Pilates topu", "Stability ball"], jump_rope: ["Atlama ipi", "Jump rope"], ab_wheel: ["Karın tekerleği", "Ab wheel"],
-  plates: ["Plaka", "Weight plate"], dip_station: ["Dips istasyonu", "Dip station"], plyo_box: ["Plyo kutusu", "Plyo box"],
-  gym_gear: ["Salon ekipmanı", "Gym equipment"], cardio_machine: ["Kardiyo makinesi", "Cardio machine"],
-};
-
-/** "Dambıl + Sehpa", "Kettlebell / Dambıl" for alternatives, "Ekipmansız" when nothing is needed. */
-function equipmentLabel(options: string[][] | undefined, raw: string | null, locale: "tr" | "en") {
-  if (!options) return translateExerciseLabel(raw, locale);
-  const en = locale === "en";
-  if (options.some((option) => option.length === 0)) return en ? "No equipment" : "Ekipmansız";
-  return options
-    .map((option) => option.map((group) => GROUP_LABELS[group]?.[en ? 1 : 0] ?? group).join(" + "))
-    .join(" / ");
-}
 
 export function GET(request: Request) {
   // Herkese açık katalog: kimlik gerektirmez, ancak toplu kazımaya karşı sınırlandırılır.
@@ -37,12 +19,15 @@ export function GET(request: Request) {
   const muscleRole = safeParam(searchParams.get("muscleRole"));
   const force = safeParam(searchParams.get("force"));
   const mechanic = safeParam(searchParams.get("mechanic"));
+  const modality = safeParam(searchParams.get("modality"));
+  const subcategory = safeParam(searchParams.get("subcategory"));
   const muscleTargets = expandMuscleFilter(muscle);
   const owned = safeParam(searchParams.get("owned")).split(",").map((item) => item.trim()).filter(Boolean);
   const filtered = filterExercises({ search: safeParam(searchParams.get("search")), equipment: safeParam(searchParams.get("equipment")), owned, level: safeParam(searchParams.get("level")), category: safeParam(searchParams.get("category")) });
+  const byModality = isModality(modality) ? filterByModality(filtered, modality, subcategory) : filtered;
   const byMuscle = muscleTargets.length
-    ? filtered.filter((item) => [...item.primaryMuscles, ...item.secondaryMuscles].some((value) => muscleTargets.includes(value)))
-    : filtered;
+    ? byModality.filter((item) => [...item.primaryMuscles, ...item.secondaryMuscles].some((value) => muscleTargets.includes(value)))
+    : byModality;
   const byEnvironment = environment === "gym" || environment === "home"
     ? byMuscle.filter((item) => (item.environment ?? []).includes(environment))
     : byMuscle;
@@ -65,17 +50,6 @@ export function GET(request: Request) {
       return aOrder !== bOrder ? aOrder - bOrder : a.name.localeCompare(b.name);
     });
   const offset = (page - 1) * limit;
-  const localized = items.slice(offset, offset + limit).map((item) => ({
-    ...item,
-    name: translateExerciseName(item.name, locale),
-    primaryMuscles: item.primaryMuscles.map((value) => translateExerciseLabel(value, locale)),
-    secondaryMuscles: item.secondaryMuscles.map((value) => translateExerciseLabel(value, locale)),
-    equipment: equipmentLabel(item.requiredEquipment, item.equipment, locale),
-    requiredEquipment: item.requiredEquipment ?? [],
-    level: translateExerciseLabel(item.level, locale),
-    levelKey: item.level,
-    category: translateExerciseLabel(item.category, locale),
-    instructions: turkishExerciseInstructions(item, locale),
-  }));
+  const localized = items.slice(offset, offset + limit).map((item) => presentExercise(item, locale));
   return Response.json({ items: localized, page, limit, total: items.length, totalPages: Math.ceil(items.length / limit), locale });
 }

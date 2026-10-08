@@ -19,7 +19,9 @@ export async function GET(request: Request) {
 
   const { data, error } = await client.rpc("hedefit_get_discoverable");
   if (error) return Response.json({ error: "Ayar yüklenemedi." }, { status: 500 });
-  return Response.json({ discoverable: data !== false });
+  // Arkadaşlarla ilerleme paylaşımı (level, seri, challenge'lar). Sütun yoksa varsayılan açık.
+  const share = await client.from("profiles").select("share_progress_with_friends").eq("id", auth.user.id).maybeSingle();
+  return Response.json({ discoverable: data !== false, shareProgress: share.error ? true : share.data?.share_progress_with_friends !== false });
 }
 
 export async function PATCH(request: Request) {
@@ -29,6 +31,13 @@ export async function PATCH(request: Request) {
   if (!limited.ok) return tooManyRequests(limited.retryAfterSeconds);
 
   const payload = await request.json().catch(() => null) as Record<string, unknown> | null;
+  if (typeof payload?.shareProgress === "boolean") {
+    const shareClient = socialUserClient(request);
+    if (!shareClient) return Response.json({ error: "Servis yapılandırılmamış." }, { status: 503 });
+    const shared = await shareClient.rpc("hedefit_set_share_progress", { p_value: payload.shareProgress });
+    if (shared.error) return Response.json({ error: "Ayar kaydedilemedi." }, { status: 500 });
+    return Response.json({ shareProgress: shared.data !== false });
+  }
   if (typeof payload?.discoverable !== "boolean") {
     return Response.json({ error: "Geçersiz değer." }, { status: 400 });
   }

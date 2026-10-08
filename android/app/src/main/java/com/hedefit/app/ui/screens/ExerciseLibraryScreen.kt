@@ -23,6 +23,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hedefit.app.data.model.ExerciseCatalogData
@@ -40,7 +44,7 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
+fun ExerciseLibraryScreen(startWithMap: Boolean = false, initialMuscle: String = "", initialModality: String = "", initialEnvironment: String = "", initialEquipment: String = "", items: List<ExerciseCatalogData>, loading: Boolean, language: String, onBack: () -> Unit, onSearch: (String, String, String, String, String, String, String, String, String, String, String) -> Unit, onUse: (ExerciseCatalogData) -> Unit, onStart: (ExerciseCatalogData) -> Unit, onCreateProgram: (String, List<ExerciseCatalogData>) -> Unit = { _, _ -> }, isLocked: (ExerciseCatalogData) -> Boolean = { false }, onLocked: (ExerciseCatalogData) -> Unit = {}) {
     val en = language == "en"
     var query by remember { mutableStateOf("") }
     var muscle by remember { mutableStateOf("") }
@@ -51,21 +55,54 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
     var force by remember { mutableStateOf("") }
     var mechanic by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var modality by remember { mutableStateOf("") }
+    var subcategory by remember { mutableStateOf("") }
     var showFilters by remember { mutableStateOf(false) }
+    var showMap by remember { mutableStateOf(startWithMap) }
+    var grid by remember { mutableStateOf(startWithMap) }
     var selected by remember { mutableStateOf<ExerciseCatalogData?>(null) }
     var showCustom by remember { mutableStateOf(false) }
     var selectedForProgram by remember { mutableStateOf<List<ExerciseCatalogData>>(emptyList()) }
     var showNameDialog by remember { mutableStateOf(false) }
-    val activeFilterCount = listOf(muscle, equipment, level, environment, force, mechanic, category).count(String::isNotBlank)
-    val clearFilters = {
-        muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""
-        onSearch(query, "", "", "", "", "", "", "", "")
+    LaunchedEffect(initialModality) { if (initialModality.isNotBlank()) modality = initialModality }
+    // Keşfet > Programlar kategorileri (Gym / Evde / Direnç Bandı) filtreyi önceden seçili açar.
+    LaunchedEffect(initialEnvironment) { if (initialEnvironment.isNotBlank()) environment = initialEnvironment }
+    LaunchedEffect(initialEquipment) { if (initialEquipment.isNotBlank()) equipment = initialEquipment }
+    LaunchedEffect(initialMuscle) {
+        // Liste çağıran tarafta bu kasla zaten yüklendi; burada yalnız filtre durumu eşitlenir.
+        if (initialMuscle.isNotBlank()) { muscle = initialMuscle; muscleRole = "primary" }
     }
-    val search = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category) }
-    ScreenContainer { Column(Modifier.fillMaxSize()) {
+    val activeFilterCount = listOf(muscle, equipment, level, environment, force, mechanic, category, modality, subcategory).count(String::isNotBlank)
+    val clearFilters = {
+        muscle = ""; equipment = ""; level = ""; environment = ""; muscleRole = ""; force = ""; mechanic = ""; category = ""; modality = ""; subcategory = ""
+        onSearch(query, "", "", "", "", "", "", "", "", "", "")
+    }
+    val search = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory) }
+    // Aşağı kaydırdıkça harita küçülür, hareket listesi iskeletin üstüne doğru büyür; yukarı kaydırınca geri açılır.
+    val mapCollapse = remember { MapCollapse() }
+    LaunchedEffect(showMap) { mapCollapse.px = 0 }
+    val mapScroll = remember(mapCollapse) {
+        object : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+            override fun onPreScroll(available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                if (available.y >= 0f || mapCollapse.px >= mapCollapse.max) return androidx.compose.ui.geometry.Offset.Zero
+                val next = (mapCollapse.px - available.y.toInt()).coerceAtMost(mapCollapse.max)
+                val used = next - mapCollapse.px
+                mapCollapse.px = next
+                return androidx.compose.ui.geometry.Offset(0f, -used.toFloat())
+            }
+            override fun onPostScroll(consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource): androidx.compose.ui.geometry.Offset {
+                if (available.y <= 0f || mapCollapse.px <= 0) return androidx.compose.ui.geometry.Offset.Zero
+                val next = (mapCollapse.px - available.y.toInt()).coerceAtLeast(0)
+                val used = mapCollapse.px - next
+                mapCollapse.px = next
+                return androidx.compose.ui.geometry.Offset(0f, used.toFloat())
+            }
+        }
+    }
+    ScreenContainer { Column(Modifier.fillMaxSize().nestedScroll(mapScroll)) {
         Column(Modifier.padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             HfScreenHeader(
-                if (en) "Movement Atlas" else "Hareket Atlası",
+                if (startWithMap) (if (en) "Muscle Map" else "Kas Haritası") else if (en) "Movement Atlas" else "Hareket Atlası",
                 if (loading) (if (en) "Loading…" else "Yükleniyor…") else if (en) "${items.size} movements" else "${items.size} hareket",
                 onBack = onBack,
                 backLabel = if (en) "Back" else "Geri",
@@ -93,12 +130,59 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                     if (activeFilterCount > 0) Text("$activeFilterCount", color = HedefitColors.Lime, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.align(Alignment.TopEnd).offset(4.dp, (-4).dp).background(HedefitColors.Surface, CircleShape).padding(horizontal = 5.dp, vertical = 1.dp))
                 }
             }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HfChip(if (en) "Muscle map" else "Kas haritası", showMap, { showMap = !showMap })
+                HfChip(if (en) "Grid" else "Izgara", grid, { grid = !grid })
+            }
+            if (showMap) Column(
+                Modifier.fillMaxWidth().clipToBounds().layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+                    mapCollapse.max = placeable.height
+                    val visible = (placeable.height - mapCollapse.px).coerceAtLeast(0)
+                    layout(placeable.width, visible) { placeable.place(0, -mapCollapse.px / 2) }
+                }.graphicsLayer { alpha = 1f - (mapCollapse.px.toFloat() / mapCollapse.max.coerceAtLeast(1)).coerceIn(0f, 1f) * .6f },
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                MuscleMap(
+                    selected = setOfNotNull(muscle.ifBlank { null }),
+                    onSelect = { id ->
+                        val next = if (muscle == id) "" else id
+                        muscle = next
+                        muscleRole = if (next.isBlank()) "" else "primary"
+                        onSearch(query, next, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory)
+                    },
+                    description = if (en) "Tap a muscle to list its movements" else "Hareketlerini görmek için bir kasa dokun",
+                )
+                Text(
+                    if (muscle.isBlank()) (if (en) "Tap a muscle to see its movements" else "Bir kasa dokun, hareketleri listelensin")
+                    else muscleOptions(en).firstOrNull { it.first == muscle }?.second ?: muscle,
+                    color = if (muscle.isBlank()) HedefitColors.TextMuted else HedefitColors.Lime,
+                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                )
+            }
             HfChipRow {
                 muscleOptions(en).take(9).forEach { (value, label) ->
                     HfChip(label, muscle == value, {
                         muscle = value
                         muscleRole = if (value.isBlank()) "" else "primary"
-                        onSearch(query, value, equipment, level, environment, if (value.isBlank()) "" else "primary", force, mechanic, category)
+                        onSearch(query, value, equipment, level, environment, if (value.isBlank()) "" else "primary", force, mechanic, category, modality, subcategory)
+                    })
+                }
+            }
+            // Antrenman tarzı: Pilates, Mobilite, Barre, Düşük etkili, Toparlanma (kas filtresinden bağımsız).
+            HfChipRow {
+                modalityOptions(en).forEach { (value, label) ->
+                    HfChip(label, modality == value, {
+                        modality = value; subcategory = ""
+                        onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, value, "")
+                    })
+                }
+            }
+            if (modality.isNotBlank()) HfChipRow {
+                subcategoryOptions(modality, en).forEach { (value, label) ->
+                    HfChip(label, subcategory == value, {
+                        subcategory = value
+                        onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, value)
                     })
                 }
             }
@@ -108,7 +192,22 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
             }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth(), color = HedefitColors.Lime)
-        LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (grid) androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            androidx.compose.foundation.lazy.grid.GridCells.Fixed(3), Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(items.size, key = { items[it].id }) { index ->
+                val item = items[index]
+                val locked = isLocked(item)
+                Box(Modifier.fillMaxWidth().aspectRatio(.8f).clip(RoundedCornerShape(16.dp)).alpha(if (locked) .55f else 1f).clickable { if (locked) onLocked(item) else selected = item }) {
+                    ExerciseMedia(item.imageUrls.firstOrNull(), item.name, Modifier.fillMaxSize())
+                    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color(0xCC000000)))))
+                    if (locked) Icon(Icons.Default.Lock, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(16.dp))
+                    Text(item.name, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, maxLines = 2, modifier = Modifier.align(Alignment.BottomStart).padding(8.dp))
+                }
+            }
+        } else LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(items, key = { it.id }) { item ->
                 val isPicked = selectedForProgram.any { it.id == item.id }
                 val locked = isLocked(item)
@@ -178,7 +277,7 @@ fun ExerciseLibraryScreen(items: List<ExerciseCatalogData>, loading: Boolean, la
                 item { FilterSection(if (en) "Structure" else "Yapı", mechanicOptions(en), mechanic) { mechanic = it } }
             }
             Button(
-                onClick = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category); showFilters = false },
+                onClick = { onSearch(query, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory); showFilters = false },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
             ) { Text(if (en) "Show matching movements" else "Uygun hareketleri göster") }
@@ -277,7 +376,7 @@ private fun muscleOptions(en: Boolean) = if (en) listOf(
     "shoulders" to "Shoulders", "biceps" to "Front arm · biceps", "triceps" to "Back arm · triceps", "forearms" to "Forearm & wrist", "abdominals" to "Abs",
     "glutes" to "Glutes", "quadriceps" to "Front thigh · quads", "hamstrings" to "Back thigh · hamstrings", "calves" to "Calves", "adductors" to "Inner thigh · adductors", "abductors" to "Outer hip · abductors",
 ) else listOf(
-    "" to "Tümü", "chest" to "Göğüs", "back" to "Sırt", "lats" to "Kanat", "traps" to "Trapez", "neck" to "Boyun", "shoulders" to "Omuz", "biceps" to "Ön kol", "triceps" to "Arka kol", "forearms" to "Bilek", "abdominals" to "Karın", "legs" to "Bacak", "glutes" to "Kalça", "calves" to "Baldır", "abductors" to "Dış kalça",
+    "" to "Tümü", "chest" to "Göğüs", "back" to "Sırt", "lats" to "Kanat", "traps" to "Trapez", "neck" to "Boyun", "shoulders" to "Omuz", "biceps" to "Ön kol", "triceps" to "Arka kol", "forearms" to "Bilek", "abdominals" to "Karın", "legs" to "Bacak", "glutes" to "Kalça", "calves" to "Baldır", "abductors" to "Dış kalça", "middle back" to "Orta sırt", "lower back" to "Bel", "quadriceps" to "Ön bacak", "hamstrings" to "Arka bacak",
 )
 
 @Composable
@@ -328,4 +427,53 @@ private fun CustomExerciseDialog(onDismiss: () -> Unit, onCreate: (ExerciseCatal
         dismissButton = { TextButton(onClick = onDismiss) { Text(com.hedefit.app.ui.i18n.tr("Vazgeç", "Cancel")) } },
         confirmButton = { Button(enabled = name.trim().length >= 2, onClick = { onCreate(ExerciseCatalogData("custom-${UUID.randomUUID()}", name.trim(), "custom", equipment.trim(), listOf(muscle.trim().ifBlank { "Tüm Vücut" }), listOf(instruction.trim()).filter(String::isNotBlank), "custom", emptyList())) }, colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime)) { Text("Programa ekle") } },
     )
+}
+
+private fun modalityOptions(en: Boolean) = listOf(
+    "" to if (en) "All styles" else "Tüm tarzlar",
+    "pilates" to "Pilates",
+    "mobility" to if (en) "Mobility" else "Mobilite",
+    "barre" to "Barre",
+    "low_impact" to if (en) "Low impact" else "Düşük etkili",
+    "recovery" to if (en) "Recovery" else "Toparlanma",
+)
+
+/** Sunucudaki lib/exercise-modality.ts ile aynı alt kategoriler. */
+private fun subcategoryOptions(modality: String, en: Boolean): List<Pair<String, String>> {
+    val keys = when (modality) {
+        "pilates" -> listOf("", "beginner", "full_body", "core", "lower_body", "upper_body", "posture", "short", "recovery")
+        "mobility" -> listOf("", "full_body", "hip", "back", "shoulder", "morning", "evening")
+        "barre" -> listOf("", "beginner", "lower_body", "core", "full_body", "balance_posture")
+        "low_impact" -> listOf("", "full_body", "cardio", "beginner", "recovery")
+        "recovery" -> listOf("", "full_body", "lower_body", "upper_body", "breathing")
+        else -> listOf("")
+    }
+    return keys.map { it to subcategoryLabel(it, en) }
+}
+
+internal fun subcategoryLabel(key: String, en: Boolean): String = when (key) {
+    "" -> if (en) "All" else "Tümü"
+    "beginner" -> if (en) "Beginner" else "Başlangıç"
+    "full_body" -> if (en) "Full body" else "Tüm vücut"
+    "core" -> "Core"
+    "lower_body" -> if (en) "Lower body" else "Alt vücut"
+    "upper_body" -> if (en) "Upper body" else "Üst vücut"
+    "posture" -> if (en) "Posture" else "Duruş"
+    "short" -> if (en) "Short" else "Kısa"
+    "recovery" -> if (en) "Recovery" else "Toparlanma"
+    "hip" -> if (en) "Hip" else "Kalça"
+    "back" -> if (en) "Back" else "Sırt"
+    "shoulder" -> if (en) "Shoulder" else "Omuz"
+    "morning" -> if (en) "Morning" else "Sabah"
+    "evening" -> if (en) "Evening" else "Akşam"
+    "cardio" -> if (en) "Cardio" else "Kardiyo"
+    "balance_posture" -> if (en) "Balance & posture" else "Denge ve duruş"
+    "breathing" -> if (en) "Breathing" else "Nefes"
+    else -> key
+}
+
+/** Harita bloğunun kaydırmayla daralma durumu (px). `max` yerleşimde ölçülen tam yükseklik. */
+private class MapCollapse {
+    var px by androidx.compose.runtime.mutableIntStateOf(0)
+    var max: Int = 0
 }

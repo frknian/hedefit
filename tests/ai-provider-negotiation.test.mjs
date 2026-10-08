@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { openAiCompatibleProvider } from "../lib/ai/providers/openai-compatible.ts";
 
-const ENV_KEYS = ["OPENAI_API_KEY", "OPENAI_MODEL_STANDARD"];
+const ENV_KEYS = ["OPENAI_API_KEY", "OPENAI_MODEL_LIGHT"];
 let saved;
 
 test.beforeEach(() => {
   saved = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
   process.env.OPENAI_API_KEY = "test-key";
-  process.env.OPENAI_MODEL_STANDARD = "gpt-4o";
+  process.env.OPENAI_MODEL_LIGHT = "gpt-4o-mini";
 });
 
 test.afterEach(() => {
@@ -39,7 +39,7 @@ function stubFetch(responses) {
   return calls;
 }
 
-test("basit Fit Koç çağrısı Responses API üzerinden 4o ve çıktı bütçesi kullanır", async () => {
+test("basit Fit Koç çağrısı Responses API üzerinden hafif model ve çıktı bütçesi kullanır", async () => {
   const calls = stubFetch([{ status: 200, body: response("Günde 160-220 gram protein hedefle.") }]);
   const result = await openAiCompatibleProvider.generateText({
     category: "conversation",
@@ -51,14 +51,14 @@ test("basit Fit Koç çağrısı Responses API üzerinden 4o ve çıktı bütçe
   assert.equal(result.text, "Günde 160-220 gram protein hedefle.");
   assert.equal(calls.length, 1);
   assert.match(calls[0].url, /\/v1\/responses$/);
-  assert.equal(calls[0].body.model, "gpt-4o");
+  assert.equal(calls[0].body.model, "gpt-4o-mini");
   assert.ok(!("reasoning" in calls[0].body));
   assert.ok(!calls[0].body.text?.verbosity);
   assert.equal(calls[0].body.max_output_tokens, 500);
 });
 
 test("güçlü model çağrısında düşük reasoning ve kısa yanıt ayarı kullanılır", async () => {
-  process.env.OPENAI_MODEL_STANDARD = "gpt-5.1";
+  process.env.OPENAI_MODEL_LIGHT = "gpt-5.1";
   const calls = stubFetch([{ status: 200, body: response("Tamam") }]);
   await openAiCompatibleProvider.generateText({ category: "conversation", prompt: "planla" });
   assert.equal(calls[0].body.model, "gpt-5.1");

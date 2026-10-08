@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hedefit.app.ui.i18n.upperLocalized
 import com.hedefit.app.ui.theme.HedefitColors
 
 /** Square tinted icon container used across cards, rows and tiles. */
@@ -147,7 +148,10 @@ fun HfActionTile(icon: ImageVector, tint: Color, title: String, subtitle: String
     HedefitCard(modifier, onClick = if (enabled) onClick else null, contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             HfIconBadge(icon, tint, 36.dp, 18.dp)
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                if (subtitle.isNotBlank()) Text(subtitle, color = HedefitColors.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }
@@ -156,7 +160,7 @@ fun HfActionTile(icon: ImageVector, tint: Color, title: String, subtitle: String
 fun HfStatTile(label: String, value: String, modifier: Modifier = Modifier, sub: String? = null, valueColor: Color = HedefitColors.TextPrimary, onClick: (() -> Unit)? = null) {
     HedefitCard(modifier, onClick = onClick, contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(label.uppercase(), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label.upperLocalized(), color = HedefitColors.TextSecondary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(value, color = valueColor, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (sub != null) Text(sub, color = HedefitColors.TextMuted, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

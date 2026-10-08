@@ -40,7 +40,7 @@ data class FeedItemData(
     val user: FriendUserData,
 )
 
-/** metric: "xp" | "workouts" | "distance_km". myStatus: "invited" | "joined" | "declined". */
+/** metric: "xp" | "workouts" | "distance_km" | "steps" | "challenge_days". myStatus: "invited" | "joined" | "declined" | "expired". */
 data class ChallengeData(
     val id: String,
     val title: String,
@@ -52,6 +52,10 @@ data class ChallengeData(
     val isCreator: Boolean,
     val myStatus: String,
     val participantCount: Int,
+    /** compete (Rekabet Et) | together (Birlikte Tamamla). */
+    val mode: String = "compete",
+    /** Katalog challenge'ına bağlıysa anahtarı (ör. steps_7); eski serbest hedefli meydan okumalarda null. */
+    val templateKey: String? = null,
 )
 
 data class ChallengeProgressEntryData(

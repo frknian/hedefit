@@ -1,6 +1,6 @@
 import { authenticateRequest } from "../../../../lib/api-auth.ts";
 import { rateLimit, tooManyRequests } from "../../../../lib/rate-limit.ts";
-import { deleteMemory, loadMemories, mayContainMemory, saveMemories } from "../../../../lib/ai/memory.ts";
+import { deleteAllMemories, deleteMemory, loadMemories, mayContainMemory, saveMemories } from "../../../../lib/ai/memory.ts";
 import { extractMemories } from "../../../../lib/ai/coach.ts";
 import { hasRemoteProvider } from "../../../../lib/ai/providers/openai-compatible.ts";
 import { checkAndConsumeUsage, outputTokenLimit, refundUsage } from "../../../../lib/usage-limits.ts";
@@ -31,7 +31,11 @@ export async function DELETE(request: Request) {
   const limit = rateLimit(`ai-memory-write:${auth.user.id}`, 30, 60_000);
   if (!limit.ok) return tooManyRequests(limit.retryAfterSeconds);
 
-  const id = new URL(request.url).searchParams.get("id") || "";
+  const params = new URL(request.url).searchParams;
+  // Tümünü sil: yalnızca açık "all=true" ile (yanlışlıkla id'siz çağrı hepsini silmesin).
+  if (params.get("all") === "true") return Response.json({ deleted: await deleteAllMemories(request), all: true });
+
+  const id = params.get("id") || "";
   // Kimlik biçimi doğrulanır: doğrulanmamış bir dize doğrudan sorguya girmemeli.
   if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Geçersiz kayıt" }, { status: 400 });
 

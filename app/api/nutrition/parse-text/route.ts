@@ -124,7 +124,7 @@ export async function POST(request: Request) {
 
   const usage = await checkAndConsumeUsage(request, "text_nutrition", auth.user.id);
   if ("error" in usage) return usage.error;
-  if (!usage.allowed) return usageLimitExceeded("text_nutrition", usage.used, usage.limit);
+  if (!usage.allowed) return usageLimitExceeded("text_nutrition", usage.used, usage.limit, usage.period);
 
   try {
     const item = await estimateAiTextNutrition({ foodName: query, grams, timeoutMs: 35_000, maxOutputTokens: outputTokenLimit("text_nutrition", usage.planTier) });

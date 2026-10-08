@@ -15,6 +15,7 @@ import type {
   PlannedWorkoutSession,
   StandardizedExercise,
   TrainingProfile,
+  TrainingSplitPlan,
   ValidationResult,
   WeeklyVolumeTargets,
 } from "./types.ts";

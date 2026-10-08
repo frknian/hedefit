@@ -78,6 +78,9 @@ fun ProfileSettingsScreen(
     onOpenQuestionnaire: () -> Unit,
     onOpenNotifications: () -> Unit,
     onOpenWearables: () -> Unit = {},
+    onOpenConsents: () -> Unit = {},
+    onOpenAiMemory: () -> Unit = {},
+    onOpenHealthPrivacy: () -> Unit = {},
     onAddShortcut: (String) -> Unit,
     onConnectHealth: () -> Unit,
     onSave: (ProfileUpdateData) -> Unit,
@@ -93,9 +96,22 @@ fun ProfileSettingsScreen(
     isGuest: Boolean = false,
     onSaveAccount: () -> Unit = {},
     tier: com.hedefit.app.ui.state.Tier = com.hedefit.app.ui.state.Tier.Free,
+    billing: com.hedefit.app.billing.BillingUiState = com.hedefit.app.billing.BillingUiState(),
+    onLoadBilling: () -> Unit = {},
+    onPurchasePlan: (String, String) -> Unit = { _, _ -> },
+    onManageSubscription: () -> Unit = {},
 ) {
     var showPlans by remember { mutableStateOf(false) }
-    if (showPlans) PlansSheet(tier) { showPlans = false }
+    if (showPlans) PlansSheet(
+        current = tier,
+        billing = billing,
+        isGuest = isGuest,
+        onLoadOffers = onLoadBilling,
+        onPurchase = onPurchasePlan,
+        onManage = onManageSubscription,
+        onSaveAccount = onSaveAccount,
+        onDismiss = { showPlans = false },
+    )
     val en = preferences.language == "en"
     var showShare by remember { mutableStateOf(false) }
     var name by remember(profile) { mutableStateOf(profile.displayName) }
@@ -277,6 +293,12 @@ fun ProfileSettingsScreen(
             item {
                 HedefitCard(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                     Column {
+                        SettingsRowContent(Icons.Default.Shield, if (en) "Privacy and consents" else "Gizlilik ve rızalar", if (en) "Consent status, legal texts, withdraw consent" else "Rıza durumu, yasal metinler, rızayı geri çek", onOpenConsents, HedefitColors.Lime)
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.Shield, if (en) "Health data and personalization" else "Sağlık verisi ve kişiselleştirme", if (en) "Adaptation, optional cycle tracking, delete health data" else "Uyarlama, isteğe bağlı döngü takibi, sağlık verisini sil", onOpenHealthPrivacy, HedefitColors.Lime)
+                        CardDivider()
+                        SettingsRowContent(Icons.Default.Psychology, if (en) "Coach memory" else "Koç hafızası", if (en) "See and delete what Fit Coach remembers" else "FitKoç'un hatırladıklarını gör ve sil", onOpenAiMemory, HedefitColors.Lime)
+                        CardDivider()
                         SettingsRowContent(Icons.Default.Logout, if (en) "Sign out" else "Çıkış yap", "", onSignOut, HedefitColors.TextSecondary)
                         CardDivider()
                         SettingsRowContent(Icons.Default.PauseCircle, if (en) "Freeze account" else "Hesabı dondur", "", onClick = { showFreeze = true }, tint = HedefitColors.Lime)
@@ -292,7 +314,7 @@ fun ProfileSettingsScreen(
 
     if (showReset) ConfirmDialog(if (en) "Delete progress data" else "İlerleme verilerini sil", if (en) "Your workouts, measurements, calories and streak records will be permanently deleted." else "Antrenman, ölçüm, kalori ve seri kayıtların kalıcı olarak silinecek.", if (en) "Reset" else "Sıfırla", accountBusy, en, { showReset = false }) { showReset = false; onResetProgress() }
     if (showFreeze) ConfirmDialog(if (en) "Freeze account" else "Hesabı dondur", if (en) "Your data will remain. App access will pause until you reactivate." else "Verilerin korunacak. Yeniden etkinleştirene kadar uygulama erişimin duracak.", if (en) "Freeze" else "Dondur", accountBusy, en, { showFreeze = false }) { showFreeze = false; onFreeze() }
-    if (showDelete) DeleteAccountDialog(email, accountBusy, en, { showDelete = false }) { confirmedEmail -> showDelete = false; onDelete(confirmedEmail) }
+    if (showDelete) DeleteAccountDialog(email, accountBusy, en, tier == com.hedefit.app.ui.state.Tier.Plus || tier == com.hedefit.app.ui.state.Tier.Premium, { showDelete = false }) { confirmedEmail -> showDelete = false; onDelete(confirmedEmail) }
     if (showShare) ShareAppDialog(defaultShareMessage, en, { showShare = false }) { message -> showShare = false; onShareApp(message) }
     val widgetContext = androidx.compose.ui.platform.LocalContext.current
     if (showShortcut) HomeWidgetsSheet(
@@ -533,16 +555,25 @@ private fun MinimalToggle(icon: androidx.compose.ui.graphics.vector.ImageVector,
     AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Text(body) }, dismissButton = { TextButton(onClick = onDismiss) { Text(if (en) "Cancel" else "Vazgeç") } }, confirmButton = { TextButton(enabled = !busy, onClick = onConfirm) { Text(if (busy) (if (en) "Processing…" else "İşleniyor…") else action, color = HedefitColors.Lime) } })
 }
 
-@Composable private fun DeleteAccountDialog(accountEmail: String, busy: Boolean, en: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+@Composable private fun DeleteAccountDialog(accountEmail: String, busy: Boolean, en: Boolean, hasSubscription: Boolean, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var phrase by remember { mutableStateOf("") }
     val expectedPhrase = if (en) "DELETE MY ACCOUNT" else "HESABIMI SİL"
-    val ready = email.trim().equals(accountEmail, true) && phrase == expectedPhrase
+    var subscriptionAck by remember { mutableStateOf(false) }
+    val ready = email.trim().equals(accountEmail, true) && phrase == expectedPhrase && (!hasSubscription || subscriptionAck)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (en) "Permanently delete account" else "Hesabı kalıcı olarak sil") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(if (en) "Your profile, workouts and all records will be deleted irreversibly." else "Profilin, antrenmanların ve tüm kayıtların geri alınamaz biçimde silinir.")
+            if (hasSubscription) {
+                // Hesabı silmek Google Play aboneliğini iptal etmez; ücretlendirme sürer.
+                Text(if (en) "Deleting your account does NOT cancel your Google Play subscription. Cancel it in Google Play first or you will keep being charged." else "Hesabı silmek Google Play aboneliğini İPTAL ETMEZ. Önce Google Play'den iptal et, yoksa ücretlendirme sürer.", color = HedefitColors.Coral)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(subscriptionAck, { subscriptionAck = it })
+                    Text(if (en) "I understand and will cancel it in Google Play" else "Anladım, Google Play'den iptal edeceğim", fontSize = 13.sp)
+                }
+            }
             OutlinedTextField(email, { email = it }, label = { Text(if (en) "Your email address" else "E-posta adresin") }, singleLine = true)
             OutlinedTextField(phrase, { phrase = it }, label = { Text(if (en) "Type DELETE MY ACCOUNT" else "HESABIMI SİL yaz") }, singleLine = true, visualTransformation = PasswordVisualTransformation())
         } },

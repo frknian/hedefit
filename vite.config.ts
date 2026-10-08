@@ -7,6 +7,8 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  // Günlük 03:17 UTC: Play abonelik uzlaştırması (lib/billing/reconcile.ts).
+  triggers: { crons: ["17 3 * * *"] },
 };
 
 export default defineConfig(async () => {

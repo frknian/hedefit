@@ -3,6 +3,7 @@ package com.hedefit.wear
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import android.speech.RecognizerIntent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,6 +23,9 @@ import com.hedefit.wear.data.SnapshotStore
 import com.hedefit.wear.data.WatchEvents
 import com.hedefit.wear.exercise.ExerciseService
 import com.hedefit.wear.exercise.WorkoutKind
+import com.hedefit.wear.exercise.canStartWorkout
+import com.hedefit.wear.exercise.currentGrants
+import com.hedefit.wear.exercise.heartRatePermission
 import com.hedefit.wear.ui.AskState
 import com.hedefit.wear.ui.HedefitWearApp
 import com.hedefit.wear.ui.Pages
@@ -37,9 +41,14 @@ class MainActivity : ComponentActivity() {
     private var askMode = "chat"
 
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        // Reddedilen izinde de antrenmanı başlat; Health Services eksik sensörü boş bırakır.
-        pendingKind?.let { ExerciseService.start(this, it) }
+        // Nabız/konum reddedilse de antrenman başlar (Health Services eksik sensörü boş bırakır); ama
+        // önplan servisi için etkinlik tanıma ya da nabız izninden biri şart, yoksa servis çöker.
+        val kind = pendingKind
         pendingKind = null
+        if (kind != null) {
+            if (canStartWorkout(currentGrants(this))) ExerciseService.start(this, kind)
+            else Toast.makeText(this, R.string.workout_permission_needed, Toast.LENGTH_LONG).show()
+        }
     }
 
     private val speech = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -83,7 +92,7 @@ class MainActivity : ComponentActivity() {
                 onStart = { kind ->
                     pendingKind = kind
                     val needed = buildList {
-                        add(Manifest.permission.BODY_SENSORS); add(Manifest.permission.ACTIVITY_RECOGNITION); add(Manifest.permission.POST_NOTIFICATIONS)
+                        add(heartRatePermission()); add(Manifest.permission.ACTIVITY_RECOGNITION); add(Manifest.permission.POST_NOTIFICATIONS)
                         if (kind.outdoor) { add(Manifest.permission.ACCESS_FINE_LOCATION); add(Manifest.permission.ACCESS_COARSE_LOCATION) }
                     }
                     permissions.launch(needed.toTypedArray())

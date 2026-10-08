@@ -3,6 +3,11 @@ package com.hedefit.app.ui.state
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.hedefit.app.billing.BILLING_PRODUCTS
+import com.hedefit.app.billing.BillingEvent
+import com.hedefit.app.billing.BillingManager
+import com.hedefit.app.billing.BillingUiState
+import com.hedefit.app.billing.VerifyOutcome
 import com.hedefit.app.gym.PlanRotation
 import com.hedefit.app.gym.PlanRotationPeriod
 import com.hedefit.app.ui.settings.PlanRotationStore
@@ -72,6 +77,7 @@ import com.hedefit.app.data.model.FriendsSummaryData
 import com.hedefit.app.data.model.LeaderboardEntryData
 import com.hedefit.app.data.model.FeedItemData
 import com.hedefit.app.data.model.ChallengeData
+import com.hedefit.app.data.model.toJson
 import com.hedefit.app.data.model.ChallengeProgressEntryData
 
 data class ChatMessageState(
@@ -111,6 +117,14 @@ data class MainUiState(
     val consentRequired: Boolean = false,
     val consentBusy: Boolean = false,
     val consentError: String? = null,
+    val rewardAdBusy: Boolean = false,
+    val aiMemories: List<com.hedefit.app.data.model.AiMemoryItem>? = null,
+    val aiMemoryBusy: Boolean = false,
+    val aiMemoryError: String? = null,
+    val consentStatus: com.hedefit.app.data.model.ConsentStatus? = null,
+    val consentSettingsBusy: Boolean = false,
+    val consentSettingsError: String? = null,
+    val healthPrivacy: HealthPrivacyState = HealthPrivacyState(),
     val healthConnected: Boolean = false,
     val healthBusy: Boolean = false,
     val wearables: com.hedefit.app.health.WearableSnapshot? = null,
@@ -130,6 +144,13 @@ data class MainUiState(
     val offlinePendingCount: Int = 0,
     val previousPerformance: Map<String, List<PreviousSetData>> = emptyMap(),
     val readinessCheckinBusy: Boolean = false,
+    /** Bugünkü check-in (null = henüz yapılmadı ya da sunucu hazır değil). */
+    val checkinToday: com.hedefit.app.data.model.CheckinData? = null,
+    val checkinCycle: com.hedefit.app.data.model.CycleStateData? = null,
+    val checkinSaved: Boolean = false,
+    /** Bugünün uyarlanmış planı (null = yok ya da kapatıldı). */
+    val adaptiveResult: com.hedefit.app.data.model.AdaptiveResultData? = null,
+    val nutritionWellness: com.hedefit.app.data.model.NutritionWellnessData? = null,
     val readinessAdaptation: ReadinessAdaptationData? = null,
     val replacementBusy: Boolean = false,
     val replacementCandidate: ExerciseReplacementCandidate? = null,
@@ -160,12 +181,44 @@ data class MainUiState(
     val challengeProgressBusy: Boolean = false,
     val challengeProgress: List<ChallengeProgressEntryData> = emptyList(),
     val activeChallengeId: String? = null,
+    /** Keşfet > Challenge: katalog + kullanıcının challenge'ları (çevrimdışıyken son önbellek). */
+    val challengeHub: com.hedefit.app.data.model.ChallengeHubData? = null,
+    val challengeHubBusy: Boolean = false,
+    val challengeHubError: String? = null,
+    val challengeHubOffline: Boolean = false,
+    /** Detay ekranında açık challenge'ın bugünkü görevi (uyarlama dahil). */
+    val challengeToday: com.hedefit.app.data.model.ChallengeTodayData? = null,
+    val challengeTodayBusy: Boolean = false,
+    val challengeActionBusy: Boolean = false,
+    /** Gün tamamlanınca gösterilecek kutlama (MainActivity tüketir). */
+    val challengeCelebration: ChallengeCelebration? = null,
+    val coachChallengePreview: com.hedefit.app.data.model.CoachChallengePreview? = null,
+    val coachChallengeBusy: Boolean = false,
+    val friendProfile: com.hedefit.app.data.model.FriendProfileData? = null,
+    val friendProfileBusy: Boolean = false,
+    val shareProgress: Boolean? = null,
+    val billing: BillingUiState = BillingUiState(),
 ) {
     val isGuest: Boolean get() = (auth as? AuthState.SignedIn)?.session?.user?.isAnonymous == true
 }
 
+/** Challenge günü tamamlandığında kutlama bilgisi. */
+data class ChallengeCelebration(val title: String, val xp: Int, val streak: Int, val finished: Boolean, val dayText: String, val id: Long = System.nanoTime())
+
+/** Aktif antrenman bittiğinde tamamlanacak challenge günü (uygulama kapanırsa da korunur). */
+data class PendingChallengeDay(val userChallengeId: String, val status: String, val minutes: Int?)
+
 /** Misafire kayıt teklifinin çıktığı an; metin buna göre kişiselleşir. */
 enum class SaveAccountTrigger { WorkoutCompleted, CoachLimit, Sync, Manual, Limit }
+
+/** Ayarlar → Sağlık verisi ve kişiselleştirme. `available=false`: sunucu tabloları henüz kurulu değil (bölüm sade bir not gösterir). */
+data class HealthPrivacyState(
+    val loaded: Boolean = false,
+    val available: Boolean = true,
+    val busy: Boolean = false,
+    val personalization: com.hedefit.app.data.model.PersonalizationData = com.hedefit.app.data.model.PersonalizationData(),
+    val cycle: com.hedefit.app.data.model.CycleSnapshot? = null,
+)
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val http = JsonHttpClient()
@@ -182,10 +235,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var planRotationPeriod = "monthly"
     private val waterUpdateMutex = Mutex()
 
+    private val billingManager = BillingManager(application) { event -> handleBillingEvent(event) }
+    private var billingRestored = false
+
     private val _state = MutableStateFlow(MainUiState())
     val state: StateFlow<MainUiState> = _state.asStateFlow()
 
     override fun onCleared() {
+        billingManager.release()
         stepRepository.stop()
         super.onCleared()
     }
@@ -350,6 +407,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     // The server snapshot is historical data only. Immediately
                     // replace today's visible total with the central live source.
+                    loadTodayCheckin()
+                    loadChallengeHub(reconcile = true)
                     val reading = stepRepository.refresh()
                     _state.update { current -> current.copy(
                         stepSource = reading.source,
@@ -461,6 +520,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         ),
                         transientMessage = "Antrenman ve tüm setlerin ilerlemene kaydedildi.",
                     ) }
+                    onActivitySavedForChallenges(session.id, durationSeconds / 60)
                     if (feedback.difficulty == "Zor" || feedback.painAreas.any { it != "Yok" } || feedback.fatigue >= 4) adaptPlan(feedback)
                 }
                 .onFailure { error ->
@@ -489,6 +549,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         dashboard = current.dashboard?.copy(sessions = listOf(session) + current.dashboard.sessions),
                         transientMessage = if (language == "en") "${activity.titleEn} saved: $calories kcal burned." else "${activity.titleTr} kaydedildi: $calories kcal yakıldı.",
                     ) }
+                    onActivitySavedForChallenges(session.id, input.durationMinutes)
                     onSaved()
                 }
                 .onFailure { error -> _state.update { it.copy(workoutSaving = false, transientMessage = friendlyError(error)) } }
@@ -507,6 +568,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         dashboard = current.dashboard?.copy(sessions = listOf(session) + current.dashboard.sessions),
                         transientMessage = com.hedefit.app.ui.i18n.tr("Kardiyo kaydedildi: ${session.calories} kcal günlük hesabına eklendi.", "Cardio saved: ${session.calories} kcal added to your day."),
                     ) }
+                    onActivitySavedForChallenges(session.id, durationSeconds / 60)
                     onSaved()
                 }
                 .onFailure { error -> _state.update { it.copy(workoutSaving = false, transientMessage = friendlyError(error)) } }
@@ -947,10 +1009,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun loadExerciseLibrary(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr") {
+    fun loadExerciseLibrary(search: String = "", muscle: String = "", equipment: String = "", level: String = "", environment: String = "", muscleRole: String = "", force: String = "", mechanic: String = "", category: String = "", locale: String = "tr", modality: String = "", subcategory: String = "") {
         viewModelScope.launch {
             _state.update { it.copy(exerciseLibraryBusy = true) }
-            runCatching { repository.loadExerciseCatalog(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, locale) }
+            runCatching { repository.loadExerciseCatalog(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, locale, emptyList(), modality, subcategory) }
                 .onSuccess { items -> _state.update { it.copy(exerciseLibraryBusy = false, exerciseLibrary = items) } }
                 .onFailure { error -> _state.update { it.copy(exerciseLibraryBusy = false, transientMessage = friendlyError(error)) } }
         }
@@ -1042,7 +1104,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _state.update { it.copy(challengesBusy = true) }
             runCatching { repository.loadChallenges() }
-                .onSuccess { items -> _state.update { it.copy(challengesBusy = false, challenges = items) } }
+                .onSuccess { items ->
+                    // Gönderdiğim bir meydan okumaya katılan olursa bir kez haber ver (push altyapısı yok; uygulama içi bildirim).
+                    val accepted = items.filter { it.isCreator && it.myStatus == "joined" }.any { challenge ->
+                        val key = "joined_${challenge.id}"
+                        val previous = challengePrefs.getInt(key, -1)
+                        challengePrefs.edit().putInt(key, challenge.participantCount).apply()
+                        previous in 1 until challenge.participantCount
+                    }
+                    _state.update { it.copy(challengesBusy = false, challenges = items, transientMessage = if (accepted) com.hedefit.app.ui.i18n.tr("Arkadaşın meydan okumanı kabul etti. Hadi başlayın!", "Your friend accepted your challenge. Let's go!") else it.transientMessage) }
+                }
                 .onFailure { error -> _state.update { it.copy(challengesBusy = false, transientMessage = friendlyError(error)) } }
         }
     }
@@ -1059,7 +1130,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun respondToChallengeInvite(id: String, accept: Boolean) {
         viewModelScope.launch {
             runCatching { repository.respondToChallengeInvite(id, accept) }
-                .onSuccess { loadChallenges() }
+                .onSuccess { loadChallenges(); if (accept) loadChallengeHub() }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
@@ -1084,6 +1155,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun closeChallengeProgress() {
         _state.update { it.copy(activeChallengeId = null, challengeProgress = emptyList()) }
+    }
+
+    /** Yerel anlığı hesaba taşır; çevrimdışıysa sessizce geçer, bir sonraki yazımda yeniden denenir. */
+    fun pushActiveWorkout(snapshot: org.json.JSONObject, deviceId: String) {
+        viewModelScope.launch { runCatching { repository.pushActiveWorkout(snapshot, deviceId) } }
+    }
+
+    fun clearRemoteActiveWorkout() {
+        viewModelScope.launch { runCatching { repository.clearActiveWorkout() } }
+    }
+
+    /** Başka cihazda süren antrenman varsa JSON'unu döndürür. */
+    fun pullActiveWorkout(ownDeviceId: String, onFound: (String) -> Unit) {
+        viewModelScope.launch { runCatching { repository.fetchActiveWorkout(ownDeviceId) }.getOrNull()?.let(onFound) }
     }
 
     fun loadPreviousPerformance(requestedExercises: List<com.hedefit.app.data.model.WorkoutExerciseData>? = null) {
@@ -1292,6 +1377,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .onSuccess { updated -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data ->
                     data.copy(workoutPrograms = data.workoutPrograms.map { if (it.id == updated.id) updated else it })
                 }) } }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun renameProgram(program: WorkoutProgramData, newName: String) {
+        val name = newName.trim().take(60)
+        if (name.isEmpty() || name == program.name) return
+        viewModelScope.launch {
+            runCatching { repository.renameProgram(program, name) }
+                .onSuccess { updated -> _state.update { state -> state.copy(dashboard = state.dashboard?.let { data ->
+                    data.copy(workoutPrograms = data.workoutPrograms.map { if (it.id == updated.id) updated else it })
+                }, transientMessage = com.hedefit.app.ui.i18n.tr("Program adı güncellendi.", "Program renamed.")) } }
                 .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
         }
     }
@@ -1540,12 +1637,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     val now = _state.value
                     if (now.isGuest && now.chatUsageLimit != null && (now.chatUsageUsed ?: 0) >= now.chatUsageLimit) showSaveAccountPrompt(SaveAccountTrigger.CoachLimit)
+                    rememberFromChat(clean, reply.source, locale)
                 }
                 .onFailure { error ->
                     val message = friendlyError(error)
                     _state.update { it.copy(chatBusy = false, chatMessages = it.chatMessages + ChatMessageState("Fit Koç şu anda yanıtı tamamlayamadı: $message", false), transientMessage = message) }
                     if (_state.value.isGuest && (message.contains("limit", true) || message.contains("hak", true))) showSaveAccountPrompt(SaveAccountTrigger.CoachLimit)
                 }
+        }
+    }
+
+    /**
+     * Yanıt ekrana basıldıktan sonra, arka planda: mesajda kalıcı bir tercih/kısıt varsa sunucu kısa bir not
+     * çıkarıp hesabına bağlı saklar (Ayarlar → Koç hafızası'ndan görülüp silinir). Kota/ön eleme sunucudadır;
+     * hata sohbeti etkilemez.
+     */
+    private fun rememberFromChat(message: String, replySource: String, locale: String) {
+        if (!com.hedefit.app.data.model.shouldExtractMemory(replySource, message)) return
+        viewModelScope.launch {
+            val saved = repository.extractCoachMemory(message, locale)
+            // Ekran açıkken eski liste kalmasın; sonraki açılışta yeniden yüklenir.
+            if (saved > 0) _state.update { it.copy(aiMemories = null) }
         }
     }
 
@@ -1828,6 +1940,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Hızlı kilo girişi: bugünün kaydı varsa çevre ölçülerini koruyarak yalnız kiloyu günceller. */
+    fun saveQuickWeight(weightKg: Double) {
+        val today = java.time.LocalDate.now().toString()
+        val existing = _state.value.dashboard?.measurements.orEmpty().firstOrNull { it.date.take(10) == today }
+        saveBodyMeasurement((existing ?: BodyMeasurementData(today, null, null, null, null, null, null)).copy(date = today, weightKg = weightKg))
+    }
+
+    fun deleteBodyMeasurement(measurement: BodyMeasurementData) {
+        if (_state.value.measurementSaving) return
+        viewModelScope.launch {
+            _state.update { it.copy(measurementSaving = true, transientMessage = null) }
+            runCatching { repository.deleteBodyMeasurement(measurement.date) }
+                .onSuccess {
+                    _state.update { current ->
+                        current.copy(
+                            measurementSaving = false,
+                            dashboard = current.dashboard?.copy(
+                                measurements = current.dashboard.measurements.filterNot { it.date.take(10) == measurement.date.take(10) },
+                            ),
+                            transientMessage = "Ölçüm kaydı silindi.",
+                        )
+                    }
+                }
+                .onFailure { error -> _state.update { it.copy(measurementSaving = false, transientMessage = friendlyError(error)) } }
+        }
+    }
+
     fun saveBodyMeasurement(measurement: BodyMeasurementData) {
         if (_state.value.measurementSaving) return
         viewModelScope.launch {
@@ -1895,6 +2034,102 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 .onFailure { error -> _state.update { it.copy(accountBusy = false, transientMessage = friendlyError(error)) } }
         }
     }
+
+    // ---- Google Play Billing -------------------------------------------------
+
+    private fun updateBilling(transform: (BillingUiState) -> BillingUiState) {
+        _state.update { it.copy(billing = transform(it.billing)) }
+    }
+
+    /** Paketler penceresi açılırken fiyatları ve (hak sahibiyse) ücretsiz deneme teklifini yükler. */
+    fun loadBillingOffers() {
+        if (_state.value.billing.loading) return
+        updateBilling { it.copy(loading = true, loadFailed = false) }
+        viewModelScope.launch {
+            val offers = billingManager.loadOffers()
+            updateBilling { if (offers == null) it.copy(loading = false, loadFailed = true) else it.copy(loading = false, offers = offers) }
+        }
+    }
+
+    fun purchasePlan(activity: android.app.Activity, productId: String, basePlanId: String) {
+        val state = _state.value
+        val userId = authRepository.userId()
+        val offer = state.billing.offers[productId]?.firstOrNull { it.basePlanId == basePlanId }
+        if (state.billing.busy || offer == null || userId == null || state.isGuest) return
+        updateBilling { it.copy(busy = true, message = null) }
+        viewModelScope.launch {
+            val opened = billingManager.launch(activity, offer, userId)
+            if (!opened) {
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Satın alma şu an başlatılamadı. Google Play'i kontrol edip yeniden dene.", "Couldn't start the purchase. Check Google Play and try again.")) }
+            }
+            // Pencere açıldıysa sonucu handleBillingEvent işler (busy orada kapanır).
+        }
+    }
+
+    /**
+     * Açılışta Play'deki aktif abonelikleri sunucuya yeniden doğrulatır: önceki oturumda
+     * doğrulanamayan (ağ koptu) veya başka cihazdan alınan abonelikleri kurtarır. Sunucu
+     * idempotenttir. Oturum başına bir kez çalışır; misafirde çalışmaz.
+     */
+    fun restorePurchases() {
+        if (billingRestored || _state.value.isGuest || authRepository.userId() == null) return
+        billingRestored = true
+        viewModelScope.launch {
+            val owned = billingManager.ownedPurchases()
+                ?.filter { it.purchaseState == com.android.billingclient.api.Purchase.PurchaseState.PURCHASED }
+                .orEmpty()
+            if (owned.isNotEmpty()) verifyPurchases(owned, userInitiated = false)
+        }
+    }
+
+    private fun handleBillingEvent(event: BillingEvent) {
+        when (event) {
+            is BillingEvent.Purchased -> viewModelScope.launch { verifyPurchases(event.purchases, userInitiated = true) }
+            is BillingEvent.PendingPayment ->
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Ödemen onay bekliyor. Tamamlanınca planın otomatik açılır.", "Your payment is pending. Your plan unlocks automatically once it completes.")) }
+            BillingEvent.Canceled -> updateBilling { it.copy(busy = false) }
+            BillingEvent.AlreadyOwned -> {
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Bu aboneliğe zaten sahipsin. Planın güncelleniyor…", "You already have this subscription. Updating your plan…")) }
+                billingRestored = false
+                restorePurchases()
+            }
+            is BillingEvent.Failed ->
+                updateBilling { it.copy(busy = false, message = com.hedefit.app.ui.i18n.tr("Satın alma tamamlanamadı. Ücret alınmadıysa yeniden dene.", "The purchase didn't complete. If you weren't charged, try again.")) }
+        }
+    }
+
+    private suspend fun verifyPurchases(purchases: List<com.android.billingclient.api.Purchase>, userInitiated: Boolean) {
+        var granted = false
+        var rejected = false
+        var retry = false
+        var pending = false
+        for (purchase in purchases) {
+            val productId = purchase.products.firstOrNull { it in BILLING_PRODUCTS } ?: continue
+            when (val outcome = repository.verifyPlaySubscription(productId, purchase.purchaseToken)) {
+                is VerifyOutcome.Granted -> if (outcome.entitled) granted = true
+                VerifyOutcome.Pending -> pending = true
+                VerifyOutcome.Rejected -> rejected = true
+                VerifyOutcome.Retry -> retry = true
+            }
+        }
+        if (granted) refreshAll()
+        // Sessiz geri yükleme yalnız başarıyı duyurur; kullanıcının başlattığı akış her sonucu bildirir.
+        val message = when {
+            granted -> com.hedefit.app.ui.i18n.tr("Planın aktif! Teşekkürler.", "Your plan is active! Thank you.")
+            !userInitiated -> null
+            pending -> com.hedefit.app.ui.i18n.tr("Ödemen onay bekliyor. Tamamlanınca planın otomatik açılır.", "Your payment is pending. Your plan unlocks automatically once it completes.")
+            rejected -> com.hedefit.app.ui.i18n.tr("Bu satın alma hesabına bağlanamadı. Sorun sürerse destekle iletişime geç.", "This purchase couldn't be linked to your account. Contact support if this persists.")
+            retry -> com.hedefit.app.ui.i18n.tr("Satın alma alındı ama doğrulanamadı. Uygulamayı yeniden açtığında otomatik denenir.", "Purchase received but couldn't be verified yet. We'll retry when you reopen the app.")
+            else -> null
+        }
+        // Doğrulanamayan (Retry) satın alma Play'de onaysız kalır ve bir sonraki açılışta
+        // restorePurchases ile tekrar denenir; sunucu onaylamadan Google 3 gün içinde iade eder.
+        if (retry && !granted) billingRestored = false
+        updateBilling { it.copy(busy = false, message = message) }
+        if (granted) _state.update { it.copy(transientMessage = message) }
+    }
+
+    fun clearBillingMessage() = updateBilling { it.copy(message = null) }
 
     fun consumeTransientMessage() {
         _state.update { it.copy(transientMessage = null) }
@@ -1966,6 +2201,225 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // ---- Ödüllü reklam (sunucu doğrulamalı) ---------------------------------------------
+
+    /**
+     * Reklamı göstermeden önce: bugünkü bonus tavanına ulaşıldıysa kullanıcıyı boşuna reklam izletme.
+     * Dönüş: mevcut bonus sayısı (reklam sonrası karşılaştırma için); gösterilmemeli ise null.
+     */
+    suspend fun prepareRewardedAd(feature: String): Int? {
+        if (authRepository.userId() == null || _state.value.rewardAdBusy) return null
+        val bonus = repository.adBonusToday(feature)
+        if (bonus == null) {
+            _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Şu an reklam ödülü kontrol edilemiyor. Biraz sonra dene.", "Can't check the ad reward right now. Try again shortly.")) }
+            return null
+        }
+        if (bonus.first >= bonus.second) {
+            _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Bugünkü reklam ödülü sınırına ulaştın. Yarın yeniden dene.", "You've reached today's ad reward limit. Try again tomorrow.")) }
+            return null
+        }
+        _state.update { it.copy(rewardAdBusy = true) }
+        return bonus.first
+    }
+
+    fun userIdForAds(): String? = authRepository.userId()
+
+    fun cancelRewardedAd() {
+        _state.update { it.copy(rewardAdBusy = false) }
+    }
+
+    /**
+     * Reklam bitti. Hak Google'ın SUNUCUYA ilettiği imzalı doğrulamayla verilir (birkaç saniye sürebilir);
+     * burada bonus artana kadar yoklanır ve artınca yerel sayaç güncellenir. Artmazsa kullanıcıya
+     * "henüz işlenmedi" denir; hak sonradan işlenirse bir sonraki soruda zaten uygulanır.
+     */
+    fun awaitAdReward(feature: String, baseline: Int) {
+        viewModelScope.launch {
+            var granted = 0
+            repeat(8) { attempt ->
+                if (granted > 0) return@repeat
+                kotlinx.coroutines.delay(if (attempt == 0) 1_500L else 2_000L)
+                val bonus = repository.adBonusToday(feature)?.first
+                if (bonus != null && bonus > baseline) granted = bonus - baseline
+            }
+            _state.update { current ->
+                val message = if (granted > 0) com.hedefit.app.ui.i18n.tr("+$granted soru hakkı eklendi!", "+$granted question added!")
+                else com.hedefit.app.ui.i18n.tr("Reklam doğrulaması henüz işlenmedi. Birkaç saniye sonra yeniden dene; hakkın işlenince otomatik eklenir.", "The ad reward hasn't been verified yet. Try again in a few seconds; it's added automatically once verified.")
+                current.copy(
+                    rewardAdBusy = false,
+                    chatUsageLimit = if (granted > 0 && feature == "chat") current.chatUsageLimit?.plus(granted) else current.chatUsageLimit,
+                    transientMessage = message,
+                )
+            }
+        }
+    }
+
+    // ---- Gizlilik: koç hafızası ve rıza ayarları ------------------------------------
+
+    /**
+     * Döngü bilgisini sunucuya yazar (isteğe bağlı özellik). Başarısızlık onboarding'i ya da başka bir akışı
+     * ENGELLEMEZ: kullanıcıya yalnızca hafif bir mesaj gösterilir, ayar sonra Ayarlar'dan yapılabilir.
+     */
+    fun saveCycleProfile(profile: com.hedefit.app.data.model.CycleProfileData, onDone: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val saved = runCatching { repository.saveCycleProfile(profile) }
+            saved.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+            val ok = saved.getOrDefault(false)
+            if (saved.isSuccess && !ok) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü ayarı şimdi kaydedilemedi. Daha sonra Ayarlar'dan tekrar deneyebilirsin.", "Couldn't save the cycle setting right now. You can try again later in Settings.")) }
+            if (ok) track(if (profile.trackingEnabled) "menstrual_tracking_enabled" else "menstrual_tracking_disabled")
+            onDone(ok)
+        }
+    }
+
+    private fun loadTodayCheckin() {
+        viewModelScope.launch { runCatching { repository.todayCheckin() }.onSuccess { today -> _state.update { it.copy(checkinToday = today) } } }
+    }
+
+    /** Check-in'i kaydeder. Başarısızlık hiçbir akışı engellemez; yalnızca hafif bir mesaj gösterilir. */
+    fun saveCheckin(checkin: com.hedefit.app.data.model.CheckinData, onSaved: (com.hedefit.app.data.model.CheckinSaveResult) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = runCatching { repository.saveCheckin(checkin) }
+            result.onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+            val saved = result.getOrNull()
+            if (result.isSuccess && saved == null) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Check-in şimdi kaydedilemedi. Daha sonra tekrar dene.", "Couldn't save the check-in right now. Try again later.")) }
+            if (saved != null) { _state.update { it.copy(checkinToday = saved.checkin, checkinCycle = saved.cycle, checkinSaved = true) }; onSaved(saved); track("daily_checkin_completed"); loadAdaptivePlan() }
+        }
+    }
+
+    /** Kayıtlı check-in'e göre bugünün planını uyarlar. Hata sessizdir: plan aynen geçerli kalır. */
+    fun loadAdaptivePlan() {
+        val dashboard = _state.value.dashboard ?: return
+        val exercises = dashboard.workouts
+        if (exercises.isEmpty()) return
+        val today = LocalDate.now()
+        val recent = dashboard.sessions.count { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull()?.let { it.isAfter(today.minusDays(3)) } == true }
+        viewModelScope.launch {
+            runCatching { repository.adaptivePlan(exercises, recent, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess { result -> if (result.adapted) track("adaptive_workout_generated"); _state.update { it.copy(adaptiveResult = result.takeIf { value -> value.adapted }) } }
+        }
+    }
+
+    /** Beslenme ekranı açılınca bir kez; hata olursa kart sessizce gizlenir. */
+    fun loadNutritionWellness() {
+        val dashboard = _state.value.dashboard ?: return
+        val today = LocalDate.now()
+        val worked = dashboard.sessions.any { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull() == today }
+        val diet = com.hedefit.app.data.model.dietFromAnswers(dashboard.profile.historyAnswers)
+        viewModelScope.launch {
+            runCatching { repository.nutritionWellness(diet, worked, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess { result -> if (result.tips.isNotEmpty()) track("nutrition_notes_viewed"); _state.update { it.copy(nutritionWellness = result.takeIf { value -> value.tips.isNotEmpty() }) } }
+        }
+    }
+
+    fun dismissAdaptivePlan() { _state.update { it.copy(adaptiveResult = null) } }
+
+    fun clearCheckinSaved() { _state.update { it.copy(checkinSaved = false) } }
+
+    /** Wellness oturumunu sunucudan alır; hata antrenmanı başlatmaz, yalnızca hafif bir mesaj gösterir. */
+    fun loadWellnessSession(kind: com.hedefit.app.data.model.WellnessKind, minutes: Int, locale: String, onReady: (com.hedefit.app.data.model.WellnessSessionData) -> Unit) {
+        viewModelScope.launch {
+            runCatching { repository.wellnessSession(kind.wire, minutes, locale) }
+                .onSuccess { session -> if (session.exercises.isNotEmpty()) track(when (kind) { com.hedefit.app.data.model.WellnessKind.PilatesToday -> "pilates_workout_started"; com.hedefit.app.data.model.WellnessKind.LowImpactRecovery -> "low_impact_workout_started"; com.hedefit.app.data.model.WellnessKind.PostureMobility -> "mobility_workout_started" }); if (session.exercises.isEmpty()) _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Şimdilik uygun bir oturum bulunamadı.", "No suitable session found right now.")) } else onReady(session) }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun loadAiMemories() {
+        if (_state.value.aiMemoryBusy) return
+        _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }
+        viewModelScope.launch {
+            runCatching { repository.aiMemories() }
+                .onSuccess { items -> _state.update { it.copy(aiMemories = items, aiMemoryBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    fun deleteAiMemory(id: String) {
+        if (_state.value.aiMemoryBusy) return
+        _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }
+        viewModelScope.launch {
+            runCatching { repository.deleteAiMemory(id) }
+                .onSuccess { _state.update { current -> current.copy(aiMemories = current.aiMemories?.filterNot { it.id == id }, aiMemoryBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    fun deleteAllAiMemories() {
+        if (_state.value.aiMemoryBusy) return
+        _state.update { it.copy(aiMemoryBusy = true, aiMemoryError = null) }
+        viewModelScope.launch {
+            runCatching { repository.deleteAllAiMemories() }
+                .onSuccess { _state.update { it.copy(aiMemories = emptyList(), aiMemoryBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(aiMemoryBusy = false, aiMemoryError = friendlyError(error)) } }
+        }
+    }
+
+    /** Sessiz, gizlilik dostu olay sayacı (yalnızca olay adı). Başarısızlık hiçbir akışı etkilemez. */
+    fun track(event: String) {
+        viewModelScope.launch { runCatching { repository.trackEvent(event) } }
+    }
+
+    fun loadHealthPrivacy() {
+        viewModelScope.launch {
+            _state.update { it.copy(healthPrivacy = it.healthPrivacy.copy(busy = true)) }
+            val settings = runCatching { repository.personalization() }
+            val cycle = if (settings.getOrNull()?.first == true) runCatching { repository.cycleSnapshot() }.getOrNull() else null
+            _state.update { it.copy(healthPrivacy = HealthPrivacyState(loaded = true, available = settings.getOrNull()?.first ?: false, busy = false, personalization = settings.getOrNull()?.second ?: it.healthPrivacy.personalization, cycle = cycle)) }
+            settings.exceptionOrNull()?.let { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun updatePersonalization(adaptive: Boolean? = null, aiHealthContext: Boolean? = null, cycleOff: Boolean = false) {
+        viewModelScope.launch {
+            runCatching { repository.updatePersonalization(adaptive, aiHealthContext, cycleOff) }
+                .onSuccess { updated -> _state.update { it.copy(healthPrivacy = it.healthPrivacy.copy(personalization = updated)) }; if (cycleOff) loadHealthPrivacy() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    /** Döngü verisini sunucuda siler. */
+    fun deleteCycleData() {
+        viewModelScope.launch {
+            runCatching { repository.deleteCycleData() }
+                .onSuccess { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Döngü verin silindi.", "Your cycle data was deleted.")) }; track("cycle_data_deleted"); loadHealthPrivacy() }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    /** Döngü, tüm check-in'ler ve kişiselleştirme ayarları kalıcı silinir; yerel check-in/uyarlama durumu da temizlenir. */
+    fun deleteAllHealthData() {
+        viewModelScope.launch {
+            runCatching { repository.deleteAllHealthData() }
+                .onSuccess {
+                    _state.update { it.copy(checkinToday = null, checkinCycle = null, adaptiveResult = null, transientMessage = com.hedefit.app.ui.i18n.tr("Sağlık verilerin silindi.", "Your health data was deleted.")) }
+                    track("health_data_deleted")
+                    loadHealthPrivacy()
+                }
+                .onFailure { error -> _state.update { it.copy(transientMessage = friendlyError(error)) } }
+        }
+    }
+
+    fun loadConsentStatus() {
+        if (_state.value.consentSettingsBusy) return
+        _state.update { it.copy(consentSettingsBusy = true, consentSettingsError = null) }
+        viewModelScope.launch {
+            runCatching { repository.consentStatus() }
+                .onSuccess { status -> _state.update { it.copy(consentStatus = status, consentSettingsBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(consentSettingsBusy = false, consentSettingsError = friendlyError(error)) } }
+        }
+    }
+
+    /** Rızayı geri çeker ve oturumu kapatır; hesap bir sonraki girişte yeniden rıza kapısına düşer. */
+    fun withdrawConsents(health: Boolean, crossBorder: Boolean) {
+        if (_state.value.consentSettingsBusy) return
+        _state.update { it.copy(consentSettingsBusy = true, consentSettingsError = null) }
+        viewModelScope.launch {
+            runCatching { repository.withdrawConsents(health, crossBorder) }
+                .onSuccess { signOut() }
+                .onFailure { error -> _state.update { it.copy(consentSettingsBusy = false, consentSettingsError = friendlyError(error)) } }
+        }
+    }
+
     fun acceptExplicitConsents() {
         if (_state.value.consentBusy) return
         viewModelScope.launch {
@@ -1987,6 +2441,293 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     else refreshAll()
                 }
                 .onFailure { refreshAll() }
+        }
+    }
+
+
+    // ---- Keşfet > Challenge ---------------------------------------------------------------------------
+
+    private val challengePrefs by lazy { getApplication<Application>().getSharedPreferences("hedefit-challenges", android.content.Context.MODE_PRIVATE) }
+
+    private fun cachedHub(): com.hedefit.app.data.model.ChallengeHubData? =
+        challengePrefs.getString("hub", null)?.let { raw -> runCatching { com.hedefit.app.data.model.parseChallengeHub(org.json.JSONObject(raw)) }.getOrNull() }
+
+    private fun cacheHub(hub: com.hedefit.app.data.model.ChallengeHubData) {
+        challengePrefs.edit().putString("hub", hub.toJson().toString()).apply()
+        writeChallengeReminderSummary(hub)
+    }
+
+    /** Bildirim alıcısı ağ çağırmadan doğru metni seçsin diye bugünkü challenge özeti cihazda tutulur. */
+    private fun writeChallengeReminderSummary(hub: com.hedefit.app.data.model.ChallengeHubData) {
+        val today = LocalDate.now()
+        val primary = hub.primaryActive(today)
+        val state = primary?.state(today)
+        challengePrefs.edit()
+            .putString("reminder_date", today.toString())
+            .putString("reminder_title_tr", primary?.plan?.title?.tr)
+            .putString("reminder_title_en", primary?.plan?.title?.en)
+            .putBoolean("reminder_done", state?.todayDone ?: true)
+            .putInt("reminder_streak", state?.streak ?: 0)
+            .apply()
+    }
+
+    var pendingChallengeDay: PendingChallengeDay?
+        get() = challengePrefs.getString("pending_id", null)?.let { id ->
+            if (challengePrefs.getString("pending_date", null) != LocalDate.now().toString()) null
+            else PendingChallengeDay(id, challengePrefs.getString("pending_status", "completed") ?: "completed", challengePrefs.getInt("pending_minutes", -1).takeIf { it >= 0 })
+        }
+        private set(value) {
+            challengePrefs.edit().apply {
+                if (value == null) remove("pending_id").remove("pending_status").remove("pending_minutes").remove("pending_date")
+                else putString("pending_id", value.userChallengeId).putString("pending_status", value.status).putInt("pending_minutes", value.minutes ?: -1).putString("pending_date", LocalDate.now().toString())
+            }.apply()
+        }
+
+    private fun wellnessProminentNow(): Boolean = _state.value.dashboard?.profile?.let { com.hedefit.app.data.model.wellnessProminent(it.gender, it.historyAnswers.getOrNull(8).orEmpty()) } == true
+
+    /** Katalog + kendi challenge'ları. Bağlantı yoksa son önbellek gösterilir; reconcile=true ise doğrulanabilir görevler eşitlenir. */
+    fun loadChallengeHub(reconcile: Boolean = false) {
+        if (_state.value.challengeHubBusy) return
+        if (_state.value.challengeHub == null) cachedHub()?.let { cached -> _state.update { it.copy(challengeHub = cached, challengeHubOffline = true) } }
+        _state.update { it.copy(challengeHubBusy = true, challengeHubError = null) }
+        viewModelScope.launch {
+            runCatching { repository.loadChallengeHub(_state.value.dashboard?.profile, wellnessProminentNow()) }
+                .onSuccess { hub ->
+                    cacheHub(hub)
+                    _state.update { it.copy(challengeHub = hub, challengeHubBusy = false, challengeHubOffline = false) }
+                    if (reconcile) reconcileChallenges()
+                }
+                .onFailure { error -> _state.update { it.copy(challengeHubBusy = false, challengeHubError = error.message ?: friendlyError(error), challengeHubOffline = it.challengeHub != null) } }
+        }
+    }
+
+    private fun replaceChallenge(updated: com.hedefit.app.data.model.UserChallengeData) {
+        _state.update { current ->
+            val hub = current.challengeHub ?: return@update current
+            val next = hub.copy(challenges = hub.challenges.map { if (it.id == updated.id) updated else it })
+            cacheHub(next)
+            current.copy(challengeHub = next, challengeToday = current.challengeToday?.takeIf { it.challenge.id == updated.id }?.copy(challenge = updated) ?: current.challengeToday)
+        }
+    }
+
+    fun joinChallenge(key: String, onJoined: (String) -> Unit = {}) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.joinChallenge(key) }
+                .onSuccess { id ->
+                    track("challenge_joined")
+                    _state.update { it.copy(challengeActionBusy = false, transientMessage = com.hedefit.app.ui.i18n.tr("Challenge başladı. Bugünkü görevin ana ekranda.", "Challenge started. Today's task is on your Today screen.")) }
+                    loadChallengeHub()
+                    onJoined(id)
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun loadChallengeToday(id: String) {
+        _state.update { it.copy(challengeTodayBusy = true, challengeToday = it.challengeToday?.takeIf { today -> today.challenge.id == id }) }
+        viewModelScope.launch {
+            runCatching { repository.challengeToday(id, _state.value.dashboard?.profile, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess { today -> _state.update { it.copy(challengeToday = today, challengeTodayBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(challengeTodayBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun clearChallengeToday() { _state.update { it.copy(challengeToday = null) } }
+
+    /**
+     * "Bugünkü görevi yap": hareket görevleri MEVCUT aktif antrenman ekranında yapılır (oturum hareketleri ya da
+     * kullanıcının kendi programı). Adım/su/öğün/check-in görevleri sunucuda mevcut kayıtlardan doğrulanır.
+     */
+    fun startChallengeTask(id: String, onStartSession: (List<com.hedefit.app.data.model.WorkoutExerciseData>) -> Unit, onStartProgram: () -> Unit, onOpenCheckin: () -> Unit) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            val today = runCatching { repository.challengeToday(id, _state.value.dashboard?.profile, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .getOrElse { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) }; return@launch }
+            _state.update { it.copy(challengeToday = today, challengeActionBusy = false) }
+            val adaptation = today.adaptation ?: return@launch
+            val task = adaptation.task
+            when {
+                task.kind == "session" && today.session != null && today.session.exercises.isNotEmpty() -> {
+                    pendingChallengeDay = PendingChallengeDay(id, adaptation.completionStatus, task.minutes)
+                    track("challenge_task_started")
+                    onStartSession(today.session.exercises)
+                }
+                task.kind == "workout" -> {
+                    if (_state.value.dashboard?.workouts.isNullOrEmpty()) { _state.update { it.copy(transientMessage = com.hedefit.app.ui.i18n.tr("Önce Keşfet > Programlar'dan bir program seç.", "Pick a program in Explore > Programs first.")) }; return@launch }
+                    pendingChallengeDay = PendingChallengeDay(id, adaptation.completionStatus, task.minutes)
+                    track("challenge_task_started")
+                    onStartProgram()
+                }
+                task.kind == "checkin" && !today.checkinDone -> onOpenCheckin()
+                else -> completeChallengeDay(id, "complete", adaptation.completionStatus, task.minutes, null)
+            }
+        }
+    }
+
+    fun useRecoveryDay(id: String) = completeChallengeDay(id, "recovery", "recovery", null, null)
+
+    fun completeChallengeDay(id: String, action: String, status: String, minutes: Int?, sessionId: String?, silent: Boolean = false) {
+        viewModelScope.launch {
+            // Cihaz sayacındaki adımlar sunucuya yalnızca Health Connect yoksa yazılır (HC verisinin üzerine yazılmaz).
+            if (_state.value.stepSource == StepSource.DEVICE_STEP_COUNTER || _state.value.stepSource == StepSource.DEVICE_STEP_DETECTOR) {
+                runCatching { repository.syncTodayDeviceSteps(_state.value.dashboard?.steps ?: 0) }
+            }
+            if (!silent) _state.update { it.copy(challengeActionBusy = true) }
+            runCatching { repository.completeChallengeDay(id, action, status, minutes, sessionId) }
+                .onSuccess { (result, challenge) ->
+                    if (pendingChallengeDay?.userChallengeId == id) pendingChallengeDay = null
+                    challenge?.let(::replaceChallenge)
+                    _state.update { it.copy(challengeActionBusy = false) }
+                    if (!result.alreadyDone) {
+                        track(if (action == "recovery") "challenge_recovery_day" else "challenge_day_completed")
+                        if (result.finished) track("challenge_completed")
+                        val plan = challenge?.plan ?: _state.value.challengeHub?.challenges?.firstOrNull { it.id == id }?.plan
+                        val state = challenge?.state()
+                        _state.update { it.copy(challengeCelebration = ChallengeCelebration(
+                            title = plan?.title?.text().orEmpty(),
+                            xp = result.xp,
+                            streak = result.streak,
+                            finished = result.finished,
+                            dayText = state?.let { s -> com.hedefit.app.ui.i18n.tr("Gün ${s.doneDays} / ${s.totalDays}", "Day ${s.doneDays} / ${s.totalDays}") }.orEmpty(),
+                        )) }
+                        // XP/level/rozetler dashboard'dan okunur: sessizce tazele.
+                        refreshGamificationQuietly()
+                    }
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = if (silent) it.transientMessage else error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun consumeChallengeCelebration() { _state.update { it.copy(challengeCelebration = null) } }
+
+    private fun refreshGamificationQuietly() {
+        viewModelScope.launch {
+            runCatching { repository.loadDashboard() }.onSuccess { fresh ->
+                _state.update { current -> current.copy(dashboard = current.dashboard?.copy(gamificationTotalXp = fresh.gamificationTotalXp, unlockedAchievements = fresh.unlockedAchievements) ?: fresh) }
+            }
+        }
+    }
+
+    /** Antrenman/aktivite kaydedildiğinde: bekleyen challenge günü bu oturumla tamamlanır, yoksa doğrulanabilir görevler eşitlenir. */
+    private fun onActivitySavedForChallenges(sessionId: String, minutes: Int?) {
+        val pending = pendingChallengeDay
+        if (pending != null) completeChallengeDay(pending.userChallengeId, "complete", pending.status, pending.minutes ?: minutes, sessionId)
+        else reconcileChallenges()
+    }
+
+    /**
+     * Bağlantı geri geldiğinde / uygulama açıldığında: bugünkü görevi verisiyle zaten karşılanmış aktif challenge'ları
+     * sessizce tamamlar (sunucu yine doğrular; tekrar çağrı XP vermez). Böylece çevrimdışı yapılan iş kaybolmaz.
+     */
+    fun reconcileChallenges() {
+        val hub = _state.value.challengeHub ?: return
+        val data = _state.value.dashboard ?: return
+        val today = LocalDate.now()
+        val todaySessions = data.sessions.filter { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull() == today }
+        val sessionMinutes = todaySessions.sumOf { it.durationSeconds } / 60
+        val meals = data.nutritionLogs.size
+        hub.active.forEach { challenge ->
+            val state = challenge.state(today)
+            if (state.todayDone || state.finished) return@forEach
+            val task = challenge.plan.days.getOrNull(state.doneDays) ?: return@forEach
+            val satisfied = when (task.kind) {
+                "session", "workout" -> todaySessions.isNotEmpty() && sessionMinutes >= ((task.minutes ?: 10).coerceAtMost(30) * 0.6)
+                "steps" -> data.steps >= (task.target ?: Int.MAX_VALUE)
+                "water" -> data.waterMl >= (task.target ?: Int.MAX_VALUE)
+                "meals" -> meals >= (task.target ?: Int.MAX_VALUE)
+                "checkin" -> _state.value.checkinToday != null
+                else -> false
+            }
+            // Aynı veriyle aynı denemeyi tekrarlama (ör. adım senkronu gecikirse her dakika istek atılmaz).
+            val attempt = "${challenge.id}:$today:${task.kind}:${todaySessions.size}:${data.steps / 500}:${data.waterMl / 250}:$meals:${_state.value.checkinToday != null}"
+            if (satisfied && reconcileAttempts.add(attempt)) completeChallengeDay(challenge.id, "complete", "completed", task.minutes, todaySessions.firstOrNull()?.id, silent = true)
+        }
+    }
+
+    private val reconcileAttempts = mutableSetOf<String>()
+
+    fun abandonChallenge(id: String, onDone: () -> Unit = {}) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.abandonChallenge(id) }
+                .onSuccess {
+                    if (pendingChallengeDay?.userChallengeId == id) pendingChallengeDay = null
+                    track("challenge_abandoned")
+                    _state.update { it.copy(challengeActionBusy = false, transientMessage = com.hedefit.app.ui.i18n.tr("Challenge bırakıldı. Kazandığın XP seninle kalır.", "Challenge left. The XP you earned stays with you.")) }
+                    loadChallengeHub(); onDone()
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    private fun recentWorkouts14d(): Int {
+        val since = LocalDate.now().minusDays(13)
+        return _state.value.dashboard?.sessions.orEmpty().count { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull()?.let { !it.isBefore(since) } == true }
+    }
+
+    fun previewCoachChallenge(preferences: com.hedefit.app.data.model.CoachChallengePreferences) {
+        _state.update { it.copy(coachChallengeBusy = true) }
+        viewModelScope.launch {
+            runCatching { com.hedefit.app.data.model.parseCoachPreview(repository.coachChallenge(preferences, _state.value.dashboard?.profile, recentWorkouts14d(), start = false)) }
+                .onSuccess { preview -> track("coach_challenge_previewed"); _state.update { it.copy(coachChallengePreview = preview, coachChallengeBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(coachChallengeBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun startCoachChallenge(preferences: com.hedefit.app.data.model.CoachChallengePreferences, onStarted: (String) -> Unit) {
+        if (_state.value.coachChallengeBusy) return
+        _state.update { it.copy(coachChallengeBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.coachChallenge(preferences, _state.value.dashboard?.profile, recentWorkouts14d(), start = true).optString("id") }
+                .onSuccess { id ->
+                    track("coach_challenge_started")
+                    _state.update { it.copy(coachChallengeBusy = false, coachChallengePreview = null, transientMessage = com.hedefit.app.ui.i18n.tr("Fit Koç challenge'ın başladı.", "Your Fit Coach challenge has started.")) }
+                    loadChallengeHub(); onStarted(id)
+                }
+                .onFailure { error -> _state.update { it.copy(coachChallengeBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun clearCoachChallengePreview() { _state.update { it.copy(coachChallengePreview = null) } }
+
+    fun createFriendChallenge(templateKey: String, mode: String, friendIds: List<String>, onDone: () -> Unit = {}) {
+        if (_state.value.challengeActionBusy) return
+        _state.update { it.copy(challengeActionBusy = true) }
+        viewModelScope.launch {
+            runCatching { repository.createFriendChallenge(templateKey, mode, friendIds, if (com.hedefit.app.ui.i18n.AppLang.en) "en" else "tr") }
+                .onSuccess {
+                    track("friend_challenge_created")
+                    _state.update { it.copy(challengeActionBusy = false, transientMessage = com.hedefit.app.ui.i18n.tr("Meydan okuma gönderildi. Arkadaşın kabul edince ilerlemeniz burada görünür.", "Challenge sent. Your progress shows here once your friend accepts.")) }
+                    loadChallenges(); loadChallengeHub(); onDone()
+                }
+                .onFailure { error -> _state.update { it.copy(challengeActionBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun loadFriendProfile(userId: String) {
+        _state.update { it.copy(friendProfileBusy = true, friendProfile = null) }
+        viewModelScope.launch {
+            runCatching { repository.friendProfile(userId) }
+                .onSuccess { profile -> _state.update { it.copy(friendProfile = profile, friendProfileBusy = false) } }
+                .onFailure { error -> _state.update { it.copy(friendProfileBusy = false, transientMessage = error.message ?: friendlyError(error)) } }
+        }
+    }
+
+    fun clearFriendProfile() { _state.update { it.copy(friendProfile = null, friendProfileBusy = false) } }
+
+    fun loadShareProgress() {
+        viewModelScope.launch { runCatching { repository.loadShareProgress() }.onSuccess { value -> _state.update { it.copy(shareProgress = value) } } }
+    }
+
+    fun setShareProgress(value: Boolean) {
+        _state.update { it.copy(shareProgress = value) }
+        viewModelScope.launch {
+            runCatching { repository.setShareProgress(value) }
+                .onFailure { error -> _state.update { it.copy(shareProgress = !value, transientMessage = friendlyError(error)) } }
         }
     }
 

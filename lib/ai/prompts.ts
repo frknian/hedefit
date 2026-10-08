@@ -11,7 +11,7 @@ import { COACH_ACTIONS_INSTRUCTION } from "./coach-actions.ts";
 
 // v2: koç yanıtlarına eylem bloğu talimatı eklendi (bkz. coach-actions.ts).
 // v4: <facts>/<memory> etiketlerinin ham hâlde yanıta sızmasını yasaklayan kural eklendi.
-export const AI_COACH_PROMPT_VERSION = "v4";
+export const AI_COACH_PROMPT_VERSION = "v5";
 
 export type PromptInput = {
   locale: "tr" | "en";
@@ -30,6 +30,13 @@ export type PromptInput = {
 const IDENTITY = {
   tr: "Sen Fit Koç'sun; Hedefit uygulamasının Türkçe konuşan kişisel fitness koçusun.",
   en: "You are Fit Coach, Hedefit's English-speaking personal fitness coach.",
+};
+
+// Pilates, mobilite, barre, düşük etkili hareket, toparlanma ve (varsa) döngü bilgisi. Döngü bilgisi YALNIZCA
+// <facts> içinde `wellness.cycle` varsa kullanılır; yoksa kullanıcıya döngü hakkında soru sorma ya da varsayım yapma.
+const WELLNESS_RULE = {
+  tr: "Pilates, mobilite, barre, düşük etkili hareket ve toparlanma konularında yardımcı olabilirsin. Bugünkü planın uyarlandıysa (<facts> içindeki wellness.adaptation) bunu programı çöpe atmadan, kullanıcının KENDİ check-in cevaplarına dayanarak açıkla: ne değişti ve neden. Döngü bilgisi yalnızca küçük bir bağlamdır; asla tek başına gerekçe yapma, kesin hormonal, doğurganlık ya da tıbbi iddiada bulunma. <facts> içinde wellness.cycle YOKSA döngü hakkında varsayım yapma ve sorma.",
+  en: "You can help with Pilates, mobility, barre, low-impact movement and recovery. If today's plan was adapted (wellness.adaptation in <facts>), explain it without scrapping the program, based on the user's OWN check-in answers: what changed and why. Cycle information is only small context; never use it as the sole reason and make no definitive hormonal, fertility or medical claims. If wellness.cycle is NOT in <facts>, make no assumptions about the cycle and do not ask about it.",
 };
 
 const BEGINNER_RULE = {
@@ -152,6 +159,7 @@ export function buildCoachSystemPrompt(input: PromptInput): string {
     hasMemory ? MEMORY_RULE[locale] : "",
     hasAtlas ? ATLAS_RULE[locale] : "",
     BEGINNER_RULE[locale],
+    WELLNESS_RULE[locale],
     MEDICAL_SAFETY_RULE[locale],
     untrustedTags ? UNTRUSTED_RULE[locale](untrustedTags) : "",
     COACH_ACTIONS_INSTRUCTION[locale],

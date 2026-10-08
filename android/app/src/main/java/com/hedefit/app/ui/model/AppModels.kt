@@ -5,7 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -15,7 +15,8 @@ import androidx.compose.material.icons.filled.EmojiEvents
 
 enum class AppDestination(val label: String, val icon: ImageVector) {
     Home("Bugün", Icons.Default.Home),
-    Workout("Antrenman", Icons.Default.FitnessCenter),
+    /** Keşfet: Programlar (eski Antrenman sekmesinin tamamı) · Challenge · Topluluk. */
+    Explore("Keşfet", Icons.Default.Explore),
     Nutrition("Beslenme", Icons.Default.Restaurant),
     Game("Ödüller", Icons.Default.EmojiEvents),
     Progress("İlerleme", Icons.Default.BarChart),
@@ -24,14 +25,14 @@ enum class AppDestination(val label: String, val icon: ImageVector) {
 
     fun localizedLabel(language: String) = if (language != "en") when (this) {
         Home -> "Bugün"
-        Workout -> "Antrenman"
+        Explore -> "Keşfet"
         Nutrition -> "Beslenme"
         Game -> "Ödüller"
         Progress -> "İlerleme"
         Coach -> "Fit Koç"
     } else when (this) {
         Home -> "Today"
-        Workout -> "Workout"
+        Explore -> "Explore"
         Nutrition -> "Nutrition"
         Game -> "Rewards"
         Progress -> "Progress"
@@ -39,7 +40,8 @@ enum class AppDestination(val label: String, val icon: ImageVector) {
     }
 
     companion object {
-        val primaryTabs = listOf(Home, Workout, Nutrition, Progress, Coach)
+        // Alt bar: Bugün · Keşfet · Fit Koç (ortada) · Beslenme · İlerleme.
+        val primaryTabs = listOf(Home, Explore, Coach, Nutrition, Progress)
     }
 }
 

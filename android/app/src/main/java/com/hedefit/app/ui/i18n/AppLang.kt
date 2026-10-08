@@ -12,6 +12,9 @@ object AppLang {
     var en by mutableStateOf(false)
 }
 
+/** Dile göre büyük harf (Türkçede i → İ). Locale'siz uppercase() "SERI" gibi hatalı sonuç verir. */
+fun String.upperLocalized(): String = uppercase(if (AppLang.en) java.util.Locale.ENGLISH else java.util.Locale.forLanguageTag("tr"))
+
 /** Türkçe / İngilizce metin seçer. */
 fun tr(tr: String, en: String): String = if (AppLang.en) en else tr
 
@@ -28,8 +31,21 @@ fun localizedProgramName(name: String?, source: String? = null): String = when {
     name == "Kendi Programım" || name == "My Program" -> tr("Kendi Programım", "My Program")
     name == "Fit Koç Programı" || name == "Fit Coach Program" -> tr("Fit Koç Programı", "Fit Coach Program")
     name == "Antrenman" || name == "Workout" -> tr("Antrenman", "Workout")
+    isQuickWorkoutName(name) -> localizedQuickWorkoutName(name!!)
     name.isNullOrBlank() -> tr("Antrenman", "Workout")
     else -> name
+}
+
+private const val QUICK_TR = "Hızlı Antrenman: "
+private const val QUICK_EN = "Quick Workout: "
+
+/** "Hızlı Antrenman: Göğüs & Sırt" / "Quick Workout: Chest & Back" gibi uygulamanın ürettiği hızlı antrenman adı mı? */
+fun isQuickWorkoutName(name: String?): Boolean = name != null && (name.startsWith(QUICK_TR) || name.startsWith(QUICK_EN))
+
+/** Hızlı antrenman adını ve içindeki bölge adlarını ("A & B") dile göre gösterir. */
+fun localizedQuickWorkoutName(name: String): String {
+    val areas = name.removePrefix(QUICK_TR).removePrefix(QUICK_EN).split(" & ").joinToString(" & ") { localizedArea(it.trim()) }
+    return tr(QUICK_TR, QUICK_EN) + areas
 }
 
 private val areaPairs = listOf(

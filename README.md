@@ -82,16 +82,61 @@ Backend Cloudflare Workers üzerinde yayınlanır:
   XP, ücretsiz hesapların günlük soru hakkını artırır: 300 XP'de +1, 500 XP'de
   +2 ve sonrasında her 250 XP'de bir ek hak (en çok +5). Kötüye kullanım
   koruması olarak kullanıcı başına kısa süreli istek sınırı korunur.
-- Fit Koç model yönlendirmesi basit sohbet, besin çıkarımı ve görsel okumada
-  `gpt-4o`; kişisel program üretimi ve karmaşık haftalık değerlendirmede
-  `gpt-5.1` kullanır. Model adları Worker ortamındaki `OPENAI_MODEL_*`
-  değişkenleriyle değiştirilebilir.
+- Fit Koç model yönlendirmesi: serbest sohbet, besin açıklaması ve kısa özetler
+  `gpt-4o-mini` (`OPENAI_MODEL_LIGHT`); besin çıkarımı ve görsel okuma `gpt-4o`
+  (`OPENAI_MODEL_CHEAP` / `OPENAI_MODEL_STANDARD`); kişisel program üretimi ve
+  karmaşık haftalık değerlendirme `gpt-5.1` (`OPENAI_MODEL_ADVANCED`).
+- Maliyet telemetrisi: her model çağrısı `ai_usage_events` tablosuna (kullanıcı,
+  özellik, plan, model, token, tahmini maliyet; metin yok) yazılır. Özet görünümler:
+  `ai_usage_daily_by_feature`, `ai_usage_monthly_by_user`. Fiyatlar
+  `lib/ai/pricing.ts`'te; ham kayıtlar `purge_ai_usage_events(180)` ile temizlenir.
+  Migration: `20261003130000_ai_usage_events.sql` (aylık tavan için
+  `usage_month_total` da burada).
+- Pahalı özelliklerde aylık tavan vardır (`lib/usage-limits.ts` `MONTHLY_LIMITS`):
+  program üretimi Free 4 / Plus 20 / Premium 30, Premium fotoğraf 120.
 
 Canlı dağıtım:
 
 ```bash
 npm run deploy
 ```
+
+## Google Play abonelikleri (Billing)
+
+Plan yalnızca sunucuda, Google Play Developer API'den doğrulanarak yazılır
+(`app/api/billing/verify`, `lib/billing/`); istemci plan yazamaz. Abonelik
+değişiklikleri (yenileme, iptal, iade, ödeme sorunu) RTDN ile gelir:
+
+1. Play Console → Monetization setup → *Real-time developer notifications*: bir Pub/Sub
+   topic'i bağla ve `google-play-developer-notifications@system.gserviceaccount.com`
+   hesabına topic üzerinde *Pub/Sub Publisher* yetkisi ver.
+2. Topic'e **push** abonelik ekle: endpoint `https://<worker>/api/billing/rtdn`,
+   *Enable authentication* açık, servis hesabı + audience = endpoint URL'si.
+3. Worker secret'ları: `GOOGLE_PLAY_SERVICE_ACCOUNT` (Play API servis hesabı JSON'u),
+   `GOOGLE_PLAY_RTDN_AUDIENCE` (adım 2'deki audience), `GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT_EMAIL`
+   (push aboneliğinin servis hesabı e-postası); isteğe bağlı `GOOGLE_PLAY_PACKAGE_NAME`.
+4. Play Console'dan *Send test notification* ile doğrula (log: `rtdn test notification received`).
+
+Günlük cron (`vite.config.ts` → `triggers.crons`, 03:17 UTC) RTDN kaçsa bile planları
+Google ile uzlaştırır (`lib/billing/reconcile.ts`). Migration'lar: `20261003120000_play_billing.sql`,
+`20261003140000_play_rtdn.sql`. Hesap silme, aktif abonelik varken kullanıcı onaylamadan 409 döner
+(silmek Play aboneliğini iptal etmez).
+
+## Ödüllü reklam (sunucu doğrulamalı)
+
+Ücretsiz/misafir kullanıcı günlük koç sorusu hakkı bitince kısa bir ödüllü reklam izleyip +1 soru
+kazanabilir (günde en fazla 3). Hak **yalnızca** AdMob'un imzalı SSV callback'iyle verilir; istemci
+"izledim" diyerek hak alamaz (`app/api/ads/reward` yalnızca okur).
+
+1. AdMob → Apps → Ad units → bir **Rewarded** birimi oluştur; birimin **Server-side verification**
+   callback URL'sini `https://<worker>/api/ads/ssv` yap (AdMob'daki "Verify URL" ile dene).
+2. Worker secret/değişken: `ADMOB_REWARDED_AD_UNIT_ID` (sunucu başka birimlerin callback'ini yok sayar).
+3. Android derlemesi: `ADMOB_REWARDED_AD_UNIT_ID` (Gradle property, ortam değişkeni ya da `.env`); boşsa
+   release'te "reklam izle" seçeneği gösterilmez. Debug derlemesi Google test birimini kullanır.
+4. Migration: `20261003150000_ad_rewards.sql` (`ad_reward_events`, `grant_ad_reward`, `ad_bonus_today`).
+
+Doğrulama: ECDSA P-256 imzası (`lib/ads/ssv.ts`), 24 saatten eski zaman damgası reddedilir, her
+`transaction_id` bir kez işlenir, yalnız ücretsiz plan ve etkin hesap hak alır.
 
 ## Web sitesi (tanıtım)
 
@@ -106,8 +151,10 @@ npm run site:build          # yalnız .site-dist/ üretir (SITE_URL gerekir)
 ```
 
 - `site:build` çıktısı `.site-dist/` içindedir: `__SITE_URL__` yer tutucularını doldurur, `sitemap.xml` ve `robots.txt` üretir.
-- Özel alan adı: Cloudflare panelinde `hedefit-site` Worker'ına alan adı ekle, sonra `SITE_URL` ile yeniden yayınla (canonical, sitemap ve paylaşım görseli güncellenir).
-- Mağaza bağlantıları: `site/main.js` içindeki `STORES` nesnesine Google Play ve App Store adreslerini yaz; butonlar otomatik aktifleşir.
+- Özel alan adı: alan adı Cloudflare'de olmalı; `SITE_URL=https://alanadi.com npm run site:deploy` Worker'ı o alan adına da bağlar ve canonical, sitemap ve paylaşım görselini günceller. API için `HEDEFIT_API_BASE_URL=https://api.alanadi.com npm run deploy`.
+- İngilizce sürüm (`site/en/`) Türkçe sayfalardan **üretilir**: `python3 scripts/i18n/build-en.py` (çeviriler `scripts/i18n/en.json`; yeni/değişen Türkçe metin için `python3 scripts/i18n/extract.py` eksikleri listeler). Çıktı dosyalarını elle düzenleme.
+- "Yayınlanınca haber ver" formu: site Worker'ı (`scripts/site-worker/index.js`, Workers KV `SUBSCRIBERS`). Liste: `node scripts/export-subscribers.mjs > aboneler.csv`.
+- Mağaza bağlantıları: `GOOGLE_PLAY_URL` / `APP_STORE_URL` ortam değişkenleriyle (yalnız `https://`) `npm run site:deploy` çalıştır; butonlar otomatik aktifleşir. Alan adı ve mağaza formları için `android/STORE_LISTING.md`.
 - `gizlilik.html` ve `destek.html` üretilir: `LegalTexts.kt` değişince `python3 scripts/build-legal-pages.py`.
 - Plan limitleri (`planlar.html`) `lib/usage-limits.ts` ve Android `Entitlements.kt` ile birlikte güncellenmelidir.
 - Wrangler komutları depo dışından çalıştırılır (kökteki `.wrangler/deploy` yönlendirmesi API Worker'ına aittir).

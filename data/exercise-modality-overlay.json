@@ -1,0 +1,841 @@
+{
+ "air-bike": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "bench-childs-pose": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "upper_body",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "bird-dog": {
+  "modalities": [
+   "pilates",
+   "low_impact"
+  ],
+  "subcategories": [
+   "beginner",
+   "core",
+   "full_body",
+   "posture"
+  ],
+  "impact": "low"
+ },
+ "bird-dog-hold": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "core",
+   "posture"
+  ],
+  "impact": "low"
+ },
+ "boat-pose": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core"
+  ],
+  "impact": "low"
+ },
+ "butterfly-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "evening"
+  ],
+  "impact": "low"
+ },
+ "cat-cow": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "morning",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "cat-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "chair-pose": {
+  "modalities": [
+   "barre"
+  ],
+  "subcategories": [
+   "lower_body",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "childs-pose": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "full_body",
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "chin-tuck-hold": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "clamshells": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "clamshells-hold": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "cobra-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "cow-face-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "shoulder"
+  ],
+  "impact": "low"
+ },
+ "cross-body-shoulder-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "shoulder"
+  ],
+  "impact": "low"
+ },
+ "dancer-pose": {
+  "modalities": [
+   "barre"
+  ],
+  "subcategories": [
+   "balance_posture",
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "dead-bug": {
+  "modalities": [
+   "pilates",
+   "low_impact"
+  ],
+  "subcategories": [
+   "beginner",
+   "core",
+   "recovery"
+  ],
+  "impact": "low"
+ },
+ "dead-bug-hold": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "core"
+  ],
+  "impact": "low"
+ },
+ "dolphin-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "shoulder",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "doorway-chest-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "shoulder",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "downward-dog": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "full_body",
+   "shoulder",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "downward-dog-pedal": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "full_body",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "downward-dog-to-low-lunge": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "easy-pose": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "breathing",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "elliptical-trainer": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "fish-pose": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "garland-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "morning",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "glute-bridge": {
+  "modalities": [
+   "pilates",
+   "low_impact"
+  ],
+  "subcategories": [
+   "beginner",
+   "lower_body",
+   "recovery"
+  ],
+  "impact": "low"
+ },
+ "glute-bridge-hold": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "lower_body",
+   "short"
+  ],
+  "impact": "low"
+ },
+ "half-kneeling-hip-flexor-rock": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "happy-baby": {
+  "modalities": [
+   "mobility",
+   "recovery"
+  ],
+  "subcategories": [
+   "evening",
+   "hip",
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "head-to-knee-pose": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "heel-to-toe-walk": {
+  "modalities": [
+   "barre"
+  ],
+  "subcategories": [
+   "balance_posture",
+   "beginner"
+  ],
+  "impact": "low"
+ },
+ "hero-pose": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "hollow-body-hold": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core"
+  ],
+  "impact": "low"
+ },
+ "incline-treadmill-walk": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "knee-to-chest-stretch": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "lower_body",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "kneeling-hip-flexor-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "evening"
+  ],
+  "impact": "low"
+ },
+ "kneeling-wrist-stretch": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "legs-up-the-wall": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "full_body",
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "lizard-stretch": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip"
+  ],
+  "impact": "low"
+ },
+ "locust-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back"
+  ],
+  "impact": "low"
+ },
+ "low-lunge": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "low-lunge-to-half-split": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "mountain-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "full_body",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "neck-side-stretch": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "overhead-triceps-stretch": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "pigeon-stretch": {
+  "modalities": [
+   "mobility",
+   "recovery"
+  ],
+  "subcategories": [
+   "evening",
+   "hip",
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "pilates-kneeling-side-kick": {
+  "modalities": [
+   "pilates",
+   "barre"
+  ],
+  "subcategories": [
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "pilates-leg-pull-back": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core",
+   "upper_body",
+   "posture"
+  ],
+  "impact": "low"
+ },
+ "pilates-leg-pull-front": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "pilates-roll-down": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "posture",
+   "short"
+  ],
+  "impact": "low"
+ },
+ "pilates-roll-over": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core"
+  ],
+  "impact": "low"
+ },
+ "pilates-saw": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "posture",
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "pilates-side-bend": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core",
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "pilates-spine-stretch-forward": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "beginner",
+   "posture",
+   "short"
+  ],
+  "impact": "low"
+ },
+ "pilates-spine-twist": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "posture",
+   "core"
+  ],
+  "impact": "low"
+ },
+ "puppy-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "shoulder",
+   "back"
+  ],
+  "impact": "low"
+ },
+ "rowing-machine": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "savasana": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "full_body",
+   "breathing"
+  ],
+  "impact": "low"
+ },
+ "seated-forward-fold": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "lower_body",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "seated-spinal-twist": {
+  "modalities": [
+   "mobility",
+   "recovery"
+  ],
+  "subcategories": [
+   "back",
+   "evening",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "seated-straddle-stretch": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "side-plank": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core",
+   "upper_body"
+  ],
+  "impact": "low"
+ },
+ "single-leg-glute-bridge": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "sphinx-pose": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "evening"
+  ],
+  "impact": "low"
+ },
+ "stair-climber": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio"
+  ],
+  "impact": "low"
+ },
+ "standing-calf-stretch": {
+  "modalities": [
+   "mobility",
+   "recovery"
+  ],
+  "subcategories": [
+   "full_body",
+   "lower_body",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "standing-forward-fold": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "full_body",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "standing-quad-stretch": {
+  "modalities": [
+   "recovery"
+  ],
+  "subcategories": [
+   "lower_body"
+  ],
+  "impact": "low"
+ },
+ "standing-side-bend": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "standing-side-bend-flow": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "morning",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "stationary-bike": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio",
+   "beginner"
+  ],
+  "impact": "low"
+ },
+ "supine-spinal-twist": {
+  "modalities": [
+   "mobility",
+   "recovery"
+  ],
+  "subcategories": [
+   "back",
+   "evening",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "supine-windshield-wipers": {
+  "modalities": [
+   "pilates"
+  ],
+  "subcategories": [
+   "core"
+  ],
+  "impact": "low"
+ },
+ "thoracic-bridge": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "shoulder"
+  ],
+  "impact": "low"
+ },
+ "thread-the-needle": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "shoulder"
+  ],
+  "impact": "low"
+ },
+ "thread-the-needle-flow": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "shoulder",
+   "morning"
+  ],
+  "impact": "low"
+ },
+ "tree-pose": {
+  "modalities": [
+   "barre"
+  ],
+  "subcategories": [
+   "balance_posture"
+  ],
+  "impact": "low"
+ },
+ "upward-dog": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "back",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "walking": {
+  "modalities": [
+   "low_impact"
+  ],
+  "subcategories": [
+   "cardio",
+   "beginner",
+   "full_body"
+  ],
+  "impact": "low"
+ },
+ "wide-legged-forward-fold": {
+  "modalities": [
+   "mobility"
+  ],
+  "subcategories": [
+   "hip",
+   "back"
+  ],
+  "impact": "low"
+ }
+}

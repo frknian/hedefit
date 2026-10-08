@@ -232,3 +232,17 @@ test("eksik hedef bilgisi 400 döner", { concurrency: false }, async () => {
     restoreEnv();
   }
 });
+
+// Android GoalScience.weeks (GoalScienceParityTest.kt) ve site/tools.js ile aynı değerler. Üçü ayrışırsa
+// aynı kullanıcıya uygulamada ve sitede farklı süre görünür.
+test("hafta hesabı Android ve site ile ortak vektörlerde aynıdır", () => {
+  const vectors = [
+    [60, 56, "steady", 9], [100, 94, "steady", 8], [100, 94, "easy", 12], [100, 94, "hard", 6],
+    [70, 73, "steady", 11], [50, 42, "steady", 21], [50, 45, "steady", 13], [80, 75, "steady", 8],
+    [50, 49.6, "steady", 0], [75, 75, "steady", 0], [90, 70, "hard", 22], [250, 35, "easy", 172],
+  ];
+  for (const [current, target, intensity, expected] of vectors) {
+    const result = planGoal({ targetWeightKg: target, weeklyDays: 3, sessionMinutes: 45, intensity }, { currentWeightKg: current, bmr: 1700 });
+    assert.equal(result.status === "ready" ? result.weeks : 0, expected, `${current}→${target} ${intensity}`);
+  }
+});

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Tanıtım sitesini yayınlar (statik varlıklı Worker) ya da yerelde önizler.
 //   Yayın:    npm run site:deploy
-//             SITE_URL=https://alanadi.com npm run site:deploy     (özel alan adı bağlanınca)
+//             SITE_URL=https://alanadi.com npm run site:deploy     (özel alan adı: Worker o alan adına da bağlanır)
+//             GOOGLE_PLAY_URL=… APP_STORE_URL=… npm run site:deploy  (mağaza butonları aktifleşir)
 //   Önizleme: npm run site:preview                                 (http://localhost:8788)
 //
 // Wrangler bilinçli olarak depo DIŞINDAN çalıştırılır: kökteki `.wrangler/deploy`
@@ -29,5 +30,8 @@ if (mode === "preview") {
   run(wrangler, ["pages", "dev", out, "--port", "8788"], { cwd: tmpdir() });
 } else {
   run("node", [join(root, "scripts/build-site.mjs")], { env: { ...process.env, SITE_URL: process.env.SITE_URL || DEFAULT_SITE_URL } });
-  run(wrangler, ["deploy", "-c", join(root, "scripts/wrangler.site.jsonc"), "--message", "Site deploy"], { cwd: tmpdir() });
+  // Özel alan adı: SITE_URL workers.dev dışındaysa Worker o alan adına (Cloudflare'deki bir bölgeye) bağlanır.
+  const host = new URL(process.env.SITE_URL || DEFAULT_SITE_URL).hostname;
+  const domainArgs = host.endsWith(".workers.dev") ? [] : ["--domain", host];
+  run(wrangler, ["deploy", "-c", join(root, "scripts/wrangler.site.jsonc"), "--message", "Site deploy", ...domainArgs], { cwd: tmpdir() });
 }

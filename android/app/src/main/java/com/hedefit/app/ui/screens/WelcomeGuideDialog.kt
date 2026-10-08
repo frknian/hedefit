@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
@@ -36,7 +37,7 @@ import com.hedefit.app.ui.components.staggeredEntrance
 import com.hedefit.app.ui.i18n.tr
 import com.hedefit.app.ui.theme.HedefitColors
 
-enum class GuideAction { Workout, Nutrition, Cardio, Coach, Reminders, HealthConnect }
+enum class GuideAction { Workout, Nutrition, Cardio, MuscleMap, Coach, Reminders, HealthConnect }
 
 private data class GuideMission(val action: GuideAction, val icon: ImageVector, val tint: Color, val title: String, val body: String, val cta: String)
 
@@ -44,6 +45,7 @@ private fun missions(coachName: String) = listOf(
     GuideMission(GuideAction.Workout, Icons.Default.FitnessCenter, HedefitColors.Lime, tr("İlk antrenmanını başlat", "Start your first workout"), tr("Programın hazır. Bir seti tamamla, sayacın ve XP'nin nasıl çalıştığını gör.", "Your program is ready. Finish a set and see the timer and XP in action."), tr("Antrenmana git", "Go to workout")),
     GuideMission(GuideAction.Nutrition, Icons.Default.Restaurant, HedefitColors.Warning, tr("İlk öğününü ekle", "Log your first meal"), tr("Yaz, fotoğraf çek ya da ara. Kalori ve makrolar otomatik hesaplanır.", "Type it, snap a photo or search. Calories and macros are calculated for you."), tr("Öğün ekle", "Add a meal")),
     GuideMission(GuideAction.Cardio, Icons.AutoMirrored.Filled.DirectionsRun, HedefitColors.Coral, tr("Kardiyoyu dene", "Try cardio"), tr("Koşu bandı, bisiklet ya da açık hava. Yaktığın kalori günlük hedefine eklenir.", "Treadmill, bike or outdoors. Burned calories are added to your daily target."), tr("Kardiyoyu aç", "Open cardio")),
+    GuideMission(GuideAction.MuscleMap, Icons.Default.AccessibilityNew, HedefitColors.Lime, tr("Kas haritasını dene", "Try the muscle map"), tr("Bir kasa dokun, o kasın hareketlerini animasyonlarıyla gör.", "Tap a muscle and see its exercises with animations."), tr("Aç", "Open")),
     GuideMission(GuideAction.Coach, Icons.Default.AutoAwesome, HedefitColors.Sleep, tr("$coachName'a bir soru sor", "Ask $coachName a question"), tr("Antrenman, beslenme ya da motivasyon: seni tanıyan koçuna sor.", "Training, food or motivation: ask the coach who knows you."), tr("Soru sor", "Ask")),
     GuideMission(GuideAction.Reminders, Icons.Default.NotificationsActive, HedefitColors.Water, tr("Hatırlatma kur", "Set a reminder"), tr("Antrenman günlerinde seni programına geri getirir.", "Brings you back to your plan on training days."), tr("Hatırlatma kur", "Set reminder")),
     GuideMission(GuideAction.HealthConnect, Icons.Default.Watch, HedefitColors.Lime, tr("Saatini ya da adımlarını bağla", "Connect your watch or steps"), tr("Adım, uyku ve nabız otomatik gelsin.", "Get steps, sleep and heart rate automatically."), tr("Bağla", "Connect")),

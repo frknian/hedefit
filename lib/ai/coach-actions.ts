@@ -50,6 +50,8 @@ export type CoachAction =
   | { type: "remind" }
   /** Hedef planı ekranını açar. */
   | { type: "changeGoal" }
+  /** Fit Koç ile kişisel challenge oluşturma ekranını açar (Keşfet > Challenge). */
+  | { type: "createChallenge" }
   /** Egzersizi alternatif veya regresyon/progresyon hareketiyle değiştirir. */
   | { type: "replace_exercise"; exerciseId?: string; replacementId: string; replacementName: string; sets?: number; reps?: string; restSeconds?: number; reason?: string }
   /** Antrenman yoğunluğunu ve hacmini toparlanma için düşürür. */
@@ -102,6 +104,7 @@ function toAction(raw: unknown): CoachAction | null {
     case "startOutdoor": return { type: "startOutdoor" };
     case "remind": return { type: "remind" };
     case "changeGoal": return { type: "changeGoal" };
+    case "createChallenge": return { type: "createChallenge" };
     case "start_recovery_check": return { type: "start_recovery_check" };
     case "createWorkout": {
       const region = typeof value.region === "string" ? value.region.trim() : "";
@@ -250,7 +253,7 @@ export const COACH_ACTIONS_INSTRUCTION = {
 [{"type":"replace_exercise","replacementId":"goblet-squat","replacementName":"Goblet Squat","reason":"too_hard"}]
 \`\`\`
 Geçerli eylemler:
-- openWorkout (antrenmanı aç), createWorkout + region, startOutdoor, suggestMeal + targetKcal, remind, changeGoal.
+- openWorkout (antrenmanı aç), createWorkout + region, startOutdoor, suggestMeal + targetKcal, remind, changeGoal, createChallenge (kullanıcı challenge isterse kişisel challenge ekranını aç).
 - replace_exercise + replacementId + replacementName (+ exerciseId, sets, reps, restSeconds, reason)
 - reduce_intensity + percent (+ reason)
 - shorten_workout + targetMinutes (ör. 15, 20, 30)
@@ -265,7 +268,7 @@ En fazla 3 eylem öner. Eylem gerekmiyorsa blok ekleme. Blok dışında JSON yaz
 [{"type":"replace_exercise","replacementId":"goblet-squat","replacementName":"Goblet Squat","reason":"too_hard"}]
 \`\`\`
 Valid actions:
-- openWorkout, createWorkout + region, startOutdoor, suggestMeal + targetKcal, remind, changeGoal.
+- openWorkout, createWorkout + region, startOutdoor, suggestMeal + targetKcal, remind, changeGoal, createChallenge (open the personal challenge builder when the user asks for a challenge).
 - replace_exercise + replacementId + replacementName (+ exerciseId, sets, reps, restSeconds, reason)
 - reduce_intensity + percent (+ reason)
 - shorten_workout + targetMinutes (e.g. 15, 20, 30)

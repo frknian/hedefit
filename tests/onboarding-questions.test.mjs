@@ -3,16 +3,16 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { FREE_TEXT_QUESTIONS, QUESTION, QUESTION_COUNT, emptyHistory, isHistoryComplete, normalizeHistory } from "../lib/onboarding-questions.ts";
 
-test("şema 15 sorudan oluşur ve indeksler benzersizdir", () => {
-  assert.equal(QUESTION_COUNT, 15);
+test("şema 23 sorudan oluşur ve indeksler benzersizdir", () => {
+  assert.equal(QUESTION_COUNT, 23);
   const indexes = Object.values(QUESTION);
   assert.equal(new Set(indexes).size, indexes.length, "iki soru aynı indekste");
-  assert.deepEqual(indexes.slice().sort((a, b) => a - b), [...Array(15).keys()], "indeksler 0-14 aralığını tam doldurmalı");
+  assert.deepEqual(indexes.slice().sort((a, b) => a - b), [...Array(23).keys()], "indeksler 0-22 aralığını tam doldurmalı");
 });
 
 test("boş geçmiş doğru uzunlukta kurulur", () => {
   const history = emptyHistory();
-  assert.equal(history.length, 15);
+  assert.equal(history.length, 23);
   assert.ok(history.every((value) => value === ""));
 });
 
@@ -25,7 +25,7 @@ test("eski 10 cevaplı kayıt yeni sıraya doğru taşınır", () => {
   ];
   const migrated = normalizeHistory(legacy);
 
-  assert.equal(migrated.length, 15);
+  assert.equal(migrated.length, 23);
   assert.equal(migrated[QUESTION.goal], "Kas geliştirmek", "hedef kaybolmamalı");
   assert.equal(migrated[QUESTION.experience], "Düzenli");
   assert.equal(migrated[QUESTION.level], "Orta seviye");
@@ -52,7 +52,7 @@ test("yeni sorular eski kayıtta boş kalır", () => {
 });
 
 test("güncel uzunluktaki kayıt olduğu gibi korunur", () => {
-  const current = Array.from({ length: 15 }, (_, index) => `cevap-${index}`);
+  const current = Array.from({ length: 23 }, (_, index) => `cevap-${index}`);
   assert.deepEqual(normalizeHistory(current), current);
 });
 
@@ -60,8 +60,8 @@ test("bozuk veya eksik veri güvenli biçimde ele alınır", () => {
   assert.deepEqual(normalizeHistory(null), emptyHistory());
   assert.deepEqual(normalizeHistory("metin"), emptyHistory());
   assert.deepEqual(normalizeHistory([]), emptyHistory());
-  assert.equal(normalizeHistory([1, 2, 3]).length, 15, "sayılar boş dizeye çevrilmeli");
-  assert.equal(normalizeHistory(Array(30).fill("x")).length, 15, "fazlası kırpılmalı");
+  assert.equal(normalizeHistory([1, 2, 3]).length, 23, "sayılar boş dizeye çevrilmeli");
+  assert.equal(normalizeHistory(Array(40).fill("x")).length, 23, "fazlası kırpılmalı");
 });
 
 test("test yalnız zorunlu cevaplar dolunca tamamlanmış sayılır", () => {
@@ -91,4 +91,16 @@ test("her soru için metin ve seçenek girdisi vardır", async () => {
     const questions = source.slice(source.indexOf("historyQuestions:"), source.indexOf("] as string[],"));
     assert.equal([...questions.matchAll(/^\s*"/gm)].length, QUESTION_COUNT, `${file}: soru sayısı ${QUESTION_COUNT} olmalı`);
   }
+});
+
+test("AI'ya giden cevaplardan sağlık/alerji/alışkanlık/stres/memnuniyet çıkar, sakatlık kalır", async () => {
+  const { AI_SENSITIVE_QUESTIONS, redactSensitiveAnswers, labelledAnswers, QUESTION } = await import("../lib/onboarding-questions.ts");
+  const history = Array.from({ length: QUESTION_COUNT }, (_, index) => `cevap-${index}`);
+  const redacted = redactSensitiveAnswers(history, "");
+  for (const index of AI_SENSITIVE_QUESTIONS) assert.equal(redacted[index], "", `slot ${index} boşalmalı`);
+  assert.equal(redacted[QUESTION.injuries], `cevap-${QUESTION.injuries}`, "sakatlık program güvenliği için kalır");
+  assert.equal(redacted.length, history.length, "indeksler hizalı kalmalı");
+  const labels = labelledAnswers(history).map((entry) => entry.answer);
+  for (const index of AI_SENSITIVE_QUESTIONS) assert.ok(!labels.includes(`cevap-${index}`), `etiketli listede slot ${index} olmamalı`);
+  assert.ok(labelledAnswers(history, { allowHealthContext: true }).some((entry) => entry.answer === `cevap-${QUESTION.healthConditions}`), "açık izinle gönderilebilir");
 });

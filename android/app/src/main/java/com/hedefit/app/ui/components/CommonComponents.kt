@@ -41,6 +41,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -121,19 +122,22 @@ fun HedefitAppFrame(
 
 @Composable
 private fun HedefitBottomBar(selected: AppDestination, onSelect: (AppDestination) -> Unit, language: String, coachName: String) {
-    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .clip(RoundedCornerShape(30.dp))
-                .background(HedefitColors.SurfaceHigh.copy(alpha = .78f))
-                .border(1.dp, HedefitColors.TextPrimary.copy(alpha = .06f), RoundedCornerShape(30.dp))
-                .padding(horizontal = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AppDestination.primaryTabs.forEach { destination ->
-                val label = if (destination == AppDestination.Coach) coachName else destination.localizedLabel(language)
+    // Koç ortada, yükseltilmiş ve vurgulu; diğer sekmeler ikon + etiket.
+    val tabs = AppDestination.primaryTabs.let { all ->
+        val others = all.filter { it != AppDestination.Coach }
+        others.take(2) + all.filter { it == AppDestination.Coach } + others.drop(2)
+    }
+    val shape = RoundedCornerShape(30.dp)
+    Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp).padding(top = 14.dp, bottom = 8.dp), contentAlignment = Alignment.BottomCenter) {
+        Box(
+            Modifier.fillMaxWidth().height(66.dp).clip(shape)
+                .background(HedefitColors.SurfaceHigh.copy(alpha = .92f))
+                .border(1.dp, HedefitColors.TextPrimary.copy(alpha = .08f), shape),
+        )
+        Row(Modifier.fillMaxWidth().height(66.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            tabs.forEach { destination ->
+                val isCoach = destination == AppDestination.Coach
+                val label = if (isCoach) coachName else destination.localizedLabel(language)
                 val active = destination == selected
                 Box(
                     modifier = Modifier
@@ -143,12 +147,20 @@ private fun HedefitBottomBar(selected: AppDestination, onSelect: (AppDestination
                         .semantics { contentDescription = label },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        Modifier.size(44.dp).background(if (active) HedefitColors.Lime.copy(alpha = .16f) else Color.Transparent, CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (destination == AppDestination.Coach) FitCoachRobotAvatar(Modifier.size(if (active) 34.dp else 30.dp).alpha(if (active) 1f else .7f))
-                        else Icon(destination.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = if (active) HedefitColors.Lime else HedefitColors.TextMuted)
+                    androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        if (isCoach) {
+                            Box(
+                                Modifier.offset(y = (-14).dp).size(48.dp)
+                                    .background(if (active) HedefitColors.Lime else HedefitColors.Lime.copy(alpha = .9f), CircleShape)
+                                    .border(3.dp, HedefitColors.Background, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) { FitCoachRobotAvatar(Modifier.size(36.dp)) }
+                            Text(label, color = if (active) HedefitColors.Lime else HedefitColors.TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, modifier = Modifier.offset(y = (-14).dp))
+                        } else {
+                            Icon(destination.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = if (active) HedefitColors.Lime else HedefitColors.TextMuted)
+                            Spacer(Modifier.height(2.dp))
+                            Text(label, color = if (active) HedefitColors.Lime else HedefitColors.TextMuted, fontSize = 10.sp, fontWeight = if (active) FontWeight.ExtraBold else FontWeight.Medium, maxLines = 1)
+                        }
                     }
                 }
             }

@@ -22,6 +22,14 @@ export const QUESTION = {
   dailyMovement: 12,
   sleep: 13,
   freeNote: 14,
+  focusAreas: 15,
+  healthConditions: 16,
+  foodAllergies: 17,
+  dietPreference: 18,
+  habits: 19,
+  stress: 20,
+  lifestyleSatisfaction: 21,
+  performance: 22,
 } as const;
 
 export const QUESTION_COUNT = Object.keys(QUESTION).length;
@@ -119,12 +127,40 @@ export const QUESTION_LABELS: Record<keyof typeof QUESTION, string> = {
   dailyMovement: "Gün içi hareket düzeyi",
   sleep: "Uyku ve toparlanma düzeni",
   freeNote: "Serbest not",
+  focusAreas: "Odaklanmak istediği vücut bölgeleri",
+  healthConditions: "Sağlık durumu",
+  foodAllergies: "Besin alerjileri",
+  dietPreference: "Beslenme tercihi",
+  habits: "Alışkanlıkları",
+  stress: "Günlük stres seviyesi",
+  lifestyleSatisfaction: "Yaşam tarzından memnuniyeti (0-10)",
+  performance: "Fiziksel performans (squat / barfiks tekrarı)",
 };
 
-/** Cevapları soru etiketleriyle eşleştirir; boş cevaplar listeye girmez. */
-export function labelledAnswers(history: string[]): { question: string; answer: string }[] {
+/**
+ * Sağlık ve yaşam tarzı cevapları. Üçüncü taraf AI sağlayıcılarına VARSAYILAN olarak gönderilmez:
+ * plan veya koç yanıtı için gerekli değildir ve kullanıcının açık izni olmadan sağlık verisi
+ * dışarı çıkmamalıdır. (Sakatlık/ağrı bilinçli olarak burada DEĞİL: program güvenliği için gerekir.)
+ */
+export const AI_SENSITIVE_QUESTIONS: number[] = [
+  QUESTION.healthConditions,
+  QUESTION.foodAllergies,
+  QUESTION.habits,
+  QUESTION.stress,
+  QUESTION.lifestyleSatisfaction,
+];
+
+/** Hassas slotları boşaltır; indeksler hizalı kalır (etiketsiz dizilerde de güvenli). */
+export function redactSensitiveAnswers<T>(answers: T[], blank: T, allowHealthContext = false): T[] {
+  if (allowHealthContext) return answers.slice();
+  return answers.map((answer, index) => (AI_SENSITIVE_QUESTIONS.includes(index) ? blank : answer));
+}
+
+/** Cevapları soru etiketleriyle eşleştirir; boş cevaplar listeye girmez. Hassas cevaplar varsayılan olarak çıkar. */
+export function labelledAnswers(history: string[], options: { allowHealthContext?: boolean } = {}): { question: string; answer: string }[] {
+  const safe = redactSensitiveAnswers(history, "", options.allowHealthContext === true);
   return Object.entries(QUESTION)
-    .map(([name, index]) => ({ question: QUESTION_LABELS[name as keyof typeof QUESTION], answer: (history[index] || "").trim() }))
+    .map(([name, index]) => ({ question: QUESTION_LABELS[name as keyof typeof QUESTION], answer: (safe[index] || "").trim() }))
     .filter((entry) => entry.answer !== "");
 }
 

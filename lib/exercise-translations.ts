@@ -1,5 +1,6 @@
 import type { Exercise } from "@/types/exercise";
 import { catalogExerciseNamesTr } from "./exercise-names-tr.ts";
+import wellnessData from "../data/exercises-wellness.json" with { type: "json" };
 import type { Locale } from "@/lib/i18n/server";
 
 const labelsTr: Record<string, string> = {
@@ -516,9 +517,12 @@ const exactExerciseNamesTr: Record<string, string> = {
   Windmills: "Yel Değirmeni",
 };
 
+/** Hedefit'e özel (wellness) hareketlerin elle yazılmış Türkçe adları: İngilizce ad → Türkçe ad. */
+const wellnessNamesTr: Record<string, string> = Object.fromEntries((wellnessData as Array<{ name: string; nameTr: string }>).map((item) => [item.name, item.nameTr]));
+
 export function translateExerciseName(value: string, locale: Locale = "tr") {
   if (locale === "en") return value;
-  const exact = catalogExerciseNamesTr[value] ?? exactExerciseNamesTr[value];
+  const exact = catalogExerciseNamesTr[value] ?? exactExerciseNamesTr[value] ?? wellnessNamesTr[value];
   if (exact) return exact;
   return exerciseNameTerms.reduce((name, [pattern, replacement]) => name.replace(pattern, replacement), value)
     .replace(/\s+/g, " ").replace(/\s+-\s+/g, " - ").trim();

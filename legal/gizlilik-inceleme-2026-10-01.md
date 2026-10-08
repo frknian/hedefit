@@ -23,7 +23,7 @@
    alınması gerekir mi. **Mevcut kullanıcılar (Android):** Yapıldı. Rıza alanları olmayan hesap açılışta tam ekran rıza
    kapısı görür (aynı iki kutu); rıza verilene kadar ana arayüz ve veri yükleme açılmaz, reddeden çıkış
    yapar, silme için e-posta yönlendirmesi vardır. Rıza durumu okunamazsa (ağ hatası) kullanıcı kilitlenmez.
-   **Yapılmadı:** iOS kayıt akışı ve iOS rıza kapısı; uygulama içinden rızayı görme/geri çekme ekranı.
+   **Yapıldı (Android, 2026-10-03):** Ayarlar → Gizlilik ve rızalar ekranı rıza durumunu ve tarihlerini gösterir, yasal metinleri açar, rızayı geri çekmeyi sağlar (rıza kaydı boşaltılır, geri çekme zamanı `consent_withdrawn_at` olarak yazılır, oturum kapanır; veriler silinmez). **Yapılmadı:** iOS kayıt akışı ve iOS rıza kapısı/ekranı. **Avukata sorulacak:** rıza geri çekilince verilerin otomatik silinmesi gerekir mi, yoksa yalnız işlemenin durması yeterli mi (şu an hesap silme ayrı ve kullanıcı kararıdır).
 2. **[METNE EKLENDİ; aranabilirlik kapatma ayarı eklendi (`discoverable`) — migrasyon uygulanmalı] Sosyal özellikler metinde yok.** Arkadaş isteği, kullanıcı adıyla arama, haftalık XP sıralaması,
    etkinlik akışı ve ortak meydan okumalar var; arkadaşlar görünen adı, kullanıcı adını, avatarı, XP'yi,
    etkinlik türünü ve (meydan okumada) mesafeyi görüyor. Kullanıcı adı en az 2 karakterle herkese
@@ -84,3 +84,25 @@ ilgili kişi hakları ve 30 gün başvuru süresi.
 Açık rıza metinleri ve kayıt akışı; yurt dışı aktarım yöntemi (standart sözleşme + Kurul bildirimi);
 veri sorumlusu/temsilci/VERBİS durumu; yaş ve veli rızası; sosyal özelliklerde aydınlatma; AI sağlayıcısıyla
 veri işleme sözleşmesi (DPA).
+
+
+## F. Güncelleme (2026-10-03): abonelik ve AI maliyet telemetrisi
+
+Kodda yeni işlenen veriler metne eklendi (KVKK aydınlatma + gizlilik politikası, TR/EN; belge sürümü `2026-10-03`):
+
+- **Abonelik/ödeme:** plan, Google Play satın alma jetonu, abonelik durumu ve bitiş tarihi
+  (`subscriptions`, `billing_events`). Kart/ödeme bilgisine erişilmez. Google Play hizmet sağlayıcı
+  olarak listelendi. Hesap silme aboneliği iptal etmez uyarısı metinde ve uygulamada (silme
+  penceresi) var.
+- **AI kullanım kayıtları:** özellik, plan, model, token sayısı, tahmini maliyet (`ai_usage_events`);
+  istek/yanıt metni yok. Saklama 180 gün (günlük cron `purge_ai_usage_events` ile uygulanır).
+  RTDN kayıtları 90 gün.
+
+**Avukata sorulacaklar (eklendi):** abonelik jetonunun ve AI kullanım metadatasının işlenmesinde
+hukuki sebep (sözleşmenin ifası / meşru menfaat) yeterli mi; Google Play'in veri işleyen mi ayrı
+sorumlu mu sayılacağı; satın alma kayıtları için vergi/ticari saklama süresi (şu an hesap silinince
+siliniyor — ticari defter yükümlülüğü varsa bu süre uzayabilir); 180 günlük saklama süresinin
+uygunluğu.
+
+**Mağaza formları:** Play Data safety'ye "Satın alma geçmişi" (Purchases) ve AI kullanım metadatası
+(uygulama etkinliği) eklenmeli.

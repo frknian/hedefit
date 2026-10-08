@@ -27,7 +27,7 @@ export function repairPlan(
   catalog: StandardizedExercise[],
   maxIterations = 5,
 ): RepairResult {
-  let currentSessions: PlannedWorkoutSession[] = JSON.parse(JSON.stringify(sessions));
+  const currentSessions: PlannedWorkoutSession[] = JSON.parse(JSON.stringify(sessions));
   const repairNotes: string[] = [];
   let iterations = 0;
 

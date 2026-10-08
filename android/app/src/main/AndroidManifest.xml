@@ -46,6 +46,8 @@
         <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="${ADMOB_APP_ID}" />
         <receiver android:name=".notifications.RoutineNotificationReceiver" android:exported="false" />
         <receiver android:name=".notifications.NewBlockNotificationReceiver" android:exported="false" />
+        <receiver android:name=".notifications.WeighInNotificationReceiver" android:exported="false" />
+        <receiver android:name=".notifications.ChallengeNotificationReceiver" android:exported="false" />
         <receiver android:name=".notifications.RestTimerReceiver" android:exported="false" />
         <receiver android:name=".notifications.StepMidnightResetReceiver" android:exported="false">
             <intent-filter>

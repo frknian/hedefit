@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +45,7 @@ import com.hedefit.app.ui.screens.ProgressScreen
 import com.hedefit.app.ui.screens.WorkoutPlanScreen
 import com.hedefit.app.ui.screens.ProfileSettingsScreen
 import com.hedefit.app.ui.screens.ProfileQuestionnaireScreen
+import com.hedefit.app.ui.state.canUseModalityExercise
 import com.hedefit.app.ui.state.limits
 import com.hedefit.app.ui.state.tier
 import com.hedefit.app.ui.i18n.withLocalizedExercises
@@ -84,7 +87,7 @@ import com.hedefit.app.gym.detectPersonalRecord
 private fun coreQuestionsAnswered(answers: List<String>) =
     com.hedefit.app.ui.screens.CORE_QUESTION_INDICES.all { answers.getOrNull(it)?.isNotBlank() == true }
 
-private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges }
+private enum class UtilityPage { Main, Profile, Questionnaire, Notifications, Calendar, Discover, ExerciseLibrary, EquipmentScanner, Route, GoalJourney, ManualActivity, Wearables, Cardio, Friends, Challenges, Consents, AiMemory, HealthPrivacy, ChallengeDetail, CoachChallenge }
 
 /** Programdaki Türkçe bölge adını atlasın birincil kas filtresine çevirir. */
 private fun replacementMuscle(area: String): String {
@@ -119,6 +122,8 @@ class MainActivity : ComponentActivity() {
         mainViewModel.syncHealthIfConnected()
         // Misafir e-posta bağladıysa, doğrulama bağlantısından dönüşte hesabı kalıcı say.
         mainViewModel.refreshGuestStatus()
+        // Play'deki aktif abonelikleri (doğrulanamamış / başka cihazdan) sunucuya yeniden doğrulat.
+        mainViewModel.restorePurchases()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,7 +140,7 @@ class MainActivity : ComponentActivity() {
             com.hedefit.app.ui.i18n.AppLang.en = preferences.language == "en"
             LaunchedEffect(preferences.planRotation) { mainViewModel.setPlanRotationPeriod(preferences.planRotation) }
             // The new-block alarm is one-shot: re-arm it whenever the app opens.
-            LaunchedEffect(Unit) { notificationScheduler.scheduleNewBlock(preferences) }
+            LaunchedEffect(Unit) { notificationScheduler.scheduleNewBlock(preferences); notificationScheduler.scheduleWeighIn(preferences); notificationScheduler.scheduleChallengeReminder(preferences) }
             var adsAllowed by remember { mutableStateOf(false) }
 
             fun updatePreferences(next: com.hedefit.app.ui.settings.AppPreferences) {
@@ -168,7 +173,7 @@ class MainActivity : ComponentActivity() {
                 val uiState = remember(rawUiState, preferences.language) {
                     rawUiState.dashboard?.let { rawUiState.copy(dashboard = it.withLocalizedExercises(rawUiState.exerciseNames)) } ?: rawUiState
                 }
-                var selected by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_workout", false) == true -> AppDestination.Workout; intent?.getBooleanExtra("open_nutrition", false) == true -> AppDestination.Nutrition; else -> AppDestination.Home }) }
+                var selected by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_workout", false) == true -> AppDestination.Explore; intent?.getBooleanExtra("open_nutrition", false) == true -> AppDestination.Nutrition; else -> AppDestination.Home }) }
                 val tabHistory = remember { mutableStateListOf<AppDestination>() }
                 var lastTab by remember { mutableStateOf(selected) }
                 var poppingTab by remember { mutableStateOf(false) }
@@ -183,7 +188,72 @@ class MainActivity : ComponentActivity() {
                 var activeWorkout by rememberSaveable { mutableStateOf(activeWorkoutStore.hasRecoverable()) }
                 var activeWorkoutExercises by remember { mutableStateOf(activeWorkoutStore.read()?.exercises) }
                 var workoutSummary by remember { mutableStateOf<WorkoutSummary?>(null) }
-                var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
+                var libraryMapMode by rememberSaveable { mutableStateOf(false) }
+                var libraryInitialMuscle by rememberSaveable { mutableStateOf("") }
+                var libraryInitialModality by rememberSaveable { mutableStateOf("") }
+                var libraryInitialEnvironment by rememberSaveable { mutableStateOf("") }
+                var libraryInitialEquipment by rememberSaveable { mutableStateOf("") }
+                // Keşfet: Programlar (eski Antrenman) · Challenge · Topluluk.
+                var exploreSegment by rememberSaveable { mutableStateOf(com.hedefit.app.ui.screens.ExploreSegment.Programs) }
+                var openChallengeId by rememberSaveable { mutableStateOf<String?>(null) }
+                var openTemplateKey by rememberSaveable { mutableStateOf<String?>(null) }
+                var friendSheetUser by remember { mutableStateOf<com.hedefit.app.data.model.FriendUserData?>(null) }
+                var friendChallengeRequest by remember { mutableStateOf<Pair<String?, String?>?>(null) }
+                var showDailyCheckin by rememberSaveable { mutableStateOf(false) }
+                var utilityPage by rememberSaveable { mutableStateOf(when { intent?.getBooleanExtra("open_route", false) == true && !com.hedefit.app.ui.layout.detectTablet(this@MainActivity) -> UtilityPage.Route; intent?.getBooleanExtra("open_activity", false) == true -> UtilityPage.ManualActivity; else -> UtilityPage.Main }) }
+                // Tablet ev/ofis cihazıdır: Rota girişleri antrenman standını (büyük sayaçlı aktif antrenman) açar.
+                // Katlanan telefonlar GPS ile dışarıda kullanıldığı için Rota'yı korur.
+                val isTablet = com.hedefit.app.ui.layout.rememberIsTablet()
+                var workoutStoreVersion by remember { mutableIntStateOf(0) }
+                fun openRouteOrStand() {
+                    if (!isTablet) { utilityPage = UtilityPage.Route; return }
+                    if (activeWorkoutStore.hasRecoverable()) {
+                        activeWorkoutExercises = activeWorkoutStore.read()?.exercises
+                        mainViewModel.loadPreviousPerformance(activeWorkoutExercises)
+                        activeWorkout = true
+                    } else if (!uiState.dashboard?.workouts.isNullOrEmpty()) {
+                        activeWorkoutStore.clear(); activeWorkoutExercises = null
+                        mainViewModel.loadPreviousPerformance()
+                        activeWorkout = true
+                    } else mainViewModel.showTransientMessage(com.hedefit.app.ui.i18n.tr("Önce bir antrenman programı oluştur.", "Create a workout program first."))
+                }
+                fun openExplore(segment: com.hedefit.app.ui.screens.ExploreSegment) {
+                    exploreSegment = segment
+                    utilityPage = UtilityPage.Main
+                    selected = AppDestination.Explore
+                    when (segment) {
+                        com.hedefit.app.ui.screens.ExploreSegment.Challenges -> mainViewModel.loadChallengeHub()
+                        com.hedefit.app.ui.screens.ExploreSegment.Community -> if (!uiState.isGuest) {
+                            mainViewModel.loadFriendsSummary(); mainViewModel.loadWeeklyLeaderboard(); mainViewModel.loadChallenges(); mainViewModel.loadDiscoverable(); mainViewModel.loadShareProgress()
+                        }
+                        else -> Unit
+                    }
+                }
+                fun openChallenge(id: String) { openTemplateKey = null; openChallengeId = id; mainViewModel.clearChallengeToday(); utilityPage = UtilityPage.ChallengeDetail }
+                fun openTemplate(key: String) {
+                    // Zaten aktifse ilerleme ekranı açılır; aynı challenge'a ikinci kez katılınmaz.
+                    val active = uiState.challengeHub?.active?.firstOrNull { it.templateKey == key }
+                    if (active != null) openChallenge(active.id) else { openChallengeId = null; openTemplateKey = key; utilityPage = UtilityPage.ChallengeDetail }
+                }
+                fun startChallengeTask(id: String) {
+                    mainViewModel.startChallengeTask(
+                        id,
+                        onStartSession = { exercises -> utilityPage = UtilityPage.Main; activeWorkoutStore.clear(); activeWorkoutExercises = exercises; mainViewModel.loadPreviousPerformance(exercises); activeWorkout = true },
+                        onStartProgram = { utilityPage = UtilityPage.Main; activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true },
+                        onOpenCheckin = { mainViewModel.clearCheckinSaved(); showDailyCheckin = true },
+                    )
+                }
+                // Başka bir cihazda (telefon, katlanan, tablet) süren antrenmanı bu cihaza taşır.
+                fun pullRemoteWorkout() {
+                    if (activeWorkout) return
+                    mainViewModel.pullActiveWorkout(activeWorkoutStore.deviceId) { raw -> if (activeWorkoutStore.importRemote(raw)) workoutStoreVersion++ }
+                }
+                LaunchedEffect(uiState.dashboard != null) { if (uiState.dashboard != null) pullRemoteWorkout() }
+                DisposableEffect(Unit) {
+                    val observer = androidx.lifecycle.LifecycleEventObserver { _, event -> if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) pullRemoteWorkout() }
+                    lifecycle.addObserver(observer)
+                    onDispose { lifecycle.removeObserver(observer) }
+                }
                 var googleCredentialBusy by remember { mutableStateOf(false) }
                 var offerCardioFinisher by remember { mutableStateOf(false) }
                 val dailyStreak = remember { com.hedefit.app.ui.components.DailyStreak.touch(this@MainActivity) }
@@ -435,6 +505,7 @@ class MainActivity : ComponentActivity() {
                                 emoji = if (prs.isNotEmpty()) "🏆" else "💪",
                             ))
                             mainViewModel.completeDetailedWorkout(seconds, calories, sets, feedback, activeWorkoutExercises)
+                            mainViewModel.clearRemoteActiveWorkout()
                             activeWorkout = false
                             activeWorkoutExercises = null
                             adMobManager.showAtNaturalTransition(uiState.limits().interstitialAds)
@@ -449,9 +520,11 @@ class MainActivity : ComponentActivity() {
                         chatBusy = uiState.chatBusy,
                         onSendChatMessage = { msg, ctx -> mainViewModel.sendChat(msg, preferences.language, ctx) },
                         onExecuteCoachAction = mainViewModel::executeCoachAction,
+                        onSnapshotSaved = mainViewModel::pushActiveWorkout,
                         onSkip = { postpone ->
                             val program = uiState.dashboard?.workoutPrograms?.firstOrNull { it.isActive }
                             mainViewModel.skipTodayWorkout(postpone, program?.id, program?.name, preferences.language)
+                            mainViewModel.clearRemoteActiveWorkout()
                             activeWorkout = false
                             activeWorkoutExercises = null
                         },
@@ -482,9 +555,18 @@ class MainActivity : ComponentActivity() {
                             onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
                             isGuest = uiState.isGuest,
                             tier = uiState.tier(),
+                            billing = uiState.billing,
+                            onLoadBilling = mainViewModel::loadBillingOffers,
+                            onPurchasePlan = { productId, basePlanId -> mainViewModel.purchasePlan(this@MainActivity, productId, basePlanId) },
+                            onManageSubscription = {
+                                startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=$packageName")))
+                            },
                             onSaveAccount = { mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.Manual) },
                             onOpenNotifications = { utilityPage = UtilityPage.Notifications },
                             onOpenWearables = { utilityPage = UtilityPage.Wearables },
+                            onOpenConsents = { utilityPage = UtilityPage.Consents },
+                            onOpenAiMemory = { utilityPage = UtilityPage.AiMemory },
+                            onOpenHealthPrivacy = { utilityPage = UtilityPage.HealthPrivacy },
                             onAddShortcut = { type ->
                                 val accepted = if (type.startsWith("widget_")) HedefitShortcuts.requestWidget(this@MainActivity, type) else HedefitShortcuts.request(this@MainActivity, type)
                                 if (!accepted) Toast.makeText(this@MainActivity, com.hedefit.app.ui.i18n.tr("Bu başlatıcı ana ekrana eklemeyi desteklemiyor.", "This launcher doesn't support adding to the home screen."), Toast.LENGTH_LONG).show()
@@ -514,6 +596,7 @@ class MainActivity : ComponentActivity() {
                             quickStart = false,
                             onClose = { utilityPage = UtilityPage.Main },
                             onSave = { update -> mainViewModel.saveProfile(update, regeneratePlan = true) { utilityPage = UtilityPage.Main } },
+                            onSaveCycle = { cycle -> mainViewModel.saveCycleProfile(cycle) },
                         )
                         UtilityPage.Notifications -> NotificationCalendarScreen(
                             preferences = preferences,
@@ -537,14 +620,25 @@ class MainActivity : ComponentActivity() {
                             completedDates = dashboard.sessions.mapNotNull { session -> runCatching { java.time.Instant.parse(session.completedAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate() }.getOrNull() }.toSet(),
                         )
                         UtilityPage.ExerciseLibrary -> ExerciseLibraryScreen(
+                            startWithMap = libraryMapMode,
+                            initialMuscle = libraryInitialMuscle,
+                            initialModality = libraryInitialModality,
+                            initialEnvironment = libraryInitialEnvironment,
+                            initialEquipment = libraryInitialEquipment,
                             items = uiState.exerciseLibrary,
                             loading = uiState.exerciseLibraryBusy,
                             language = preferences.language,
                             onBack = { utilityPage = UtilityPage.Main },
-                            onSearch = { search, muscle, equipment, level, environment, muscleRole, force, mechanic, category -> mainViewModel.loadExerciseLibrary(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, preferences.language) },
+                            onSearch = { search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, modality, subcategory -> mainViewModel.loadExerciseLibrary(search, muscle, equipment, level, environment, muscleRole, force, mechanic, category, preferences.language, modality, subcategory) },
                             onUse = mainViewModel::useExerciseFromLibrary,
-                            isLocked = { item -> !uiState.limits().canUseExercise(item) },
-                            onLocked = { item -> mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.Exercise) { it.canUseExercise(item) } },
+                            isLocked = { item -> !uiState.limits().canUseExercise(item) || !uiState.limits().canUseModalityExercise(item.modalities, item.subcategories) },
+                            onLocked = { item ->
+                                // Önce modalite kilidi (Barre / Pilates-mobilite içeriği), yoksa seviye kilidi.
+                                if (!uiState.limits().canUseModalityExercise(item.modalities, item.subcategories)) {
+                                    val feature = if (item.modalities.all { it == "barre" }) com.hedefit.app.ui.state.LockedFeature.Barre else com.hedefit.app.ui.state.LockedFeature.WellnessContent
+                                    mainViewModel.requireEntitlement(feature) { it.canUseModalityExercise(item.modalities, item.subcategories) }
+                                } else mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.Exercise) { it.canUseExercise(item) }
+                            },
                             onStart = { item ->
                                 val exercise = com.hedefit.app.data.model.WorkoutExerciseData(item.id, item.name, item.primaryMuscles.firstOrNull() ?: "Tüm Vücut", 3, "8–12", 75)
                                 activeWorkoutExercises = listOf(exercise)
@@ -552,6 +646,18 @@ class MainActivity : ComponentActivity() {
                                 activeWorkout = true
                             },
                             onCreateProgram = { name, exercises -> mainViewModel.createProgramFromExercises(name, exercises, preferences.language); utilityPage = UtilityPage.Main },
+                        )
+                        UtilityPage.Discover -> com.hedefit.app.ui.screens.DiscoverScreen(
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onSearch = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            onMuscle = { muscle -> markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = muscle; mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                            onOpenCardio = { utilityPage = UtilityPage.Cardio },
+                            onOpenRoute = { utilityPage = UtilityPage.Route },
+                            onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner },
+                            onOpenGame = { utilityPage = UtilityPage.Main; selected = AppDestination.Game },
+                            onModality = { modality -> libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = modality; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(modality = modality, locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
                         )
                         UtilityPage.EquipmentScanner -> EquipmentScannerScreen(
                             onBack = { utilityPage = UtilityPage.Main },
@@ -611,6 +717,41 @@ class MainActivity : ComponentActivity() {
                             },
                             language = preferences.language,
                             unitSystem = preferences.unitSystem,
+                        )
+                        UtilityPage.Consents -> com.hedefit.app.ui.screens.ConsentSettingsScreen(
+                            status = uiState.consentStatus,
+                            busy = uiState.consentSettingsBusy,
+                            error = uiState.consentSettingsError,
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onLoad = mainViewModel::loadConsentStatus,
+                            onWithdraw = { health, crossBorder ->
+                                scope.launch { googleSignIn.clearCredentialState() }
+                                mainViewModel.withdrawConsents(health, crossBorder)
+                            },
+                        )
+                        UtilityPage.HealthPrivacy -> com.hedefit.app.ui.screens.HealthPrivacyScreen(
+                            state = uiState.healthPrivacy,
+                            gender = uiState.dashboard?.profile?.gender.orEmpty(),
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onLoad = mainViewModel::loadHealthPrivacy,
+                            onAdaptive = { mainViewModel.updatePersonalization(adaptive = it) },
+                            onAiContext = { mainViewModel.updatePersonalization(aiHealthContext = it) },
+                            onSaveCycle = { profile -> mainViewModel.saveCycleProfile(profile) { mainViewModel.loadHealthPrivacy() } },
+                            onTurnOffCycle = { mainViewModel.updatePersonalization(cycleOff = true) },
+                            onDeleteCycle = mainViewModel::deleteCycleData,
+                            onDeleteAll = mainViewModel::deleteAllHealthData,
+                        )
+                        UtilityPage.AiMemory -> com.hedefit.app.ui.screens.AiMemoryScreen(
+                            memories = uiState.aiMemories,
+                            busy = uiState.aiMemoryBusy,
+                            error = uiState.aiMemoryError,
+                            language = preferences.language,
+                            onBack = { utilityPage = UtilityPage.Main },
+                            onRefresh = mainViewModel::loadAiMemories,
+                            onDelete = mainViewModel::deleteAiMemory,
+                            onDeleteAll = mainViewModel::deleteAllAiMemories,
                         )
                         UtilityPage.Wearables -> com.hedefit.app.ui.screens.WearablesScreen(
                             snapshot = uiState.wearables,
@@ -682,6 +823,44 @@ class MainActivity : ComponentActivity() {
                             onBack = { utilityPage = UtilityPage.Main },
                             onSave = { machine, seconds, kcal, summary -> mainViewModel.recordCardioSession(machine, seconds, kcal, summary) { utilityPage = UtilityPage.Main } },
                         )
+                        UtilityPage.ChallengeDetail -> {
+                            val hub = uiState.challengeHub
+                            val challenge = openChallengeId?.let { id -> hub?.challenges?.firstOrNull { it.id == id } ?: uiState.challengeToday?.challenge?.takeIf { it.id == id } }
+                            val template = openTemplateKey?.let { key -> hub?.templates?.firstOrNull { it.plan.key == key } }
+                            val back = { utilityPage = UtilityPage.Main; mainViewModel.clearChallengeToday() }
+                            if (challenge == null && template == null) {
+                                LaunchedEffect(Unit) { if (hub == null) mainViewModel.loadChallengeHub() else back() }
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { androidx.compose.material3.CircularProgressIndicator(color = com.hedefit.app.ui.theme.HedefitColors.Lime) }
+                            } else com.hedefit.app.ui.screens.ChallengeDetailScreen(
+                                template = template,
+                                challenge = challenge,
+                                rules = hub?.rules ?: com.hedefit.app.data.model.ChallengeRulesData(),
+                                today = uiState.challengeToday,
+                                todayBusy = uiState.challengeTodayBusy,
+                                actionBusy = uiState.challengeActionBusy,
+                                canChallengeFriends = !uiState.isGuest,
+                                onBack = back,
+                                onLoadToday = mainViewModel::loadChallengeToday,
+                                onJoin = { key -> mainViewModel.joinChallenge(key) { id -> openChallenge(id) } },
+                                onDoTask = { id -> startChallengeTask(id) },
+                                onRecovery = mainViewModel::useRecoveryDay,
+                                onAbandon = { id -> mainViewModel.abandonChallenge(id) { back() } },
+                                onShare = { item, xp -> com.hedefit.app.gym.ChallengeShareCard.share(this@MainActivity, item, xp) },
+                                onChallengeFriend = { key ->
+                                    mainViewModel.loadFriendsSummary()
+                                    friendChallengeRequest = key to null
+                                },
+                            )
+                        }
+                        UtilityPage.CoachChallenge -> com.hedefit.app.ui.screens.CoachChallengeScreen(
+                            coachName = preferences.coachName.ifBlank { if (preferences.language == "en") "Fit Coach" else "Fit Koç" },
+                            profile = dashboard.profile,
+                            preview = uiState.coachChallengePreview,
+                            busy = uiState.coachChallengeBusy,
+                            onBack = { utilityPage = UtilityPage.Main; mainViewModel.clearCoachChallengePreview() },
+                            onPreview = mainViewModel::previewCoachChallenge,
+                            onStart = { prefs -> mainViewModel.startCoachChallenge(prefs) { id -> openChallenge(id) } },
+                        )
                         UtilityPage.Main -> Unit
                     }
                 } else {
@@ -695,12 +874,12 @@ class MainActivity : ComponentActivity() {
                             AppDestination.Home -> HomeScreen(padding, expanded, uiState.dashboard, uiState.avatarPreview, uiState.dataLoading, uiState.dataError, onRetry = mainViewModel::refreshAll, onSignOut = {
                                 scope.launch { googleSignIn.clearCredentialState() }
                                 mainViewModel.signOut()
-                            }, onOpenProfile = { utilityPage = UtilityPage.Profile }, onOpenCalendar = { utilityPage = UtilityPage.Calendar }, onOpenRoute = { utilityPage = UtilityPage.Route },
+                            }, onOpenProfile = { utilityPage = UtilityPage.Profile }, onOpenCalendar = { utilityPage = UtilityPage.Calendar }, onOpenRoute = ::openRouteOrStand,
                                 onOpenGoal = { utilityPage = UtilityPage.GoalJourney },
                                 onOpenNutrition = { selected = AppDestination.Nutrition },
                                 onOpenProgram = { programId ->
                                     programId?.let { id -> uiState.dashboard?.workoutPrograms?.firstOrNull { it.id == id }?.let(mainViewModel::activateProgram) }
-                                    selected = AppDestination.Workout
+                                    openExplore(com.hedefit.app.ui.screens.ExploreSegment.Programs)
                                 },
                                 onProgramHomeVisibilityChange = mainViewModel::setProgramHomeVisibility,
                                 unitSystem = preferences.unitSystem,
@@ -709,11 +888,21 @@ class MainActivity : ComponentActivity() {
                                 waterGoalMl = preferences.waterGoalMl,
                                 onWaterGoalChange = { updatePreferences(preferences.copy(waterGoalMl = it)) },
                                 onAddWater = mainViewModel::addWater,
+                                onSaveWeight = mainViewModel::saveQuickWeight,
                                 language = preferences.language,
                                 stepSource = uiState.stepSource,
                                 showAds = adsAllowed && uiState.limits().bannerAds,
                                 onOpenCoach = { selected = AppDestination.Coach },
-                                onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; libraryInitialModality = ""; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                onOpenDiscover = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); openExplore(com.hedefit.app.ui.screens.ExploreSegment.Programs) },
+                                checkinToday = uiState.checkinToday,
+                                onOpenCheckin = { mainViewModel.clearCheckinSaved(); showDailyCheckin = true },
+                                adaptiveResult = uiState.adaptiveResult,
+                                onStartAdaptive = { result -> mainViewModel.track("adaptive_workout_started"); activeWorkoutExercises = result.exercises; mainViewModel.loadPreviousPerformance(result.exercises); mainViewModel.dismissAdaptivePlan(); activeWorkout = true },
+                                onDismissAdaptive = mainViewModel::dismissAdaptivePlan,
+                                onAdaptiveUpgrade = { hint -> mainViewModel.requireEntitlement(if (hint == "switch_pilates") com.hedefit.app.ui.state.LockedFeature.PilatesSwitch else com.hedefit.app.ui.state.LockedFeature.AdaptiveAction) { false } },
+                                onStartWellness = { kind -> mainViewModel.loadWellnessSession(kind, if (kind == com.hedefit.app.data.model.WellnessKind.PilatesToday) 20 else 15, preferences.language) { session -> activeWorkoutExercises = session.exercises; mainViewModel.loadPreviousPerformance(session.exercises); activeWorkout = true } },
                                 onSaveSleep = mainViewModel::saveSleep,
                                 onOpenGame = { selected = AppDestination.Game },
                                 onOpenProgress = { selected = AppDestination.Progress },
@@ -723,63 +912,122 @@ class MainActivity : ComponentActivity() {
                                 dailyStreak = dailyStreak,
                                 quickActions = preferences.homeQuickActions,
                                 onQuickActionsChange = { updatePreferences(preferences.copy(homeQuickActions = it)) },
-                                onOpenFriends = {
-                                    utilityPage = UtilityPage.Friends
-                                    mainViewModel.loadFriendsSummary()
-                                    mainViewModel.loadWeeklyLeaderboard()
-                                    mainViewModel.loadFriendActivityFeed()
-                                },
+                                onOpenFriends = { openExplore(com.hedefit.app.ui.screens.ExploreSegment.Community) },
+                                activeChallenge = uiState.challengeHub?.primaryActive(),
+                                otherActiveChallenges = ((uiState.challengeHub?.active?.size ?: 0) - 1).coerceAtLeast(0),
+                                challengeDayXp = uiState.challengeHub?.rules?.dayXp ?: 25,
+                                challengeBusy = uiState.challengeActionBusy,
+                                onOpenChallenge = { openChallenge(it.id) },
+                                onDoChallengeTask = { startChallengeTask(it.id) },
                             )
-                            AppDestination.Workout -> WorkoutPlanScreen(padding, expanded, uiState.dashboard?.workouts.orEmpty(), uiState.dashboard?.workoutPrograms.orEmpty(), uiState.exerciseLibrary, uiState.exerciseLibraryBusy, uiState.dataLoading, uiState.planGenerating, mainViewModel::generatePlan, onStartWorkout = {
-                                if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
-                            }, hasActiveWorkout = activeWorkoutStore.hasRecoverable(), onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
-                                onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
-                                onOpenCardio = { utilityPage = UtilityPage.Cardio },
-                                onOpenRoute = { utilityPage = UtilityPage.Route },
-                                newBlockDue = mainViewModel.newBlockDue(PlanRotationPeriod.fromKey(preferences.planRotation)),
-                                rotationPeriod = preferences.planRotation,
-                                onStartNewBlock = mainViewModel::generatePlan,
-                                onGenerateRegional = { muscle, label, connected -> mainViewModel.generateRegionalPlan(muscle, label, connected, preferences.language) },
-                                onLoadRegional = { muscle -> mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", category = "strength", locale = preferences.language) },
-                                onGenerateQuickWorkout = { regions, duration, fatigue, environment, owned, level -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, owned, level, preferences.language) },
-                                onCreateOwnPlan = { draft -> mainViewModel.createCustomProgram(draft, preferences.language) { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary } },
-                                onAddPushPullTemplate = { key -> mainViewModel.addPushPullTemplate(key, preferences.language) },
-                                onPreviewTemplate = { key -> mainViewModel.previewReadyProgram(key, preferences.language == "en") },
-                                onSelectProgram = mainViewModel::activateProgram,
-                                onRemoveProgram = mainViewModel::deleteProgram,
-                                onCopyProgram = mainViewModel::copyProgram,
-                                onUpdateExercise = mainViewModel::updateWorkoutExercise,
-                                onReplaceExercise = mainViewModel::replaceWorkoutExercise,
-                                onRemoveExercise = mainViewModel::removeWorkoutExercise,
-                                onMoveExercise = mainViewModel::moveWorkoutExercise,
-                                onLoadReplacementOptions = { exercise -> mainViewModel.loadExerciseLibrary(muscle = replacementMuscle(exercise.area), muscleRole = "primary", category = "strength", locale = preferences.language) },
-                                language = preferences.language,
-                                onAdaptReadiness = { input, cb -> mainViewModel.submitReadinessCheckin(input, onComplete = cb) },
-                                onApplyReadinessAdaptation = mainViewModel::applyReadinessAdaptation,
-                                readinessAdaptation = uiState.readinessAdaptation,
-                                readinessBusy = uiState.readinessCheckinBusy,
-                                onRequestReplacementCandidate = { id, reason, area, cb ->
-                                    mainViewModel.requestExerciseReplacement(id, reason, discomfortArea = area, locale = preferences.language, onComplete = cb)
-                                },
-                                onApplyReplacementCandidate = mainViewModel::applyExerciseReplacement,
-                                replacementCandidate = uiState.replacementCandidate,
-                                replacementBusy = uiState.replacementBusy,
-                                onRequestPlanAdaptation = { trigger, mins, cb ->
-                                    mainViewModel.requestPlanAdaptation(trigger, mins, locale = preferences.language, onComplete = cb)
-                                },
-                                onApplyPlanAdaptation = mainViewModel::applyPlanAdaptation,
-                                planAdaptationResult = uiState.planAdaptationResult,
-                                planAdaptationBusy = uiState.planAdaptationBusy,
-                                chatMessages = uiState.chatMessages,
-                                chatBusy = uiState.chatBusy,
-                                onSendChatMessage = { msg, ctx -> mainViewModel.sendChat(msg, preferences.language, ctx) },
-                                onExecuteCoachAction = mainViewModel::executeCoachAction,
-                                onOpenCalendar = { utilityPage = UtilityPage.Calendar },
-                                onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
-                                profile = uiState.dashboard?.profile,
-                                performances = uiState.dashboard?.exercisePerformance.orEmpty(),
-                                catalog = uiState.dashboard?.exerciseCatalog.orEmpty(),
-                            )
+                            AppDestination.Explore -> {
+                                val exploreHeader: @androidx.compose.runtime.Composable () -> Unit = { com.hedefit.app.ui.screens.ExploreHeader(exploreSegment) { openExplore(it) } }
+                                when (exploreSegment) {
+                                com.hedefit.app.ui.screens.ExploreSegment.Programs -> WorkoutPlanScreen(padding, expanded, uiState.dashboard?.workouts.orEmpty(), uiState.dashboard?.workoutPrograms.orEmpty(), uiState.exerciseLibrary, uiState.exerciseLibraryBusy, uiState.dataLoading, uiState.planGenerating, mainViewModel::generatePlan, onStartWorkout = {
+                                    if (!uiState.dashboard?.workouts.isNullOrEmpty()) { activeWorkoutStore.clear(); activeWorkoutExercises = null; mainViewModel.loadPreviousPerformance(); activeWorkout = true }
+                                }, hasActiveWorkout = remember(workoutStoreVersion, activeWorkout) { activeWorkoutStore.hasRecoverable() }, onResumeWorkout = { activeWorkoutExercises = activeWorkoutStore.read()?.exercises; mainViewModel.loadPreviousPerformance(activeWorkoutExercises); activeWorkout = true }, onOpenScanner = { utilityPage = UtilityPage.EquipmentScanner }, onOpenLibrary = { libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = ""; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                    onOpenMuscleMap = { markTried(com.hedefit.app.ui.screens.GuideAction.MuscleMap); libraryMapMode = true; libraryInitialMuscle = ""; libraryInitialModality = ""; libraryInitialEnvironment = ""; libraryInitialEquipment = ""; mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary },
+                                    onOpenActivityLog = { utilityPage = UtilityPage.ManualActivity },
+                                    onOpenCardio = { utilityPage = UtilityPage.Cardio },
+                                    onOpenRoute = ::openRouteOrStand,
+                                    newBlockDue = mainViewModel.newBlockDue(PlanRotationPeriod.fromKey(preferences.planRotation)),
+                                    rotationPeriod = preferences.planRotation,
+                                    onStartNewBlock = mainViewModel::generatePlan,
+                                    onGenerateRegional = { muscle, label, connected -> mainViewModel.generateRegionalPlan(muscle, label, connected, preferences.language) },
+                                    onLoadRegional = { muscle -> mainViewModel.loadExerciseLibrary(muscle = muscle, muscleRole = "primary", category = "strength", locale = preferences.language) },
+                                    onGenerateQuickWorkout = { regions, duration, fatigue, environment, owned, level -> mainViewModel.generateQuickWorkout(regions, duration, fatigue, environment, owned, level, preferences.language) },
+                                    onCreateOwnPlan = { draft -> mainViewModel.createCustomProgram(draft, preferences.language) { mainViewModel.loadExerciseLibrary(locale = preferences.language); utilityPage = UtilityPage.ExerciseLibrary } },
+                                    onAddPushPullTemplate = { key -> mainViewModel.addPushPullTemplate(key, preferences.language) },
+                                    onPreviewTemplate = { key -> mainViewModel.previewReadyProgram(key, preferences.language == "en") },
+                                    onSelectProgram = mainViewModel::activateProgram,
+                                    onRemoveProgram = mainViewModel::deleteProgram,
+                                    onCopyProgram = mainViewModel::copyProgram,
+                                    onRenameProgram = mainViewModel::renameProgram,
+                                    onUpdateExercise = mainViewModel::updateWorkoutExercise,
+                                    onReplaceExercise = mainViewModel::replaceWorkoutExercise,
+                                    onRemoveExercise = mainViewModel::removeWorkoutExercise,
+                                    onMoveExercise = mainViewModel::moveWorkoutExercise,
+                                    onLoadReplacementOptions = { exercise -> mainViewModel.loadExerciseLibrary(muscle = replacementMuscle(exercise.area), muscleRole = "primary", category = "strength", locale = preferences.language) },
+                                    language = preferences.language,
+                                    onAdaptReadiness = { input, cb -> mainViewModel.submitReadinessCheckin(input, onComplete = cb) },
+                                    onApplyReadinessAdaptation = mainViewModel::applyReadinessAdaptation,
+                                    readinessAdaptation = uiState.readinessAdaptation,
+                                    readinessBusy = uiState.readinessCheckinBusy,
+                                    onRequestReplacementCandidate = { id, reason, area, cb ->
+                                        mainViewModel.requestExerciseReplacement(id, reason, discomfortArea = area, locale = preferences.language, onComplete = cb)
+                                    },
+                                    onApplyReplacementCandidate = mainViewModel::applyExerciseReplacement,
+                                    replacementCandidate = uiState.replacementCandidate,
+                                    replacementBusy = uiState.replacementBusy,
+                                    onRequestPlanAdaptation = { trigger, mins, cb ->
+                                        mainViewModel.requestPlanAdaptation(trigger, mins, locale = preferences.language, onComplete = cb)
+                                    },
+                                    onApplyPlanAdaptation = mainViewModel::applyPlanAdaptation,
+                                    planAdaptationResult = uiState.planAdaptationResult,
+                                    planAdaptationBusy = uiState.planAdaptationBusy,
+                                    chatMessages = uiState.chatMessages,
+                                    chatBusy = uiState.chatBusy,
+                                    onSendChatMessage = { msg, ctx -> mainViewModel.sendChat(msg, preferences.language, ctx) },
+                                    onExecuteCoachAction = mainViewModel::executeCoachAction,
+                                    onOpenCalendar = { utilityPage = UtilityPage.Calendar },
+                                    onOpenQuestionnaire = { utilityPage = UtilityPage.Questionnaire },
+                                    profile = uiState.dashboard?.profile,
+                                    performances = uiState.dashboard?.exercisePerformance.orEmpty(),
+                                    catalog = uiState.dashboard?.exerciseCatalog.orEmpty(),
+                                    exploreHeader = exploreHeader,
+                                    onOpenLibraryFiltered = { environment, equipment, modality ->
+                                        libraryMapMode = false; libraryInitialMuscle = ""; libraryInitialModality = modality; libraryInitialEnvironment = environment; libraryInitialEquipment = equipment
+                                        mainViewModel.loadExerciseLibrary(equipment = equipment, environment = environment, modality = modality, locale = preferences.language)
+                                        utilityPage = UtilityPage.ExerciseLibrary
+                                    },
+                                )
+                                com.hedefit.app.ui.screens.ExploreSegment.Challenges -> com.hedefit.app.ui.screens.ChallengeHubScreen(
+                                    padding = padding,
+                                    header = exploreHeader,
+                                    hub = uiState.challengeHub,
+                                    busy = uiState.challengeHubBusy,
+                                    offline = uiState.challengeHubOffline,
+                                    error = uiState.challengeHubError,
+                                    coachName = coachDisplayName,
+                                    onRetry = { mainViewModel.loadChallengeHub() },
+                                    onOpenCoachChallenge = { mainViewModel.clearCoachChallengePreview(); utilityPage = UtilityPage.CoachChallenge },
+                                    onOpenTemplate = { openTemplate(it.plan.key) },
+                                    onOpenChallenge = { openChallenge(it.id) },
+                                    onJoin = { template -> mainViewModel.joinChallenge(template.plan.key) { id -> openChallenge(id) } },
+                                )
+                                com.hedefit.app.ui.screens.ExploreSegment.Community -> com.hedefit.app.ui.screens.CommunityScreen(
+                                    padding = padding,
+                                    header = exploreHeader,
+                                    isGuest = uiState.isGuest,
+                                    summary = uiState.friendsSummary,
+                                    busy = uiState.friendsBusy,
+                                    searchResults = uiState.userSearchResults,
+                                    searchBusy = uiState.userSearchBusy,
+                                    discoverable = uiState.discoverable,
+                                    shareProgress = uiState.shareProgress,
+                                    leaderboard = uiState.leaderboard,
+                                    friendChallenges = uiState.challenges,
+                                    progress = uiState.challengeProgress,
+                                    progressBusy = uiState.challengeProgressBusy,
+                                    openProgressId = uiState.activeChallengeId,
+                                    onSearch = mainViewModel::searchUsers,
+                                    onClearSearch = mainViewModel::clearUserSearch,
+                                    onSendRequest = mainViewModel::sendFriendRequest,
+                                    onAccept = { id -> mainViewModel.respondToFriendRequest(id, true) },
+                                    onDecline = { id -> mainViewModel.respondToFriendRequest(id, false) },
+                                    onRemove = mainViewModel::removeFriend,
+                                    onDiscoverableChange = mainViewModel::setDiscoverable,
+                                    onShareProgressChange = mainViewModel::setShareProgress,
+                                    onOpenFriend = { user -> friendSheetUser = user; mainViewModel.loadFriendProfile(user.id) },
+                                    onAcceptChallenge = { id -> mainViewModel.respondToChallengeInvite(id, true) },
+                                    onDeclineChallenge = { id -> mainViewModel.respondToChallengeInvite(id, false) },
+                                    onLeaveChallenge = mainViewModel::leaveOrCancelChallenge,
+                                    onOpenProgress = mainViewModel::openChallengeProgress,
+                                    onCloseProgress = mainViewModel::closeChallengeProgress,
+                                    onSaveAccount = { mainViewModel.showSaveAccountPrompt(com.hedefit.app.ui.state.SaveAccountTrigger.Manual) },
+                                )
+                                }
+                            }
                             AppDestination.Nutrition -> NutritionScreen(
                                 padding, expanded, uiState.dashboard, uiState.nutritionBusy, uiState.foodSearchBusy, uiState.foodSearchResults, uiState.foodSearchQuery,
                                 mainViewModel::addNutritionWithAi, { query -> mainViewModel.searchFoods(query, preferences.language) }, mainViewModel::addCatalogFood,
@@ -804,6 +1052,9 @@ class MainActivity : ComponentActivity() {
                                 onSavePhotoResults = mainViewModel::savePhotoNutrition,
                                 reviewFromText = uiState.mealReviewSource == "text",
                                 reviewMeal = uiState.mealReviewMeal,
+                                wellness = uiState.nutritionWellness,
+                                onLoadWellness = mainViewModel::loadNutritionWellness,
+                                onUpgradeNutrition = { mainViewModel.requireEntitlement(com.hedefit.app.ui.state.LockedFeature.AdaptiveAction) { false } },
                                 openMealComposer = openMealComposer,
                                 onMealComposerOpened = { openMealComposer = false },
                             )
@@ -815,12 +1066,7 @@ class MainActivity : ComponentActivity() {
                                 weeklyActivityGoal = preferences.weeklyWorkoutGoal,
                                 language = preferences.language,
                                 onBack = { selected = AppDestination.Home },
-                                onOpenFriends = {
-                                    utilityPage = UtilityPage.Friends
-                                    mainViewModel.loadFriendsSummary()
-                                    mainViewModel.loadWeeklyLeaderboard()
-                                    mainViewModel.loadFriendActivityFeed()
-                                },
+                                onOpenFriends = { openExplore(com.hedefit.app.ui.screens.ExploreSegment.Community) },
                             )
                             AppDestination.Progress -> ProgressScreen(
                                 padding, expanded, uiState.dashboard, preferences.language,
@@ -829,15 +1075,20 @@ class MainActivity : ComponentActivity() {
                                 onWeeklyWorkoutGoalChange = { updatePreferences(preferences.copy(weeklyWorkoutGoal = it)) },
                                 measurementSaving = uiState.measurementSaving,
                                 onSaveMeasurement = mainViewModel::saveBodyMeasurement,
+                                onDeleteMeasurement = mainViewModel::deleteBodyMeasurement,
                                 onDeleteRoute = mainViewModel::deleteRoute,
                                 nutritionHistory = (uiState.nutritionHistory + uiState.dashboard?.nutritionLogs.orEmpty()).distinctBy { it.id },
                                 onLoadNutritionHistory = mainViewModel::loadProgressNutrition,
+                                gamification = gamificationSnapshot,
+                                challengeHub = uiState.challengeHub,
+                                onOpenRewards = { selected = AppDestination.Game },
+                                onOpenChallenge = { openChallenge(it.id) },
                             )
                             AppDestination.Coach -> CoachScreen(
                                 padding, expanded, uiState.chatMessages, uiState.chatBusy,
                                 { message -> mainViewModel.sendChat(message, preferences.language) },
                                 uiState.dashboard,
-                                onOpenPlan = { selected = AppDestination.Workout },
+                                onOpenPlan = { openExplore(com.hedefit.app.ui.screens.ExploreSegment.Programs) },
                                 language = preferences.language,
                                 coachName = coachDisplayName,
                                 onCoachNameChange = { updatePreferences(preferences.copy(coachName = it)) },
@@ -850,11 +1101,11 @@ class MainActivity : ComponentActivity() {
                                     // olduğu gibi ViewModel'e devredilir.
                                     when (action.type) {
                                         "openWorkout" -> {
-                                            selected = AppDestination.Workout
+                                            openExplore(com.hedefit.app.ui.screens.ExploreSegment.Programs)
                                             mainViewModel.showTransientMessage(if (preferences.language == "en") "Today's workout is open." else "Bugünkü antrenman açıldı.")
                                         }
                                         "createWorkout" -> {
-                                            selected = AppDestination.Workout
+                                            openExplore(com.hedefit.app.ui.screens.ExploreSegment.Programs)
                                             val region = action.region
                                             mainViewModel.showTransientMessage(
                                                 if (preferences.language == "en") "Opening the workout screen${if (region != null) " for $region" else ""}."
@@ -862,7 +1113,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                         "startOutdoor" -> {
-                                            utilityPage = UtilityPage.Route
+                                            openRouteOrStand()
                                         }
                                         "suggestMeal" -> {
                                             selected = AppDestination.Nutrition
@@ -874,11 +1125,31 @@ class MainActivity : ComponentActivity() {
                                         "changeGoal" -> {
                                             utilityPage = UtilityPage.GoalJourney
                                         }
+                                        "createChallenge" -> {
+                                            mainViewModel.clearCoachChallengePreview()
+                                            utilityPage = UtilityPage.CoachChallenge
+                                        }
                                         else -> mainViewModel.executeCoachAction(action)
                                     }
                                 },
                                 usageUsed = uiState.chatUsageUsed,
                                 usageLimit = uiState.chatUsageLimit,
+                                onCreateChallenge = { mainViewModel.clearCoachChallengePreview(); utilityPage = UtilityPage.CoachChallenge },
+                                rewardedAvailable = adsAllowed && adMobManager.rewardedConfigured && adMobManager.rewardedReady && uiState.limits().rewardedAds,
+                                rewardBusy = uiState.rewardAdBusy,
+                                onWatchAd = {
+                                    scope.launch {
+                                        val userId = mainViewModel.userIdForAds() ?: return@launch
+                                        val baseline = mainViewModel.prepareRewardedAd("chat") ?: return@launch
+                                        val shown = adMobManager.showRewarded(
+                                            userId = userId,
+                                            feature = "chat",
+                                            onEarned = { mainViewModel.awaitAdReward("chat", baseline) },
+                                            onClosedWithoutReward = mainViewModel::cancelRewardedAd,
+                                        )
+                                        if (!shown) mainViewModel.cancelRewardedAd()
+                                    }
+                                },
                             )
                         } }
                     }
@@ -888,6 +1159,13 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(activeMission, selected, utilityPage, activeWorkout) {
                     if (activeMission != null && selected == AppDestination.Home && utilityPage == UtilityPage.Main && !activeWorkout) activeMission = null
                 }
+                if (showDailyCheckin && uiState.dashboard != null) com.hedefit.app.ui.components.DailyCheckinSheet(
+                    onDismiss = { showDailyCheckin = false; mainViewModel.clearCheckinSaved() },
+                    onSave = { checkin -> mainViewModel.saveCheckin(checkin) },
+                    saved = uiState.checkinSaved,
+                    cycle = uiState.checkinCycle,
+                    initial = uiState.checkinToday,
+                )
                 if ((showWelcomeGuide || !preferences.welcomeGuideSeen) && activeMission == null && uiState.auth is AuthState.SignedIn && uiState.dashboard != null && utilityPage == UtilityPage.Main && coreQuestionsAnswered(uiState.dashboard?.profile?.historyAnswers.orEmpty()) && uiState.dashboard?.profile?.heightCm != null && uiState.dashboard?.profile?.weightKg != null) WelcomeGuideDialog(
                     language = preferences.language,
                     coachName = preferences.coachName.ifBlank { if (preferences.language == "en") "Fit Coach" else "FitKoç" },
@@ -901,11 +1179,12 @@ class MainActivity : ComponentActivity() {
                             activeMission = action.name
                             utilityPage = UtilityPage.Main
                             when (action) {
-                                com.hedefit.app.ui.screens.GuideAction.Workout -> selected = AppDestination.Workout
+                                com.hedefit.app.ui.screens.GuideAction.Workout -> openExplore(com.hedefit.app.ui.screens.ExploreSegment.Programs)
                                 com.hedefit.app.ui.screens.GuideAction.Nutrition -> { selected = AppDestination.Nutrition; openMealComposer = true }
                                 com.hedefit.app.ui.screens.GuideAction.Reminders -> utilityPage = UtilityPage.Notifications
                                 com.hedefit.app.ui.screens.GuideAction.Coach -> selected = AppDestination.Coach
                                 com.hedefit.app.ui.screens.GuideAction.Cardio -> utilityPage = UtilityPage.Cardio
+                                com.hedefit.app.ui.screens.GuideAction.MuscleMap -> utilityPage = UtilityPage.Discover
                                 com.hedefit.app.ui.screens.GuideAction.HealthConnect -> Unit
                             }
                         }
@@ -951,6 +1230,53 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                // Challenge günü tamamlandı: mevcut kutlama katmanıyla (+XP, seri, bitirme).
+                LaunchedEffect(uiState.challengeCelebration?.id) {
+                    val event = uiState.challengeCelebration ?: return@LaunchedEffect
+                    mainViewModel.consumeChallengeCelebration()
+                    if (event.xp <= 0 && !event.finished) return@LaunchedEffect
+                    val snap = gamificationSnapshot
+                    celebrationQueue.add(com.hedefit.app.ui.components.CelebrationEvent(
+                        kind = if (event.finished) com.hedefit.app.ui.components.CelebrationKind.GoalClosed else com.hedefit.app.ui.components.CelebrationKind.Workout,
+                        title = if (event.finished) com.hedefit.app.ui.i18n.tr("Challenge tamamlandı! 🏆", "Challenge complete! 🏆") else com.hedefit.app.ui.i18n.tr("Challenge günü tamam!", "Challenge day done!"),
+                        subtitle = listOf(event.title, event.dayText).filter { it.isNotBlank() }.joinToString(" · "),
+                        xpGained = event.xp,
+                        levelProgressFrom = snap?.level?.progress ?: 0f,
+                        levelProgressTo = snap?.level?.let { ((it.currentXp + event.xp).toFloat() / it.nextLevelXp.coerceAtLeast(1)).coerceAtMost(1f) } ?: 0f,
+                        level = snap?.level?.level,
+                        streakDays = event.streak,
+                        emoji = if (event.finished) "🏆" else "🔥",
+                    ))
+                }
+                // Su, öğün, adım, check-in ya da çevrimdışı kaydedilen iş eşitlenince doğrulanabilir challenge görevlerini kapat.
+                LaunchedEffect(uiState.challengeHub?.active?.size, uiState.dashboard?.waterMl, uiState.dashboard?.nutritionLogs?.size, (uiState.dashboard?.steps ?: 0) / 500, uiState.checkinToday, uiState.dashboard?.sessions?.size) {
+                    kotlinx.coroutines.delay(1_500)
+                    mainViewModel.reconcileChallenges()
+                }
+                friendSheetUser?.let { user ->
+                    com.hedefit.app.ui.screens.FriendProfileSheet(
+                        user = user,
+                        profile = uiState.friendProfile?.takeIf { it.id == user.id },
+                        busy = uiState.friendProfileBusy,
+                        onDismiss = { friendSheetUser = null; mainViewModel.clearFriendProfile() },
+                        onChallenge = { friendSheetUser = null; if (uiState.challengeHub == null) mainViewModel.loadChallengeHub(); friendChallengeRequest = null to user.id },
+                        onRemove = {
+                            uiState.friendsSummary?.friends?.firstOrNull { it.user.id == user.id }?.let { mainViewModel.removeFriend(it.id) }
+                            friendSheetUser = null
+                        },
+                    )
+                }
+                friendChallengeRequest?.let { (templateKey, friendId) ->
+                    com.hedefit.app.ui.screens.FriendChallengeSheet(
+                        templates = uiState.challengeHub?.templates.orEmpty(),
+                        friends = uiState.friendsSummary?.friends.orEmpty(),
+                        initialTemplateKey = templateKey,
+                        initialFriendId = friendId,
+                        busy = uiState.challengeActionBusy,
+                        onDismiss = { friendChallengeRequest = null },
+                        onSend = { key, mode, ids -> mainViewModel.createFriendChallenge(key, mode, ids) { friendChallengeRequest = null } },
+                    )
+                }
                 if (offerCardioFinisher) androidx.compose.material3.AlertDialog(
                     onDismissRequest = { offerCardioFinisher = false },
                     title = { androidx.compose.material3.Text(com.hedefit.app.ui.i18n.tr("Kardiyoyla bitirelim mi? 🏃", "Finish with some cardio? 🏃")) },

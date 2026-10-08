@@ -17,7 +17,7 @@ export type SafetyDecision =
   | { blocked: true; reason: SafetyReason; response: string }
   | { blocked: false; reason?: SafetyReason; extraInstruction?: string };
 
-export type SafetyReason = "emergency" | "self_harm" | "eating_disorder" | "medication" | "diagnosis" | "extreme_restriction";
+export type SafetyReason = "emergency" | "self_harm" | "eating_disorder" | "medication" | "diagnosis" | "extreme_restriction" | "reproductive_health";
 
 // Kalıplar bilerek dar tutulur. Geniş bir kalıp ("ağrı") her kas ağrısı
 // sorusunu acile çevirir; koç kullanılamaz hale gelir ve kullanıcı uyarıyı
@@ -56,6 +56,13 @@ const PATTERNS: Array<{ reason: SafetyReason; tr: RegExp; en: RegExp }> = [
     en: /which (drug|medication)|prescribe|what dose|dosage should i|start (a )?steroid/i,
   },
   {
+    // Üreme sağlığı: gebelik, hormon tedavisi, doğum kontrol dozu, adet gecikmesinin nedeni gibi KLİNİK sorular.
+    // Genel "adetteyken antrenman" soruları engellenmez (aşağıda yalnızca uyarı eklenir).
+    reason: "reproductive_health",
+    tr: /hamile (miyim|olabilir)|gebelik testi|adet(im)? (gecik|kesil|düzensiz.*(neden|hastal))|hormon (tedavi|ilac|hap)|doğum kontrol.*(doz|kaç|hangi)|pcos|polikistik|endometriyoz|adet söktürücü/i,
+    en: /am i pregnant|pregnancy test|(period|cycle) (is )?(late|missed|stopped)|hormone (therapy|pill|treatment)|birth control.*(dose|which|how many)|pcos|polycystic|endometriosis/i,
+  },
+  {
     reason: "diagnosis",
     tr: /(bende|bana) .*(hastalık|kanser|tiroit|diyabet) mi|teşhis (koy|et)|tanı koy/i,
     en: /do i have (cancer|diabetes|thyroid|a disease)|diagnos(e|is) me/i,
@@ -85,6 +92,10 @@ const RESPONSES: Record<SafetyReason, { tr: string; en: string }> = {
     tr: "İlaç, doz veya takviye önerisi veremem — bu bir hekimin işi. Antrenman ve beslenme tarafında nasıl ilerleyeceğini konuşmak istersen buradayım.",
     en: "I can't recommend medication, dosages, or supplements — that's a doctor's call. I'm happy to help with the training and nutrition side instead.",
   },
+  reproductive_health: {
+    tr: "Gebelik, hormon tedavisi, adet düzeni ya da doğum kontrolüyle ilgili klinik sorulara yanıt veremem; bunlar bir hekimin ya da kadın sağlığı uzmanının işi. Antrenmanını döngüne ve o günkü hissine göre nasıl ayarlayacağını konuşmak istersen buradayım.",
+    en: "I can't answer clinical questions about pregnancy, hormone treatment, cycle regularity or birth control — that's for a doctor or a women's health specialist. I'm happy to help you adapt your training to how you feel and your cycle if you'd like.",
+  },
   diagnosis: {
     tr: "Tanı koyamam; bunu ancak bir hekim muayene ve tetkikle söyleyebilir. Belirtilerin sürüyorsa bir sağlık kuruluşuna başvur. Bu arada antrenmanda ağrısız ve kontrollü kalmanı öneririm.",
     en: "I can't diagnose anything — only a doctor can, after an examination. If your symptoms persist, please see a healthcare provider. In the meantime, keep training pain-free and controlled.",
@@ -106,8 +117,20 @@ export function evaluateSafety(text: string, locale: "tr" | "en" = "tr"): Safety
       return { blocked: true, reason: pattern.reason, response: RESPONSES[pattern.reason][locale] };
     }
   }
+  // Bloke edilmeyen ama dikkat gerektiren konu: genel döngü/adet sohbeti. Model yalnızca genel, kesin olmayan
+  // wellness bilgisi verir; klinik/hormonal iddia yapmaz.
+  if (CYCLE_TALK.test(value)) {
+    return {
+      blocked: false,
+      extraInstruction: locale === "en"
+        ? "The user mentions their menstrual cycle. Give only general, non-definitive wellness guidance. Do not claim anything about hormone levels, fertility, pregnancy or diagnoses. Suggest adjusting training to how they feel today (their check-in comes first), and say this is not medical advice."
+        : "Kullanıcı adet döngüsünden söz ediyor. Yalnızca genel ve kesin olmayan wellness bilgisi ver. Hormon düzeyi, doğurganlık, gebelik ya da teşhis iddiasında bulunma. Antrenmanı kullanıcının o günkü hissine göre ayarlamayı öner (check-in cevapları önceliklidir) ve bunun tıbbi tavsiye olmadığını belirt.",
+    };
+  }
   return { blocked: false };
 }
+
+const CYCLE_TALK = /\b(adet|regl|döngü|döngüm|menstr\w*|period|cycle|pms|premenstr\w*)\b/i;
 
 /**
  * Modelin çıktısına uygulanan son kontrol. Model, girdide hiçbir tetikleyici
@@ -118,6 +141,16 @@ export function enforceOutputSafety(text: string, locale: "tr" | "en" = "tr"): s
   const claimsDiagnosis = locale === "en"
     ? /\byou (have|are suffering from)\b.*\b(diabetes|cancer|thyroid|hypertension|anemia)\b/i.test(text)
     : /\b(sende|sizde)\b.*\b(diyabet|kanser|tiroit|hipertansiyon|anemi)\b.*\bvar\b/i.test(text);
+  // Kesin hormonal/doğurganlık iddiası: model bunu kendiliğinden kurarsa yanıtın önüne açık bir uyarı eklenir.
+  const claimsHormonal = locale === "en"
+    ? /\b(your|ur) (estrogen|progesterone|hormones?)\b.*\b(are|is)\b.*\b(high|low|peaking|dropping)\b|\byou('re| are) (ovulating|pregnant|infertile)\b/i.test(text)
+    : /(östrojen|progesteron|hormon)\S*.*(yüksek|düşük|zirve|düşüyor)|ovülasyondasın|hamilesin|kısırsın/i.test(text);
+  if (claimsHormonal) {
+    const hormonalNotice = locale === "en"
+      ? "Note: I can't know your hormone levels or fertility — treat cycle information only as general context and check with a doctor for anything medical.\n\n"
+      : "Not: Hormon düzeylerini ya da doğurganlığını bilemem — döngü bilgisini yalnızca genel bir bağlam olarak değerlendir; tıbbi her konuyu bir hekime danış.\n\n";
+    return hormonalNotice + text;
+  }
   if (!claimsDiagnosis) return text;
   const notice = locale === "en"
     ? "Note: I can't diagnose conditions — please confirm anything health-related with a doctor.\n\n"

@@ -24,4 +24,22 @@ class LayoutPolicyTest {
         assertEquals(18, LayoutPolicy.horizontalPadding(360))
         assertEquals(18, LayoutPolicy.horizontalPadding(700))
     }
+
+    @Test
+    fun tabletsAreLargeScreensWithoutHingeSensor() {
+        assertTrue(LayoutPolicy.isTablet(800, hasHingeSensor = false))
+        assertTrue(LayoutPolicy.isTablet(600, hasHingeSensor = false))
+        assertFalse(LayoutPolicy.isTablet(411, hasHingeSensor = false))
+    }
+
+    @Test
+    fun unfoldedFoldablesAreNotTablets() {
+        assertFalse(LayoutPolicy.isTablet(841, hasHingeSensor = true))
+    }
+
+    @Test
+    fun standSplitsByOrientation() {
+        assertTrue(LayoutPolicy.standSideBySide(1280, 800))
+        assertFalse(LayoutPolicy.standSideBySide(800, 1280))
+    }
 }

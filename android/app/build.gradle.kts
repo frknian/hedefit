@@ -47,6 +47,9 @@ android {
         buildConfigField("String", "SUPABASE_URL", quoted(appConfig("NEXT_PUBLIC_SUPABASE_URL")))
         buildConfigField("String", "SUPABASE_ANON_KEY", quoted(appConfig("NEXT_PUBLIC_SUPABASE_ANON_KEY")))
         buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", quoted(appConfig("ADMOB_BANNER_AD_UNIT_ID", "ca-app-pub-5328854373446190/6660516300")))
+        // Ödüllü reklam birimi (AdMob → Rewarded). Boşsa "reklam izle" seçeneği hiç gösterilmez. SSV callback'i
+        // sunucuda (app/api/ads/ssv) aynı birimi ADMOB_REWARDED_AD_UNIT_ID ile doğrular.
+        buildConfigField("String", "ADMOB_REWARDED_AD_UNIT_ID", quoted(appConfig("ADMOB_REWARDED_AD_UNIT_ID", "")))
         buildConfigField("String", "ADMOB_INTERSTITIAL_AD_UNIT_ID", quoted(appConfig("ADMOB_INTERSTITIAL_AD_UNIT_ID", "ca-app-pub-5328854373446190/3478045691")))
         manifestPlaceholders["ADMOB_APP_ID"] = appConfig("ADMOB_APP_ID", "ca-app-pub-5328854373446190~4094062717")
         buildConfigField(
@@ -120,6 +123,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-ads:25.4.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.play:review-ktx:2.0.2")
+    implementation("com.android.billingclient:billing:8.3.0")
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
     implementation("androidx.compose.ui:ui")

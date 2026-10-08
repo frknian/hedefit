@@ -1,3 +1,5 @@
+import type { ExerciseAsset, ImpactLevel, Modality } from "../lib/exercise-modality.ts";
+
 export interface Exercise {
   id: string;
   /** English display name (RepDB `name_en` / legacy `name`). */
@@ -17,7 +19,7 @@ export interface Exercise {
 
   // --- RepDB canonical enrichment (additive; optional so legacy rows stay valid) ---
   /** Where this row came from. Legacy rows are kept addressable so old plans never break. */
-  source?: "repdb" | "legacy" | "supplement";
+  source?: "repdb" | "legacy" | "supplement" | "wellness";
   sourceExerciseId?: string;
   nameTr?: string;
   descriptionEn?: string;
@@ -38,6 +40,12 @@ export interface Exercise {
   imageStart?: string | null;
   imageEnd?: string | null;
   mediaStatus?: "complete" | "partial" | "missing";
+  /** Pilates / mobility / barre / low impact / recovery (bağımsız boyut; `category` değişmez). */
+  modalities?: Modality[];
+  subcategories?: string[];
+  impact?: ImpactLevel;
+  /** Görsel/animasyonun kaynağı ve lisansı (third-party ve Hedefit'e özel içerik için zorunlu). */
+  asset?: ExerciseAsset;
   /** True when instructionsTr/nameTr are dictionary-generated, not human/AI reviewed. */
   needsTranslationReview?: boolean;
   isActive?: boolean;

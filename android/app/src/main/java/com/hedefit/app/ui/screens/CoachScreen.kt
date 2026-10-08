@@ -7,6 +7,9 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import com.hedefit.app.ui.components.ScreenContainer
@@ -89,6 +93,11 @@ fun CoachScreen(
     onExecuteAction: (com.hedefit.app.data.model.CoachActionData) -> Unit = {},
     usageUsed: Int? = null,
     usageLimit: Int? = null,
+    rewardedAvailable: Boolean = false,
+    rewardBusy: Boolean = false,
+    onWatchAd: () -> Unit = {},
+    /** "Bana challenge oluştur": kişisel challenge sayfasını açar (sohbet akışını değiştirmez). */
+    onCreateChallenge: (() -> Unit)? = null,
 ) {
     val en = language == "en"
     var input by remember { mutableStateOf("") }
@@ -114,6 +123,35 @@ fun CoachScreen(
                     usageUsed = usageUsed,
                     usageLimit = usageLimit,
                 )
+                // Günlük hak bittiyse (ücretsiz/misafir): kısa reklamla +1 soru. Hak sunucuda, imzalı AdMob
+                // doğrulamasıyla verilir; günde en fazla 3.
+                if (rewardedAvailable && usageLimit != null && usageUsed != null && usageUsed >= usageLimit) {
+                    Spacer(Modifier.height(8.dp))
+                    HedefitCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                if (en) "You've used today's questions. Watch a short ad for +1 question." else "Bugünkü soru hakkın bitti. Kısa bir reklam izleyerek +1 soru kazan.",
+                                Modifier.weight(1f), color = HedefitColors.TextSecondary, fontSize = 13.sp,
+                            )
+                            Button(
+                                onClick = onWatchAd, enabled = !rewardBusy,
+                                colors = ButtonDefaults.buttonColors(containerColor = HedefitColors.Lime, contentColor = HedefitColors.OnLime),
+                            ) { Text(if (rewardBusy) (if (en) "Please wait…" else "Bekle…") else (if (en) "Watch ad" else "Reklam izle"), fontWeight = FontWeight.Bold) }
+                        }
+                    }
+                }
+                if (onCreateChallenge != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(HedefitColors.Surface).clickable(onClick = onCreateChallenge).padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(Icons.Default.EmojiEvents, null, tint = HedefitColors.Lime, modifier = Modifier.size(20.dp))
+                        Text(if (en) "Create a challenge for me" else "Bana challenge oluştur", Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(if (en) "Personal plan" else "Kişisel plan", color = HedefitColors.TextMuted, fontSize = 12.sp)
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = HedefitColors.TextMuted, modifier = Modifier.size(18.dp))
+                    }
+                }
                 Spacer(Modifier.height(6.dp))
                 CoachConversation(messages, busy, input, { input = it }, send, onSendMessage, onOpenPlan, onExecuteAction, data, Modifier.weight(1f), en, coachName)
             }
@@ -266,6 +304,7 @@ private fun MessageBubble(
                             "suggestMeal" -> if (en) "Open meal suggestions" else "Öğün önerilerini aç"
                             "remind" -> if (en) "Open reminder settings" else "Hatırlatma ayarlarını aç"
                             "changeGoal" -> if (en) "Review my goal plan" else "Hedef planımı incele"
+                            "createChallenge" -> if (en) "Create my challenge" else "Challenge'ımı oluştur"
                             else -> if (en) "Apply recommendation" else "Önerilen eylemi uygula"
                         }
 

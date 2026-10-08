@@ -304,3 +304,101 @@ test("account/reset-progress: hatalı input — kimliği doğrulanmamış istek 
     restoreEnv();
   }
 });
+
+// ---- account/delete: aktif Google Play aboneliği ----------------------------------
+
+function withSubscriptionAwareDeleteFetch(userId, { activeSubscription }) {
+  const seen = { deleted: false, lookups: 0 };
+  const fetchImpl = withAuthenticatedFetch((url) => {
+    const href = String(url);
+    if (href.includes("/rest/v1/subscriptions")) { seen.lookups += 1; return Response.json(activeSubscription ? [{ purchase_token: "tok" }] : []); }
+    if (href.includes("/storage/v1/object/list/")) return Response.json([]);
+    if (href.includes("/auth/v1/admin/users/")) { seen.deleted = true; return Response.json({ user: { id: userId } }); }
+    throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
+  }, userId);
+  return { fetchImpl, seen };
+}
+
+async function postDelete(extra = {}) {
+  const { POST } = await import(`../app/api/account/delete/route.ts?test=${Date.now()}${Math.random()}`);
+  return POST(authorizedRequest("http://localhost/api/account/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ confirmation: "HESABIMI SİL", email: "test@example.com", ...extra }),
+  }));
+}
+
+test("account/delete: aktif abonelik varken onay bayrağı yoksa 409 ve hesap silinmez", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const restoreSecret = withSecretKeyEnv();
+  const previousFetch = globalThis.fetch;
+  const { fetchImpl, seen } = withSubscriptionAwareDeleteFetch(freshUserId(), { activeSubscription: true });
+  globalThis.fetch = fetchImpl;
+  try {
+    const response = await postDelete();
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).code, "active_subscription");
+    assert.equal(seen.deleted, false);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreSecret();
+    restoreEnv();
+  }
+});
+
+test("account/delete: kullanıcı aktif aboneliği onayladıysa hesap silinir", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const restoreSecret = withSecretKeyEnv();
+  const previousFetch = globalThis.fetch;
+  const { fetchImpl, seen } = withSubscriptionAwareDeleteFetch(freshUserId(), { activeSubscription: true });
+  globalThis.fetch = fetchImpl;
+  try {
+    const response = await postDelete({ confirmActiveSubscription: true });
+    assert.equal(response.status, 200);
+    assert.equal(seen.deleted, true);
+    assert.equal(seen.lookups, 0, "onaylandıysa abonelik sorgulanmaz");
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreSecret();
+    restoreEnv();
+  }
+});
+
+test("account/delete: aboneliği olmayan kullanıcı bayraksız silebilir", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const restoreSecret = withSecretKeyEnv();
+  const previousFetch = globalThis.fetch;
+  const { fetchImpl, seen } = withSubscriptionAwareDeleteFetch(freshUserId(), { activeSubscription: false });
+  globalThis.fetch = fetchImpl;
+  try {
+    assert.equal((await postDelete()).status, 200);
+    assert.equal(seen.deleted, true);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreSecret();
+    restoreEnv();
+  }
+});
+
+test("account/delete: abonelik sorgusu başarısızsa silme hakkı engellenmez", async () => {
+  const restoreEnv = withSupabaseAuthEnv();
+  const restoreSecret = withSecretKeyEnv();
+  const previousFetch = globalThis.fetch;
+  let deleted = false;
+  const userId = freshUserId();
+  globalThis.fetch = withAuthenticatedFetch((url) => {
+    const href = String(url);
+    if (href.includes("/rest/v1/subscriptions")) return Response.json({ code: "XX000", message: "boom" }, { status: 500 });
+    if (href.includes("/storage/v1/object/list/")) return Response.json([]);
+    if (href.includes("/auth/v1/admin/users/")) { deleted = true; return Response.json({ user: { id: userId } }); }
+    throw new TypeError(`beklenmeyen ağ isteği: ${href}`);
+  }, userId);
+  try {
+    assert.equal((await postDelete()).status, 200);
+    assert.equal(deleted, true);
+  } finally {
+    globalThis.fetch = previousFetch;
+    restoreSecret();
+    restoreEnv();
+  }
+});

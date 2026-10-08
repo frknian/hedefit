@@ -10,6 +10,9 @@
 <meta property="og:description" content="Hedefit Plus ve Premium: daha fazla Fit Koç sorusu, fotoğraftan kalori, tüm hareketler, sınırsız kendi programın ve reklamsız deneyim.">
 <meta property="og:type" content="website">
 <link rel="canonical" href="__SITE_URL__/planlar">
+<link rel="alternate" hreflang="tr" href="__SITE_URL__/planlar">
+<link rel="alternate" hreflang="en" href="__SITE_URL__/en/plans">
+<link rel="alternate" hreflang="x-default" href="__SITE_URL__/planlar">
 <meta property="og:site_name" content="Hedefit">
 <meta property="og:locale" content="tr_TR">
 <meta property="og:url" content="__SITE_URL__/planlar">
@@ -27,7 +30,7 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="legal plans-page">
-<header class="nav"><a class="brand" href="index.html"><img src="assets/brand/icon.png" alt="" width="36" height="36"><span>HEDEFIT</span></a><a class="btn btn-sm" href="index.html">Ana sayfa</a></header>
+<header class="nav"><a class="brand" href="index.html"><img src="assets/brand/icon.png" alt="" width="36" height="36"><span>HEDEFIT</span></a><a class="lang-switch" href="/en/plans" hreflang="en" lang="en">EN</a><a class="btn btn-sm" href="index.html">Ana sayfa</a></header>
 
 <main>
 <section class="plans-hero wrap">
@@ -36,15 +39,43 @@
   <p class="lead">Hedefit’i ücretsiz başlat. Daha fazla Fit Koç sorusu, fotoğraftan kalori, tüm hareketler ve reklamsız deneyim için Plus ya da Premium’a geç.</p>
 </section>
 
+<section class="wrap finder" id="finder">
+  <h2>Hangisi <span class="hl">sana uygun?</span></h2>
+  <p class="lead">Üç soruyu cevapla, önerelim.</p>
+  <div class="fgrid">
+    <fieldset><legend>Günde kaç Fit Koç sorusu sorarsın?</legend>
+      <label><input type="radio" name="coach" value="0" checked><span>1–5</span></label>
+      <label><input type="radio" name="coach" value="1"><span>6–20</span></label>
+      <label><input type="radio" name="coach" value="2"><span>21–40</span></label></fieldset>
+    <fieldset><legend>Günde kaç öğünü fotoğraftan analiz edersin?</legend>
+      <label><input type="radio" name="photo" value="0" checked><span>0–1</span></label>
+      <label><input type="radio" name="photo" value="1"><span>2–3</span></label>
+      <label><input type="radio" name="photo" value="2"><span>4–8</span></label></fieldset>
+    <fieldset><legend>Kaç kendi programın olsun?</legend>
+      <label><input type="radio" name="prog" value="0" checked><span>0–2</span></label>
+      <label><input type="radio" name="prog" value="1"><span>3–5</span></label>
+      <label><input type="radio" name="prog" value="2"><span>6 ve üzeri</span></label></fieldset>
+    <fieldset class="needs"><legend>İstediğin özellikler</legend>
+      <label><input type="checkbox" name="need" value="1"><span>Reklamsız</span></label>
+      <label><input type="checkbox" name="need" value="1"><span>Öğün planlayıcı</span></label>
+      <label><input type="checkbox" name="need" value="2"><span>Bölgesel program</span></label>
+      <label><input type="checkbox" name="need" value="2"><span>Sınırsız beslenme geçmişi</span></label></fieldset>
+  </div>
+  <div id="finderOut" aria-live="polite"></div>
+</section>
+
 <section class="wrap pcards">
   <article class="pcard">
     <header><h2>Plus</h2><p>Daha çok yapay zekâ, reklamsız.</p></header>
-    <div class="price"><b>Fiyat yakında</b><small>Mağaza sayfalarında yayınlanacak</small></div>
+    <div class="price"><b>₺99 / ay</b><small>Yıllık ₺849 (%28 indirim) · ilk 7 gün ücretsiz</small></div>
     <ul>
       <li><b>20</b> Fit Koç sorusu / gün</li>
       <li><b>Sınırsız</b> öğün kaydı</li>
       <li><b>3</b> fotoğraftan kalori / gün</li>
-      <li>Tüm hareketler</li>
+      <li>Tüm hareketler (Pilates, mobilite, barre dahil)</li>
+      <li>Günlük check-in: 90 gün geçmiş</li>
+      <li>Daha akıllı uyarlama: hareket değişimi, mobilite, toparlanma</li>
+      <li>Antrenman yüküne göre beslenme notları</li>
       <li><b>5</b> kendi programı</li>
       <li>Rota kaydı</li>
       <li>Öğün planlayıcı</li>
@@ -57,12 +88,15 @@
   <article class="pcard featured">
     <span class="ribbon">En kapsamlı</span>
     <header><h2>Premium</h2><p>Hiçbir sınır olmadan.</p></header>
-    <div class="price"><b>Fiyat yakında</b><small>Mağaza sayfalarında yayınlanacak</small></div>
+    <div class="price"><b>₺169 / ay</b><small>Yıllık ₺1.449 (%28 indirim)</small></div>
     <ul>
       <li><b>40</b> Fit Koç sorusu / gün</li>
       <li><b>Sınırsız</b> öğün kaydı</li>
-      <li><b>15</b> fotoğraftan kalori / gün</li>
-      <li>Tüm hareketler</li>
+      <li><b>8</b> fotoğraftan kalori / gün</li>
+      <li>Tüm hareketler (Pilates, mobilite, barre dahil)</li>
+      <li>Günlük check-in: sınırsız geçmiş ve trendler</li>
+      <li>Pilates’e çevirme ve kişisel AI açıklaması</li>
+      <li>Döngüye duyarlı koç ve tercihine özel beslenme notları (isteğe bağlı)</li>
       <li><b>Sınırsız</b> kendi programı</li>
       <li>Rota kaydı</li>
       <li>Öğün planlayıcı</li>
@@ -82,13 +116,20 @@
       <tbody>
         <tr><th scope="row">Fit Koç soru / gün</th><td>3</td><td>5</td><td class="c-plus">20</td><td class="c-prem">40</td></tr>
         <tr><th scope="row">Öğün kaydı / gün</th><td>5</td><td>15</td><td class="c-plus">Sınırsız</td><td class="c-prem">Sınırsız</td></tr>
-        <tr><th scope="row">Fotoğraftan kalori / gün</th><td>1</td><td>1</td><td class="c-plus">3</td><td class="c-prem">15</td></tr>
+        <tr><th scope="row">Fotoğraftan kalori / gün</th><td>1</td><td>1</td><td class="c-plus">3</td><td class="c-prem">8</td></tr>
         <tr><th scope="row">Hareketler</th><td>Başlangıç</td><td>Başlangıç + orta</td><td class="c-plus">Tümü</td><td class="c-prem">Tümü</td></tr>
         <tr><th scope="row">Kendi programı</th><td>0</td><td>2</td><td class="c-plus">5</td><td class="c-prem">Sınırsız</td></tr>
         <tr><th scope="row">Rota kaydı</th><td class="no">—</td><td class="yes">✓</td><td class="c-plus yes">✓</td><td class="c-prem yes">✓</td></tr>
         <tr><th scope="row">Öğün planlayıcı</th><td class="no">—</td><td class="no">—</td><td class="c-plus yes">✓</td><td class="c-prem yes">✓</td></tr>
         <tr><th scope="row">Bölgesel program</th><td class="no">—</td><td class="no">—</td><td class="c-plus no">—</td><td class="c-prem yes">✓</td></tr>
         <tr><th scope="row">Beslenme geçmişi</th><td>7 gün</td><td>30 gün</td><td class="c-plus">90 gün</td><td class="c-prem">Sınırsız</td></tr>
+        <tr><th scope="row">Günlük check-in geçmişi</th><td>7 gün</td><td>14 gün</td><td class="c-plus">90 gün</td><td class="c-prem">Sınırsız + trend</td></tr>
+        <tr><th scope="row">Plan uyarlama</th><td>Kısalt, hafiflet</td><td>Kısalt, hafiflet</td><td class="c-plus">+ değişim, mobilite, toparlanma</td><td class="c-prem">+ Pilates’e çevirme</td></tr>
+        <tr><th scope="row">Pilates, mobilite, düşük etkili</th><td>Başlangıç</td><td>Başlangıç</td><td class="c-plus">Tümü + barre</td><td class="c-prem">Tümü + barre</td></tr>
+        <tr><th scope="row">Uyarlama açıklaması</th><td>Şablon</td><td>Şablon</td><td class="c-plus">Şablon</td><td class="c-prem">Kişisel AI açıklaması</td></tr>
+        <tr><th scope="row">Beslenme notları</th><td>Genel</td><td>Genel</td><td class="c-plus">Antrenman yüküne göre</td><td class="c-prem">Tercihe özel</td></tr>
+        <tr><th scope="row">Döngü takibi (isteğe bağlı)</th><td class="yes">✓</td><td class="yes">✓</td><td class="c-plus yes">✓</td><td class="c-prem yes">✓</td></tr>
+        <tr><th scope="row">Döngüye göre uyarlama</th><td class="no">—</td><td class="no">—</td><td class="c-plus yes">✓</td><td class="c-prem yes">✓</td></tr>
         <tr><th scope="row">Reklam</th><td>Var</td><td>Var</td><td class="c-plus">Yok</td><td class="c-prem">Yok</td></tr>
       </tbody>
     </table>
@@ -99,7 +140,7 @@
 <section class="wrap pfaq">
   <h2>Sık sorulanlar</h2>
   <details open><summary>Plus ile Premium arasındaki fark ne?</summary>
-    <p>Premium; Fit Koç’ta (40 soru), fotoğraftan kalorida (15) daha yüksek günlük hak, sınırsız kendi programı, bölgesel program ve sınırsız beslenme geçmişi sunar. Plus, çoğu kullanıcı için yeterli olan 20 soru, 3 fotoğraf, 5 program ve 90 günlük geçmişle gelir.</p></details>
+    <p>Premium; Fit Koç’ta (40 soru), fotoğraftan kalorida (8) daha yüksek günlük hak, sınırsız kendi programı, bölgesel program ve sınırsız beslenme geçmişi sunar. Plus, çoğu kullanıcı için yeterli olan 20 soru, 3 fotoğraf, 5 program ve 90 günlük geçmişle gelir.</p></details>
   <details><summary>Ödemeyi ve iptali nasıl yaparım?</summary>
     <p>Üyelikler Google Play ya da App Store üzerinden yönetilir; iptal için ilgili mağazanın <b>Abonelikler</b> bölümünü kullan. Hesabı silmek aboneliği otomatik iptal etmeyebilir, önce mağazadan iptal et.</p></details>
   <details><summary>Fiyatlar ne zaman açıklanacak?</summary>
@@ -113,5 +154,6 @@
 <nav aria-label="Alt menü"><a href="index.html">Ana sayfa</a><a href="planlar.html">Planlar</a><a href="gizlilik.html">Gizlilik</a><a href="destek.html">Destek</a><a href="hesap-silme.html">Hesap silme</a></nav>
 <p>© <span id="yr">2026</span> Hedefit</p></div></footer>
 <script src="page.js"></script>
+<script src="tools.js"></script>
 </body>
 </html>

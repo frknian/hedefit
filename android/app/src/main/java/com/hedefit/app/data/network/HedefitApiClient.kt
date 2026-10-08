@@ -10,6 +10,7 @@ class HedefitApiClient(
 ) {
     suspend fun get(path: String): HttpResponse = request(path, "GET", null)
     suspend fun post(path: String, body: JSONObject): HttpResponse = request(path, "POST", body.toString())
+    suspend fun put(path: String, body: JSONObject): HttpResponse = request(path, "PUT", body.toString())
     suspend fun patch(path: String, body: JSONObject): HttpResponse = request(path, "PATCH", body.toString())
     suspend fun delete(path: String): HttpResponse = request(path, "DELETE", null)
 

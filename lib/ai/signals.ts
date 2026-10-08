@@ -15,6 +15,7 @@
 // Ayrıca her alan tür ve aralık olarak doğrulanır: bu veri doğrudan prompta
 // gömülecek, güvenilmeyen girdidir.
 
+import { redactSensitiveAnswers } from "../onboarding-questions.ts";
 import type { IntelligenceInput } from "./intelligence.ts";
 import type { NutritionGoalType } from "../nutrition-goals.ts";
 import { sanitizeNutritionGoal } from "../nutrition-goals.ts";
@@ -115,6 +116,35 @@ function training(value: unknown) {
     : undefined;
 }
 
+const ADAPTATION_LEVELS = ["good", "moderate", "low", "recovery"] as const;
+const ADAPTATION_ACTIONS = ["shorten", "reduce_intensity", "replace_exercises", "add_mobility", "switch_recovery", "switch_pilates"];
+const ADAPTATION_REASONS = ["low_energy", "poor_sleep", "sore", "pain", "training_load"];
+
+/**
+ * İstemciden yalnızca KABA uyarlama özeti kabul edilir (seviye, uygulanan eylemler, nedenler). Döngü bilgisi İSTEMCİDEN
+ * ASLA alınmaz; sunucu kendi doğruladığı izin ve katmana göre ekler (bkz. app/api/chat/route.ts).
+ */
+function wellness(value: unknown): NonNullable<IntelligenceInput["wellness"]> | undefined {
+  const source = record(value);
+  const adaptation = record(source?.adaptation);
+  if (!adaptation) return undefined;
+  const level = ADAPTATION_LEVELS.find((item) => item === adaptation.level);
+  if (!level) return undefined;
+  const intensity = adaptation.intensity === "reduced" || adaptation.intensity === "recovery" ? adaptation.intensity : "normal";
+  const list = (input: unknown, allowed: string[]) => (Array.isArray(input) ? input.filter((item): item is string => typeof item === "string" && allowed.includes(item)).slice(0, 6) : []);
+  return {
+    adaptation: {
+      level,
+      adapted: adaptation.adapted === true,
+      actions: list(adaptation.actions, ADAPTATION_ACTIONS),
+      intensity,
+      reasons: list(adaptation.reasons, ADAPTATION_REASONS),
+      ...(typeof adaptation.sessionKind === "string" && ["pilates_today", "low_impact_recovery", "posture_mobility"].includes(adaptation.sessionKind) ? { sessionKind: adaptation.sessionKind } : {}),
+      ...(bounded(adaptation.estimatedMinutes, 1, 240) !== undefined ? { estimatedMinutes: bounded(adaptation.estimatedMinutes, 1, 240) } : {}),
+    },
+  };
+}
+
 function totals(value: unknown) {
   const source = record(value);
   if (!source) return undefined;
@@ -172,8 +202,9 @@ export function sanitizeCoachSignals(value: unknown, legacyContext?: string): In
       weightKg: bounded(profile?.weightKg, 20, 400),
       environment: text(profile?.environment, 40),
       equipment: text(profile?.equipment, 200),
+      // Hassas slotlar, boş cevaplar süzülmeden ÖNCE indeksine göre çıkarılır (sonrasında indeks kaybolur).
       assessmentAnswers: Array.isArray(profile?.assessmentAnswers)
-        ? profile.assessmentAnswers.map((answer) => text(answer, 100)).filter((answer): answer is string => Boolean(answer)).slice(0, 20)
+        ? redactSensitiveAnswers(profile.assessmentAnswers.map((answer) => text(answer, 100)), undefined).filter((answer): answer is string => Boolean(answer)).slice(0, 30)
         : undefined,
     },
     goal: {
@@ -202,5 +233,6 @@ export function sanitizeCoachSignals(value: unknown, legacyContext?: string): In
       streakDays: bounded(activity?.streakDays, 0, 10_000),
     },
     training: training(source.training),
+    wellness: wellness(source.wellness),
   };
 }

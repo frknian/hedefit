@@ -1,0 +1,2493 @@
+[
+  {
+    "id": "wl-pilates-hundred",
+    "name": "Pilates Hundred",
+    "nameTr": "Pilates Hundred",
+    "force": "static",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis",
+      "transverse_abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors"
+    ],
+    "instructions": [
+      "Lie on your back with your knees bent over your hips and your arms long by your sides.",
+      "Exhale and curl your head and shoulders off the mat, extending the legs to about 45 degrees.",
+      "Pulse your arms briskly up and down by your hips while breathing in for five pulses and out for five.",
+      "Repeat for ten rounds, then lower down and hug your knees."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; dizlerin kalçalarının üzerinde bükülü, kolların yanında uzun dursun.",
+      "Nefes ver, baş ve omuzlarını minderden kaldır ve bacaklarını yaklaşık 45 dereceye uzat.",
+      "Kollarınla kalçanın yanında hızlı ve küçük vuruşlar yap; beş vuruş nefes al, beş vuruş nefes ver.",
+      "On tur tekrarla, sonra yavaşça in ve dizlerini göğsüne çek."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-hundred/start.webp",
+      "/exercise-images/wl-pilates-hundred/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-hundred",
+    "descriptionEn": "A classic Pilates mat exercise: small, steady arm pulses while the head and shoulders stay lifted, building deep core endurance.",
+    "descriptionTr": "Klasik bir Pilates minder egzersizi: baş ve omuzlar havadayken küçük, düzenli kol vuruşlarıyla derin karın dayanıklılığını geliştirir.",
+    "tipsEn": [
+      "Keep your lower back heavy on the mat; raise the legs higher if it lifts.",
+      "Breathe in for 5 pulses and out for 5."
+    ],
+    "tipsTr": [
+      "Belini minderde ağır tut; kalkıyorsa bacaklarını daha yukarıda tut.",
+      "Beş vuruşta nefes al, beş vuruşta ver."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-hundred/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-hundred/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "core",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-roll-up",
+    "name": "Pilates Roll-Up",
+    "nameTr": "Pilates Roll-Up",
+    "force": "dynamic",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors",
+      "erector_spinae"
+    ],
+    "instructions": [
+      "Lie on your back with your legs long and your arms overhead.",
+      "Inhale to lift your arms to the ceiling, then exhale and curl your chin to your chest.",
+      "Roll up one vertebra at a time and reach over your legs.",
+      "Inhale at the top, then exhale and roll back down slowly."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; bacakların uzun, kolların başının üstünde olsun.",
+      "Nefes alırken kollarını tavana kaldır, nefes verirken çeneni göğsüne yaklaştır.",
+      "Omurgayı parça parça kaldırarak bacaklarının üzerine uzan.",
+      "Tepede nefes al, nefes verirken yavaşça geri yuvarlan."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-roll-up/start.webp",
+      "/exercise-images/wl-pilates-roll-up/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-roll-up",
+    "descriptionEn": "A slow, articulated sit-up that rolls the spine up one segment at a time and folds over the legs.",
+    "descriptionTr": "Omurgayı bir bir kaldırıp bacakların üzerine katlanan, yavaş ve kontrollü bir otur-kalk hareketi.",
+    "tipsEn": [
+      "Press your heels away and keep your feet active.",
+      "If you stick, bend your knees or use a strap."
+    ],
+    "tipsTr": [
+      "Topuklarını uzağa it, ayaklarını aktif tut.",
+      "Takılırsan dizlerini bük ya da bir bant kullan."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility",
+      "muscle_gain"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-roll-up/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-roll-up/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "core",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-single-leg-stretch",
+    "name": "Pilates Single Leg Stretch",
+    "nameTr": "Pilates Tek Bacak Esneme",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis",
+      "obliques"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors"
+    ],
+    "instructions": [
+      "Lie on your back, lift your head and shoulders, and draw one knee in with your hands on that shin.",
+      "Extend the other leg long at about 45 degrees.",
+      "Switch legs smoothly, exhaling as you change.",
+      "Continue for 10 to 16 switches, keeping the lower back steady."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan, baş ve omuzlarını kaldır; bir dizini çekip ellerini o kaval kemiğine koy.",
+      "Diğer bacağını yaklaşık 45 derece uzun uzat.",
+      "Bacakları akıcı biçimde değiştir; her değişimde nefes ver.",
+      "10–16 değişim yap, beli sabit tut."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-single-leg-stretch/start.webp",
+      "/exercise-images/wl-pilates-single-leg-stretch/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-single-leg-stretch",
+    "descriptionEn": "Alternating knee hugs with the head and shoulders lifted; trains coordination and abdominal control.",
+    "descriptionTr": "Baş ve omuzlar havadayken dizleri sırayla çekmek; koordinasyonu ve karın kontrolünü geliştirir.",
+    "tipsEn": [
+      "Keep your pelvis still while the legs switch.",
+      "Lower your head if your neck tires."
+    ],
+    "tipsTr": [
+      "Bacaklar değişirken kalçanı sabit tut.",
+      "Boynun yorulursa başını indir."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-single-leg-stretch/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-single-leg-stretch/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "core",
+      "beginner"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-double-leg-stretch",
+    "name": "Pilates Double Leg Stretch",
+    "nameTr": "Pilates Çift Bacak Esneme",
+    "force": "dynamic",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis",
+      "transverse_abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors",
+      "anterior_deltoid"
+    ],
+    "instructions": [
+      "Lie on your back with your head and shoulders lifted and your knees hugged to your chest.",
+      "Inhale and reach your arms overhead while straightening the legs to about 45 degrees.",
+      "Exhale and sweep your arms in a circle, pulling your knees back to your chest.",
+      "Repeat for eight to ten rounds."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan, baş ve omuzların havada, dizlerin göğsüne çekili olsun.",
+      "Nefes al; kollarını başının üstüne uzatırken bacaklarını yaklaşık 45 dereceye düzelt.",
+      "Nefes ver; kollarınla geniş bir daire çizip dizlerini göğsüne çek.",
+      "Sekiz–on tur tekrarla."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-double-leg-stretch/start.webp",
+      "/exercise-images/wl-pilates-double-leg-stretch/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-double-leg-stretch",
+    "descriptionEn": "Open and close the body: knees hug in, then arms and legs reach away together while the abdominals stay lifted.",
+    "descriptionTr": "Vücudu aç-kapa: dizler göğse çekilir, sonra kollar ve bacaklar birlikte uzanır; karın sürekli aktif kalır.",
+    "tipsEn": [
+      "Reach long, not high; keep the lower back anchored.",
+      "Move with your breath: out as you extend, in as you hug."
+    ],
+    "tipsTr": [
+      "Yukarı değil uzağa uzan; beli sabit tut.",
+      "Nefesle hareket et: uzanırken ver, çekerken al."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-double-leg-stretch/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-double-leg-stretch/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "core",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-shoulder-bridge",
+    "name": "Pilates Shoulder Bridge",
+    "nameTr": "Pilates Omuz Köprüsü",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gluteus_maximus",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "erector_spinae",
+      "rectus_abdominis"
+    ],
+    "instructions": [
+      "Lie on your back with your knees bent and your feet hip-width apart.",
+      "Exhale and tilt your pelvis, then lift your hips one vertebra at a time.",
+      "Pause with a long line from knees to shoulders.",
+      "Inhale, then roll down slowly from the upper back to the tailbone."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; dizlerin bükülü, ayakların kalça genişliğinde olsun.",
+      "Nefes ver, pelvisini yatır ve kalçanı omurga omurga kaldır.",
+      "Dizlerden omuzlara uzun, düz bir çizgi oluşturup bir an dur.",
+      "Nefes al ve üst sırttan kuyruk sokumuna doğru yavaşça in."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-shoulder-bridge/start.webp",
+      "/exercise-images/wl-pilates-shoulder-bridge/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-shoulder-bridge",
+    "descriptionEn": "Peel the spine off the mat to lift the hips, then lower slowly: strengthens glutes and hamstrings and mobilises the spine.",
+    "descriptionTr": "Omurgayı minderden kaldırarak kalçayı yükseltmek ve yavaşça indirmek: kalça ve arka bacağı güçlendirir, omurgayı mobilize eder.",
+    "tipsEn": [
+      "Press through your whole foot, not only the toes.",
+      "Stop where your ribs and hips form a straight line."
+    ],
+    "tipsTr": [
+      "Yalnızca parmak uçlarına değil, ayağın tamamına bas.",
+      "Kaburga ve kalçan düz bir çizgi olunca dur."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "muscle_gain",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-shoulder-bridge/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-shoulder-bridge/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "beginner",
+      "lower_body",
+      "posture"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-swimming",
+    "name": "Pilates Swimming",
+    "nameTr": "Pilates Yüzme",
+    "force": "dynamic",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "erector_spinae",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "posterior_deltoid",
+      "hamstrings"
+    ],
+    "instructions": [
+      "Lie face down with your arms reaching forward and your legs long.",
+      "Lift your head, chest and limbs slightly off the mat.",
+      "Flutter opposite arm and leg up and down in small, quick beats while breathing steadily.",
+      "Continue for 20 to 30 seconds, then rest."
+    ],
+    "instructionsTr": [
+      "Yüzüstü uzan; kolların öne uzanmış, bacakların uzun olsun.",
+      "Baş, göğüs ve uzuvlarını minderden hafifçe kaldır.",
+      "Çapraz kol ve bacağı küçük ve hızlı vuruşlarla yukarı aşağı oynat; nefesini düzenli tut.",
+      "20–30 saniye devam et, sonra dinlen."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-swimming/start.webp",
+      "/exercise-images/wl-pilates-swimming/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-swimming",
+    "descriptionEn": "Lying face down, flutter opposite arm and leg while the back stays long; builds posture muscles along the spine.",
+    "descriptionTr": "Yüzüstü, çapraz kol ve bacağı çırparken sırt uzun kalır; omurga boyunca duruş kaslarını geliştirir.",
+    "tipsEn": [
+      "Keep your neck long, gaze at the mat.",
+      "Draw your navel in lightly to protect the lower back."
+    ],
+    "tipsTr": [
+      "Boynunu uzun tut, bakışın minderde olsun.",
+      "Belini korumak için göbeğini hafifçe içeri çek."
+    ],
+    "bodyPart": "back",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility",
+      "endurance"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-swimming/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-swimming/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "posture",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-swan-prep",
+    "name": "Pilates Swan Prep",
+    "nameTr": "Pilates Kuğu Hazırlık",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "erector_spinae"
+    ],
+    "secondaryMuscles": [
+      "posterior_deltoid",
+      "trapezius"
+    ],
+    "instructions": [
+      "Lie face down with your forearms on the mat and your elbows under your shoulders.",
+      "Inhale and lengthen your spine forward and up, lifting your chest.",
+      "Keep your shoulders away from your ears and your legs together.",
+      "Exhale and lower with control. Repeat 6 to 8 times."
+    ],
+    "instructionsTr": [
+      "Yüzüstü uzan; ön kolların minderde, dirsekler omuz altında olsun.",
+      "Nefes al, omurgayı öne ve yukarı uzatarak göğsünü kaldır.",
+      "Omuzlarını kulaklarından uzak, bacaklarını bitişik tut.",
+      "Nefes verirken kontrolle in. 6–8 tekrar yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-swan-prep/start.webp",
+      "/exercise-images/wl-pilates-swan-prep/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-swan-prep",
+    "descriptionEn": "A gentle prone back extension on the forearms that opens the chest and strengthens the upper back.",
+    "descriptionTr": "Ön kollar üzerinde yapılan nazik bir sırt ekstansiyonu: göğsü açar, üst sırtı güçlendirir.",
+    "tipsEn": [
+      "Lengthen out of the waist rather than cranking the neck back.",
+      "Keep your pubic bone on the mat."
+    ],
+    "tipsTr": [
+      "Boynu geriye kırmak yerine belden uzat.",
+      "Kasık kemiğini minderde tut."
+    ],
+    "bodyPart": "back",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.8,
+    "imageStart": "/exercise-images/wl-pilates-swan-prep/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-swan-prep/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "beginner",
+      "upper_body",
+      "posture"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-rolling-like-a-ball",
+    "name": "Pilates Rolling Like a Ball",
+    "nameTr": "Pilates Top Gibi Yuvarlanma",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis"
+    ],
+    "secondaryMuscles": [
+      "erector_spinae"
+    ],
+    "instructions": [
+      "Sit and hug your shins, knees bent, chin tucked, balanced behind your sit bones.",
+      "Inhale and roll back to your shoulder blades, keeping the round shape.",
+      "Exhale and use your abdominals to roll back up to balance.",
+      "Repeat 6 to 8 times without letting your feet touch down."
+    ],
+    "instructionsTr": [
+      "Otur, kaval kemiklerini kucakla; dizler bükülü, çene içeride, oturma kemiklerinin gerisinde dengede dur.",
+      "Nefes al ve yuvarlak şekli koruyarak kürek kemiklerine kadar geri yuvarlan.",
+      "Nefes ver ve karın kaslarınla dengeye geri gel.",
+      "Ayakların yere değmeden 6–8 tekrar yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-rolling-like-a-ball/start.webp",
+      "/exercise-images/wl-pilates-rolling-like-a-ball/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-rolling-like-a-ball",
+    "descriptionEn": "Balance on your tailbone in a tight ball and roll back and forth along the spine, massaging the back and training control.",
+    "descriptionTr": "Kuyruk sokumunda sıkı bir top şeklinde dengelenip omurga boyunca ileri geri yuvarlanmak: sırtı masajlar, kontrolü geliştirir.",
+    "tipsEn": [
+      "Keep the ball shape; do not roll onto your neck.",
+      "Place a folded towel under your tailbone if it is tender."
+    ],
+    "tipsTr": [
+      "Top şeklini koru; boynuna yuvarlanma.",
+      "Kuyruk sokumun hassassa altına katlı bir havlu koy."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3,
+    "imageStart": "/exercise-images/wl-pilates-rolling-like-a-ball/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-rolling-like-a-ball/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "core",
+      "beginner"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-teaser-prep",
+    "name": "Pilates Teaser Prep",
+    "nameTr": "Pilates Teaser Hazırlık",
+    "force": "static",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis",
+      "transverse_abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors",
+      "quadriceps"
+    ],
+    "instructions": [
+      "Lie on your back with your knees over your hips and your shins parallel to the floor.",
+      "Exhale and curl your head, shoulders and ribs up, reaching your hands toward your shins.",
+      "Hold for two breaths with the back long.",
+      "Roll down one segment at a time."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; dizlerin kalçaların üzerinde, kaval kemiklerin yere paralel olsun.",
+      "Nefes ver; baş, omuz ve kaburgalarını kaldırıp ellerini kaval kemiklerine uzat.",
+      "Sırtı uzun tutarak iki nefes bekle.",
+      "Parça parça yavaşça in."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-teaser-prep/start.webp",
+      "/exercise-images/wl-pilates-teaser-prep/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-teaser-prep",
+    "descriptionEn": "A bent-knee V-sit that lifts the chest while the shins stay parallel to the floor; builds strong, controlled abdominals.",
+    "descriptionTr": "Dizler bükülü V-oturuş: kaval kemikleri yere paralelken göğüs kalkar; güçlü ve kontrollü karın kasları geliştirir.",
+    "tipsEn": [
+      "Keep your chest open, not collapsed.",
+      "Slow the descent as much as the rise."
+    ],
+    "tipsTr": [
+      "Göğsünü açık tut, çökertme.",
+      "İnişi çıkış kadar yavaş yap."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance",
+      "muscle_gain"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-pilates-teaser-prep/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-teaser-prep/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "core",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-single-leg-circles",
+    "name": "Pilates Single Leg Circles",
+    "nameTr": "Pilates Tek Bacak Daireleri",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "hip_flexors",
+      "gluteus_medius"
+    ],
+    "secondaryMuscles": [
+      "rectus_abdominis",
+      "adductors"
+    ],
+    "instructions": [
+      "Lie on your back with one leg extended on the mat and the other lifted toward the ceiling.",
+      "Keep your hips level and draw a small circle with the lifted leg across the body, down, out and up.",
+      "Complete five circles, then reverse the direction.",
+      "Switch legs."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; bir bacağın minderde uzun, diğeri tavana doğru kalkık olsun.",
+      "Kalçanı sabit tutarak kalkık bacakla vücudun önünden aşağı, dışa ve yukarı küçük bir daire çiz.",
+      "Beş daire yap, sonra yönü değiştir.",
+      "Bacak değiştir."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-single-leg-circles/start.webp",
+      "/exercise-images/wl-pilates-single-leg-circles/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-single-leg-circles",
+    "descriptionEn": "Draw small circles with one leg while the pelvis stays still; separates hip movement from the trunk.",
+    "descriptionTr": "Pelvis sabitken bir bacakla küçük daireler çizmek: kalça hareketini gövdeden ayırmayı öğretir.",
+    "tipsEn": [
+      "Make the circles small enough to keep the pelvis quiet.",
+      "Bend the lifted knee slightly if the hamstring is tight."
+    ],
+    "tipsTr": [
+      "Pelvis sakin kalsın diye daireleri küçük tut.",
+      "Arka bacağın gergin ise kaldırdığın dizi hafif bük."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3,
+    "imageStart": "/exercise-images/wl-pilates-single-leg-circles/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-single-leg-circles/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "beginner",
+      "lower_body",
+      "core"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-toe-taps",
+    "name": "Pilates Tabletop Toe Taps",
+    "nameTr": "Pilates Masa Pozisyonu Ayak Dokunuşu",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "transverse_abdominis",
+      "rectus_abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors"
+    ],
+    "instructions": [
+      "Lie on your back with your knees stacked over your hips, shins parallel to the floor.",
+      "Brace gently and lower one foot toward the mat, tapping the toes.",
+      "Return to tabletop, then repeat with the other foot.",
+      "Alternate for 10 to 20 taps."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; dizlerin kalçaların üzerinde, kaval kemikleri yere paralel (masa pozisyonu) olsun.",
+      "Karnını hafifçe sık ve bir ayağını minderdeki parmak ucuna dokunana kadar indir.",
+      "Masa pozisyonuna dön, diğer ayakla tekrarla.",
+      "10–20 dokunuş boyunca sırayla devam et."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-toe-taps/start.webp",
+      "/exercise-images/wl-pilates-toe-taps/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-toe-taps",
+    "descriptionEn": "From tabletop, lower one foot to tap the mat and return, keeping the ribs knit and the back still.",
+    "descriptionTr": "Masa pozisyonundan bir ayağı yere dokundurup geri getirmek: kaburga kapalı, bel sabit kalır.",
+    "tipsEn": [
+      "If your back arches, tap with a smaller range.",
+      "Move slowly, exhaling on each tap."
+    ],
+    "tipsTr": [
+      "Belin kalkıyorsa daha küçük bir aralıkla dokun.",
+      "Yavaş git, her dokunuşta nefes ver."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance",
+      "fat_loss"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3,
+    "imageStart": "/exercise-images/wl-pilates-toe-taps/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-toe-taps/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "beginner",
+      "core",
+      "short"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-pilates-pelvic-curl",
+    "name": "Pilates Pelvic Curl",
+    "nameTr": "Pilates Pelvik Kıvrılma",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "transverse_abdominis",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "erector_spinae"
+    ],
+    "instructions": [
+      "Lie on your back with your knees bent and your feet flat.",
+      "Exhale and tilt your pelvis so your tailbone curls up and your lower back presses into the mat.",
+      "Inhale to release back to a neutral spine.",
+      "Repeat slowly 10 times."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan; dizlerin bükülü, ayakların yerde olsun.",
+      "Nefes ver ve pelvisini yatırarak kuyruk sokumunu kıvır, belini minderde bastır.",
+      "Nefes alarak nötr omurgaya dön.",
+      "Yavaşça 10 kez tekrarla."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-pilates-pelvic-curl/start.webp",
+      "/exercise-images/wl-pilates-pelvic-curl/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-pilates-pelvic-curl",
+    "descriptionEn": "A small pelvic tilt that curls the tailbone toward the ceiling; a gentle spine warm-up and low-back relief.",
+    "descriptionTr": "Kuyruk sokumunu tavana doğru kıvıran küçük bir pelvik eğim: nazik bir omurga ısınması ve bel rahatlatma hareketi.",
+    "tipsEn": [
+      "Keep the movement small and smooth.",
+      "Relax the neck and jaw."
+    ],
+    "tipsTr": [
+      "Hareketi küçük ve akıcı tut.",
+      "Boyun ve çeneni gevşet."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "mobility",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.5,
+    "imageStart": "/exercise-images/wl-pilates-pelvic-curl/start.webp",
+    "imageEnd": "/exercise-images/wl-pilates-pelvic-curl/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "pilates"
+    ],
+    "subcategories": [
+      "beginner",
+      "recovery",
+      "short",
+      "posture"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-mobility-quadruped-rock-back",
+    "name": "Quadruped Rock-Back",
+    "nameTr": "Dört Ayak Geri Sallanma",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gluteus_maximus",
+      "hip_flexors"
+    ],
+    "secondaryMuscles": [
+      "erector_spinae",
+      "adductors"
+    ],
+    "instructions": [
+      "Start on hands and knees with a long, neutral spine.",
+      "Exhale and slowly send your hips back toward your heels, reaching your arms forward.",
+      "Pause where you feel a gentle stretch in your hips.",
+      "Inhale and glide forward to the start. Repeat 8 to 10 times."
+    ],
+    "instructionsTr": [
+      "Dört ayak üzerinde, uzun ve nötr bir omurgayla başla.",
+      "Nefes ver ve kalçanı yavaşça topuklarına doğru gönder, kollarını öne uzat.",
+      "Kalçanda hafif bir esneme hissettiğin yerde bekle.",
+      "Nefes al ve başlangıca doğru kay. 8–10 tekrar yap."
+    ],
+    "category": "stretching",
+    "images": [
+      "/exercise-images/wl-mobility-quadruped-rock-back/start.webp",
+      "/exercise-images/wl-mobility-quadruped-rock-back/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-mobility-quadruped-rock-back",
+    "descriptionEn": "Shift your hips back toward your heels to open the hips and lengthen the lower back, then return to the start.",
+    "descriptionTr": "Kalçayı topuklara doğru geri göndererek kalçayı açar ve beli uzatır, sonra başlangıca dönersin.",
+    "tipsEn": [
+      "Keep the spine long; do not round forward.",
+      "Go only as far back as feels comfortable."
+    ],
+    "tipsTr": [
+      "Omurgayı uzun tut, öne yuvarlanma.",
+      "Yalnızca rahat ettiğin kadar geriye git."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "mobility",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.3,
+    "imageStart": "/exercise-images/wl-mobility-quadruped-rock-back/start.webp",
+    "imageEnd": "/exercise-images/wl-mobility-quadruped-rock-back/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "mobility"
+    ],
+    "subcategories": [
+      "hip",
+      "back",
+      "evening"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-mobility-ankle-rocks",
+    "name": "Wall Ankle Rocks",
+    "nameTr": "Duvarda Ayak Bileği Sallama",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gastrocnemius",
+      "soleus"
+    ],
+    "secondaryMuscles": [
+      "quadriceps"
+    ],
+    "instructions": [
+      "Stand facing a wall with one foot forward and your hands on the wall.",
+      "Keep your heel down and glide your knee forward toward the wall.",
+      "Return to the start and repeat 10 times.",
+      "Switch sides."
+    ],
+    "instructionsTr": [
+      "Bir duvara bakarak dur; bir ayağın önde, elleri duvarda olsun.",
+      "Topuğunu yerde tutarak dizini duvara doğru kaydır.",
+      "Başlangıca dön ve 10 kez tekrarla.",
+      "Taraf değiştir."
+    ],
+    "category": "stretching",
+    "images": [
+      "/exercise-images/wl-mobility-ankle-rocks/start.webp",
+      "/exercise-images/wl-mobility-ankle-rocks/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-mobility-ankle-rocks",
+    "descriptionEn": "Rock the knee forward over the toes with the heel down to improve ankle dorsiflexion for squats and lunges.",
+    "descriptionTr": "Topuk yerdeyken dizi parmakların üzerine sallayarak çömelme ve hamlelerde gereken ayak bileği hareketini artırır.",
+    "tipsEn": [
+      "Keep the whole heel on the floor.",
+      "Track the knee over the second toe."
+    ],
+    "tipsTr": [
+      "Topuğunun tamamı yerde kalsın.",
+      "Dizi ikinci parmağın doğrultusunda tut."
+    ],
+    "bodyPart": "lower_legs",
+    "goalCompatibility": [
+      "mobility",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.3,
+    "imageStart": "/exercise-images/wl-mobility-ankle-rocks/start.webp",
+    "imageEnd": "/exercise-images/wl-mobility-ankle-rocks/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "mobility"
+    ],
+    "subcategories": [
+      "full_body",
+      "morning"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-mobility-hip-hinge-reach",
+    "name": "Hip Hinge Reach",
+    "nameTr": "Kalça Menteşesi Uzanma",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "hamstrings",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "erector_spinae"
+    ],
+    "instructions": [
+      "Stand tall with your arms overhead and your knees soft.",
+      "Push your hips back and lean your torso forward with a long spine.",
+      "Reach your arms forward until you feel the back of your legs.",
+      "Squeeze your glutes to stand tall. Repeat 10 times."
+    ],
+    "instructionsTr": [
+      "Kollarını başının üstüne uzat, dizlerin hafif bükülü dik dur.",
+      "Kalçanı geriye it ve uzun bir omurgayla gövdeni öne eğ.",
+      "Bacağının arkasında gerginlik hissedene kadar kollarını öne uzat.",
+      "Kalçanı sıkarak doğrul. 10 tekrar yap."
+    ],
+    "category": "stretching",
+    "images": [
+      "/exercise-images/wl-mobility-hip-hinge-reach/start.webp",
+      "/exercise-images/wl-mobility-hip-hinge-reach/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-mobility-hip-hinge-reach",
+    "descriptionEn": "Hinge at the hips with a long spine and reach forward; teaches the hip-dominant pattern behind safe lifting.",
+    "descriptionTr": "Uzun bir omurgayla kalçadan menteşelenip öne uzanmak: güvenli kaldırışların temelindeki kalça baskın hareket kalıbını öğretir.",
+    "tipsEn": [
+      "Send the hips back as if closing a door with them.",
+      "Keep your back long, not rounded."
+    ],
+    "tipsTr": [
+      "Kalçanla bir kapıyı kapatır gibi geriye it.",
+      "Sırtını yuvarlama, uzun tut."
+    ],
+    "bodyPart": "back",
+    "goalCompatibility": [
+      "mobility",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.5,
+    "imageStart": "/exercise-images/wl-mobility-hip-hinge-reach/start.webp",
+    "imageEnd": "/exercise-images/wl-mobility-hip-hinge-reach/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "mobility"
+    ],
+    "subcategories": [
+      "hip",
+      "back",
+      "morning"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-plie",
+    "name": "Barre Plié",
+    "nameTr": "Barre Plié",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "quadriceps",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "adductors",
+      "hamstrings"
+    ],
+    "instructions": [
+      "Stand tall beside a barre, counter or chair back with your heels together and toes turned slightly out.",
+      "Inhale and bend your knees over your toes, keeping your torso upright.",
+      "Lower only as far as your heels can stay down.",
+      "Exhale and press up through the floor. Repeat 12 to 16 times."
+    ],
+    "instructionsTr": [
+      "Bir barın, tezgahın ya da sandalye arkalığının yanında dik dur; topuklar bitişik, parmak uçları hafif dışarıda olsun.",
+      "Nefes al ve gövdeni dik tutarak dizlerini parmaklarının üzerine bük.",
+      "Topukların yerde kalabildiği kadar in.",
+      "Nefes ver ve yeri iterek yüksel. 12–16 tekrar yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-plie/start.webp",
+      "/exercise-images/wl-barre-plie/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-plie",
+    "descriptionEn": "Bend the knees over the toes while the torso stays tall, resting a hand on a barre, counter or chair for balance.",
+    "descriptionTr": "Dik bir gövdeyle dizleri parmakların üzerine bükmek; denge için bir el barda, tezgahta ya da sandalyede durur.",
+    "tipsEn": [
+      "Keep your tailbone pointing straight down.",
+      "Press the floor evenly through the whole foot."
+    ],
+    "tipsTr": [
+      "Kuyruk sokumunu düz aşağı baktır.",
+      "Ayağının tamamıyla yeri eşit it."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "muscle_gain",
+      "endurance"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.3,
+    "imageStart": "/exercise-images/wl-barre-plie/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-plie/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "beginner",
+      "lower_body",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-releve",
+    "name": "Barre Relevé",
+    "nameTr": "Barre Relevé",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gastrocnemius",
+      "soleus"
+    ],
+    "secondaryMuscles": [
+      "quadriceps"
+    ],
+    "instructions": [
+      "Stand tall with your feet together and a hand on a barre or chair.",
+      "Exhale and rise onto the balls of your feet, lifting your heels as high as you can.",
+      "Hold for a breath, then lower slowly.",
+      "Repeat 15 to 20 times."
+    ],
+    "instructionsTr": [
+      "Ayaklar bitişik, bir elin barda ya da sandalyede dik dur.",
+      "Nefes ver ve topuklarını olabildiğince kaldırarak ayak ucuna yüksel.",
+      "Bir nefes bekle, sonra yavaşça in.",
+      "15–20 tekrar yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-releve/start.webp",
+      "/exercise-images/wl-barre-releve/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-releve",
+    "descriptionEn": "Rise onto the balls of the feet with a tall spine and lower slowly; builds calf strength and ankle stability.",
+    "descriptionTr": "Omurga dikken ayak uçlarına yükselip yavaşça inmek: baldır gücünü ve ayak bileği stabilitesini geliştirir.",
+    "tipsEn": [
+      "Rise straight up; do not roll the ankles out.",
+      "Lower slower than you lift."
+    ],
+    "tipsTr": [
+      "Dümdüz yüksel; ayak bileklerini dışarı yuvarlama.",
+      "İnişi kalkıştan yavaş yap."
+    ],
+    "bodyPart": "lower_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3,
+    "imageStart": "/exercise-images/wl-barre-releve/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-releve/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "beginner",
+      "balance_posture"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-chair-pulse",
+    "name": "Barre Chair Pose Pulse",
+    "nameTr": "Barre Sandalye Pozu Nabzı",
+    "force": "static",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "quadriceps",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "erector_spinae"
+    ],
+    "instructions": [
+      "Stand with your feet together and sit back into a squat with your arms forward.",
+      "Lower an inch, then rise an inch in small, quick pulses.",
+      "Keep your chest lifted and your weight in your heels.",
+      "Pulse for 30 to 45 seconds, then rest."
+    ],
+    "instructionsTr": [
+      "Ayaklar bitişik dur ve kollarını öne uzatıp geriye çömel.",
+      "Bir parmak aşağı in, bir parmak yüksel: küçük ve hızlı nabızlar yap.",
+      "Göğsünü kaldırıp ağırlığını topuklarında tut.",
+      "30–45 saniye nabız at, sonra dinlen."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-chair-pulse/start.webp",
+      "/exercise-images/wl-barre-chair-pulse/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-chair-pulse",
+    "descriptionEn": "Hold a low squat and pulse in tiny movements until the thighs burn; a classic barre burnout.",
+    "descriptionTr": "Alçak bir çömelmede kalıp küçük hareketlerle nabız atmak; klasik bir barre yorma hareketi.",
+    "tipsEn": [
+      "Keep the pulses small and quick.",
+      "Keep your weight in your heels."
+    ],
+    "tipsTr": [
+      "Nabızları küçük ve hızlı tut.",
+      "Ağırlığını topuklarında tut."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "muscle_gain",
+      "endurance",
+      "fat_loss"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 4,
+    "imageStart": "/exercise-images/wl-barre-chair-pulse/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-chair-pulse/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "lower_body",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-arabesque-lift",
+    "name": "Barre Arabesque Lift",
+    "nameTr": "Barre Arabesk Kaldırış",
+    "force": "dynamic",
+    "level": "intermediate",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gluteus_maximus",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "erector_spinae",
+      "gluteus_medius"
+    ],
+    "instructions": [
+      "Stand tall with a hand on a barre or chair and your weight on one leg.",
+      "Extend the other leg straight behind you with a pointed toe.",
+      "Lift it up to hip height without arching your back, then lower with control.",
+      "Do 12 to 15 lifts, then switch legs."
+    ],
+    "instructionsTr": [
+      "Bir elin barda ya da sandalyede, ağırlığın tek bacakta dik dur.",
+      "Diğer bacağını parmak ucun uzun biçimde arkaya düz uzat.",
+      "Belini kavislendirmeden kalça hizasına kaldır, sonra kontrolle indir.",
+      "12–15 kaldırış yap, sonra bacak değiştir."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-arabesque-lift/start.webp",
+      "/exercise-images/wl-barre-arabesque-lift/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-arabesque-lift",
+    "descriptionEn": "Lift one straight leg behind you with a long spine to target the glutes while balancing on the other leg.",
+    "descriptionTr": "Omurga uzunken tek bacağı düz biçimde arkaya kaldırmak: diğer bacak üzerinde dengelenirken kalçayı çalıştırır.",
+    "tipsEn": [
+      "Lift from the glute, not by arching the lower back.",
+      "Keep the hips square."
+    ],
+    "tipsTr": [
+      "Beli kavislendirerek değil, kalçadan kaldır.",
+      "Kalçaları öne dönük tut."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "muscle_gain",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3,
+    "imageStart": "/exercise-images/wl-barre-arabesque-lift/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-arabesque-lift/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "lower_body",
+      "balance_posture"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-front-leg-lift",
+    "name": "Barre Front Leg Lift",
+    "nameTr": "Barre Öne Bacak Kaldırış",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "hip_flexors",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "rectus_abdominis"
+    ],
+    "instructions": [
+      "Stand tall with a hand on a barre or chair and one foot slightly forward.",
+      "Lift the front leg straight up to a comfortable height without leaning back.",
+      "Hold for a breath, then lower slowly.",
+      "Do 12 to 15, then switch legs."
+    ],
+    "instructionsTr": [
+      "Bir elin barda ya da sandalyede, bir ayağın hafif önde dik dur.",
+      "Öndeki bacağı geriye yaslanmadan rahat bir yüksekliğe düz kaldır.",
+      "Bir nefes bekle, sonra yavaşça indir.",
+      "12–15 tekrar yap, sonra bacak değiştir."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-front-leg-lift/start.webp",
+      "/exercise-images/wl-barre-front-leg-lift/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-front-leg-lift",
+    "descriptionEn": "Lift the working leg forward with a flexed core and a tall spine, building hip flexor strength and control.",
+    "descriptionTr": "Karın aktif ve omurga dikken çalışan bacağı öne kaldırmak: kalça fleksörü gücünü ve kontrolünü geliştirir.",
+    "tipsEn": [
+      "Do not lean back to gain height.",
+      "Keep the standing leg strong."
+    ],
+    "tipsTr": [
+      "Yükseklik için geriye yaslanma.",
+      "Destek bacağını güçlü tut."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3,
+    "imageStart": "/exercise-images/wl-barre-front-leg-lift/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-front-leg-lift/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "lower_body",
+      "core"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-tendu",
+    "name": "Barre Tendu Slide",
+    "nameTr": "Barre Tendu Kayma",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gastrocnemius",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors"
+    ],
+    "instructions": [
+      "Stand tall with a hand on a barre and your feet together.",
+      "Slide one foot forward along the floor until only the toes touch, with a long pointed foot.",
+      "Slide back in, pulling the heel to the other foot.",
+      "Repeat 10 to 12 times, then switch."
+    ],
+    "instructionsTr": [
+      "Bir elin barda, ayakların bitişik dik dur.",
+      "Bir ayağını yer boyunca öne kaydır; yalnızca parmak uçların değsin, ayağın uzun ve sivri olsun.",
+      "Topuğunu diğer ayağa çekerek geri kay.",
+      "10–12 tekrar yap, sonra taraf değiştir."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-tendu/start.webp",
+      "/exercise-images/wl-barre-tendu/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-tendu",
+    "descriptionEn": "Slide one foot along the floor into a pointed toe and back; a precise warm-up for the feet, calves and hips.",
+    "descriptionTr": "Bir ayağı yerde sivri parmak ucuna kaydırıp geri getirmek; ayaklar, baldırlar ve kalçalar için hassas bir ısınma.",
+    "tipsEn": [
+      "Keep the hips level and the heel moving first.",
+      "Press through the big toe as you point."
+    ],
+    "tipsTr": [
+      "Kalçalarını düz tut; önce topuk hareket etsin.",
+      "Uzatırken baş parmağını it."
+    ],
+    "bodyPart": "lower_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.5,
+    "imageStart": "/exercise-images/wl-barre-tendu/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-tendu/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "beginner",
+      "balance_posture"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-knee-lift-balance",
+    "name": "Barre Knee Lift Balance",
+    "nameTr": "Barre Diz Kaldırma Dengesi",
+    "force": "static",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "hip_flexors",
+      "rectus_abdominis"
+    ],
+    "secondaryMuscles": [
+      "gluteus_medius",
+      "quadriceps"
+    ],
+    "instructions": [
+      "Stand tall with a light hand on a barre or chair.",
+      "Lift one knee to hip height with the shin hanging down.",
+      "Hold for 3 to 5 breaths, staying tall.",
+      "Lower and switch legs."
+    ],
+    "instructionsTr": [
+      "Bir elin barda ya da sandalyede hafifçe, dik dur.",
+      "Bir dizini kalça hizasına kaldır; kaval kemiği aşağı sarksın.",
+      "Dik kalarak 3–5 nefes bekle.",
+      "İn ve bacak değiştir."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-knee-lift-balance/start.webp",
+      "/exercise-images/wl-barre-knee-lift-balance/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-knee-lift-balance",
+    "descriptionEn": "Lift one knee to hip height and balance, training single-leg stability and posture.",
+    "descriptionTr": "Bir dizi kalça hizasına kaldırıp dengede durmak: tek bacak stabilitesini ve duruşu geliştirir.",
+    "tipsEn": [
+      "Stand tall through the crown of the head.",
+      "Keep the standing hip level."
+    ],
+    "tipsTr": [
+      "Başının tepesinden yukarı uzan.",
+      "Destek tarafı kalçayı düz tut."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 2.8,
+    "imageStart": "/exercise-images/wl-barre-knee-lift-balance/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-knee-lift-balance/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "balance_posture",
+      "core",
+      "beginner"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-barre-plank-knee-tuck",
+    "name": "Barre Plank Knee Tuck",
+    "nameTr": "Barre Plank Diz Çekme",
+    "force": "dynamic",
+    "level": "intermediate",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis",
+      "transverse_abdominis"
+    ],
+    "secondaryMuscles": [
+      "hip_flexors",
+      "anterior_deltoid"
+    ],
+    "instructions": [
+      "Start in a high plank with your hands under your shoulders.",
+      "Draw one knee toward your chest while keeping your hips level.",
+      "Return the foot to the floor and switch sides.",
+      "Alternate for 10 to 16 tucks."
+    ],
+    "instructionsTr": [
+      "Eller omuz altında, yüksek plank pozisyonunda başla.",
+      "Kalçanı sabit tutarak bir dizini göğsüne doğru çek.",
+      "Ayağı yere bırak ve taraf değiştir.",
+      "10–16 çekiş boyunca sırayla devam et."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-barre-plank-knee-tuck/start.webp",
+      "/exercise-images/wl-barre-plank-knee-tuck/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-barre-plank-knee-tuck",
+    "descriptionEn": "From a plank, draw one knee toward the chest and return without letting the hips sag or pike.",
+    "descriptionTr": "Plank pozisyonundan bir dizi göğse çekip kalça düşmeden ya da kalkmadan geri bırakmak.",
+    "tipsEn": [
+      "Keep the hips level; do not hike them.",
+      "Exhale as the knee comes in."
+    ],
+    "tipsTr": [
+      "Kalçanı kaldırma, düz tut.",
+      "Diz içeri gelirken nefes ver."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance",
+      "fat_loss"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 4,
+    "imageStart": "/exercise-images/wl-barre-plank-knee-tuck/start.webp",
+    "imageEnd": "/exercise-images/wl-barre-plank-knee-tuck/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "barre"
+    ],
+    "subcategories": [
+      "core",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-low-march-in-place",
+    "name": "March in Place",
+    "nameTr": "Yerinde Yürüyüş",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "hip_flexors",
+      "quadriceps"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius",
+      "rectus_abdominis"
+    ],
+    "instructions": [
+      "Stand tall with your arms relaxed by your sides.",
+      "March in place, lifting each knee toward hip height.",
+      "Swing the opposite arm forward with each step.",
+      "Continue for 45 to 60 seconds at a steady pace."
+    ],
+    "instructionsTr": [
+      "Kolların gevşek, dik dur.",
+      "Yerinde yürü; her dizi kalça hizasına doğru kaldır.",
+      "Her adımda karşı kolunu öne salla.",
+      "Düzenli bir tempoyla 45–60 saniye devam et."
+    ],
+    "category": "cardio",
+    "images": [
+      "/exercise-images/wl-low-march-in-place/start.webp",
+      "/exercise-images/wl-low-march-in-place/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-low-march-in-place",
+    "descriptionEn": "Lift your knees and swing your arms in a steady march: an easy, joint-friendly way to raise the heart rate.",
+    "descriptionTr": "Dizleri kaldırıp kolları sallayarak düzenli bir yürüyüş: kalp atışını eklem dostu biçimde yükseltmenin kolay yolu.",
+    "tipsEn": [
+      "Lift the knees as high as is comfortable.",
+      "Swing the opposite arm with each step."
+    ],
+    "tipsTr": [
+      "Dizleri rahat edeceğin kadar yukarı kaldır.",
+      "Her adımda karşı kolu salla."
+    ],
+    "bodyPart": "full_body",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance",
+      "fat_loss"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-low-march-in-place/start.webp",
+    "imageEnd": "/exercise-images/wl-low-march-in-place/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "low_impact"
+    ],
+    "subcategories": [
+      "beginner",
+      "cardio",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-low-knee-lift-reach",
+    "name": "Standing Knee Lift & Reach",
+    "nameTr": "Ayakta Diz Kaldır ve Uzan",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "rectus_abdominis",
+      "hip_flexors"
+    ],
+    "secondaryMuscles": [
+      "anterior_deltoid",
+      "quadriceps"
+    ],
+    "instructions": [
+      "Stand tall and reach both arms overhead.",
+      "Pull your hands down toward your chest as you lift one knee toward your elbows.",
+      "Return to standing with your arms overhead.",
+      "Alternate sides for 30 to 45 seconds."
+    ],
+    "instructionsTr": [
+      "Dik dur ve iki kolunu başının üstüne uzat.",
+      "Bir dizini dirseklerine doğru kaldırırken ellerini göğsüne çek.",
+      "Kollar yukarıda dik duruşa dön.",
+      "30–45 saniye boyunca sırayla taraf değiştir."
+    ],
+    "category": "cardio",
+    "images": [
+      "/exercise-images/wl-low-knee-lift-reach/start.webp",
+      "/exercise-images/wl-low-knee-lift-reach/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-low-knee-lift-reach",
+    "descriptionEn": "Reach tall, then draw the knee up as the hands pull down: a standing crunch that raises the heart rate without impact.",
+    "descriptionTr": "Yukarı uzanıp dizi çekerken elleri aşağı indirmek: darbesiz, ayakta bir karın hareketi.",
+    "tipsEn": [
+      "Stay tall; do not slump forward.",
+      "Exhale as you crunch."
+    ],
+    "tipsTr": [
+      "Dik kal, öne çökme.",
+      "Kıvrılırken nefes ver."
+    ],
+    "bodyPart": "full_body",
+    "goalCompatibility": [
+      "general_fitness",
+      "endurance",
+      "fat_loss"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 4,
+    "imageStart": "/exercise-images/wl-low-knee-lift-reach/start.webp",
+    "imageEnd": "/exercise-images/wl-low-knee-lift-reach/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "low_impact"
+    ],
+    "subcategories": [
+      "cardio",
+      "full_body",
+      "beginner"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-low-squat-to-reach",
+    "name": "Squat to Overhead Reach",
+    "nameTr": "Çömel ve Yukarı Uzan",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "quadriceps",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "anterior_deltoid",
+      "erector_spinae"
+    ],
+    "instructions": [
+      "Stand with your feet hip-width apart.",
+      "Sit back into a squat with your arms forward.",
+      "Press up through your feet and reach both arms overhead.",
+      "Repeat smoothly for 12 to 15 reps."
+    ],
+    "instructionsTr": [
+      "Ayaklar kalça genişliğinde dur.",
+      "Kollarını öne uzatıp geriye çömel.",
+      "Ayaklarınla yeri iterek yüksel ve iki kolunu yukarı uzat.",
+      "12–15 tekrarı akıcı biçimde yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-low-squat-to-reach/start.webp",
+      "/exercise-images/wl-low-squat-to-reach/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-low-squat-to-reach",
+    "descriptionEn": "Sit into a squat, then stand tall and reach overhead; a flowing, no-jump full-body move.",
+    "descriptionTr": "Çömelip doğrularak yukarı uzanmak; zıplamadan akıcı, tüm vücut bir hareket.",
+    "tipsEn": [
+      "Keep your knees tracking over your toes.",
+      "Reach tall as you stand."
+    ],
+    "tipsTr": [
+      "Dizlerini parmaklarının doğrultusunda tut.",
+      "Doğrulurken yukarı uzan."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "fat_loss",
+      "muscle_gain"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 4.5,
+    "imageStart": "/exercise-images/wl-low-squat-to-reach/start.webp",
+    "imageEnd": "/exercise-images/wl-low-squat-to-reach/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "low_impact"
+    ],
+    "subcategories": [
+      "full_body",
+      "cardio"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-low-wall-push-up",
+    "name": "Wall Push-Up",
+    "nameTr": "Duvarda Şınav",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "pectoralis_major"
+    ],
+    "secondaryMuscles": [
+      "triceps_brachii",
+      "anterior_deltoid"
+    ],
+    "instructions": [
+      "Stand facing a wall at arm's length, hands on the wall at shoulder height.",
+      "Bend your elbows to bring your chest toward the wall, body straight.",
+      "Press back to the start.",
+      "Do 10 to 15 repetitions."
+    ],
+    "instructionsTr": [
+      "Kol boyu uzaklıkta duvara bak; elleri omuz hizasında duvarda olsun.",
+      "Vücudun düz kalırken dirseklerini bükerek göğsünü duvara yaklaştır.",
+      "İterek başlangıca dön.",
+      "10–15 tekrar yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-low-wall-push-up/start.webp",
+      "/exercise-images/wl-low-wall-push-up/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-low-wall-push-up",
+    "descriptionEn": "A beginner-friendly push-up against a wall that trains the chest and arms with very little load on the joints.",
+    "descriptionTr": "Duvara karşı yapılan, yeni başlayanlara uygun şınav: eklemlere çok az yük bindirerek göğüs ve kolları çalıştırır.",
+    "tipsEn": [
+      "Keep your body in one straight line.",
+      "Move slowly and breathe out as you press."
+    ],
+    "tipsTr": [
+      "Vücudunu tek düz çizgide tut.",
+      "Yavaş git, iterken nefes ver."
+    ],
+    "bodyPart": "chest",
+    "goalCompatibility": [
+      "general_fitness",
+      "muscle_gain",
+      "strength"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-low-wall-push-up/start.webp",
+    "imageEnd": "/exercise-images/wl-low-wall-push-up/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "low_impact"
+    ],
+    "subcategories": [
+      "beginner",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-low-step-back-lunge",
+    "name": "Step-Back Lunge",
+    "nameTr": "Geri Adım Hamle",
+    "force": "push",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "quadriceps",
+      "gluteus_maximus"
+    ],
+    "secondaryMuscles": [
+      "hamstrings",
+      "adductors"
+    ],
+    "instructions": [
+      "Stand tall with your feet hip-width apart.",
+      "Step one foot back and lower until both knees are about 90 degrees.",
+      "Press through the front heel to return to standing.",
+      "Do 8 to 12 on each side."
+    ],
+    "instructionsTr": [
+      "Ayaklar kalça genişliğinde dik dur.",
+      "Bir ayağını geri at ve iki diz de yaklaşık 90 derece olana kadar in.",
+      "Öndeki topukla iterek ayağa kalk.",
+      "Her tarafta 8–12 tekrar yap."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-low-step-back-lunge/start.webp",
+      "/exercise-images/wl-low-step-back-lunge/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-low-step-back-lunge",
+    "descriptionEn": "Step one foot back and lower into a lunge, then return; easier on the knees than a jumping or walking lunge.",
+    "descriptionTr": "Bir ayağı geri atıp hamleye inmek ve geri dönmek; zıplamalı ya da yürüyüşlü hamleden dizlerde daha rahattır.",
+    "tipsEn": [
+      "Keep the front knee over the ankle.",
+      "Push through the front heel to stand."
+    ],
+    "tipsTr": [
+      "Öndeki dizi ayak bileğinin üzerinde tut.",
+      "Kalkarken öndeki topuğu it."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "muscle_gain",
+      "fat_loss"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 4,
+    "imageStart": "/exercise-images/wl-low-step-back-lunge/start.webp",
+    "imageEnd": "/exercise-images/wl-low-step-back-lunge/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "low_impact"
+    ],
+    "subcategories": [
+      "full_body",
+      "beginner"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-low-bridge-march",
+    "name": "Glute Bridge March",
+    "nameTr": "Köprü Yürüyüşü",
+    "force": "dynamic",
+    "level": "beginner",
+    "mechanic": "compound",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "gluteus_maximus",
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "rectus_abdominis",
+      "hip_flexors"
+    ],
+    "instructions": [
+      "Lie on your back with your knees bent and lift into a glute bridge.",
+      "Keeping your hips level, lift one foot off the floor.",
+      "Place it down and lift the other foot.",
+      "March for 20 to 30 seconds, then lower."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan, dizlerin bükülü; kalçayı kaldırıp köprü yap.",
+      "Kalçanı düz tutarak bir ayağını yerden kaldır.",
+      "Bırak ve diğer ayağı kaldır.",
+      "20–30 saniye yürü, sonra in."
+    ],
+    "category": "strength",
+    "images": [
+      "/exercise-images/wl-low-bridge-march/start.webp",
+      "/exercise-images/wl-low-bridge-march/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-low-bridge-march",
+    "descriptionEn": "Hold a glute bridge and alternate lifting each foot, challenging hip stability and core control with no impact.",
+    "descriptionTr": "Kalça köprüsünde kalıp ayakları sırayla kaldırmak: darbesiz biçimde kalça stabilitesini ve karın kontrolünü zorlar.",
+    "tipsEn": [
+      "Keep your hips level as a foot lifts.",
+      "Squeeze the glutes the whole time."
+    ],
+    "tipsTr": [
+      "Ayak kalkarken kalçanı düz tut.",
+      "Boyunca kalçanı sık."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "general_fitness",
+      "muscle_gain",
+      "mobility"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 3.5,
+    "imageStart": "/exercise-images/wl-low-bridge-march/start.webp",
+    "imageEnd": "/exercise-images/wl-low-bridge-march/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "low_impact"
+    ],
+    "subcategories": [
+      "beginner",
+      "recovery",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-recovery-diaphragmatic-breathing",
+    "name": "Diaphragmatic Breathing",
+    "nameTr": "Diyafram Nefesi",
+    "force": "static",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "transverse_abdominis"
+    ],
+    "secondaryMuscles": [
+      "obliques"
+    ],
+    "instructions": [
+      "Lie on your back with your knees bent and one hand on your belly.",
+      "Inhale slowly through the nose so the belly rises under your hand.",
+      "Exhale gently through pursed lips, letting the belly fall.",
+      "Continue for 2 to 5 minutes."
+    ],
+    "instructionsTr": [
+      "Sırtüstü uzan, dizlerin bükülü; bir elin karnının üzerinde olsun.",
+      "Burundan yavaşça nefes al; karnın elinin altında yükselsin.",
+      "Dudaklarını büzerek yumuşakça nefes ver; karnın insin.",
+      "2–5 dakika devam et."
+    ],
+    "category": "stretching",
+    "images": [
+      "/exercise-images/wl-recovery-diaphragmatic-breathing/start.webp",
+      "/exercise-images/wl-recovery-diaphragmatic-breathing/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-recovery-diaphragmatic-breathing",
+    "descriptionEn": "Slow belly breathing that calms the nervous system and teaches the diaphragm to do its job.",
+    "descriptionTr": "Sinir sistemini sakinleştiren ve diyaframa görevini öğreten yavaş karın nefesi.",
+    "tipsEn": [
+      "Let the belly rise, keeping the chest quiet.",
+      "Make the exhale a little longer than the inhale."
+    ],
+    "tipsTr": [
+      "Göğüs sakin kalırken karnın yükselsin.",
+      "Nefes vermeyi nefes almadan biraz uzun tut."
+    ],
+    "bodyPart": "core",
+    "goalCompatibility": [
+      "mobility",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 1.3,
+    "imageStart": "/exercise-images/wl-recovery-diaphragmatic-breathing/start.webp",
+    "imageEnd": "/exercise-images/wl-recovery-diaphragmatic-breathing/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "recovery"
+    ],
+    "subcategories": [
+      "full_body",
+      "breathing"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  },
+  {
+    "id": "wl-recovery-supine-hamstring-stretch",
+    "name": "Supine Hamstring Stretch",
+    "nameTr": "Sırtüstü Arka Bacak Esnetme",
+    "force": "static",
+    "level": "beginner",
+    "mechanic": "isolation",
+    "equipment": null,
+    "requiredEquipment": [
+      []
+    ],
+    "primaryMuscles": [
+      "hamstrings"
+    ],
+    "secondaryMuscles": [
+      "gastrocnemius",
+      "gluteus_maximus"
+    ],
+    "instructions": [
+      "Lie on your back with both legs extended.",
+      "Lift one leg and hold behind the thigh or calf, keeping the leg as straight as comfortable.",
+      "Gently draw it toward you until you feel a stretch behind the thigh.",
+      "Hold for 30 seconds, then switch."
+    ],
+    "instructionsTr": [
+      "Sırtüstü, iki bacağın uzun uzan.",
+      "Bir bacağını kaldır; uyluğunu ya da baldırını tut, bacağı rahatça düz tut.",
+      "Uyluğunun arkasında esneme hissedene kadar nazikçe kendine çek.",
+      "30 saniye bekle, sonra değiştir."
+    ],
+    "category": "stretching",
+    "images": [
+      "/exercise-images/wl-recovery-supine-hamstring-stretch/start.webp",
+      "/exercise-images/wl-recovery-supine-hamstring-stretch/peak.webp"
+    ],
+    "source": "wellness",
+    "sourceExerciseId": "wl-recovery-supine-hamstring-stretch",
+    "descriptionEn": "Lie on your back and draw one straight leg toward you to release the back of the thigh.",
+    "descriptionTr": "Sırtüstü yatıp düz bir bacağı kendine çekerek uyluğun arkasını gevşetmek.",
+    "tipsEn": [
+      "Keep the lower back on the floor.",
+      "Use a towel or strap around the foot if you cannot reach."
+    ],
+    "tipsTr": [
+      "Belini yerde tut.",
+      "Ulaşamıyorsan ayağına havlu ya da bant dola."
+    ],
+    "bodyPart": "upper_legs",
+    "goalCompatibility": [
+      "mobility",
+      "general_fitness"
+    ],
+    "environment": [
+      "home",
+      "outdoor",
+      "gym"
+    ],
+    "laterality": "bilateral",
+    "isBodyweight": true,
+    "metValue": 1.8,
+    "imageStart": "/exercise-images/wl-recovery-supine-hamstring-stretch/start.webp",
+    "imageEnd": "/exercise-images/wl-recovery-supine-hamstring-stretch/peak.webp",
+    "mediaStatus": "complete",
+    "isActive": true,
+    "modalities": [
+      "recovery"
+    ],
+    "subcategories": [
+      "lower_body",
+      "full_body"
+    ],
+    "impact": "low",
+    "asset": {
+      "source": "Hedefit original illustration",
+      "license": "Proprietary (Hedefit)",
+      "attribution": "",
+      "commercialUse": true
+    }
+  }
+]

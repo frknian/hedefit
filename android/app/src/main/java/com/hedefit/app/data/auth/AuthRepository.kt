@@ -234,6 +234,29 @@ class AuthRepository(
             meta.optString("cross_border_consent_at").isNotBlank()
     }
 
+    /** Hesaptaki rıza kayıtlarını okur (Gizlilik ve rızalar ekranı). */
+    suspend fun consentStatus(): com.hedefit.app.data.model.ConsentStatus {
+        val response = http.request(
+            url = authUrl("user"),
+            method = "GET",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+        ).requireSuccess("Rıza durumu okunamadı.")
+        return com.hedefit.app.data.model.parseConsentStatus(response.jsonObject().optJSONObject("user_metadata"))
+    }
+
+    /**
+     * Seçilen açık rızaları geri çeker (alanlar boşaltılır, geri çekme zamanı yazılır). Çağıran, hesabın
+     * rıza kapısına düşmesi için oturumu kapatır; veriler silinmez (silmek için hesap silme kullanılır).
+     */
+    suspend fun withdrawConsents(health: Boolean, crossBorder: Boolean) {
+        http.request(
+            url = authUrl("user"),
+            method = "PUT",
+            headers = authHeaders() + ("Authorization" to "Bearer ${validAccessToken()}"),
+            body = JSONObject().put("data", com.hedefit.app.data.model.consentWithdrawalPatch(health, crossBorder, Instant.now().toString())).toString(),
+        ).requireSuccess("Rıza geri çekilemedi.")
+    }
+
     /** Var olan hesap için iki açık rızayı (ayrı zaman damgalarıyla) kaydeder. */
     suspend fun saveExplicitConsents() {
         val now = Instant.now().toString()
@@ -336,6 +359,6 @@ class AuthRepository(
     private fun authHeaders() = mapOf("apikey" to BuildConfig.SUPABASE_ANON_KEY, "Content-Type" to "application/json")
 
     internal companion object {
-        const val LEGAL_DOCUMENT_VERSION = "2026-10-01"
+        const val LEGAL_DOCUMENT_VERSION = "2026-10-03"
     }
 }

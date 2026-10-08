@@ -238,6 +238,14 @@ data class ExerciseCatalogData(
     val levelKey: String = "",
     /** Audited equipment alternatives; an empty option means no equipment is needed. */
     val requiredEquipment: List<List<String>> = emptyList(),
+    /** pilates | mobility | barre | low_impact | recovery (boş = klasik hareket). */
+    val modalities: List<String> = emptyList(),
+    val subcategories: List<String> = emptyList(),
+    val subcategoryLabels: List<String> = emptyList(),
+    /** low | moderate | high; boş = bilinmiyor. */
+    val impact: String = "",
+    val description: String = "",
+    val tips: List<String> = emptyList(),
 )
 
 data class NutritionGoalData(
