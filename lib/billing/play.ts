@@ -62,8 +62,8 @@ export async function obfuscatedAccountId(userId: string): Promise<string> {
 }
 
 export class BillingVerificationError extends Error {
-  code: "unknown_product" | "unknown_state" | "account_mismatch";
-  constructor(code: "unknown_product" | "unknown_state" | "account_mismatch", message: string) {
+  code: string;
+  constructor(code: string, message: string) {
     super(message);
     this.code = code;
   }

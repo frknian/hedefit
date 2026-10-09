@@ -28,7 +28,6 @@ targets:
         excludes:
           - Info.plist
           - Hedefit.entitlements
-          - Assets.xcassets
     info:
       path: Hedefit/Info.plist
       properties:
@@ -48,12 +47,18 @@ targets:
           - CFBundleURLSchemes: ["$(GOOGLE_URL_SCHEME)"]
     entitlements:
       path: Hedefit/Hedefit.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        com.apple.security.application-groups: [group.com.hedefit.app]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hedefit.app
         PRODUCT_NAME: Hedefit
         INFOPLIST_KEY_CFBundleDisplayName: Hedefit
         CODE_SIGN_ENTITLEMENTS: Hedefit/Hedefit.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     configFiles:
       Debug: Config.base.xcconfig
       Release: Config.base.xcconfig
@@ -107,7 +112,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hedefit.app.watchkitapp
-        PRODUCT_NAME: Hedefit
+        PRODUCT_NAME: HedefitWatch
+        INFOPLIST_KEY_CFBundleDisplayName: Hedefit
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_ENTITLEMENTS: HedefitWatch/HedefitWatch.entitlements

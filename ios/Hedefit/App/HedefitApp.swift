@@ -1,41 +1,54 @@
 import SwiftUI
-import BackgroundTasks
 import GoogleSignIn
 
 @main
 struct HedefitApp: App {
-    @State private var store = AppStore()
+    @State private var app = AppModel.shared
+    @State private var theme = Theme.shared
+    @State private var lang = AppLang.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.hedefit.app.sync", using: nil) { task in
-            Task { await OfflineQueue.shared.flush(); task.setTaskCompleted(success: true) }
-        }
+        NotificationService.shared.configure()
+        WatchBridge.shared.activate()
+        WatchBridge.shared.onWater = { ml in Task { await AppModel.shared.addWater(ml) } }
+        WatchBridge.shared.onWorkout = { kind, minutes, distance in Task { await AppModel.shared.recordWatchWorkout(kind: kind, minutes: minutes, distance: distance) } }
     }
 
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environment(store)
-                .tint(Color.hedefitGreen)
-                // SF Pro, iOS'un yerel ve tüm Dynamic Type boyutlarıyla uyumlu
-                // arayüz yazı ailesidir; bütün sekmeler aynı aileyi miras alır.
-                .fontDesign(.default)
-                .background(Color.hedefitBackground.ignoresSafeArea())
-                .preferredColorScheme(store.settings.darkMode ? .dark : .light)
-                .task { await store.bootstrap() }
-                .onOpenURL { url in if !GIDSignIn.sharedInstance.handle(url) { store.handleDeepLink(url) } }
+                .environment(app).environment(theme).environment(lang)
+                .preferredColorScheme(theme.preferredScheme)
+                .tint(HC.lime)
+                .task {
+                    await app.bootstrap()
+                    #if DEBUG
+                    DebugOpen.apply(app)
+                    #endif
+                }
+                .onOpenURL { url in
+                    if GIDSignIn.sharedInstance.handle(url) { return }
+                    DeepLinks.handle(url, app: app)
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active, app.phase == .signedIn { Task { await app.refreshOnForeground() } }
+                }
         }
     }
 }
 
-extension Color {
-    static let hedefitGreen = Color(red: 61/255, green: 220/255, blue: 132/255)
-    static let hedefitBlue = Color(red: 90/255, green: 169/255, blue: 1)
-    static let hedefitPurple = Color(red: 0.45, green: 0.35, blue: 0.96)
-    static let hedefitOrange = Color(red: 1.0, green: 0.55, blue: 0.18)
-    static let hedefitBackground = Color(red: 10/255, green: 11/255, blue: 13/255)
-    static let hedefitSurface = Color(red: 19/255, green: 22/255, blue: 26/255)
-    static let hedefitSurfaceHigh = Color(red: 27/255, green: 31/255, blue: 37/255)
-    static let hedefitMuted = Color(red: 102/255, green: 110/255, blue: 121/255)
-    static let panel = Color.hedefitSurface
+enum DeepLinks {
+    @MainActor static func handle(_ url: URL, app: AppModel) {
+        switch url.host {
+        case "home": app.select(.home)
+        case "workout": app.select(.explore)
+        case "nutrition": app.select(.nutrition)
+        case "coach": app.select(.coach)
+        case "progress": app.select(.progress)
+        case "route": app.select(.home); app.push(.route)
+        case "activity": app.select(.home); app.push(.manualActivity)
+        default: app.select(.home)
+        }
+    }
 }
