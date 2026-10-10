@@ -14,7 +14,13 @@ export const APPLE_PRODUCT_TIERS: Record<string, "plus" | "pro"> = {
 };
 
 /** Apple Root CA - G3 SHA-256 parmak izi (https://www.apple.com/certificateauthority/). */
-const APPLE_ROOT_G3_SHA256 = "63:34:3A:BF:B8:9A:6A:03:EB:B5:7E:9B:3F:5F:A7:BE:7C:4F:5C:75:6F:30:17:B3:A8:C4:88:C3:65:3E:91:79";
+const APPLE_ROOT_G3_SHA256_DEFAULT = "63:34:3A:BF:B8:9A:6A:03:EB:B5:7E:9B:3F:5F:A7:BE:7C:4F:5C:75:6F:30:17:B3:A8:C4:88:C3:65:3E:91:79";
+let appleRootSha256 = APPLE_ROOT_G3_SHA256_DEFAULT;
+
+/** Yalnız testler için: sahte bir kök sertifikayı güvenilir yapar. Üretimde çağrılmaz. */
+export function setAppleRootFingerprintForTests(fingerprint: string | null) {
+  appleRootSha256 = fingerprint ?? APPLE_ROOT_G3_SHA256_DEFAULT;
+}
 
 export type AppleTransaction = {
   transactionId: string;
@@ -42,7 +48,7 @@ export function verifyAppleJws(jws: string, now = Date.now()): AppleTransaction 
     if (!certs[i].verify(certs[i + 1].publicKey)) throw new BillingVerificationError("invalid_chain", "Sertifika zinciri doğrulanamadı.");
   }
   const root = certs[certs.length - 1];
-  if (root.fingerprint256 !== APPLE_ROOT_G3_SHA256) throw new BillingVerificationError("untrusted_root", "Güvenilmeyen sertifika.");
+  if (root.fingerprint256 !== appleRootSha256) throw new BillingVerificationError("untrusted_root", "Güvenilmeyen sertifika.");
   for (const cert of certs) {
     if (Date.parse(cert.validFrom) > now || Date.parse(cert.validTo) < now) throw new BillingVerificationError("expired_cert", "Sertifika süresi dolmuş.");
   }
