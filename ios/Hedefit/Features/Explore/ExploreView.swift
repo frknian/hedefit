@@ -200,7 +200,10 @@ struct ProgramsSection: View {
 
     private var tools: some View {
         VStack(spacing: 10) {
-            HfActionTile(icon: "figure.run", tint: HC.lime, title: tr("Kardiyo", "Cardio"), subtitle: tr("Koşu bandı, bisiklet, kürek • canlı hız ve eğim", "Treadmill, bike, rower • live speed & incline")) { app.push(.cardio) }
+            HStack(spacing: 10) {
+                HfActionTile(icon: "figure.run", tint: HC.lime, title: tr("Kardiyo", "Cardio"), subtitle: tr("Canlı hız ve eğim", "Live speed & incline")) { app.push(.cardio) }
+                HfActionTile(icon: "camera.fill", tint: HC.lime, title: tr("Ekipman tara", "Scan equipment"), subtitle: tr("Kamerayla tanı", "Recognise with camera")) { app.push(.equipmentScanner) }
+            }
             HStack(spacing: 10) {
                 HfActionTile(icon: "book.fill", tint: HC.lime, title: tr("Hareket Atlası", "Movement Atlas"), subtitle: tr("Teknik ve hareketler", "Technique and exercises")) { app.openLibrary() }
                 HfActionTile(icon: "sparkles", tint: HC.lime, title: tr("Program oluştur", "New program"), subtitle: tr("AI, şablon veya kendin", "AI, templates or custom")) { app.push(.programHub) }
@@ -212,10 +215,6 @@ struct ProgramsSection: View {
             HStack(spacing: 10) {
                 HfActionTile(icon: "location.fill", tint: HC.lime, title: tr("Hedefit Rota", "Hedefit Route"), subtitle: tr("GPS aktivitesi", "GPS activity")) { app.push(.route) }
                 HfActionTile(icon: "plus", tint: HC.lime, title: tr("Antrenman ekle", "Log activity"), subtitle: tr("Spor, mesafe, tempo", "Sport, distance, pace")) { app.push(.manualActivity) }
-            }
-            HStack(spacing: 10) {
-                HfActionTile(icon: "camera.fill", tint: HC.lime, title: tr("Ekipman tara", "Scan equipment"), subtitle: tr("Kamerayla tanı", "Recognise with camera")) { app.push(.equipmentScanner) }
-                Color.clear.frame(maxWidth: .infinity)
             }
         }
     }
