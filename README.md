@@ -122,6 +122,17 @@ Google ile uzlaştırır (`lib/billing/reconcile.ts`). Migration'lar: `202610031
 `20261003140000_play_rtdn.sql`. Hesap silme, aktif abonelik varken kullanıcı onaylamadan 409 döner
 (silmek Play aboneliğini iptal etmez).
 
+### App Store (iOS)
+İstemci imzalı StoreKit 2 işlemini `app/api/billing/apple/verify`'e gönderir; sunucu x5c zincirini Apple Root CA G3'e
+kadar doğrular (`lib/billing/apple.ts`) ve planı aynı `apply_play_subscription` ile yazar (jeton: `apple:<originalTransactionId>`).
+Yenileme/iptal/iade bildirimleri **App Store Server Notifications V2** ile gelir:
+
+1. App Store Connect → Uygulama → App Information → *App Store Server Notifications*: Production ve Sandbox URL'si
+   `https://<worker>/api/billing/apple/notifications` (Version 2).
+2. İsteğe bağlı Worker secret'ı `APPLE_BUNDLE_ID` (varsayılan `com.hedefit.app`).
+3. Aynı `begin/finish_billing_event` ve `void_play_subscription` fonksiyonlarını kullanır; ek migration gerekmez.
+4. App Store Connect'ten *Request a Test Notification* ile doğrula (log: `apple notification processed`).
+
 ## Ödüllü reklam (sunucu doğrulamalı)
 
 Ücretsiz/misafir kullanıcı günlük koç sorusu hakkı bitince kısa bir ödüllü reklam izleyip +1 soru
